@@ -1,22 +1,8 @@
 @import "tailwindcss";
 
-@theme {
-  /* رنگ‌های اصلی اپلیکیشن زیبانو */
-  --color-primary: #A88B7D;
-  --color-secondary: #8D7468;
-  --color-background: #F5F0EC;
-  --color-card: #EBE3DE;
-  --color-text-main: #2C2521;
-  --color-text-secondary: #5A504B;
-  --color-border: #DCD1CB;
-  
-  /* فونت‌ها */
-  --font-vazir: 'Vazir', sans-serif;
-  --font-vazir-medium: 'Vazir-Medium', sans-serif;
-  --font-vazir-bold: 'Vazir-Bold', sans-serif;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
-/* تعریف فونت‌های وزیر */
+/* فونت‌های وزیر */
 @font-face {
   font-family: 'Vazir';
   src: url('/fonts/Vazir.ttf') format('truetype');
@@ -41,16 +27,41 @@
   font-display: swap;
 }
 
-/* استایل‌های پایه */
+/* متغیرهای تم */
+:root {
+  --color-background: #F5F0EC;
+  --color-card: #EBE3DE;
+  --color-primary: #A88B7D;
+  --color-secondary: #8D7468;
+  --color-text-main: #2C2521;
+  --color-text-secondary: #5A504B;
+  --color-border: #DCD1CB;
+}
+
+.dark {
+  --color-background: #171412;
+  --color-card: #26211E;
+  --color-primary: #A88B7D;
+  --color-secondary: #6B5A52;
+  --color-text-main: #F5F0EC;
+  --color-text-secondary: #BDB4AF;
+  --color-border: #3D3734;
+}
+
 @layer base {
   html {
     direction: rtl;
-    font-family: 'Vazir', sans-serif;
   }
-  
+
   body {
     background-color: var(--color-background);
     color: var(--color-text-main);
     font-family: 'Vazir', sans-serif;
+    min-height: 100vh;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  html:not([data-theme-loaded]) body {
+    visibility: hidden;
   }
 }
