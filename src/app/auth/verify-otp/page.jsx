@@ -1,4 +1,4 @@
-// src/app/(auth)/verify-otp/page.jsx
+// src/app/auth/verify-otp/page.jsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
