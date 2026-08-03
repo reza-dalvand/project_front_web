@@ -65,3 +65,12 @@
     visibility: hidden;
   }
 }
+
+/* در انتهای فایل globals.css اضافه شود */
+
+/* Placeholder styling برای input ها */
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+}

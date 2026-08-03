@@ -1,0 +1,1 @@
+export { default as ServiceTypeIcon, TYPE_CONFIG } from './ServiceTypeIcon';
