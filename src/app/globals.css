@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  /* رنگ‌های اصلی اپلیکیشن زیبانو */
+  --color-primary: #A88B7D;
+  --color-secondary: #8D7468;
+  --color-background: #F5F0EC;
+  --color-card: #EBE3DE;
+  --color-text-main: #2C2521;
+  --color-text-secondary: #5A504B;
+  --color-border: #DCD1CB;
+  
+  /* فونت‌ها */
+  --font-vazir: 'Vazir', sans-serif;
+  --font-vazir-medium: 'Vazir-Medium', sans-serif;
+  --font-vazir-bold: 'Vazir-Bold', sans-serif;
+}
+
+/* تعریف فونت‌های وزیر */
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazir-Medium';
+  src: url('/fonts/Vazir-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazir-Bold';
+  src: url('/fonts/Vazir-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* استایل‌های پایه */
+@layer base {
+  html {
+    direction: rtl;
+    font-family: 'Vazir', sans-serif;
+  }
+  
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text-main);
+    font-family: 'Vazir', sans-serif;
+  }
+}
