@@ -2,15 +2,19 @@
 'use client';
 import { create } from 'zustand';
 
-export const useNetworkStore = create((set) => ({
+export const useNetworkStore = create((set, get) => ({
   isConnected: true,
   isInternetReachable: true,
   connectionType: 'unknown',
   showOfflineBanner: false,
+  _initialized: false,
 
-  // مقداردهی اولیه و گوش دادن به تغییرات شبکه
   init: () => {
     if (typeof window === 'undefined') return null;
+
+    // جلوگیری از init چندباره
+    if (get()._initialized) return null;
+    set({ _initialized: true });
 
     const updateStatus = () => {
       const connected = navigator.onLine;
@@ -26,19 +30,17 @@ export const useNetworkStore = create((set) => ({
       }
     };
 
-    // بررسی اولیه
     updateStatus();
 
-    // گوش دادن به رویدادها
     window.addEventListener('online', updateStatus);
     window.addEventListener('offline', updateStatus);
 
     return () => {
       window.removeEventListener('online', updateStatus);
       window.removeEventListener('offline', updateStatus);
+      set({ _initialized: false });
     };
   },
 
-  // بستن بنر آفلاین
   dismissBanner: () => set({ showOfflineBanner: false }),
 }));

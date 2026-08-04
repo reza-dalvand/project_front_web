@@ -1,20 +1,12 @@
 'use client';
-
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FiChevronDown, FiChevronUp, FiX, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-/**
- * کامپوننت منوی کشویی با مودال تمام‌صفحه
- *
- * @param {string} label - برچسب بالای input
- * @param {string|number|null} value - مقدار انتخاب شده (id)
- * @param {Array} options - آرایه گزینه‌ها [{ id, label }]
- * @param {function} onSelect - تابع انتخاب (id را می‌گیرد)
- * @param {string} placeholder - متن placeholder
- * @param {boolean} disabled - غیرفعال بودن
- */
+let dropdownCounter = 0;
+
 export default function Dropdown({
   label,
   value,
@@ -26,27 +18,28 @@ export default function Dropdown({
   const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
-
+  const instanceId = useRef(`dropdown-${++dropdownCounter}`);
   const selectedItem = options.find((opt) => opt.id === value);
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      releaseScrollLock(instanceId.current);
+    };
   }, []);
 
-  // قفل کردن اسکرول بدنه
   useEffect(() => {
     if (visible) {
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     };
   }, [visible]);
 
-  // بستن با Escape
   useEffect(() => {
     if (!visible) return;
     const handleEsc = (e) => {
@@ -75,7 +68,6 @@ export default function Dropdown({
       style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
       onClick={() => setVisible(false)}
     >
-      {/* مودال محتوا */}
       <div
         className="w-full max-h-[75vh] rounded-t-3xl flex flex-col animate-slide-up"
         style={{
@@ -84,7 +76,6 @@ export default function Dropdown({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle Bar */}
         <div className="flex justify-center pt-3 pb-1">
           <div
             className="w-10 h-1 rounded-full"
@@ -92,7 +83,6 @@ export default function Dropdown({
           />
         </div>
 
-        {/* هدر */}
         <div
           className="flex items-center justify-between px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
@@ -112,7 +102,6 @@ export default function Dropdown({
           </button>
         </div>
 
-        {/* لیست گزینه‌ها */}
         <div className="flex-1 overflow-y-auto py-2">
           {options.length === 0 ? (
             <div className="py-12 text-center">
@@ -170,7 +159,6 @@ export default function Dropdown({
           {label}
         </label>
       )}
-
       <button
         onClick={() => !disabled && setVisible((v) => !v)}
         disabled={disabled}
@@ -190,7 +178,6 @@ export default function Dropdown({
         >
           {selectedItem ? selectedItem.label : placeholder}
         </span>
-
         {visible ? (
           <FiChevronUp
             size={20}
@@ -211,7 +198,6 @@ export default function Dropdown({
           />
         )}
       </button>
-
       {createPortal(content, document.body)}
     </div>
   );

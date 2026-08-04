@@ -1,6 +1,5 @@
 // src/components/common/AuthBottomSheet.jsx
 'use client';
-
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiX, FiSmartphone, FiUser, FiShield, FiCheck, FiMessageSquare } from 'react-icons/fi';
@@ -11,6 +10,7 @@ import Button from './Button';
 import Input from './Input';
 import { validatePhone } from '@/utils/phoneUtils';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 const OTP_LENGTH = 5;
 const RESEND_SECONDS = 60;
@@ -21,8 +21,9 @@ export default function AuthBottomSheet() {
   const { colors } = useTheme();
   const login = useAuthStore((s) => s.login);
   const { showAuthModal, closeAuthModal, cancelAuthModal } = useAuthModal();
+  const instanceId = useRef('auth-bottom-sheet');
 
-  const [stage, setStage] = useState('info'); // 'info' | 'otp' | 'success'
+  const [stage, setStage] = useState('info');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -33,7 +34,6 @@ export default function AuthBottomSheet() {
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
   const inputRefs = useRef([]);
 
   // ریست فرم هنگام باز شدن
@@ -74,17 +74,24 @@ export default function AuthBottomSheet() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [showAuthModal, cancelAuthModal]);
 
-  // قفل کردن اسکرول
+  // قفل کردن اسکرول با سیستم مرکزی
   useEffect(() => {
     if (showAuthModal) {
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     };
   }, [showAuthModal]);
+
+  // cleanup در unmount
+  useEffect(() => {
+    return () => {
+      releaseScrollLock(instanceId.current);
+    };
+  }, []);
 
   const handlePhoneChange = (text) => {
     const cleaned = text.replace(/[^0-9]/g, '');
@@ -99,11 +106,13 @@ export default function AuthBottomSheet() {
       setError('لطفاً ابتدا قوانین را بپذیرید');
       return;
     }
+
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
     if (fullName.length < 3) {
       setError('نام و نام خانوادگی کامل نیست');
       return;
     }
+
     if (!validatePhone(phone)) {
       setError('شماره موبایل معتبر نیست');
       return;
@@ -112,6 +121,7 @@ export default function AuthBottomSheet() {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
     setLoading(false);
+
     setStage('otp');
     setTimer(RESEND_SECONDS);
     setCanResend(false);
@@ -137,6 +147,7 @@ export default function AuthBottomSheet() {
     const digit = cleaned[0] || '';
     newOtp[index] = digit;
     setOtp(newOtp);
+
     if (error) setError('');
 
     if (digit && index < OTP_LENGTH - 1) {
@@ -431,7 +442,6 @@ export default function AuthBottomSheet() {
                     ویرایش اطلاعات
                   </span>
                 </button>
-
                 {canResend ? (
                   <button onClick={handleResend} type="button">
                     <span

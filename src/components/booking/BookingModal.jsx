@@ -1,10 +1,9 @@
 'use client';
-
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   FiX, FiCalendar, FiClock, FiArrowRight, FiArrowLeft,
-  FiLock, FiCheck, FiSparkles, FiShield,
+  FiLock, FiCheck, FiSparkles, FiShield, FiStar,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
@@ -15,6 +14,7 @@ import PriceBreakdown from '@/components/common/PriceBreakdown';
 import RulesCard from './RulesCard';
 import { toPersianDigit, parseNumber } from '@/utils/numberUtils';
 import { PERSIAN_MONTHS } from '@/utils/dateUtils';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 const STEPS = [
   { id: 1, label: 'بررسی', icon: FiCheck },
@@ -59,14 +59,13 @@ export default function BookingModal({
 }) {
   const { colors } = useTheme();
   const currentService = service || MOCK_SERVICE;
-
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const instanceId = useRef('booking-modal');
 
-  // محاسبه depositAmount
   const originalPrice = parseNumber(
     currentService.originalPrice ?? currentService.price
   );
@@ -79,29 +78,29 @@ export default function BookingModal({
     ? Math.round((finalPrice * depositPercent) / 100)
     : finalPrice;
 
-  // Mount شدن در مرورگر
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      releaseScrollLock(instanceId.current);
+    };
   }, []);
 
-  // ریست هنگام باز شدن
   useEffect(() => {
     if (visible) {
       setCurrentStep(1);
       setSelectedDate(null);
       setSelectedTime(null);
       setShowSuccess(false);
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     };
   }, [visible]);
 
-  // بستن با Escape
   useEffect(() => {
     if (!visible) return;
     const handleEsc = (e) => {
@@ -132,14 +131,10 @@ export default function BookingModal({
 
   const canProceed = useMemo(() => {
     switch (currentStep) {
-      case 1:
-        return true;
-      case 2:
-        return !!selectedDate;
-      case 3:
-        return !!selectedTime;
-      default:
-        return false;
+      case 1: return true;
+      case 2: return !!selectedDate;
+      case 3: return !!selectedTime;
+      default: return false;
     }
   }, [currentStep, selectedDate, selectedTime]);
 
@@ -153,7 +148,6 @@ export default function BookingModal({
     onClose?.();
   };
 
-  // رندر فوتر بر اساس مرحله
   const renderFooter = () => {
     if (currentStep === 1) {
       return (
@@ -166,7 +160,6 @@ export default function BookingModal({
         />
       );
     }
-
     if (currentStep === 2) {
       return (
         <div className="flex items-center gap-3">
@@ -192,8 +185,6 @@ export default function BookingModal({
         </div>
       );
     }
-
-    // مرحله ۳ - پرداخت
     return (
       <div className="flex items-center gap-3">
         <button
@@ -276,10 +267,8 @@ export default function BookingModal({
 
         {/* محتوای اسکرولی */}
         <div className="flex-1 overflow-y-auto px-4 pt-2 pb-10">
-          {/* ═══ مرحله ۱: اطلاعات خدمت + قوانین ═══ */}
           {currentStep === 1 && !showSuccess && (
             <div className="flex flex-col gap-3.5">
-              {/* بخش ۱: جزئیات پرداخت */}
               <div className="flex items-center gap-2.5 mb-1">
                 <div
                   className="w-9 h-9 rounded-[11px] flex items-center justify-center"
@@ -296,7 +285,6 @@ export default function BookingModal({
                   </span>
                 </div>
               </div>
-
               <PriceBreakdown
                 originalPrice={originalPrice}
                 discountPercent={discountPercent}
@@ -307,8 +295,6 @@ export default function BookingModal({
                 showRemaining={true}
                 variant="detailed"
               />
-
-              {/* بخش ۲: قوانین رزرو */}
               <div className="flex items-center gap-2.5 mt-3 mb-1">
                 <div
                   className="w-9 h-9 rounded-[11px] flex items-center justify-center"
@@ -325,12 +311,10 @@ export default function BookingModal({
                   </span>
                 </div>
               </div>
-
               <RulesCard colors={colors} />
             </div>
           )}
 
-          {/* ═══ مرحله ۲: انتخاب تاریخ ═══ */}
           {currentStep === 2 && !showSuccess && (
             <div className="flex flex-col gap-3.5">
               <BookingDateSelector
@@ -340,10 +324,8 @@ export default function BookingModal({
             </div>
           )}
 
-          {/* ═══ مرحله ۳: انتخاب ساعت ═══ */}
           {currentStep === 3 && !showSuccess && (
             <div className="flex flex-col gap-3.5">
-              {/* Chip تاریخ انتخاب شده */}
               {selectedDate && (
                 <button
                   onClick={handlePrev}
@@ -361,8 +343,6 @@ export default function BookingModal({
                   </span>
                 </button>
               )}
-
-              {/* یادآوری پرداخت */}
               <div
                 className="flex items-center gap-2 p-2.5 rounded-[12px] border"
                 style={{
@@ -378,7 +358,6 @@ export default function BookingModal({
                   با انتخاب ساعت و تپ روی دکمه پرداخت، بیعانه پرداخت و نوبت شما ثبت می‌شود
                 </span>
               </div>
-
               <BookingTimeSelector
                 slots={MOCK_TIME_SLOTS}
                 selectedId={selectedTime?.id}
@@ -387,7 +366,6 @@ export default function BookingModal({
             </div>
           )}
 
-          {/* ═══ مرحله موفقیت ═══ */}
           {showSuccess && (
             <div className="flex flex-col items-center justify-center py-12 px-6 gap-4">
               <div
@@ -396,7 +374,6 @@ export default function BookingModal({
               >
                 <FiCheck size={48} color="#fff" />
               </div>
-
               <span className="text-xl font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
                 رزرو با موفقیت ثبت شد!
               </span>
@@ -406,8 +383,6 @@ export default function BookingModal({
               >
                 کد تایید ۴ رقمی به شماره شما ارسال خواهد شد
               </span>
-
-              {/* خلاصه رزرو */}
               <div
                 className="w-full p-4 rounded-2xl border flex flex-col gap-2.5 mt-2"
                 style={{
@@ -456,7 +431,6 @@ export default function BookingModal({
                   </span>
                 </div>
               </div>
-
               <div className="w-full mt-3">
                 <Button
                   title="بازگشت به صفحه کسب‌وکار"
@@ -467,7 +441,6 @@ export default function BookingModal({
               </div>
             </div>
           )}
-
           <div className="h-16" />
         </div>
 

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX, FiCheck, FiStar, FiSend } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -7,6 +7,7 @@ import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
 import StarRating from '@/components/common/StarRating';
 import { useToast } from '@/hooks/useToast';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 const REVIEW_TAGS = [
   { id: 'clean', label: 'مکان تمیز بود' },
@@ -17,14 +18,6 @@ const REVIEW_TAGS = [
   { id: 'recommend', label: 'پیشنهاد می‌کنم' },
 ];
 
-/**
- * مدال نظردهی پس از انجام نوبت
- *
- * @param {boolean} visible - وضعیت نمایش
- * @param {object} appointment - داده نوبت
- * @param {function} onClose - تابع بستن
- * @param {function} onSubmit - تابع ثبت نظر
- */
 export default function ReviewModal({
   visible,
   appointment,
@@ -34,6 +27,7 @@ export default function ReviewModal({
   const { colors } = useTheme();
   const { showToast } = useToast();
   const [mounted, setMounted] = useState(false);
+  const instanceId = useRef('review-modal');
   const [rating, setRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
   const [comment, setComment] = useState('');
@@ -42,7 +36,10 @@ export default function ReviewModal({
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      releaseScrollLock(instanceId.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -52,14 +49,24 @@ export default function ReviewModal({
       setComment('');
       setIsSubmitting(false);
       setShowSuccess(false);
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     };
   }, [visible]);
+
+  // بستن با Escape
+  useEffect(() => {
+    if (!visible) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [visible, onClose]);
 
   const toggleTag = (tagId) => {
     setSelectedTags((prev) =>
@@ -106,7 +113,7 @@ export default function ReviewModal({
     >
       <div
         className="relative w-full max-w-md rounded-t-3xl md:rounded-3xl flex flex-col
-          max-h-[90vh] overflow-hidden shadow-2xl"
+        max-h-[90vh] overflow-hidden shadow-2xl"
         style={{
           backgroundColor: colors.cardBackground,
           borderTop: `1px solid ${colors.border}`,
@@ -239,8 +246,8 @@ export default function ReviewModal({
                         key={tag.id}
                         onClick={() => toggleTag(tag.id)}
                         className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl
-                          border-[1.5px] transition-all duration-200
-                          hover:scale-105 active:scale-95"
+                        border-[1.5px] transition-all duration-200
+                        hover:scale-105 active:scale-95"
                         style={{
                           backgroundColor: isSelected
                             ? colors.primary + '22'
@@ -284,7 +291,7 @@ export default function ReviewModal({
                   maxLength={300}
                   rows={3}
                   className="w-full p-4 rounded-2xl border-2 outline-none resize-none
-                    text-sm font-[Vazir] leading-6 transition-colors"
+                  text-sm font-[Vazir] leading-6 transition-colors"
                   style={{
                     backgroundColor: colors.background,
                     borderColor: colors.border,

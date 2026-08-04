@@ -1,29 +1,27 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  FiX, FiCheck, FiInfo, FiTrendingUp, 
-  FiDollarSign, FiAlertCircle, FiCheckCircle 
+import {
+  FiX, FiCheck, FiInfo, FiTrendingUp,
+  FiDollarSign, FiAlertCircle, FiCheckCircle
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
 import { formatPrice, APP_FEE_TIERS, getCurrentFeeTier, toPersianDigit } from '@/utils/numberUtils';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-/**
- * مدال راهنمای قیمت‌گذاری
- * @param {boolean} visible - وضعیت نمایش
- * @param {function} onClose - تابع بستن
- * @param {number} currentPrice - قیمت فعلی خدمت (برای هایلایت کردن ردیف مناسب)
- */
 export default function PriceGuideModal({ visible, onClose, currentPrice }) {
   const { colors } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const instanceId = useRef('price-guide-modal');
   const currentTier = currentPrice > 0 ? getCurrentFeeTier(currentPrice) : null;
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      releaseScrollLock(instanceId.current);
+    };
   }, []);
 
   // بستن با Escape
@@ -36,15 +34,15 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
 
-  // قفل اسکرول
+  // قفل اسکرول با سیستم مرکزی
   useEffect(() => {
     if (visible) {
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     };
   }, [visible]);
 

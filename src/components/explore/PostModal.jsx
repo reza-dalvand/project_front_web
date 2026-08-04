@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import {
   FiX,
@@ -20,6 +19,7 @@ import GallerySlider from "./GallerySlider";
 import StarRating from "@/components/common/StarRating";
 import Avatar from "@/components/common/Avatar";
 import Button from "@/components/common/Button";
+import { acquireScrollLock, releaseScrollLock } from "@/utils/scrollLock";
 
 export default function PostModal({
   post,
@@ -32,10 +32,14 @@ export default function PostModal({
   const { requireAuth } = useAuth();
   const [isSaved, setIsSaved] = useState(post?.saved || false);
   const [mounted, setMounted] = useState(false);
+  const instanceId = useRef("post-modal");
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      releaseScrollLock(instanceId.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -44,15 +48,15 @@ export default function PostModal({
     }
   }, [post]);
 
-  // قفل کردن اسکرول بدنه
+  // قفل کردن اسکرول بدنه با سیستم مرکزی
   useEffect(() => {
     if (visible) {
-      document.body.style.overflow = "hidden";
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = "";
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = "";
+      releaseScrollLock(instanceId.current);
     };
   }, [visible]);
 
@@ -83,7 +87,6 @@ export default function PostModal({
         console.log("Share cancelled");
       }
     } else {
-      // Fallback: copy to clipboard
       navigator.clipboard.writeText(post.caption);
     }
   };
@@ -119,8 +122,8 @@ export default function PostModal({
       }}
     >
       <div
-        className="relative w-full max-w-lg max-h-[90vh] rounded-3xl overflow-hidden 
-                   flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-300"
+        className="relative w-full max-w-lg max-h-[90vh] rounded-3xl overflow-hidden
+        flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-300"
         style={{
           backgroundColor: colors.background,
           borderColor: colors.border,
@@ -138,7 +141,7 @@ export default function PostModal({
           <button
             onClick={onClose}
             className="w-10 h-10 rounded-full flex items-center justify-center
-                       border transition-colors hover:opacity-80"
+            border transition-colors hover:opacity-80"
             style={{
               backgroundColor: colors.background,
               borderColor: colors.border,
@@ -146,13 +149,11 @@ export default function PostModal({
           >
             <FiX size={20} style={{ color: colors.textMain }} />
           </button>
-
           <div className="flex-1" />
-
           <button
             onClick={handleShare}
             className="w-10 h-10 rounded-full flex items-center justify-center
-                       border transition-colors hover:opacity-80"
+            border transition-colors hover:opacity-80"
             style={{
               backgroundColor: colors.background,
               borderColor: colors.border,
@@ -160,11 +161,10 @@ export default function PostModal({
           >
             <FiShare2 size={18} style={{ color: colors.textMain }} />
           </button>
-
           <button
             onClick={handleSave}
             className="w-10 h-10 rounded-full flex items-center justify-center
-                       border transition-colors hover:opacity-80"
+            border transition-colors hover:opacity-80"
             style={{
               backgroundColor: isSaved
                 ? colors.primary + "20"
@@ -223,12 +223,11 @@ export default function PostModal({
                   </span>
                 </div>
               </button>
-
               {/* دکمه رزرو */}
               <button
                 onClick={handleBooking}
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl
-                           shadow-md transition-all hover:shadow-lg"
+                shadow-md transition-all hover:shadow-lg"
                 style={{ backgroundColor: "#43A047" }}
               >
                 <FiCalendar size={14} color="#fff" />
@@ -269,8 +268,8 @@ export default function PostModal({
           {/* امتیاز - فقط برای کسب‌وکار */}
           {!isMagazine && post.rating > 0 && (
             <div
-              className="flex items-center justify-between p-3 mx-4 mt-4 
-                         rounded-2xl border"
+              className="flex items-center justify-between p-3 mx-4 mt-4
+              rounded-2xl border"
               style={{
                 backgroundColor: colors.cardBackground,
                 borderColor: colors.border,
@@ -339,8 +338,8 @@ export default function PostModal({
 
           {/* راهنما */}
           <div
-            className="flex items-center gap-2.5 p-3 mx-4 mt-4 mb-4 
-                       rounded-xl border"
+            className="flex items-center gap-2.5 p-3 mx-4 mt-4 mb-4
+            rounded-xl border"
             style={{
               backgroundColor: isMagazine ? "#9C27B008" : colors.primary + "08",
               borderColor: isMagazine ? "#9C27B025" : colors.primary + "25",

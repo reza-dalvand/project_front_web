@@ -1,33 +1,47 @@
 'use client';
-
 import { FiX, FiCopy } from 'react-icons/fi';
 import { createPortal } from 'react-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
 import InfoRow from '@/components/common/InfoRow';
 import { TX_STATUS_META, formatPrice } from './constants';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 export default function TransactionDetailModal({ visible, tx, onClose }) {
   const { colors } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const instanceId = useRef('tx-detail-modal');
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      releaseScrollLock(instanceId.current);
+    };
   }, []);
 
   useEffect(() => {
     if (visible) {
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     };
   }, [visible]);
+
+  // بستن با Escape
+  useEffect(() => {
+    if (!visible) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [visible, onClose]);
 
   if (!mounted || !visible || !tx) return null;
 
@@ -41,7 +55,7 @@ export default function TransactionDetailModal({ visible, tx, onClose }) {
     >
       <div
         className="w-full max-w-lg max-h-[85vh] rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden
-          shadow-2xl"
+        shadow-2xl"
         style={{
           backgroundColor: colors.cardBackground,
           borderTop: `1px solid ${colors.border}`,
@@ -127,8 +141,8 @@ export default function TransactionDetailModal({ visible, tx, onClose }) {
                   tx.status === 'settled'
                     ? 'تسویه در'
                     : tx.completedAt
-                      ? 'تایید خدمت در'
-                      : 'پرداخت در'
+                    ? 'تایید خدمت در'
+                    : 'پرداخت در'
                 }
                 value={tx.settledAt || tx.completedAt || tx.createdAt}
                 showDivider

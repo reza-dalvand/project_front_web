@@ -1,12 +1,12 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FiX, FiSave } from 'react-icons/fi';
 import { createPortal } from 'react-dom';
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import { toEnglishDigits } from '@/utils/numberUtils';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 export default function BankEditModal({
   visible,
@@ -17,6 +17,7 @@ export default function BankEditModal({
 }) {
   const { colors } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const instanceId = useRef('bank-edit-modal');
   const [form, setForm] = useState({
     ownerName: '',
     nationalId: '',
@@ -29,7 +30,10 @@ export default function BankEditModal({
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      releaseScrollLock(instanceId.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -43,14 +47,24 @@ export default function BankEditModal({
         bankName: bankInfo?.bankName || '',
       });
       setErrors({});
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     };
   }, [visible, bankInfo, businessOwnerName]);
+
+  // بستن با Escape
+  useEffect(() => {
+    if (!visible) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [visible, onClose]);
 
   const updateField = (key, val) => {
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -59,10 +73,12 @@ export default function BankEditModal({
 
   const validate = () => {
     const e = {};
+
     const enNational = toEnglishDigits(form.nationalId).replace(/[^0-9]/g, '');
     if (enNational.length !== 10) {
       e.nationalId = 'کد ملی باید ۱۰ رقم باشد';
     }
+
     const enSheba = toEnglishDigits(form.sheba);
     const cleanedSheba = enSheba.replace(/IR|ir/gi, '').replace(/[^0-9]/g, '');
     if (cleanedSheba.length !== 24) {
@@ -71,16 +87,20 @@ export default function BankEditModal({
     if (!enSheba.trim().toUpperCase().startsWith('IR')) {
       e.sheba = 'شماره شبا باید با IR شروع شود';
     }
+
     const enCard = toEnglishDigits(form.cardNumber).replace(/[^0-9]/g, '');
     if (enCard.length !== 16) {
       e.cardNumber = 'شماره کارت باید ۱۶ رقم باشد';
     }
+
     if (!form.ownerName.trim() || form.ownerName.trim().length < 3) {
       e.ownerName = 'نام کامل صاحب حساب الزامی است';
     }
+
     if (!form.bankName.trim()) {
       e.bankName = 'نام بانک الزامی است';
     }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -149,6 +169,7 @@ export default function BankEditModal({
             error={errors.ownerName}
             hint={businessOwnerName ? `نام تایید شده احراز هویت: ${businessOwnerName}` : undefined}
           />
+
           <Input
             label="کد ملی صاحب حساب *"
             placeholder="مثال: ۰۰۱۲۳۴۵۶۷۸۹"
@@ -157,6 +178,7 @@ export default function BankEditModal({
             error={errors.nationalId}
             maxLength={10}
           />
+
           <Input
             label="نام بانک *"
             placeholder="مثال: بانک ملی ایران"
@@ -164,6 +186,7 @@ export default function BankEditModal({
             onChangeText={(v) => updateField('bankName', v)}
             error={errors.bankName}
           />
+
           <Input
             label="شماره شبا *"
             placeholder="IR010550000000101550500550555555555"
@@ -172,6 +195,7 @@ export default function BankEditModal({
             error={errors.sheba}
             hint="تسویه حساب‌های اصلی از طریق شماره شبا انجام می‌شود"
           />
+
           <Input
             label="شماره کارت *"
             placeholder="مثال: ۶۰۳۷ ۹۹۱۸ ۱۲۳۴ ۵۶۷۸"
@@ -181,6 +205,7 @@ export default function BankEditModal({
             maxLength={16}
             hint="برای تشخیص حساب در گزارشات استفاده می‌شود"
           />
+
           <Input
             label="شماره حساب (اختیاری)"
             placeholder="در صورت داشتن وارد کنید"

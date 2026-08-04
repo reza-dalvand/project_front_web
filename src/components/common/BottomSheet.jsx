@@ -1,20 +1,12 @@
 'use client';
-
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-/**
- * کامپوننت BottomSheet - پنل پایین صفحه
- *
- * @param {boolean} visible - وضعیت نمایش
- * @param {function} onClose - تابع بستن
- * @param {string} title - عنوان (اختیاری)
- * @param {React.ReactNode} children - محتوای اصلی
- * @param {React.ReactNode} footer - فوتر (اختیاری)
- * @param {number} snapPoint - ارتفاع پنل (0 تا 1)
- */
+let bottomSheetCounter = 0;
+
 export default function BottomSheet({
   visible,
   onClose,
@@ -30,14 +22,16 @@ export default function BottomSheet({
   const sheetRef = useRef(null);
   const dragStartY = useRef(0);
   const currentTranslateY = useRef(0);
+  const instanceId = useRef(`bottomsheet-${++bottomSheetCounter}`);
 
-  // مونت شدن در مرورگر
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      releaseScrollLock(instanceId.current);
+    };
   }, []);
 
-  // مدیریت انیمیشن باز/بسته
   useEffect(() => {
     if (visible) {
       setShow(true);
@@ -47,20 +41,21 @@ export default function BottomSheet({
           setAnimating(false);
         });
       });
-      // جلوگیری از اسکرول بدنه
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
       setAnimating(true);
       const timer = setTimeout(() => {
         setShow(false);
         setAnimating(false);
-        document.body.style.overflow = '';
+        releaseScrollLock(instanceId.current);
       }, 300);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        releaseScrollLock(instanceId.current);
+      };
     }
   }, [visible]);
 
-  // بستن با Escape
   useEffect(() => {
     if (!visible) return;
     const handleEscape = (e) => {
@@ -70,7 +65,6 @@ export default function BottomSheet({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [visible, onClose]);
 
-  // هندلر Drag برای بستن با کشیدن
   const handleTouchStart = (e) => {
     dragStartY.current = e.touches[0].clientY;
     currentTranslateY.current = 0;
@@ -87,7 +81,6 @@ export default function BottomSheet({
   const handleTouchEnd = () => {
     if (sheetRef.current) {
       sheetRef.current.style.transform = '';
-      // اگر بیش از ۳۰٪ صفحه کشیده شده، ببند
       if (currentTranslateY.current > window.innerHeight * 0.3) {
         onClose?.();
       }
@@ -101,7 +94,6 @@ export default function BottomSheet({
 
   const content = (
     <>
-      {/* Backdrop */}
       <div
         className={`
           fixed inset-0 z-[9998]
@@ -112,8 +104,6 @@ export default function BottomSheet({
         style={{ backgroundColor: 'rgba(0, 0, 0, 0.55)' }}
         onClick={onClose}
       />
-
-      {/* Sheet */}
       <div
         ref={sheetRef}
         className={`
@@ -130,7 +120,6 @@ export default function BottomSheet({
           boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.15)',
         }}
       >
-        {/* Handle Bar */}
         <div
           className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
           onTouchStart={handleTouchStart}
@@ -143,7 +132,6 @@ export default function BottomSheet({
           />
         </div>
 
-        {/* Title */}
         {title && (
           <div
             className="flex items-center justify-between px-5 py-3 border-b"
@@ -160,8 +148,7 @@ export default function BottomSheet({
             </h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center
-                         transition-colors duration-200"
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-200"
               style={{ backgroundColor: colors.background }}
             >
               <FiX size={18} style={{ color: colors.textMain }} />
@@ -169,12 +156,10 @@ export default function BottomSheet({
           </div>
         )}
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {children}
         </div>
 
-        {/* Footer */}
         {footer && (
           <div
             className="px-5 py-4 border-t"

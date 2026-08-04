@@ -1,19 +1,23 @@
 'use client';
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 export default function PortfolioModal({ visible, onClose, portfolio }) {
   const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const instanceId = useRef('portfolio-modal');
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      releaseScrollLock(instanceId.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -22,14 +26,24 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
 
   useEffect(() => {
     if (visible) {
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     };
   }, [visible]);
+
+  // بستن با Escape
+  useEffect(() => {
+    if (!visible) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [visible, onClose]);
 
   if (!mounted || !visible || !portfolio) return null;
 
@@ -58,7 +72,7 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
         <button
           onClick={onClose}
           className="absolute top-4 left-4 z-20 w-11 h-11 rounded-full
-                     flex items-center justify-center transition-transform hover:scale-110"
+          flex items-center justify-center transition-transform hover:scale-110"
           style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
         >
           <FiX size={22} color="#fff" />
@@ -80,8 +94,8 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
             <button
               onClick={goToPrev}
               className="absolute top-1/2 -translate-y-1/2 right-3 w-12 h-12
-                         rounded-full flex items-center justify-center
-                         transition-transform hover:scale-110"
+              rounded-full flex items-center justify-center
+              transition-transform hover:scale-110"
               style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
             >
               <FiChevronRight size={28} color="#fff" />
@@ -92,8 +106,8 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
             <button
               onClick={goToNext}
               className="absolute top-1/2 -translate-y-1/2 left-3 w-12 h-12
-                         rounded-full flex items-center justify-center
-                         transition-transform hover:scale-110"
+              rounded-full flex items-center justify-center
+              transition-transform hover:scale-110"
               style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
             >
               <FiChevronLeft size={28} color="#fff" />
@@ -104,7 +118,7 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
           {images.length > 1 && (
             <div
               className="absolute top-4 right-4 flex items-center gap-1.5
-                         px-3 py-1.5 rounded-xl"
+              px-3 py-1.5 rounded-xl"
               style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
             >
               <span className="text-xs font-[Vazir-Bold] text-white">
@@ -153,7 +167,7 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
         {images.length > 1 && (
           <div
             className="absolute bottom-[40%] left-1/2 -translate-x-1/2
-                       flex items-center gap-1.5 py-3 z-10"
+            flex items-center gap-1.5 py-3 z-10"
           >
             {images.map((_, i) => (
               <button

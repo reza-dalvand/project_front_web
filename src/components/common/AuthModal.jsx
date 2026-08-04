@@ -1,6 +1,5 @@
 // src/components/common/AuthModal.jsx
 'use client';
-
 import { useState, useRef, useEffect } from 'react';
 import { FiX, FiSmartphone, FiUser, FiShield, FiCheck, FiEdit } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -10,18 +9,20 @@ import Button from './Button';
 import Input from './Input';
 import { validatePhone } from '@/utils/phoneUtils';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 const OTP_LENGTH = 5;
 const RESEND_SECONDS = 60;
-const MOCK_OTP = '12345'; // برای تست
+const MOCK_OTP = '12345';
 
 export default function AuthModal() {
   const { colors } = useTheme();
   const login = useAuthStore((s) => s.login);
   const { showAuthModal, closeAuthModal, cancelAuthModal } = useAuthModal();
+  const instanceId = useRef('auth-modal');
 
   // ═══ مراحل مدال ═══
-  const [stage, setStage] = useState('info'); // 'info' | 'otp' | 'success'
+  const [stage, setStage] = useState('info');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -33,7 +34,6 @@ export default function AuthModal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
-
   const inputRefs = useRef([]);
 
   // ═══ ریست کردن فرم هنگام باز شدن ═══
@@ -75,17 +75,24 @@ export default function AuthModal() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [showAuthModal, cancelAuthModal]);
 
-  // ═══ قفل کردن اسکرول بدنه ═══
+  // ═══ قفل کردن اسکرول بدنه با سیستم مرکزی ═══
   useEffect(() => {
     if (showAuthModal) {
-      document.body.style.overflow = 'hidden';
+      acquireScrollLock(instanceId.current);
     } else {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     }
     return () => {
-      document.body.style.overflow = '';
+      releaseScrollLock(instanceId.current);
     };
   }, [showAuthModal]);
+
+  // ═══ cleanup در unmount ═══
+  useEffect(() => {
+    return () => {
+      releaseScrollLock(instanceId.current);
+    };
+  }, []);
 
   // ═══ هندلر تغییر شماره ═══
   const handlePhoneChange = (text) => {
@@ -109,10 +116,12 @@ export default function AuthModal() {
       setError('لطفاً نام و نام خانوادگی را کامل وارد کنید');
       return;
     }
+
     if (!phone) {
       setError('لطفاً شماره موبایل خود را وارد کنید');
       return;
     }
+
     if (!validatePhone(phone)) {
       setError('شماره موبایل معتبر نیست (مثال: ۰۹۱۲۳۴۵۶۷۸۹)');
       return;
@@ -120,15 +129,16 @@ export default function AuthModal() {
 
     setLoading(true);
     setError('');
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoading(false);
 
+    await new Promise((r) => setTimeout(r, 1000));
+
+    setLoading(false);
     setStage('otp');
     setTimer(RESEND_SECONDS);
     setCanResend(false);
+
     setToast({ message: 'کد تایید ارسال شد (کد تست: ۱۲۳۴۵)', type: 'success' });
     setTimeout(() => setToast(null), 4000);
-
     setTimeout(() => inputRefs.current[0]?.focus(), 400);
   };
 
@@ -152,6 +162,7 @@ export default function AuthModal() {
     const digit = cleaned[0] || '';
     newOtp[index] = digit;
     setOtp(newOtp);
+
     if (error) setError('');
 
     if (digit && index < OTP_LENGTH - 1) {
@@ -177,6 +188,7 @@ export default function AuthModal() {
 
     setLoading(true);
     setError('');
+
     await new Promise((r) => setTimeout(r, 1000));
 
     if (code === MOCK_OTP) {
@@ -502,7 +514,6 @@ export default function AuthModal() {
                     ویرایش شماره
                   </span>
                 </button>
-
                 {canResend ? (
                   <button onClick={handleResend} type="button">
                     <span
