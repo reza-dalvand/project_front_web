@@ -1,16 +1,17 @@
 // src/constants/categorySubServices.js
+
 /**
-* 📦 زیرخدمات هر دسته‌بندی اصلی
-* استفاده شده در CategoryFilterModal و CategoryBusinessesScreen
+* زیرخدمات هر دسته‌بندی اصلی
+* استفاده شده در CategoryFilterModal و صفحه دسته‌بندی
 */
 export const CATEGORY_SUB_SERVICES = {
   1: [ // میکاپ
-    { id: 'makeup_bride',     label: 'میکاپ عروس' },
-    { id: 'makeup_party',     label: 'میکاپ مجلسی' },
-    { id: 'makeup_natural',   label: 'میکاپ طبیعی' },
-    { id: 'makeup_european',  label: 'میکاپ اروپایی' },
-    { id: 'makeup_grim',      label: 'گریم صورت' },
-    { id: 'shinyon',          label: 'شینیون مو' },
+    { id: 'makeup_bride',    label: 'میکاپ عروس' },
+    { id: 'makeup_party',    label: 'میکاپ مجلسی' },
+    { id: 'makeup_natural',  label: 'میکاپ طبیعی' },
+    { id: 'makeup_european', label: 'میکاپ اروپایی' },
+    { id: 'makeup_grim',     label: 'گریم صورت' },
+    { id: 'shinyon',         label: 'شینیون مو' },
   ],
   2: [ // کاشت ناخن
     { id: 'nail_gel',     label: 'کاشت ژله‌ای' },
@@ -28,27 +29,27 @@ export const CATEGORY_SUB_SERVICES = {
     { id: 'laser_bikini',    label: 'لیزر بیکینی' },
   ],
   4: [ // پاکسازی
-    { id: 'facial_basic',    label: 'پاکسازی پایه' },
-    { id: 'facial_vip',      label: 'فیشیال VIP' },
-    { id: 'facial_gold',     label: 'ماسک طلا' },
-    { id: 'facial_hydro',    label: 'هیدروفیشیال' },
-    { id: 'facial_acne',     label: 'درمان آکنه' },
-    { id: 'facial_antiage',  label: 'جوانسازی' },
+    { id: 'facial_basic',   label: 'پاکسازی پایه' },
+    { id: 'facial_vip',     label: 'فیشیال VIP' },
+    { id: 'facial_gold',    label: 'ماسک طلا' },
+    { id: 'facial_hydro',   label: 'هیدروفیشیال' },
+    { id: 'facial_acne',    label: 'درمان آکنه' },
+    { id: 'facial_antiage', label: 'جوانسازی' },
   ],
   5: [ // رنگ مو
-    { id: 'hair_color_full',  label: 'رنگ کامل مو' },
-    { id: 'hair_highlight',   label: 'هایلایت' },
-    { id: 'hair_balayage',    label: 'بالیاژ' },
-    { id: 'hair_ombre',       label: 'آمبره' },
-    { id: 'hair_bleach',      label: 'دکلره' },
-    { id: 'hair_root',        label: 'ریشه‌گیری' },
+    { id: 'hair_color_full', label: 'رنگ کامل مو' },
+    { id: 'hair_highlight',  label: 'هایلایت' },
+    { id: 'hair_balayage',   label: 'بالیاژ' },
+    { id: 'hair_ombre',      label: 'آمبره' },
+    { id: 'hair_bleach',     label: 'دکلره' },
+    { id: 'hair_root',       label: 'ریشه‌گیری' },
   ],
   6: [ // کراتین
-    { id: 'keratin_brazilian',   label: 'کراتین برزیلی' },
-    { id: 'keratin_protein',     label: 'پروتئین تراپی' },
-    { id: 'keratin_botox',       label: 'بوتاکس مو' },
-    { id: 'keratin_nanoplasty',  label: 'نانوپلاستیا' },
-    { id: 'hair_straighten',     label: 'صافی دائمی' },
+    { id: 'keratin_brazilian',  label: 'کراتین برزیلی' },
+    { id: 'keratin_protein',    label: 'پروتئین تراپی' },
+    { id: 'keratin_botox',      label: 'بوتاکس مو' },
+    { id: 'keratin_nanoplasty', label: 'نانوپلاستیا' },
+    { id: 'hair_straighten',    label: 'صافی دائمی' },
   ],
   7: [ // مژه
     { id: 'lash_classic',   label: 'کاشت کلاسیک' },
@@ -59,13 +60,21 @@ export const CATEGORY_SUB_SERVICES = {
     { id: 'lash_removal',   label: 'ریموو مژه' },
   ],
   8: [ // ماساژ
-    { id: 'massage_swedish',  label: 'ماساژ سوئدی' },
-    { id: 'massage_thai',     label: 'ماساژ تایلندی' },
-    { id: 'massage_sports',   label: 'ماساژ ورزشی' },
-    { id: 'massage_stone',    label: 'ماساژ سنگ داغ' },
-    { id: 'massage_aroma',    label: 'آروماتراپی' },
+    { id: 'massage_swedish', label: 'ماساژ سوئدی' },
+    { id: 'massage_thai',    label: 'ماساژ تایلندی' },
+    { id: 'massage_sports',  label: 'ماساژ ورزشی' },
+    { id: 'massage_stone',   label: 'ماساژ سنگ داغ' },
+    { id: 'massage_aroma',   label: 'آروماتراپی' },
   ],
 };
+
+// گزینه‌های مرتب‌سازی
+export const SORT_OPTIONS = [
+  { id: 'all',               label: 'همه',            icon: 'apps' },
+  { id: 'top_rated',         label: 'بیشترین امتیاز', icon: 'star' },
+  { id: 'most_booked',       label: 'بیشترین رزرو',   icon: 'trending-up' },
+  { id: 'highest_discount',  label: 'بیشترین تخفیف',  icon: 'local-offer' },
+];
 
 /**
 * پیدا کردن زیرخدمات یک دسته بر اساس ID

@@ -15,6 +15,7 @@ import AppointmentCard from '@/components/manageBusiness/AppointmentCard';
 import VerifyCodeModal from '@/components/manageBusiness/VerifyCodeModal';
 import CancelReasonModal from '@/components/manageBusiness/CancelReasonModal';
 import { todayJalaali } from '@/utils/dateUtils';
+import AppointmentDetailSheet from '@/components/manageBusiness/AppointmentDetailSheet';
 
 // دیتای موقت نوبت‌ها
 const MOCK_APPOINTMENTS = [
@@ -100,7 +101,8 @@ export default function AllAppointmentsPage() {
   const [verifyVisible, setVerifyVisible] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelVisible, setCancelVisible] = useState(false);
-
+  const [selectedApt, setSelectedApt] = useState(null);
+  const [detailVisible, setDetailVisible] = useState(false);
   // فیلتر نوبت‌ها
   const filteredAppointments = useMemo(() => {
     let result = appointments;
@@ -186,6 +188,15 @@ export default function AllAppointmentsPage() {
     setCancelTarget(null);
     showToast('نوبت لغو شد • بیعانه به مشتری مسترد می‌شود', 'info');
   };
+  const openDetail = (apt) => {
+    setSelectedApt(apt);
+    setDetailVisible(true);
+  };
+
+  const closeDetail = () => {
+    setDetailVisible(false);
+    setTimeout(() => setSelectedApt(null), 300);
+  };
 
   const getEmptyConfig = () => {
     if (searchQuery || dateFilter) {
@@ -235,7 +246,7 @@ export default function AllAppointmentsPage() {
               <AppointmentCard
                 key={apt.id}
                 appointment={apt}
-                onDetails={(a) => console.log('Details:', a.id)}
+                onDetails={openDetail}
                 onVerify={handleOpenVerify}
                 onCancel={handleOpenCancel}
               />
@@ -259,6 +270,11 @@ export default function AllAppointmentsPage() {
         appointment={cancelTarget}
         onClose={() => { setCancelVisible(false); setCancelTarget(null); }}
         onConfirm={handleConfirmCancel}
+      />
+      <AppointmentDetailSheet
+        visible={detailVisible}
+        appointment={selectedApt}
+        onClose={closeDetail}
       />
     </ScreenWrapper>
   );

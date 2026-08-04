@@ -1,8 +1,7 @@
 'use client';
-
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiImage, FiPlus, FiCamera } from 'react-icons/fi';
+import { FiCamera, FiPlus, FiImage, FiTag } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -10,71 +9,29 @@ import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
-import Button from '@/components/common/Button';
 import EmptyStateVariants from '@/components/common/EmptyStateVariants';
 import StatsCard from '@/components/common/StatsCard';
-import PortfolioCard from '@/components/manageBusiness/portfolio/PortfolioCard';
+import {
+  PortfolioCard,
+  PortfolioFormSheet,
+  PortfolioDetailModal,
+} from '@/components/manageBusiness/portfolio';
 import { toPersianDigit } from '@/utils/numberUtils';
-
-// دیتای موقت نمونه‌کارها
-const MOCK_PORTFOLIOS = [
-  {
-    id: 'pf1',
-    title: 'فیشیال VIP عروس',
-    coverImage: 'https://picsum.photos/400/400?random=60',
-    images: [
-      'https://picsum.photos/800/800?random=60',
-      'https://picsum.photos/800/800?random=160',
-      'https://picsum.photos/800/800?random=260',
-    ],
-    description: 'فیشیال تخصصی عروس با استفاده از بهترین محصولات روز دنیا.',
-    serviceId: 'svc_1',
-    serviceName: 'فیشیال تخصصی پوست',
-  },
-  {
-    id: 'pf2',
-    title: 'کاشت ناخن ژلیش',
-    coverImage: 'https://picsum.photos/400/400?random=61',
-    images: [
-      'https://picsum.photos/800/800?random=61',
-      'https://picsum.photos/800/800?random=161',
-    ],
-    description: 'کاشت ناخن با طراحی مینیمال و ژلیش ماندگار تا ۳ هفته.',
-    serviceId: 'svc_2',
-    serviceName: 'کاشت ناخن ژلیش',
-  },
-  {
-    id: 'pf3',
-    title: 'میکاپ و شینیون عروس',
-    coverImage: 'https://picsum.photos/400/400?random=62',
-    images: [
-      'https://picsum.photos/800/800?random=62',
-      'https://picsum.photos/800/800?random=162',
-      'https://picsum.photos/800/800?random=262',
-      'https://picsum.photos/800/800?random=362',
-    ],
-    description: 'میکاپ حرفه‌ای عروس با سبک اروپایی و شینیون مدرن.',
-    serviceId: null,
-    serviceName: null,
-  },
-  {
-    id: 'pf4',
-    title: 'لیزر موهای زائد',
-    coverImage: 'https://picsum.photos/400/400?random=63',
-    images: ['https://picsum.photos/800/800?random=63'],
-    description: 'لیزر با دستگاه الکساندرایت ۲۰۲۴ - بدون درد و ماندگار.',
-    serviceId: 'svc_3',
-    serviceName: 'لیزر فول بادی',
-  },
-];
 
 export default function ManagePortfolioPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
+  const businessData = useBusinessStore((s) => s.businessData);
 
-  const [portfolios, setPortfolios] = useState(MOCK_PORTFOLIOS);
+  const [formVisible, setFormVisible] = useState(false);
+  const [editingPortfolio, setEditingPortfolio] = useState(null);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [activePortfolio, setActivePortfolio] = useState(null);
+
+  const portfolios = businessData?.portfolios || [];
+  const services = businessData?.services || [];
 
   // آمار
   const stats = useMemo(() => {
@@ -90,19 +47,37 @@ export default function ManagePortfolioPage() {
     };
   }, [portfolios]);
 
-  const handleDelete = (portfolio) => {
-    if (confirm(`آیا از حذف "${portfolio.title}" مطمئن هستید؟`)) {
-      setPortfolios((prev) => prev.filter((p) => p.id !== portfolio.id));
-      showToast('✓ نمونه‌کار حذف شد', 'info');
+  const openAddForm = () => {
+    setEditingPortfolio(null);
+    setFormVisible(true);
+  };
+
+  const openEditForm = (portfolio) => {
+    setEditingPortfolio(portfolio);
+    setFormVisible(true);
+  };
+
+  const openDetail = (portfolio) => {
+    setActivePortfolio(portfolio);
+    setDetailVisible(true);
+  };
+
+  const handleSave = (portfolioData, editingId) => {
+    if (editingId) {
+      // ویرایش
+      showToast('✓ نمونه‌کار با موفقیت ویرایش شد', 'success');
+    } else {
+      // افزودن جدید
+      showToast('✓ نمونه‌کار جدید اضافه شد', 'success');
     }
+    setFormVisible(false);
+    setEditingPortfolio(null);
   };
 
-  const handleEdit = (portfolio) => {
-    showToast(`ویرایش "${portfolio.title}" - به زودی`, 'info');
-  };
-
-  const handleAdd = () => {
-    showToast('افزودن نمونه‌کار جدید - به زودی', 'info');
+  const handleDelete = (portfolio) => {
+    setDetailVisible(false);
+    setActivePortfolio(null);
+    showToast('✓ نمونه‌کار حذف شد', 'info');
   };
 
   if (!isAuthenticated) {
@@ -118,9 +93,8 @@ export default function ManagePortfolioPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="نمونه‌کارها" onBackPress={() => router.push('/manage')} />
-
       <div className="flex-1 overflow-y-auto p-4 pb-32">
-        {/* Hero Section */}
+        {/* ═══════ Hero Section ═══════ */}
         <div className="flex flex-col items-center gap-2 py-4 mb-4">
           <div
             className="w-[72px] h-[72px] rounded-3xl flex items-center justify-center"
@@ -138,7 +112,7 @@ export default function ManagePortfolioPage() {
 
         {portfolios.length > 0 ? (
           <>
-            {/* Stats */}
+            {/* ═══════ Stats ═══════ */}
             <Card variant="elevated" padding={14} radius={18} className="mb-4">
               <div className="flex items-center">
                 <StatsCard
@@ -167,9 +141,9 @@ export default function ManagePortfolioPage() {
               </div>
             </Card>
 
-            {/* دکمه افزودن */}
+            {/* ═══════ دکمه سبز افزودن ═══════ */}
             <button
-              onClick={handleAdd}
+              onClick={openAddForm}
               className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-4 transition-all hover:scale-[1.01] active:scale-[0.99]"
               style={{ backgroundColor: '#43A047' }}
             >
@@ -187,26 +161,57 @@ export default function ManagePortfolioPage() {
                   کارهای جدید خود را به گالری اضافه کنید
                 </p>
               </div>
-              <span className="text-white">←</span>
+              <span className="text-white text-xl">←</span>
             </button>
 
-            {/* Grid نمونه‌کارها */}
+            {/* ═══════ Grid نمونه‌کارها ═══════ */}
             <div className="flex flex-wrap gap-3 justify-between">
               {portfolios.map((portfolio) => (
                 <PortfolioCard
                   key={portfolio.id}
                   portfolio={portfolio}
-                  onPress={(p) => console.log('View:', p.title)}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  onPress={openDetail}
+                  onEdit={openEditForm}
+                  onDelete={(p) => {
+                    if (confirm(`آیا از حذف "${p.title}" مطمئن هستید؟`)) {
+                      showToast('✓ نمونه‌کار حذف شد', 'info');
+                    }
+                  }}
                 />
               ))}
             </div>
           </>
         ) : (
-          <EmptyStateVariants variant="portfolio" onAction={handleAdd} />
+          <EmptyStateVariants variant="portfolio" onAction={openAddForm} />
         )}
       </div>
+
+      {/* ═══════ Modals ═══════ */}
+      <PortfolioDetailModal
+        visible={detailVisible}
+        portfolio={activePortfolio}
+        services={services}
+        onClose={() => {
+          setDetailVisible(false);
+          setActivePortfolio(null);
+        }}
+        onEdit={(p) => {
+          setDetailVisible(false);
+          setTimeout(() => openEditForm(p), 300);
+        }}
+        onDelete={handleDelete}
+      />
+
+      <PortfolioFormSheet
+        visible={formVisible}
+        onClose={() => {
+          setFormVisible(false);
+          setEditingPortfolio(null);
+        }}
+        onSave={handleSave}
+        editingPortfolio={editingPortfolio}
+        services={services}
+      />
     </ScreenWrapper>
   );
 }

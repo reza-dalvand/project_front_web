@@ -1,11 +1,12 @@
 'use client';
-import { useState, useMemo, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { FiSliders } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import CategoryHeader from '@/components/home/CategoryHeader';
 import BusinessListCard from '@/components/home/BusinessListCard';
+import CategoryFilterModal from '@/components/home/CategoryFilterModal';
 import EmptyState from '@/components/common/EmptyState';
 
 // داده‌های MOCK
@@ -101,10 +102,16 @@ export default function CategoryBusinessesPage() {
   const categoryName = CATEGORY_NAMES[categoryId] || 'دسته‌بندی';
 
   const [search, setSearch] = useState('');
+  const [filterVisible, setFilterVisible] = useState(false);
   const [filters, setFilters] = useState({
     serviceType: null,
     sortBy: 'all',
   });
+
+  // تشخیص فیلتر فعال
+  const hasActiveFilter =
+    (filters.serviceType && filters.serviceType !== 'all') ||
+    filters.sortBy !== 'all';
 
   // فیلتر و جستجو
   const filteredData = useMemo(() => {
@@ -126,7 +133,7 @@ export default function CategoryBusinessesPage() {
       data = data.filter((item) => item.subServiceId === filters.serviceType);
     }
 
-    // مرتب‌سازی
+    // مرتب‌سازی - فقط اگر "all" نباشد
     if (filters.sortBy === 'top_rated') {
       data.sort((a, b) => b.rating - a.rating);
     } else if (filters.sortBy === 'most_booked') {
@@ -134,13 +141,10 @@ export default function CategoryBusinessesPage() {
     } else if (filters.sortBy === 'highest_discount') {
       data.sort((a, b) => b.discount - a.discount);
     }
+    // اگر sortBy === 'all' باشد، ترتیب اصلی حفظ می‌شود
 
     return data;
   }, [search, filters]);
-
-  const hasActiveFilter =
-    (filters.serviceType && filters.serviceType !== 'all') ||
-    filters.sortBy !== 'all';
 
   const handleBusinessPress = (business) => {
     router.push(`/business/${business.id}`);
@@ -154,9 +158,7 @@ export default function CategoryBusinessesPage() {
         resultCount={filteredData.length}
         searchQuery={search}
         onSearchChange={setSearch}
-        onFilterPress={() => {
-          // TODO: باز کردن مدال فیلتر
-        }}
+        onFilterPress={() => setFilterVisible(true)}
         hasActiveFilter={hasActiveFilter}
       />
 
@@ -187,6 +189,15 @@ export default function CategoryBusinessesPage() {
           />
         )}
       </div>
+
+      {/* مدال فیلتر */}
+      <CategoryFilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onApply={setFilters}
+        currentFilters={filters}
+        categoryId={categoryId}
+      />
     </ScreenWrapper>
   );
 }

@@ -77,18 +77,19 @@ export default function CategoryHeader({
           {onFilterPress && (
             <button
               onClick={onFilterPress}
-              className="w-10 h-10 rounded-xl flex items-center justify-center
-                relative transition-transform hover:scale-105"
+              className="w-10 h-10 rounded-xl flex items-center justify-center relative border transition-colors hover:opacity-80"
               style={{
                 backgroundColor: hasActiveFilter
                   ? 'rgba(255,255,255,0.32)'
                   : 'rgba(255,255,255,0.2)',
+                borderColor: 'rgba(255,255,255,0.15)',
               }}
             >
               <FiSliders size={20} color="#fff" />
+              {/* نقطه نشانگر فیلتر فعال */}
               {hasActiveFilter && (
                 <div
-                  className="absolute top-2 right-2 w-2 h-2 rounded-full border"
+                  className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full border-2"
                   style={{
                     backgroundColor: '#FFD700',
                     borderColor: 'rgba(0,0,0,0.15)',
