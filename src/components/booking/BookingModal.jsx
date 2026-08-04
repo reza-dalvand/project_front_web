@@ -3,15 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  FiX,
-  FiCalendar,
-  FiClock,
-  FiArrowRight,
-  FiArrowLeft,
-  FiLock,
-  FiCheck,
-  FiSparkles,
-  FiShield, 
+  FiX, FiCalendar, FiClock, FiArrowRight, FiArrowLeft,
+  FiLock, FiCheck, FiSparkles, FiShield,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
@@ -423,7 +416,7 @@ export default function BookingModal({
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <FiSparkles size={16} style={{ color: colors.textSecondary }} />
+                  <FiStar size={16} style={{ color: colors.textSecondary }} />
                   <span className="text-xs font-[Vazir] min-w-[90px]" style={{ color: colors.textSecondary }}>
                     خدمت:
                   </span>

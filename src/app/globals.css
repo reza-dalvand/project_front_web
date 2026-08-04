@@ -74,3 +74,21 @@ textarea::placeholder {
   color: var(--color-text-secondary);
   opacity: 0.5;
 }
+
+/* ═══ Utility: مخفی کردن scrollbar ═══ */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ═══ انیمیشن slide-up برای Dropdown و BottomSheet ═══ */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}

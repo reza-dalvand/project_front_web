@@ -129,7 +129,7 @@ const MOCK_BUSINESS = {
   ],
 };
 
-export default function BusinessDetailsPage({ params }) {
+export default function BusinessDetailsPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const biz = MOCK_BUSINESS;

@@ -74,3 +74,34 @@ export const formatJalaaliDate = (date) => {
   if (!date) return '';
   return `${date.jd} ${PERSIAN_MONTHS[date.jm - 1]} ${date.jy}`;
 };
+
+// ═══════════════════════════════════════════════════════
+//    تاریخ امروز جلالی
+//    @returns {{ jy, jm, jd }}
+// ═══════════════════════════════════════════════════════
+export const todayJalaali = () => {
+  const now = new Date();
+  return toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+};
+
+// ═══════════════════════════════════════════════════════
+//    تعداد روزهای یک ماه جلالی
+//    @param {number} jy - سال جلالی
+//    @param {number} jm - ماه جلالی (1-12)
+//    @returns {number} - تعداد روزها (29/30/31)
+// ═══════════════════════════════════════════════════════
+export const jalaaliMonthLength = (jy, jm) => {
+  return moment().jYear(jy).jMonth(jm - 1).jDaysInMonth();
+};
+
+// ═══════════════════════════════════════════════════════
+//    روز هفته‌ی اولین روز ماه جلالی
+//    @returns {number} - 0=شنبه، 1=یکشنبه، ... 6=جمعه
+// ═══════════════════════════════════════════════════════
+export const getFirstDayOfWeekJalaali = (jy, jm) => {
+  const g = toGregorian(jy, jm, 1);
+  const d = new Date(g.year, g.month - 1, g.day);
+  const dayOfWeek = d.getDay(); // 0=Sunday ... 6=Saturday
+  // تبدیل به هفته فارسی: شنبه=0
+  return (dayOfWeek + 1) % 7;
+};

@@ -18,7 +18,7 @@ export const useRequireAuth = (options = {}) => {
   const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
-  const [hydrated, setHydrated] = useState(false);
+  const hydrated = useAuthStore((s) => s._hydrated);
 
   useEffect(() => {
     setHydrated(true);

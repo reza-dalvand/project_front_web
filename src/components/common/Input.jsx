@@ -89,15 +89,12 @@ export default function Input({
           className={`
             flex-1 bg-transparent outline-none
             text-right
-            placeholder:text-[var(--placeholder-color)]
-            placeholder:opacity-50
           `}
           style={{
             color: colors.textMain,
             fontFamily: 'Vazir',
             fontSize: '15px',
             direction: 'rtl',
-            '--placeholder-color': colors.textSecondary,
           }}
         />
 
