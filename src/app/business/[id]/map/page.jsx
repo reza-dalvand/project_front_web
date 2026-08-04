@@ -1,149 +1,264 @@
 'use client';
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { FiX, FiNavigation, FiMapPin } from 'react-icons/fi';
-import Map, { Marker, NavigationControl } from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import { FiTag, FiTrendingUp, FiCreditCard, FiDollarSign, FiBox } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import Button from '@/components/common/Button';
+import Card from './Card';
+import Divider from './Divider';
+import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
 
-// استایل نقشه OpenStreetMap (رایگان)
-const MAP_STYLE = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      attribution: '© OpenStreetMap',
-    },
-  },
-  layers: [
-    {
-      id: 'osm',
-      type: 'raster',
-      source: 'osm',
-    },
-  ],
-};
+// ✅ تغییرات:
+// FiCalculator → FiTrendingUp
+// FiStore → FiBox
 
-// داده‌های MOCK کسب‌وکار
-const MOCK_BUSINESS = {
-  id: '1',
-  name: 'مجموعه زیبایی و سلامت نیلارام',
-  address: 'سعادت‌آباد، خیابان سرو غربی، ساختمان پزشکان نگین، طبقه ۳',
-  location: {
-    latitude: 35.7898,
-    longitude: 51.3768,
-  },
-};
-
-export default function BusinessMapPage() {
-  const params = useParams();
-  const router = useRouter();
+export default function PriceBreakdown({
+  originalPrice = 0,
+  discountPercent = 0,
+  finalPrice,
+  hasDeposit = false,
+  depositPercent = 30,
+  depositAmount,
+  showRemaining = true,
+  variant = 'card',
+}) {
   const { colors } = useTheme();
-  const business = MOCK_BUSINESS; // در production از API
 
-  const [mounted, setMounted] = useState(false);
+  const discountAmount = Math.round((originalPrice * discountPercent) / 100);
+  const calculatedFinal = Math.max(0, originalPrice - discountAmount);
+  const actualFinal = finalPrice ?? calculatedFinal;
+  const calculatedDeposit = hasDeposit
+    ? Math.round((actualFinal * depositPercent) / 100)
+    : actualFinal;
+  const actualDeposit = depositAmount ?? calculatedDeposit;
+  const remaining = actualFinal - actualDeposit;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const handleNavigation = () => {
-    if (!business.location) return;
-
-    const { latitude, longitude } = business.location;
-    const label = encodeURIComponent(business.name || 'مقصد');
-
-    // باز کردن مسیریاب پیش‌فرض سیستم
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-    window.open(url, '_blank');
-  };
-
-  if (!mounted) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: colors.background }}>
-      {/* ═══ نقشه تمام صفحه ═══ */}
-      <div className="flex-1 relative">
-        <Map
-          initialViewState={{
-            longitude: business.location.longitude,
-            latitude: business.location.latitude,
-            zoom: 16,
-          }}
-          style={{ width: '100%', height: '100%' }}
-          mapStyle={MAP_STYLE}
-        >
-          <NavigationControl position="top-right" />
-          <Marker
-            longitude={business.location.longitude}
-            latitude={business.location.latitude}
-            anchor="bottom"
+  // ═══════ حالت inline ═══════
+  if (variant === 'inline') {
+    return (
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-center gap-1.5">
+          {discountPercent > 0 && (
+            <span
+              className="text-[11px] font-[Vazir] line-through"
+              style={{ color: colors.textSecondary }}
+            >
+              {formatPrice(originalPrice)}
+            </span>
+          )}
+          <span
+            className="text-[15px] font-[Vazir-Bold]"
+            style={{ color: colors.primary }}
           >
-            <div className="relative flex flex-col items-center">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
-                style={{ backgroundColor: '#E53935' }}
-              >
-                <FiMapPin size={20} color="#fff" />
-              </div>
-              <div
-                className="w-4 h-2 rounded-full mt-[-2px]"
-                style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
-              />
+            {formatPrice(actualDeposit)}
+          </span>
+          {discountPercent > 0 && (
+            <div
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-[6px]"
+              style={{ backgroundColor: '#4CAF5020' }}
+            >
+              <FiTag size={10} color="#4CAF50" />
+              <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
+                {toPersianDigit(discountPercent)}٪
+              </span>
             </div>
-          </Marker>
-        </Map>
-      </div>
-
-      {/* ═══ فوتر - اطلاعات و دکمه‌ها ═══ */}
-      <div
-        className="border-t p-5 space-y-4 shadow-2xl"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderColor: colors.border,
-        }}
-      >
-        {/* اطلاعات کسب‌وکار */}
-        <div className="text-right">
-          <h2
-            className="text-base font-[Vazir-Bold] mb-1"
-            style={{ color: colors.textMain }}
-          >
-            {business.name}
-          </h2>
-          <p
-            className="text-xs leading-5"
+          )}
+        </div>
+        {hasDeposit && showRemaining && remaining > 0 && (
+          <span
+            className="text-[10px] font-[Vazir]"
             style={{ color: colors.textSecondary }}
           >
-            {business.address}
-          </p>
+            + {formatPrice(remaining)} در سالن
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  // ═══════ حالت detailed ═══════
+  if (variant === 'detailed') {
+    return (
+      <Card variant="default" padding={16} radius={18}>
+        <div className="flex items-center gap-2 mb-1">
+          <div
+            className="w-9 h-9 rounded-[11px] flex items-center justify-center"
+            style={{ backgroundColor: '#43A04715' }}
+          >
+            <FiCreditCard size={20} color="#43A047" />
+          </div>
+          <span
+            className="text-[15px] font-[Vazir-Bold]"
+            style={{ color: colors.textMain }}
+          >
+            خلاصه پرداخت
+          </span>
         </div>
 
-        {/* دکمه‌ها */}
-        <div className="flex gap-3">
-          <Button
-            title="انصراف"
-            onPress={() => router.back()}
-            variant="outline"
-            size="lg"
-            className="flex-1"
-            icon={<FiX size={18} style={{ color: colors.textMain }} />}
-            iconPosition="left"
-          />
-          <Button
-            title="مسیریابی"
-            onPress={handleNavigation}
-            variant="primary"
-            size="lg"
-            className="flex-[2]"
-            icon={<FiNavigation size={18} color="#fff" />}
-            iconPosition="right"
-          />
+        <div className="flex justify-between items-center py-0.5">
+          <div className="flex items-center gap-1.5">
+            <FiDollarSign size={14} style={{ color: colors.textSecondary }} />
+            <span className="text-[12.5px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+              قیمت اصلی خدمت
+            </span>
+          </div>
+          <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+            {formatPrice(originalPrice)}
+          </span>
+        </div>
+
+        {discountPercent > 0 && (
+          <div className="flex justify-between items-center py-0.5">
+            <div className="flex items-center gap-1.5">
+              <FiTag size={14} color="#43A047" />
+              <span className="text-[12.5px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+                تخفیف ({toPersianDigit(discountPercent)}٪)
+              </span>
+            </div>
+            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: '#43A047' }}>
+              - {formatPrice(discountAmount)}
+            </span>
+          </div>
+        )}
+
+        <Divider spacing={8} />
+
+        <div className="flex justify-between items-center py-0.5">
+          <div className="flex items-center gap-1.5">
+            <FiTrendingUp size={14} style={{ color: colors.textMain }} />
+            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+              قیمت نهایی خدمت
+            </span>
+          </div>
+          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+            {formatPrice(actualFinal)}
+          </span>
+        </div>
+
+        {hasDeposit && (
+          <div
+            className="flex items-center justify-between p-3 rounded-[14px] border mt-1"
+            style={{
+              backgroundColor: colors.primary + '10',
+              borderColor: colors.primary + '35',
+            }}
+          >
+            <div className="flex items-center gap-2.5 flex-1">
+              <div
+                className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
+                style={{ backgroundColor: colors.primary }}
+              >
+                <FiCreditCard size={14} color="#fff" />
+              </div>
+              <div>
+                <span
+                  className="text-[11px] font-[Vazir]"
+                  style={{ color: colors.textSecondary }}
+                >
+                  مبلغ بیعانه (پرداخت آنلاین)
+                </span>
+                <div
+                  className="text-[15px] font-[Vazir-Bold] mt-0.5"
+                  style={{ color: colors.primary }}
+                >
+                  {formatPrice(actualDeposit)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {hasDeposit && remaining > 0 && (
+          <div
+            className="flex items-center gap-2.5 p-3 rounded-[14px] border"
+            style={{
+              backgroundColor: '#2196F308',
+              borderColor: '#2196F330',
+            }}
+          >
+            <FiBox size={18} color="#2196F3" />
+            <div>
+              <span
+                className="text-[11px] font-[Vazir]"
+                style={{ color: colors.textSecondary }}
+              >
+                مابقی مبلغ (پرداخت در سالن)
+              </span>
+              <div
+                className="text-[15px] font-[Vazir-Bold] mt-0.5"
+                style={{ color: '#2196F3' }}
+              >
+                {formatPrice(remaining)}
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+    );
+  }
+
+  // ═══════ حالت card ═══════
+  return (
+    <Card variant="elevated" padding={14} radius={16}>
+      {discountPercent > 0 && (
+        <div className="flex justify-between items-center">
+          <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
+            قیمت اصلی
+          </span>
+          <span
+            className="text-xs font-[Vazir] line-through"
+            style={{ color: colors.textSecondary }}
+          >
+            {formatPrice(originalPrice)}
+          </span>
+        </div>
+      )}
+      <div className="flex justify-between items-center">
+        <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+          {hasDeposit ? 'مبلغ کل خدمت' : 'مبلغ قابل پرداخت'}
+        </span>
+        <div className="flex items-center gap-1">
+          <span className="text-[18px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
+            {formatPrice(hasDeposit ? actualFinal : actualDeposit)}
+          </span>
+          <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+            تومان
+          </span>
+          {discountPercent > 0 && (
+            <div
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-[6px] mr-1"
+              style={{ backgroundColor: '#4CAF5020' }}
+            >
+              <FiTag size={10} color="#4CAF50" />
+              <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
+                {toPersianDigit(discountPercent)}٪
+              </span>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+      {hasDeposit && (
+        <>
+          <Divider spacing={6} />
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <FiCreditCard size={13} style={{ color: colors.primary }} />
+              <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                بیعانه رزرو
+              </span>
+            </div>
+            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
+              {formatPrice(actualDeposit)}{' '}
+              <span className="text-[11px] font-[Vazir]">تومان</span>
+            </span>
+          </div>
+          {showRemaining && remaining > 0 && (
+            <span
+              className="text-[10px] font-[Vazir] text-right block"
+              style={{ color: colors.textSecondary }}
+            >
+              مابقی ({formatPrice(remaining)}) در محل پرداخت می‌شود
+            </span>
+          )}
+        </>
+      )}
+    </Card>
   );
 }

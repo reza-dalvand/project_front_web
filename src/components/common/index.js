@@ -28,7 +28,6 @@ export { default as CollabBadge } from './CollabBadge';
 export { default as CostTypeBadge } from './CostTypeBadge';
 export { default as InfoRow } from './InfoRow';
 export { default as EmptyStateVariants } from './EmptyStateVariants';
-export { default as MapPicker } from './MapPicker';
 export { default as SuccessModal } from './SuccessModal';
 export { default as PriceGuideModal } from './PriceGuideModal';
 export { default as Dropdown } from './Dropdown';

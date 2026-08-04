@@ -55,6 +55,7 @@ export default function SearchBar({
         onBlur={() => setFocused(false)}
         onKeyDown={handleKeyDown}
         className="flex-1 bg-transparent outline-none text-right"
+        suppressHydrationWarning
         style={{
           color: colors.textMain,
           fontSize: '14px',

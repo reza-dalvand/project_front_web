@@ -1,12 +1,13 @@
 'use client';
-
-import { useState, useRef, useEffect } from 'react';
-import Map, { Marker, NavigationControl } from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import { useState, useEffect } from 'react';
 import { FiMapPin, FiNavigation, FiCheck, FiX, FiEdit } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
 import Card from './Card';
+
+// ✅ حذف import استاتیک - از Dynamic Import استفاده می‌کنیم
+// import Map, { Marker, NavigationControl } from 'react-map-gl/maplibre';  ❌ حذف
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 const DEFAULT_LOCATION = {
   latitude: 35.6997,
@@ -14,7 +15,6 @@ const DEFAULT_LOCATION = {
   zoom: 13,
 };
 
-// استفاده از OpenStreetMap tiles (رایگان)
 const MAP_STYLE = {
   version: 8,
   sources: {
@@ -34,12 +34,6 @@ const MAP_STYLE = {
   ],
 };
 
-/**
- * کامپوننت انتخاب موقعیت روی نقشه
- * @param {object} initialLocation - { latitude, longitude }
- * @param {function} onLocationSelect - (location, address) => void
- * @param {boolean} readOnly - فقط نمایش
- */
 export default function MapPicker({
   initialLocation,
   onLocationSelect,
@@ -52,8 +46,25 @@ export default function MapPicker({
   const [tempLocation, setTempLocation] = useState(null);
   const [tempAddress, setTempAddress] = useState('در حال دریافت آدرس...');
   const [loading, setLoading] = useState(false);
+  
+  // ✅ اضافه شد - Dynamic Import برای maplibre
+  const [MapLib, setMapLib] = useState(null);
+  const [mapLoading, setMapLoading] = useState(true);
 
-  // دریافت آدرس از مختصات (Reverse Geocoding)
+  useEffect(() => {
+    import('react-map-gl/maplibre').then((mod) => {
+      setMapLib({
+        Map: mod.default,
+        Marker: mod.Marker,
+        NavigationControl: mod.NavigationControl,
+      });
+      setMapLoading(false);
+    }).catch((err) => {
+      console.error('Failed to load maplibre:', err);
+      setMapLoading(false);
+    });
+  }, []);
+
   const getAddressFromCoordinates = async (lat, lng) => {
     try {
       const response = await fetch(
@@ -68,7 +79,6 @@ export default function MapPicker({
     }
   };
 
-  // دریافت آدرس اولیه
   useEffect(() => {
     const init = async () => {
       if (confirmedLocation?.latitude && confirmedLocation?.longitude) {
@@ -125,7 +135,7 @@ export default function MapPicker({
         onClick={openModal}
         disabled={readOnly}
         className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 transition-all
-                   hover:scale-[1.01] active:scale-[0.99]"
+          hover:scale-[1.01] active:scale-[0.99]"
         style={{
           backgroundColor: colors.cardBackground,
           borderColor: confirmedLocation ? colors.primary : colors.border,
@@ -238,38 +248,46 @@ export default function MapPicker({
 
           {/* نقشه */}
           <div className="flex-1 relative">
-            <Map
-              initialViewState={{
-                longitude: tempLocation?.longitude || DEFAULT_LOCATION.longitude,
-                latitude: tempLocation?.latitude || DEFAULT_LOCATION.latitude,
-                zoom: tempLocation?.zoom || DEFAULT_LOCATION.zoom,
-              }}
-              style={{ width: '100%', height: '100%' }}
-              mapStyle={MAP_STYLE}
-              onClick={handleMapClick}
-            >
-              <NavigationControl position="top-right" />
-              {tempLocation && (
-                <Marker
-                  longitude={tempLocation.longitude}
-                  latitude={tempLocation.latitude}
-                  anchor="bottom"
-                >
-                  <div className="relative flex flex-col items-center">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
-                      style={{ backgroundColor: '#E53935' }}
-                    >
-                      <FiMapPin size={20} color="#fff" />
+            {MapLib ? (
+              <MapLib.Map
+                initialViewState={{
+                  longitude: tempLocation?.longitude || DEFAULT_LOCATION.longitude,
+                  latitude: tempLocation?.latitude || DEFAULT_LOCATION.latitude,
+                  zoom: tempLocation?.zoom || DEFAULT_LOCATION.zoom,
+                }}
+                style={{ width: '100%', height: '100%' }}
+                mapStyle={MAP_STYLE}
+                onClick={handleMapClick}
+              >
+                <MapLib.NavigationControl position="top-right" />
+                {tempLocation && (
+                  <MapLib.Marker
+                    longitude={tempLocation.longitude}
+                    latitude={tempLocation.latitude}
+                    anchor="bottom"
+                  >
+                    <div className="relative flex flex-col items-center">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
+                        style={{ backgroundColor: '#E53935' }}
+                      >
+                        <FiMapPin size={20} color="#fff" />
+                      </div>
+                      <div
+                        className="w-4 h-2 rounded-full mt-[-2px]"
+                        style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
+                      />
                     </div>
-                    <div
-                      className="w-4 h-2 rounded-full mt-[-2px]"
-                      style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
-                    />
-                  </div>
-                </Marker>
-              )}
-            </Map>
+                  </MapLib.Marker>
+                )}
+              </MapLib.Map>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p style={{ color: colors.textSecondary }}>
+                  {mapLoading ? 'در حال بارگذاری نقشه...' : 'خطا در بارگذاری نقشه'}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* فوتر - آدرس و دکمه‌ها */}

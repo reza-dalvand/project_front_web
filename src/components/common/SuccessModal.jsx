@@ -1,9 +1,10 @@
 'use client';
-
 import { useEffect, useRef, useState } from 'react';
-import { FiCheck, FiClock, FiBell, FiRocket, FiShield } from 'react-icons/fi';
+import { FiCheck, FiClock, FiBell, FiSend, FiShield } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
+
+// ✅ تغییر: FiRocket → FiSend
 
 export default function SuccessModal({
   visible,
@@ -30,19 +31,17 @@ export default function SuccessModal({
   return (
     <div
       className={`fixed inset-0 z-[9999] flex items-center justify-center p-6
-                  transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
+        transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
       style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
         className={`w-full max-w-md rounded-3xl p-8 flex flex-col items-center gap-4
-                    shadow-2xl transition-all duration-300
-                    ${visible ? 'scale-100 translate-y-0' : 'scale-90 translate-y-4'}`}
+          shadow-2xl transition-all duration-300
+          ${visible ? 'scale-100 translate-y-0' : 'scale-90 translate-y-4'}`}
         style={{ backgroundColor: colors.cardBackground }}
       >
-        {/* آیکون موفقیت */}
         <div className="relative">
-          {/* حلقه‌های تزئینی */}
           <div
             className="absolute inset-0 rounded-full border-2"
             style={{ borderColor: '#4CAF5020' }}
@@ -51,19 +50,15 @@ export default function SuccessModal({
             className="absolute -inset-2 rounded-full border"
             style={{ borderColor: '#4CAF5010' }}
           />
-
-          {/* دایره اصلی */}
           <div
             className="w-24 h-24 rounded-full flex items-center justify-center relative z-10 shadow-lg"
             style={{ backgroundColor: '#4CAF50' }}
           >
             <FiCheck size={48} color="#fff" />
           </div>
-
-          {/* Badge ایموجی */}
           <div
             className="absolute -top-1 -right-1 w-9 h-9 rounded-full flex items-center justify-center
-                       border-[3px] shadow-md z-20"
+              border-[3px] shadow-md z-20"
             style={{
               backgroundColor: '#fff',
               borderColor: '#4CAF50',
@@ -73,7 +68,6 @@ export default function SuccessModal({
           </div>
         </div>
 
-        {/* عنوان */}
         <h2
           className="text-2xl font-[Vazir-Bold] text-center"
           style={{ color: colors.textMain }}
@@ -81,7 +75,6 @@ export default function SuccessModal({
           {title}
         </h2>
 
-        {/* کارت پیام */}
         <div
           className="w-full flex items-start gap-3 p-4 rounded-2xl border"
           style={{
@@ -103,7 +96,6 @@ export default function SuccessModal({
           </p>
         </div>
 
-        {/* نکات مهم */}
         <div className="w-full space-y-3">
           <div className="flex items-center gap-2 mb-2">
             <FiCheck size={16} style={{ color: colors.primary }} />
@@ -111,7 +103,6 @@ export default function SuccessModal({
               مراحل بعدی
             </span>
           </div>
-
           {[
             {
               icon: FiClock,
@@ -126,7 +117,7 @@ export default function SuccessModal({
               description: 'نتیجه از طریق پیامک و نوتیفیکیشن ارسال می‌شود',
             },
             {
-              icon: FiRocket,
+              icon: FiSend,  // ✅ FiRocket به FiSend تغییر یافت
               iconColor: '#4CAF50',
               title: 'شروع فعالیت',
               description: 'پس از تایید، کسب‌وکار شما فعال می‌شود',
@@ -154,7 +145,6 @@ export default function SuccessModal({
           })}
         </div>
 
-        {/* کارت اطمینان */}
         <div
           className="w-full flex items-center gap-2 py-3 px-4 rounded-xl border"
           style={{
@@ -171,7 +161,6 @@ export default function SuccessModal({
           </span>
         </div>
 
-        {/* دکمه تایید */}
         <Button
           title={confirmText}
           onPress={onClose}

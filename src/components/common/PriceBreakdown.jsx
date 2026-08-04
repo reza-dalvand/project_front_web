@@ -1,6 +1,5 @@
 'use client';
-
-import { FiTag, FiCalculator, FiCreditCard, FiDollarSign, FiStore } from 'react-icons/fi';
+import { FiTag, FiTrendingUp, FiCreditCard, FiDollarSign, FiBox } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Card from './Card';
 import Divider from './Divider';
@@ -108,12 +107,12 @@ export default function PriceBreakdown({
         {discountPercent > 0 && (
           <div className="flex justify-between items-center py-0.5">
             <div className="flex items-center gap-1.5">
-              <FiTag size={14} color="#43A047" />
+              <FiTag size={14} color="#4CAF50" />
               <span className="text-[12.5px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                 تخفیف ({toPersianDigit(discountPercent)}٪)
               </span>
             </div>
-            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: '#43A047' }}>
+            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
               - {formatPrice(discountAmount)}
             </span>
           </div>
@@ -124,7 +123,7 @@ export default function PriceBreakdown({
         {/* قیمت نهایی */}
         <div className="flex justify-between items-center py-0.5">
           <div className="flex items-center gap-1.5">
-            <FiCalculator size={14} style={{ color: colors.textMain }} />
+            <FiTrendingUp size={14} style={{ color: colors.textMain }} />
             <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               قیمت نهایی خدمت
             </span>
@@ -177,7 +176,7 @@ export default function PriceBreakdown({
               borderColor: '#2196F330',
             }}
           >
-            <FiStore size={18} color="#2196F3" />
+            <FiBox size={18} color="#2196F3" />
             <div>
               <span
                 className="text-[11px] font-[Vazir]"
@@ -214,7 +213,6 @@ export default function PriceBreakdown({
           </span>
         </div>
       )}
-
       <div className="flex justify-between items-center">
         <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           {hasDeposit ? 'مبلغ کل خدمت' : 'مبلغ قابل پرداخت'}
@@ -239,7 +237,6 @@ export default function PriceBreakdown({
           )}
         </div>
       </div>
-
       {hasDeposit && (
         <>
           <Divider spacing={6} />

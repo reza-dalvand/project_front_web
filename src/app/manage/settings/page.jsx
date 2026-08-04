@@ -20,11 +20,14 @@ import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
-import MapPicker from '@/components/common/MapPicker';
+import dynamic from 'next/dynamic';
 import ImageUploader from '@/components/common/ImageUploader';
 import SectionHeader from '@/components/common/SectionHeader';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
-
+const MapPicker = dynamic(
+  () => import('@/components/common/MapPicker'),
+  { ssr: false }  // ← کلید اصلی: نه SSR، نه Turbopack problem
+);
 const BUSINESS_CATEGORIES = [
   { id: 'salon', label: 'سالن زیبایی (چند منظوره)' },
   { id: 'clinic', label: 'کلینیک پوست و مو' },
