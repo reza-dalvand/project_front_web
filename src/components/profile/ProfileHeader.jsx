@@ -21,7 +21,7 @@ export default function ProfileHeader({ user }) {
       <div className="flex items-center gap-4">
         {/* لوگوی گل زیبانو */}
         <div
-          className="w-22 h-22 rounded-full flex items-center justify-center border-[3px]"
+          className="rounded-full flex items-center justify-center border-[3px]"
           style={{ borderColor: 'rgba(255,255,255,0.3)', width: '88px', height: '88px' }}
         >
           <div

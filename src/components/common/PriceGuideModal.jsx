@@ -8,8 +8,7 @@ import {
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
-import { formatPrice, APP_FEE_TIERS, getCurrentFeeTier } from '@/utils/numberUtils';
-import { toPersianDigit } from '@/utils/numberUtils';
+import { formatPrice, APP_FEE_TIERS, getCurrentFeeTier, toPersianDigit } from '@/utils/numberUtils';
 
 /**
  * مدال راهنمای قیمت‌گذاری

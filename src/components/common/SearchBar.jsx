@@ -31,7 +31,7 @@ export default function SearchBar({
   return (
     <div
       className={`
-        flex items-center gap-3 px-4 h-13 rounded-2xl border transition-all duration-200
+        flex items-center gap-3 px-4 rounded-2xl border transition-all duration-200
         ${className}
       `}
       style={{

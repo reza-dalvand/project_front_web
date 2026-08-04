@@ -23,7 +23,8 @@ import { useToast } from '@/hooks/useToast';
 
 export default function ProfilePage() {
   const { colors, resolvedTheme, setTheme } = useTheme();
-  const { user, logout } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
   const { showToast } = useToast();
   const router = useRouter();
 

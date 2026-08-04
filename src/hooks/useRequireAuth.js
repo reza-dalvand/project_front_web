@@ -4,8 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useAuthModalStore } from './useAuth';
-
+import { useAuthModalStore } from '@/stores/useAuth';
 /**
  * Hook محافظت از صفحاتی که نیاز به لاگین دارند
  *

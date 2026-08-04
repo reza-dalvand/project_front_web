@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthModal } from './useAuth';
+import { useAuthModal } from '@/stores/useAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 /**

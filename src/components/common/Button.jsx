@@ -118,8 +118,11 @@ export default function Button({
     >
       {loading ? (
         <div
-          className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"
-          style={{ borderColor: `${getTextColor()} transparent transparent transparent` }}
+          className="w-5 h-5 border-2 rounded-full animate-spin"
+          style={{
+            borderColor: getTextColor(),
+            borderTopColor: 'transparent',
+          }}
         />
       ) : (
         <>

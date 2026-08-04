@@ -10,8 +10,7 @@ import { useBusinessStore } from '@/stores/useBusinessStore';
 export default function TodayAppointments() {
   const { colors } = useTheme();
   const router = useRouter();
-  const appointments = useBusinessStore((s) => s.businessData.appointments);
-
+  const appointments = useBusinessStore((s) => s.businessData?.appointments) || [];
   // فیلتر فقط نوبت‌های امروز
   const todayAppointments = appointments.filter((apt) => {
     const now = new Date();

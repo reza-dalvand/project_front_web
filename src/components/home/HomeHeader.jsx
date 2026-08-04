@@ -7,7 +7,7 @@ import { FiSliders, FiMoon, FiSun } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import SearchBar from '@/components/common/SearchBar';
 import Avatar from '@/components/common/Avatar';
-import { useAuth, useAuthModal } from '@/hooks/useAuth';
+import { useAuth, useAuthModal } from '@/stores/useAuth';
 
 
 export default function HomeHeader({

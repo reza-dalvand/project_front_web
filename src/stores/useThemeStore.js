@@ -54,7 +54,11 @@ export const useThemeStore = create(
     }),
     {
       name: 'zibano-theme-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined'
+            ? localStorage
+            : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
+        ),
       partialize: (state) => ({
         theme: state.theme,
       }),

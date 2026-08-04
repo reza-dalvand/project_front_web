@@ -1,4 +1,4 @@
-// src/stores/useAuth.jsjs
+// src/stores/useAuth.js
 import { create } from 'zustand';
 import { useAuthStore } from '@/stores/useAuthStore';
 
