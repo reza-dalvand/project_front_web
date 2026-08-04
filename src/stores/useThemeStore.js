@@ -26,8 +26,8 @@ export const useThemeStore = create(
   persist(
     (set, get) => ({
       theme: 'system',
-      resolvedTheme: getResolvedTheme('system'),
-      colors: getColors(getResolvedTheme('system')),
+      resolvedTheme: 'light',    // ← همیشه light در ابتدا (SSR-safe)
+      colors: lightColors,       // ← همیشه lightColors در ابتدا
       _hydrated: false,
 
       setHydrated: () => set({ _hydrated: true }),

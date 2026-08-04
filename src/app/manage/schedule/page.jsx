@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FiClock, FiCalendar, FiPlus, FiEdit2, FiCheck, FiX, FiCoffee,
+  FiChevronRight, FiChevronLeft,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -128,9 +129,9 @@ export default function ManageSchedulePage() {
         {/* هدر ماه */}
         <div className="flex items-center justify-between mb-3">
           <button onClick={() => setViewMonth((p) => p.jm === 1 ? { jy: p.jy - 1, jm: 12 } : { ...p, jm: p.jm - 1 })}
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: colors.border }}>
-            <span style={{ color: colors.textMain }}>→</span>
+  className="w-8 h-8 rounded-lg flex items-center justify-center"
+  style={{ backgroundColor: colors.border }}>
+  <FiChevronRight size={18} style={{ color: colors.textMain }} />
           </button>
           <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {PERSIAN_MONTHS[viewMonth.jm - 1]} {toPersianDigit(viewMonth.jy)}
@@ -138,7 +139,7 @@ export default function ManageSchedulePage() {
           <button onClick={() => setViewMonth((p) => p.jm === 12 ? { jy: p.jy + 1, jm: 1 } : { ...p, jm: p.jm + 1 })}
             className="w-8 h-8 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: colors.border }}>
-            <span style={{ color: colors.textMain }}>←</span>
+            <FiChevronLeft size={18} style={{ color: colors.textMain }} />
           </button>
         </div>
         {/* روزهای هفته */}

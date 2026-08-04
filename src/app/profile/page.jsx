@@ -1,3 +1,4 @@
+// src/app/profile/page.jsx
 'use client';
 
 import { useState } from 'react';
@@ -14,12 +15,15 @@ import {
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useToast } from '@/hooks/useToast';
+import ScreenWrapper from '@/components/common/ScreenWrapper';
+import BottomTabBar from '@/components/common/BottomTabBar';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileStatsCard from '@/components/profile/ProfileStatsCard';
 import ProfileMenuList from '@/components/profile/ProfileMenuList';
 import ThemeToggleItem from '@/components/profile/ThemeToggleItem';
 import { Button } from '@/components/common';
-import { useToast } from '@/hooks/useToast';
 
 export default function ProfilePage() {
   const { colors, resolvedTheme, setTheme } = useTheme();
@@ -27,17 +31,20 @@ export default function ProfilePage() {
   const logout = useAuthStore((s) => s.logout);
   const { showToast } = useToast();
   const router = useRouter();
+  const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
 
   const isDark = resolvedTheme === 'dark';
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
+  // ─── آمار کاربر ───
   const userStats = [
     { id: 1, label: 'نوبت‌ها', value: 12, icon: FiCalendar, color: '#2196F3' },
     { id: 2, label: 'علاقه‌مندی', value: 28, icon: FiHeart, color: '#E91E63' },
   ];
 
+  // ─── منوی دسترسی سریع ───
   const quickMenuItems = [
     {
       id: 'appointments',
@@ -74,6 +81,7 @@ export default function ProfilePage() {
     },
   ];
 
+  // ─── منوی تنظیمات ───
   const settingsMenuItems = [
     {
       id: 'devices',
@@ -94,33 +102,47 @@ export default function ProfilePage() {
     },
   ];
 
+  // ─── هندلرها ───
   const handleMenuPress = (item) => {
     router.push(item.route);
   };
 
   const handleLogout = () => {
     logout();
+    setShowLogoutConfirm(false);
     showToast('با موفقیت از حساب خارج شدید', 'success');
     router.push('/');
   };
 
+  // ─── حالت لودینگ ───
+  if (!isAuthenticated) {
+    return (
+      <ScreenWrapper>
+        <div className="flex items-center justify-center min-h-screen">
+          <p style={{ color: colors.textMain }}>در حال بارگذاری...</p>
+        </div>
+      </ScreenWrapper>
+    );
+  }
+
   return (
-    <div
-      className="min-h-screen pb-20"
-      style={{ backgroundColor: colors.background }}
-    >
+    <ScreenWrapper scrollable padding={0}>
+      {/* ═══ هدر پروفایل ═══ */}
       <ProfileHeader user={user} />
 
+      {/* ═══ محتوای اصلی ═══ */}
       <div className="px-5 pt-6">
+        {/* آمار */}
         <ProfileStatsCard stats={userStats} />
 
+        {/* دسترسی سریع */}
         <ProfileMenuList
           title="دسترسی سریع"
           items={quickMenuItems}
           onItemPress={handleMenuPress}
         />
 
-        {/* بخش تنظیمات */}
+        {/* ═══ بخش تنظیمات ═══ */}
         <div className="mb-6">
           <h3
             className="text-base font-[Vazir-Bold] mb-3"
@@ -134,6 +156,7 @@ export default function ProfilePage() {
             <ThemeToggleItem isDark={isDark} onToggle={toggleTheme} />
           </div>
 
+          {/* منوی تنظیمات */}
           <ProfileMenuList
             title=""
             items={settingsMenuItems}
@@ -141,8 +164,8 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* خروج */}
-        <div className="mt-4 flex flex-col gap-3 items-center">
+        {/* ═══ دکمه خروج ═══ */}
+        <div className="mt-4 flex flex-col gap-3 items-center pb-4">
           <Button
             title="خروج از حساب کاربری"
             onPress={() => setShowLogoutConfirm(true)}
@@ -163,35 +186,47 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* مدال تایید خروج */}
+      {/* ═══ Bottom Tab Bar ═══ */}
+      <BottomTabBar />
+
+      {/* ═══ مدال تایید خروج ═══ */}
       {showLogoutConfirm && (
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center p-6"
           style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
-          onClick={(e) => e.target === e.currentTarget && setShowLogoutConfirm(false)}
+          onClick={(e) =>
+            e.target === e.currentTarget && setShowLogoutConfirm(false)
+          }
         >
           <div
             className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-4"
             style={{ backgroundColor: colors.cardBackground }}
           >
+            {/* آیکون */}
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center"
               style={{ backgroundColor: '#E5393520' }}
             >
               <FiShield size={40} color="#E53935" />
             </div>
+
+            {/* عنوان */}
             <h3
               className="text-xl font-[Vazir-Bold] text-center"
               style={{ color: colors.textMain }}
             >
               خروج از حساب کاربری
             </h3>
+
+            {/* توضیحات */}
             <p
               className="text-sm text-center leading-6"
               style={{ color: colors.textSecondary }}
             >
               آیا از خروج از حساب کاربری خود مطمئن هستید؟
             </p>
+
+            {/* دکمه‌ها */}
             <div className="flex gap-3 w-full mt-2">
               <Button
                 title="انصراف"
@@ -212,6 +247,6 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-    </div>
+    </ScreenWrapper>
   );
 }

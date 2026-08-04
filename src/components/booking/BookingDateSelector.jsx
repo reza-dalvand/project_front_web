@@ -19,16 +19,16 @@ const generateAvailableDates = () => {
     const d = new Date(now);
     d.setDate(d.getDate() + i);
     const dayOfWeek = d.getDay();
-    // جمعه‌ها تعطیل (dayOfWeek === 5)
-    if (dayOfWeek !== 5) {
-      const j = toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-      dates.push({
-        ...j,
-        dayOfWeek,
-        weekdayName: PERSIAN_WEEKDAYS[(dayOfWeek + 1) % 7],
-        key: `${j.jy}-${j.jm}-${j.jd}`,
-      });
-    }
+    const isFriday = dayOfWeek === 5;
+    const j = toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    dates.push({
+      ...j,
+      dayOfWeek,
+      isFriday,          // ← علامت‌گذاری جمعه
+      disabled: isFriday, // ← جمعه‌ها غیرقابل انتخاب
+      weekdayName: PERSIAN_WEEKDAYS[(dayOfWeek + 1) % 7],
+      key: `${j.jy}-${j.jm}-${j.jd}`,
+    });
   }
   return dates;
 };
@@ -88,13 +88,13 @@ export default function BookingDateSelector({ selectedDate, onDateSelect }) {
               {group.dates.map((date) => {
                 const isSelected = isSameDate(date, selectedDate);
                 const isToday = isSameDate(date, today);
-                const isFriday = date.dayOfWeek === 5;
 
                 return (
                   <button
                     key={date.key}
-                    onClick={() => onDateSelect(date)}
-                    className="relative w-[52px] flex flex-col items-center justify-center py-2 rounded-xl border-[1.5px] transition-all duration-200 hover:scale-105 active:scale-95"
+                    onClick={() => !date.disabled && onDateSelect(date)}
+                    disabled={date.disabled}
+                    className="relative w-[52px] flex flex-col items-center justify-center py-2 rounded-xl border-[1.5px] transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
                     style={{
                       backgroundColor: isSelected
                         ? colors.primary
@@ -111,7 +111,7 @@ export default function BookingDateSelector({ selectedDate, onDateSelect }) {
                       style={{
                         color: isSelected
                           ? '#ffffffcc'
-                          : isFriday
+                          : date.isFriday
                           ? '#E57373'
                           : colors.textSecondary,
                       }}
