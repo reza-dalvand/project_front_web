@@ -15,6 +15,7 @@ import BasicInfoStep from '@/components/createbusiness/BasicInfoStep';
 import NationalIdVerificationStep from '@/components/createbusiness/NationalIdVerificationStep';
 import SuccessModal from '@/components/common/SuccessModal';
 import ServicesManagement from '@/components/createbusiness/ServicesManagement';
+import SocialMediaStep from '@/components/createbusiness/SocialMediaStep';
 
 export default function CreateBusinessPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function CreateBusinessPage() {
 
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 2;
+  const totalSteps = 3;
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [isStepValid, setIsStepValid] = useState(false);
 
@@ -67,6 +68,13 @@ export default function CreateBusinessPage() {
             formData={formData}
             onUpdate={updateForm}
             registeredPhone={registeredPhone}
+          />
+        );
+      case 3:
+        return (
+          <SocialMediaStep
+            formData={formData}
+            onUpdate={updateForm}
           />
         );
       default:

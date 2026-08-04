@@ -1,8 +1,7 @@
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiLink, FiLightbulb, FiShare2, FiCamera, FiAward } from 'react-icons/fi';
+import { FiLink, FiLightbulb, FiShare2, FiAward } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -11,6 +10,7 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
 import BookingLinkCard from '@/components/manageBusiness/bookingLink/BookingLinkCard';
+import ShareBookingLinkModal from '@/components/manageBusiness/bookingLink/ShareBookingLinkModal';
 
 export default function BookingLinkPage() {
   const { colors } = useTheme();
@@ -20,39 +20,20 @@ export default function BookingLinkPage() {
   const { showToast } = useToast();
   const [shareModalVisible, setShareModalVisible] = useState(false);
 
-  // تولید لینک اختصاصی
   const bookingLink = `https://zibano.app/book/${businessData?.id || 'biz_1'}`;
 
-  // آمار موقت
   const linkStats = {
     clicks: 245,
     bookings: 18,
     link: bookingLink,
   };
 
-  const handleShare = async () => {
-    const shareMessage = `🌸 نوبت‌دهی آنلاین
-با این لینک می‌توانید مستقیماً از من نوبت بگیرید:
-${bookingLink}
-📱 رزرو از اپلیکیشن زیبانو`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'رزرو نوبت',
-          text: shareMessage,
-          url: bookingLink,
-        });
-        return;
-      } catch (err) {
-        console.log('Share cancelled');
-      }
-    }
-    navigator.clipboard?.writeText(shareMessage);
-    showToast('لینک کپی شد', 'success');
+  const handleShare = () => {
+    setShareModalVisible(true);
   };
 
   const handleCopy = () => {
+    navigator.clipboard?.writeText(bookingLink);
     showToast('لینک رزرو با موفقیت کپی شد', 'success');
   };
 
@@ -72,7 +53,6 @@ ${bookingLink}
         title="لینک اختصاصی رزرو"
         onBackPress={() => router.push('/manage')}
       />
-
       <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-5">
         {/* هدر توضیحی */}
         <div className="flex flex-col items-center gap-3 py-4 text-center">
@@ -85,7 +65,7 @@ ${bookingLink}
           <h2 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             لینک اختصاصی شما
           </h2>
-          <p className="text-xs leading-[20px] px-5" style={{ color: colors.textSecondary }}>
+          <p className="text-xs leading-5 px-5" style={{ color: colors.textSecondary }}>
             این لینک را می‌توانید در شبکه‌های اجتماعی، بیو اینستاگرام و واتساپ خود قرار دهید
           </p>
         </div>
@@ -142,9 +122,7 @@ ${bookingLink}
               'امکان اشتراک‌گذاری آسان در همه پلتفرم‌ها',
             ].map((benefit, index) => (
               <div key={index} className="flex items-center gap-2.5">
-                <span className="text-xs" style={{ color: '#4CAF50' }}>
-                  ✓
-                </span>
+                <span className="text-xs" style={{ color: '#4CAF50' }}>✓</span>
                 <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
                   {benefit}
                 </span>
@@ -153,6 +131,13 @@ ${bookingLink}
           </div>
         </Card>
       </div>
+
+      {/* مدال اشتراک‌گذاری */}
+      <ShareBookingLinkModal
+        visible={shareModalVisible}
+        onClose={() => setShareModalVisible(false)}
+        bookingLink={bookingLink}
+      />
     </ScreenWrapper>
   );
 }
