@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  FiSparkles,
+  FiZap,
   FiGrid,
   FiUser,
   FiUserPlus,
@@ -187,7 +187,7 @@ export default function HomePage() {
     if (pendingReviews.length > 0 && !reviewVisible) {
       const timer = setTimeout(() => {
         setCurrentReviewAppointment(pendingReviews[0]);
-        setReviewVisible(true);
+        setReviewVisible(false);
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -288,7 +288,7 @@ export default function HomePage() {
                   borderColor: colors.primary + '30',
                 }}
               >
-                <FiSparkles size={22} color={colors.primary} />
+                <FiZap size={22} color={colors.primary} />
               </div>
               <div className="flex flex-col gap-0.5 flex-1">
                 <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>

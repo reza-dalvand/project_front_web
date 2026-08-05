@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { FiChevronRight, FiChevronLeft, FiCheck, FiEvent, FiX } from 'react-icons/fi';
+import { FiChevronRight, FiChevronLeft, FiCheck, FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 import {

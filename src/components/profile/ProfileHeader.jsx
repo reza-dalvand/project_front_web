@@ -1,6 +1,6 @@
 'use client';
 
-import { FiSpa } from 'react-icons/fi';
+import { FiHeart } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 
 export default function ProfileHeader({ user }) {
@@ -28,7 +28,7 @@ export default function ProfileHeader({ user }) {
             className="w-[72px] h-[72px] rounded-full flex items-center justify-center"
             style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
           >
-            <FiSpa size={40} color="#fff" />
+            <FiHeart size={40} color="#fff" />
           </div>
         </div>
 

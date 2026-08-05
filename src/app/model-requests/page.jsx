@@ -5,6 +5,7 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import AllModelRequestsHeader from '@/components/home/AllModelRequestsHeader';
 import AllModelRequestsCard from '@/components/home/AllModelRequestsCard';
 import EmptyState from '@/components/common/EmptyState';
+import ModelRequestFilterModal from '@/components/home/ModelRequestFilterModal';
 
 const MOCK_MODEL_REQUESTS = [
   {
@@ -60,6 +61,8 @@ export default function AllModelRequestsPage() {
     costType: 'all',
     serviceType: 'all',
   });
+  const [filterVisible, setFilterVisible] = useState(false);
+
 
   const filteredRequests = useMemo(() => {
     let data = [...requests];
@@ -74,6 +77,7 @@ export default function AllModelRequestsPage() {
 
   const hasActiveFilter =
     filters.costType !== 'all' || filters.serviceType !== 'all';
+
 
   const handleRequestPress = (request) => {
     router.push(`/model-requests/${request.id}`);
@@ -106,6 +110,12 @@ export default function AllModelRequestsPage() {
           />
         )}
       </div>
+      <ModelRequestFilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onApply={setFilters}
+        currentFilters={filters}
+      />
     </ScreenWrapper>
   );
 }

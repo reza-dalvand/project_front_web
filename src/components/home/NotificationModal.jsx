@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiBell, FiCalendar, FiTag, FiInfo, FiStar, FiUndo } from 'react-icons/fi';
+import { FiX, FiBell, FiCalendar, FiTag, FiInfo, FiStar, FiRotateCcw } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
@@ -12,7 +12,7 @@ const NOTIFICATION_ICONS = {
   reminder: FiBell,
   system: FiInfo,
   review: FiStar,
-  refund: FiUndo,
+  refund: FiRotateCcw,
 };
 
 const MOCK_NOTIFICATIONS = [
