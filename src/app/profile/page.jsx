@@ -1,6 +1,5 @@
 // src/app/profile/page.jsx
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -11,6 +10,7 @@ import {
   FiSmartphone,
   FiHelpCircle,
   FiLogOut,
+  FiGift,        // ← اضافه شد
   FiShield,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -32,7 +32,6 @@ export default function ProfilePage() {
   const { showToast } = useToast();
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
-
   const isDark = resolvedTheme === 'dark';
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -79,6 +78,15 @@ export default function ProfilePage() {
       color: '#FF9800',
       route: '/profile/edit',
     },
+    // ✅ آیتم جدید: دعوت از دوستان
+    {
+      id: 'invite',
+      title: 'دعوت از دوستان',
+      subtitle: 'کد معرف خود را به اشتراک بگذارید',
+      icon: FiGift,
+      color: '#9C27B0',
+      route: '/profile/invite',
+    },
   ];
 
   // ─── منوی تنظیمات ───
@@ -114,7 +122,6 @@ export default function ProfilePage() {
     router.push('/');
   };
 
-  // ─── حالت لودینگ ───
   if (!isAuthenticated) {
     return (
       <ScreenWrapper>
@@ -127,10 +134,10 @@ export default function ProfilePage() {
 
   return (
     <ScreenWrapper scrollable padding={0}>
-      {/* ═══ هدر پروفایل ═══ */}
+      {/* هدر پروفایل */}
       <ProfileHeader user={user} />
 
-      {/* ═══ محتوای اصلی ═══ */}
+      {/* محتوای اصلی */}
       <div className="px-5 pt-6">
         {/* آمار */}
         <ProfileStatsCard stats={userStats} />
@@ -142,7 +149,7 @@ export default function ProfilePage() {
           onItemPress={handleMenuPress}
         />
 
-        {/* ═══ بخش تنظیمات ═══ */}
+        {/* تنظیمات */}
         <div className="mb-6">
           <h3
             className="text-base font-[Vazir-Bold] mb-3"
@@ -150,13 +157,9 @@ export default function ProfilePage() {
           >
             تنظیمات
           </h3>
-
-          {/* تم شب/روز */}
           <div className="mb-2.5">
             <ThemeToggleItem isDark={isDark} onToggle={toggleTheme} />
           </div>
-
-          {/* منوی تنظیمات */}
           <ProfileMenuList
             title=""
             items={settingsMenuItems}
@@ -164,7 +167,7 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* ═══ دکمه خروج ═══ */}
+        {/* دکمه خروج */}
         <div className="mt-4 flex flex-col gap-3 items-center pb-4">
           <Button
             title="خروج از حساب کاربری"
@@ -186,10 +189,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ═══ Bottom Tab Bar ═══ */}
+      {/* Bottom Tab Bar */}
       <BottomTabBar />
 
-      {/* ═══ مدال تایید خروج ═══ */}
+      {/* مدال تایید خروج */}
       {showLogoutConfirm && (
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center p-6"
@@ -202,31 +205,24 @@ export default function ProfilePage() {
             className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-4"
             style={{ backgroundColor: colors.cardBackground }}
           >
-            {/* آیکون */}
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center"
               style={{ backgroundColor: '#E5393520' }}
             >
               <FiShield size={40} color="#E53935" />
             </div>
-
-            {/* عنوان */}
             <h3
               className="text-xl font-[Vazir-Bold] text-center"
               style={{ color: colors.textMain }}
             >
               خروج از حساب کاربری
             </h3>
-
-            {/* توضیحات */}
             <p
               className="text-sm text-center leading-6"
               style={{ color: colors.textSecondary }}
             >
               آیا از خروج از حساب کاربری خود مطمئن هستید؟
             </p>
-
-            {/* دکمه‌ها */}
             <div className="flex gap-3 w-full mt-2">
               <Button
                 title="انصراف"
