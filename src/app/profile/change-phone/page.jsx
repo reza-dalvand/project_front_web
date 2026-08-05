@@ -1,9 +1,11 @@
+// src/app/profile/change-phone/page.jsx
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiSmartphone, FiEdit, FiRefreshCw } from 'react-icons/fi';
+import { FiSmartphone, FiEdit, FiRefreshCw, FiCheck, FiShield } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Input from '@/components/common/Input';
@@ -11,7 +13,6 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { validatePhone } from '@/utils/phoneUtils';
-import { useToast } from '@/hooks/useToast';
 
 const OTP_LENGTH = 5;
 const RESEND_SECONDS = 60;
@@ -34,6 +35,7 @@ export default function ChangePhonePage() {
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
 
+  // تایمر ارسال مجدد
   useEffect(() => {
     if (step !== 2) return;
     if (timer <= 0) {
@@ -71,7 +73,6 @@ export default function ChangePhonePage() {
   const handleChangeOtp = (text, index) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     const newOtp = [...otp];
-
     if (cleaned.length > 1) {
       const digits = cleaned.slice(0, OTP_LENGTH).split('');
       digits.forEach((digit, i) => {
@@ -83,12 +84,10 @@ export default function ChangePhonePage() {
       inputRefs.current[nextIndex]?.focus();
       return;
     }
-
     const digit = cleaned[0] || '';
     newOtp[index] = digit;
     setOtp(newOtp);
     if (otpError) setOtpError('');
-
     if (digit && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
       setCurrentBox(index + 1);
@@ -105,13 +104,12 @@ export default function ChangePhonePage() {
   const handleVerifyOtp = async () => {
     const code = otp.join('');
     if (code.length < OTP_LENGTH) {
-      setOtpError(`کد ${OTP_LENGTH} رقمی را کامل وارد کنید`);
+      setOtpError(`کد ${toPersianDigit(OTP_LENGTH)} رقمی را کامل وارد کنید`);
       return;
     }
     setLoading(true);
     setOtpError('');
     await new Promise((r) => setTimeout(r, 1000));
-
     if (code === MOCK_OTP) {
       setLoading(false);
       updateUser({ phone: newPhone });
@@ -144,14 +142,11 @@ export default function ChangePhonePage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header
-        title="تغییر شماره موبایل"
-        onBackPress={() => router.back()}
-      />
-
+      <Header title="تغییر شماره موبایل" onBackPress={() => router.back()} />
       <div className="flex-1 overflow-y-auto px-5 pt-8 pb-10">
         {step === 1 && (
           <div className="space-y-5">
+            {/* آیکون */}
             <div className="flex flex-col items-center gap-4 mb-6">
               <div
                 className="w-24 h-24 rounded-full flex items-center justify-center"
@@ -160,38 +155,29 @@ export default function ChangePhonePage() {
                 <FiSmartphone size={44} style={{ color: colors.primary }} />
               </div>
               <div className="text-center">
-                <h3
-                  className="text-xl font-[Vazir-Bold] mb-2"
-                  style={{ color: colors.textMain }}
-                >
+                <h3 className="text-xl font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
                   تغییر شماره موبایل
                 </h3>
-                <p
-                  className="text-sm leading-6 px-4"
-                  style={{ color: colors.textSecondary }}
-                >
+                <p className="text-sm leading-6 px-4" style={{ color: colors.textSecondary }}>
                   برای امنیت بیشتر، شماره جدید شما باید با کد تایید (OTP) احراز هویت شود
                 </p>
               </div>
             </div>
 
-            <Card
-              variant="default"
-              padding={14}
-              radius={14}
+            {/* هشدار */}
+            <Card variant="default" padding={14} radius={14}
               className="border"
+              style={{ backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }}
             >
               <div className="flex items-start gap-3">
                 <span className="text-lg flex-shrink-0">ℹ️</span>
-                <p
-                  className="text-xs font-[Vazir] leading-5 flex-1"
-                  style={{ color: colors.textMain }}
-                >
+                <p className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: colors.textMain }}>
                   پس از تغییر شماره، برای ورود به حساب از شماره جدید استفاده خواهید کرد
                 </p>
               </div>
             </Card>
 
+            {/* فیلد شماره */}
             <Input
               label="شماره موبایل جدید"
               placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹"
@@ -203,6 +189,7 @@ export default function ChangePhonePage() {
               rightIcon={<FiSmartphone size={18} style={{ color: colors.textSecondary }} />}
             />
 
+            {/* دکمه ارسال */}
             <Button
               title="ارسال کد تایید"
               onPress={handleSendOtp}
@@ -211,12 +198,15 @@ export default function ChangePhonePage() {
               variant="primary"
               size="lg"
               fullWidth
+              icon={<FiSmartphone size={18} color="#fff" />}
+              iconPosition="right"
             />
           </div>
         )}
 
         {step === 2 && (
           <div className="space-y-5">
+            {/* آیکون */}
             <div className="flex flex-col items-center gap-4 mb-6">
               <div
                 className="w-24 h-24 rounded-full flex items-center justify-center"
@@ -225,17 +215,11 @@ export default function ChangePhonePage() {
                 <span className="text-4xl">💬</span>
               </div>
               <div className="text-center">
-                <h3
-                  className="text-xl font-[Vazir-Bold] mb-2"
-                  style={{ color: colors.textMain }}
-                >
+                <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                   کد تایید را وارد کنید
                 </h3>
-                <p
-                  className="text-sm"
-                  style={{ color: colors.textSecondary }}
-                >
-                  کد {toPersianDigit(OTP_LENGTH)} رقمی پیامک‌شده به{' '}
+                <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
+                  کد {toPersianDigit(OTP_LENGTH)} رقمی ارسال‌شده به{' '}
                   <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
                     {toPersianDigit(maskedPhone)}
                   </span>
@@ -256,15 +240,10 @@ export default function ChangePhonePage() {
                   onChange={(e) => handleChangeOtp(e.target.value, index)}
                   onKeyDown={(e) => handleKeyPress(e, index)}
                   onFocus={() => setCurrentBox(index)}
-                  className="w-14 h-[60px] rounded-[14px] text-center text-[22px] font-[Vazir-Bold] outline-none transition-all"
+                  className="w-14 h-16 rounded-2xl text-center text-2xl font-[Vazir-Bold] outline-none transition-all"
                   style={{
                     backgroundColor: colors.cardBackground,
-                    borderColor:
-                      otpError && digit === ''
-                        ? '#E57373'
-                        : currentBox === index
-                          ? colors.primary
-                          : colors.border,
+                    borderColor: otpError && digit === '' ? '#E57373' : currentBox === index ? colors.primary : colors.border,
                     borderWidth: currentBox === index ? 2 : 1.5,
                     color: colors.textMain,
                   }}
@@ -273,43 +252,32 @@ export default function ChangePhonePage() {
             </div>
 
             {otpError && (
-              <p className="text-center text-sm" style={{ color: '#E57373' }}>
-                {otpError}
-              </p>
+              <p className="text-center text-sm" style={{ color: '#E57373' }}>{otpError}</p>
             )}
 
+            {/* ارسال مجدد / ویرایش */}
             <div className="flex justify-between items-center px-1">
-              <button
-                onClick={() => setStep(1)}
-                className="flex items-center gap-1"
-              >
+              <button onClick={() => setStep(1)} className="flex items-center gap-1">
                 <FiEdit size={14} style={{ color: colors.primary }} />
-                <span
-                  className="text-sm font-[Vazir-Medium]"
-                  style={{ color: colors.primary }}
-                >
+                <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.primary }}>
                   ویرایش شماره
                 </span>
               </button>
               {canResend ? (
-                <button onClick={handleResend}>
-                  <span
-                    className="text-sm font-[Vazir-Bold]"
-                    style={{ color: colors.primary }}
-                  >
+                <button onClick={handleResend} className="flex items-center gap-1">
+                  <FiRefreshCw size={14} style={{ color: colors.primary }} />
+                  <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
                     ارسال مجدد کد
                   </span>
                 </button>
               ) : (
-                <span
-                  className="text-sm font-[Vazir]"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-sm" style={{ color: colors.textSecondary }}>
                   ارسال مجدد تا {formatTime(timer)}
                 </span>
               )}
             </div>
 
+            {/* دکمه تایید */}
             <Button
               title="تایید و تغییر شماره"
               onPress={handleVerifyOtp}
@@ -318,18 +286,17 @@ export default function ChangePhonePage() {
               variant="primary"
               size="lg"
               fullWidth
+              icon={<FiCheck size={18} color="#fff" />}
+              iconPosition="right"
             />
 
+            {/* راهنما */}
             <div
               className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border"
-              style={{
-                backgroundColor: colors.primary + '10',
-                borderColor: colors.primary + '30',
-              }}
+              style={{ backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }}
             >
-              <span className="text-xs font-[Vazir]" style={{ color: colors.primary }}>
-                حالت آزمایشی: کد تایید{' '}
-                <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
+              <span className="text-xs" style={{ color: colors.primary }}>
+                حالت آزمایشی: کد تایید <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
               </span>
             </div>
           </div>

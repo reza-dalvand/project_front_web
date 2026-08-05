@@ -1,24 +1,19 @@
+// src/app/profile/devices/page.jsx
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  FiSmartphone,
-  FiMonitor,
-  FiGlobe,
-  FiClock,
-  FiMapPin,
-  FiLogout,
-  FiShield,
+  FiSmartphone, FiMonitor, FiGlobe, FiShield,
+  FiLogOut, FiWifi, FiMapPin, FiClock,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
-import EmptyState from '@/components/common/EmptyState';
 import InfoRow from '@/components/common/InfoRow';
 import { toPersianDigit } from '@/utils/numberUtils';
-import { useToast } from '@/hooks/useToast';
 
 const MOCK_DEVICES = [
   {
@@ -64,7 +59,6 @@ export default function ActiveDevicesPage() {
 
   const currentDevice = devices.find((d) => d.isCurrent);
   const otherDevices = devices.filter((d) => !d.isCurrent);
-
   const stats = {
     total: devices.length,
     trusted: devices.filter((d) => d.trusted).length,
@@ -99,81 +93,34 @@ export default function ActiveDevicesPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header
-        title="دستگاه‌های فعال"
-        onBackPress={() => router.back()}
-      />
-
+      <Header title="دستگاه‌های فعال" onBackPress={() => router.back()} />
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-5">
         {/* آمار */}
         <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center">
-            <div className="flex-1 flex flex-col items-center gap-1">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center mb-1"
-                style={{ backgroundColor: colors.primary + '18' }}
-              >
-                <FiSmartphone size={18} style={{ color: colors.primary }} />
+            {[
+              { icon: <FiSmartphone size={18} />, label: 'دستگاه فعال', value: stats.total, color: colors.primary },
+              { icon: <FiShield size={18} />, label: 'مورد اعتماد', value: stats.trusted, color: '#43A047' },
+              { icon: <FiWifi size={18} />, label: 'مشکوک', value: stats.suspicious, color: '#FF9800' },
+            ].map((stat, i) => (
+              <div key={i} className="flex flex-1 flex-col items-center gap-1 relative">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center mb-1"
+                  style={{ backgroundColor: stat.color + '18' }}
+                >
+                  <span style={{ color: stat.color }}>{stat.icon}</span>
+                </div>
+                <span className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                  {toPersianDigit(stat.value)}
+                </span>
+                <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                  {stat.label}
+                </span>
+                {i < 2 && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-[50px]" style={{ backgroundColor: colors.border }} />
+                )}
               </div>
-              <span
-                className="text-[17px] font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
-                {toPersianDigit(stats.total)}
-              </span>
-              <span
-                className="text-[10px] font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
-                دستگاه فعال
-              </span>
-            </div>
-
-            <div className="w-px h-[50px]" style={{ backgroundColor: colors.border }} />
-
-            <div className="flex-1 flex flex-col items-center gap-1">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center mb-1"
-                style={{ backgroundColor: '#43A04718' }}
-              >
-                <FiShield size={18} color="#43A047" />
-              </div>
-              <span
-                className="text-[17px] font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
-                {toPersianDigit(stats.trusted)}
-              </span>
-              <span
-                className="text-[10px] font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
-                مورد اعتماد
-              </span>
-            </div>
-
-            <div className="w-px h-[50px]" style={{ backgroundColor: colors.border }} />
-
-            <div className="flex-1 flex flex-col items-center gap-1">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center mb-1"
-                style={{ backgroundColor: '#FF980018' }}
-              >
-                <FiShield size={18} color="#FF9800" />
-              </div>
-              <span
-                className="text-[17px] font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
-                {toPersianDigit(stats.suspicious)}
-              </span>
-              <span
-                className="text-[10px] font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
-                مشکوک
-              </span>
-            </div>
+            ))}
           </div>
         </Card>
 
@@ -182,19 +129,13 @@ export default function ActiveDevicesPage() {
           <div>
             <div className="flex items-center gap-2 mb-3 px-1">
               <FiSmartphone size={18} style={{ color: colors.primary }} />
-              <span
-                className="text-sm font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 دستگاه فعلی
               </span>
             </div>
-
-            <Card
-              variant="default"
-              padding={14}
-              radius={16}
+            <Card variant="default" padding={14} radius={16}
               className="border-[1.5px]"
+              style={{ borderColor: colors.primary + '60' }}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -203,32 +144,20 @@ export default function ActiveDevicesPage() {
                 >
                   {getDeviceIcon(currentDevice.type)}
                 </div>
-                <div className="flex-1">
-                  <span
-                    className="text-sm font-[Vazir-Bold] block"
-                    style={{ color: colors.textMain }}
-                  >
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-[Vazir-Bold] block" style={{ color: colors.textMain }}>
                     {currentDevice.name}
                   </span>
-                  <span
-                    className="text-xs font-[Vazir]"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <span className="text-xs" style={{ color: colors.textSecondary }}>
                     {currentDevice.os}
                   </span>
                 </div>
                 <div
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
                   style={{ backgroundColor: colors.primary + '20' }}
                 >
-                  <div
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: colors.primary }}
-                  />
-                  <span
-                    className="text-[10px] font-[Vazir-Bold]"
-                    style={{ color: colors.primary }}
-                  >
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.primary }} />
+                  <span className="text-[10px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
                     فعلی
                   </span>
                 </div>
@@ -242,17 +171,11 @@ export default function ActiveDevicesPage() {
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
               <FiMonitor size={18} style={{ color: colors.primary }} />
-              <span
-                className="text-sm font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 سایر دستگاه‌ها
               </span>
             </div>
-            <span
-              className="text-xs font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-xs" style={{ color: colors.textSecondary }}>
               {toPersianDigit(otherDevices.length)} دستگاه
             </span>
           </div>
@@ -268,58 +191,40 @@ export default function ActiveDevicesPage() {
                     >
                       {getDeviceIcon(device.type)}
                     </div>
-                    <div className="flex-1">
-                      <span
-                        className="text-sm font-[Vazir-Bold] block"
-                        style={{ color: colors.textMain }}
-                      >
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-[Vazir-Bold] block" style={{ color: colors.textMain }}>
                         {device.name}
                       </span>
-                      <span
-                        className="text-xs font-[Vazir]"
-                        style={{ color: colors.textSecondary }}
-                      >
+                      <span className="text-xs" style={{ color: colors.textSecondary }}>
                         {device.os}
                       </span>
                     </div>
                     <button
                       onClick={() => handleRemoveDevice(device)}
-                      className="w-9 h-9 rounded-full flex items-center justify-center"
+                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: '#E5393515' }}
                     >
-                      <FiLogout size={16} color="#E53935" />
+                      <FiLogOut size={16} color="#E53935" />
                     </button>
                   </div>
-
-                  <div
-                    className="flex flex-col gap-1 pt-3 border-t"
-                    style={{ borderColor: colors.border }}
-                  >
-                    <InfoRow
-                      icon="🌐"
-                      label="آی‌پی:"
-                      value={device.ip}
-                    />
-                    <InfoRow
-                      icon="🕐"
-                      label="آخرین فعالیت:"
-                      value={device.lastActive}
-                    />
-                    <InfoRow
-                      icon="📍"
-                      label="مکان:"
-                      value={device.location}
-                    />
+                  <div className="flex flex-col gap-1 pt-3 border-t" style={{ borderColor: colors.border }}>
+                    <InfoRow icon="🌐" label="آی‌پی:" value={device.ip} monospace />
+                    <InfoRow icon="🕐" label="آخرین فعالیت:" value={device.lastActive} />
+                    <InfoRow icon="📍" label="مکان:" value={device.location} />
                   </div>
                 </Card>
               ))}
             </div>
           ) : (
-            <EmptyState
-              icon="🎉"
-              title="دستگاه دیگری متصل نیست"
-              description="فقط از دستگاه فعلی به حساب خود دسترسی دارید"
-            />
+            <div className="flex flex-col items-center py-12 gap-3">
+              <span className="text-4xl">🎉</span>
+              <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                دستگاه دیگری متصل نیست
+              </h3>
+              <p className="text-sm text-center" style={{ color: colors.textSecondary }}>
+                فقط از دستگاه فعلی به حساب خود دسترسی دارید
+              </p>
+            </div>
           )}
         </div>
 
@@ -331,6 +236,8 @@ export default function ActiveDevicesPage() {
             variant="outline"
             size="lg"
             fullWidth
+            icon={<FiLogOut size={18} color="#E53935" />}
+            iconPosition="right"
             className="!border-[#E53935] !border-[1.5px]"
             style={{ color: '#E53935' }}
           />

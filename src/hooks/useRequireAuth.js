@@ -1,17 +1,10 @@
-// src/hooks/useRequireAuth.js
+// src/hooks/useRequireAuth.js — بهبود
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useAuthModalStore } from '@/stores/useAuth';
-/**
- * Hook محافظت از صفحاتی که نیاز به لاگین دارند
- *
- * اگر کاربر لاگین نباشد:
- * - در صفحات اصلی: مدال Auth باز می‌شود
- * - در صفحات حساس (مثل /profile): ریدایرکت به /login
- */
+
 export const useRequireAuth = (options = {}) => {
   const { redirectToLogin = false } = options;
   const router = useRouter();
@@ -21,15 +14,10 @@ export const useRequireAuth = (options = {}) => {
   const hydrated = useAuthStore((s) => s._hydrated);
 
   useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
     if (!hydrated) return;
-
     if (!isAuthenticated) {
       if (redirectToLogin) {
-        router.replace(`/auth/login/?redirect=${encodeURIComponent(pathname)}`);
+        router.replace(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
       } else {
         openAuthModal();
       }
