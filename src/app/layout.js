@@ -3,7 +3,6 @@ import './globals.css';
 import Providers from '@/components/providers';
 import Script from 'next/script';
 
-// ═══════ Metadata (بدون viewport و themeColor) ═══════
 export const metadata = {
   title: 'زیبانو | رزرو آنلاین خدمات زیبایی و سلامت',
   description:
@@ -22,7 +21,6 @@ export const metadata = {
   manifest: '/manifest.json',
 };
 
-// ═══════ Viewport (جدا از metadata) ═══════
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -42,6 +40,11 @@ export default function RootLayout({ children }) {
         <meta property="og:description" content="رزرو آنلاین خدمات زیبایی و سلامت" />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="fa_IR" />
+
+        {/* ✅ Apple Fullscreen Meta Tags */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="mobile-web-app-capable" content="yes" />
 
         {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
@@ -75,6 +78,27 @@ export default function RootLayout({ children }) {
                   }
                 } catch (e) {}
               })();
+            `,
+          }}
+        />
+
+        {/* ✅ ثبت Service Worker */}
+        <Script
+          id="sw-register"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(reg) {
+                      console.log('✅ SW registered:', reg.scope);
+                    })
+                    .catch(function(err) {
+                      console.log('❌ SW registration failed:', err);
+                    });
+                });
+              }
             `,
           }}
         />
