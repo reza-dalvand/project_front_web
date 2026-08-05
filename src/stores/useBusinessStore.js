@@ -4,6 +4,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 const INITIAL_BUSINESS_DATA = {
   id: 'biz_1',
+  isActive: true, 
   name: 'سالن زیبایی نیلارام',
   category: 'کلینیک پوست و مو',
   categoryId: '2',
@@ -196,7 +197,12 @@ export const useBusinessStore = create(
         })),
 
       deleteBusiness: () => {
-        set({ businessData: INITIAL_BUSINESS_DATA });
+        set((state) => ({
+          businessData: {
+            ...state.businessData,
+            isActive: false,
+          },
+        }));
         return true;
       },
 

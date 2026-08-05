@@ -1,14 +1,9 @@
 // src/components/home/HomeHeader.jsx
 'use client';
-
-
-
 import { FiSliders, FiMoon, FiSun } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import SearchBar from '@/components/common/SearchBar';
 import Avatar from '@/components/common/Avatar';
-import { useAuth, useAuthModal } from '@/stores/useAuth';
-
 
 export default function HomeHeader({
   userName,
@@ -18,17 +13,15 @@ export default function HomeHeader({
   onSearchSubmit,
   onFilterPress,
   hasActiveFilter = false,
+  isDark = false,
   onThemeToggle,
   onSearchClick,
 }) {
-  const { colors, resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-  const { isAuthenticated, user } = useAuth();
-  const { openAuthModal } = useAuthModal();
+  const { colors } = useTheme();
 
   return (
     <div
-      suppressHydrationWarning // ✅ جلوگیری از hydration mismatch
+      suppressHydrationWarning
       className="relative overflow-hidden rounded-b-[28px] pt-8 pb-6"
       style={{ backgroundColor: colors.primary }}
     >
@@ -66,6 +59,24 @@ export default function HomeHeader({
 
           {/* دکمه‌ها */}
           <div className="flex items-center gap-2">
+            {/* دکمه تغییر تم */}
+            <button
+              onClick={onThemeToggle}
+              className="w-[42px] h-[42px] rounded-[14px] flex items-center justify-center border transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.18)',
+                borderColor: 'rgba(255,255,255,0.1)',
+              }}
+              aria-label={isDark ? 'تغییر به تم روشن' : 'تغییر به تم تاریک'}
+            >
+              {isDark ? (
+                <FiSun size={20} color="#fff" />
+              ) : (
+                <FiMoon size={20} color="#fff" />
+              )}
+            </button>
+
+            {/* دکمه فیلتر */}
             <button
               onClick={onFilterPress}
               className="w-[42px] h-[42px] rounded-[14px] flex items-center justify-center border relative transition-colors"
@@ -80,32 +91,18 @@ export default function HomeHeader({
               {hasActiveFilter && (
                 <div
                   className="absolute top-2 right-2 w-2 h-2 rounded-full border-[1.5px]"
-                  style={{ backgroundColor: '#FFD700', borderColor: colors.primary }}
+                  style={{
+                    backgroundColor: '#FFD700',
+                    borderColor: colors.primary,
+                  }}
                 />
               )}
             </button>
-
-          {!isAuthenticated ? (
-            <button
-              onClick={() => openAuthModal()}
-              className="px-4 py-2 rounded-xl text-sm font-[Vazir-Bold]"
-              style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: '#fff' }}
-            >
-              ورود / ثبت‌نام
-            </button>
-          ) : (
-            <span className="text-white text-sm font-[Vazir-Medium]">
-              سلام {user?.name?.split(' ')[0]} 👋
-            </span>
-          )}
           </div>
         </div>
 
         {/* نوار جستجو */}
-        <button
-          onClick={onSearchClick}
-          className="w-full text-right"
-        >
+        <button onClick={onSearchClick} className="w-full text-right">
           <div className="pointer-events-none">
             <SearchBar
               value={searchQuery}
