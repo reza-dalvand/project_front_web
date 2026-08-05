@@ -9,7 +9,7 @@ import { useAuthModal } from '@/stores/useAuth';
 import Button from './Button';
 import Input from './Input';
 import { validatePhone } from '@/utils/phoneUtils';
-import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
+import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils'; // ✅ اضافه شد
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 const OTP_LENGTH = 5;
@@ -22,7 +22,6 @@ export default function AuthBottomSheet() {
   const login = useAuthStore((s) => s.login);
   const { showAuthModal, closeAuthModal, cancelAuthModal } = useAuthModal();
   const instanceId = useRef('auth-bottom-sheet');
-
   const [stage, setStage] = useState('info');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -36,7 +35,6 @@ export default function AuthBottomSheet() {
   const [error, setError] = useState('');
   const inputRefs = useRef([]);
 
-  // ریست فرم هنگام باز شدن
   useEffect(() => {
     if (showAuthModal) {
       setStage('info');
@@ -53,7 +51,6 @@ export default function AuthBottomSheet() {
     }
   }, [showAuthModal]);
 
-  // تایمر ارسال مجدد
   useEffect(() => {
     if (!showAuthModal || stage !== 'otp') return;
     if (timer <= 0) {
@@ -64,7 +61,6 @@ export default function AuthBottomSheet() {
     return () => clearInterval(interval);
   }, [stage, timer, showAuthModal]);
 
-  // بستن با Escape
   useEffect(() => {
     if (!showAuthModal) return;
     const handleEsc = (e) => {
@@ -74,7 +70,6 @@ export default function AuthBottomSheet() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [showAuthModal, cancelAuthModal]);
 
-  // قفل کردن اسکرول با سیستم مرکزی
   useEffect(() => {
     if (showAuthModal) {
       acquireScrollLock(instanceId.current);
@@ -86,15 +81,15 @@ export default function AuthBottomSheet() {
     };
   }, [showAuthModal]);
 
-  // cleanup در unmount
   useEffect(() => {
     return () => {
       releaseScrollLock(instanceId.current);
     };
   }, []);
 
+  // ═══════ 🔧 اصلاح شده ═══════
   const handlePhoneChange = (text) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
+    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     if (cleaned.length <= 11) {
       setPhone(cleaned);
       if (error) setError('');
@@ -106,22 +101,18 @@ export default function AuthBottomSheet() {
       setError('لطفاً ابتدا قوانین را بپذیرید');
       return;
     }
-
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
     if (fullName.length < 3) {
       setError('نام و نام خانوادگی کامل نیست');
       return;
     }
-
     if (!validatePhone(phone)) {
       setError('شماره موبایل معتبر نیست');
       return;
     }
-
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
     setLoading(false);
-
     setStage('otp');
     setTimer(RESEND_SECONDS);
     setCanResend(false);
@@ -131,7 +122,6 @@ export default function AuthBottomSheet() {
   const handleChangeOtp = (text, index) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     const newOtp = [...otp];
-
     if (cleaned.length > 1) {
       const digits = cleaned.slice(0, OTP_LENGTH).split('');
       digits.forEach((digit, i) => {
@@ -143,13 +133,10 @@ export default function AuthBottomSheet() {
       inputRefs.current[nextIndex]?.focus();
       return;
     }
-
     const digit = cleaned[0] || '';
     newOtp[index] = digit;
     setOtp(newOtp);
-
     if (error) setError('');
-
     if (digit && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
       setCurrentBox(index + 1);
@@ -169,10 +156,8 @@ export default function AuthBottomSheet() {
       setError(`کد ${OTP_LENGTH} رقمی کامل نیست`);
       return;
     }
-
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
-
     if (code === MOCK_OTP) {
       const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
       login(phone, fullName);
@@ -230,7 +215,7 @@ export default function AuthBottomSheet() {
           borderWidth: 1,
         }}
       >
-        {/* Handle Bar (موبایل) */}
+        {/* Handle Bar */}
         <div className="flex justify-center pt-3 pb-1 md:hidden">
           <div
             className="w-10 h-1 rounded-full"
@@ -262,7 +247,6 @@ export default function AuthBottomSheet() {
         <div className="p-6 overflow-y-auto flex-1">
           {stage === 'info' && (
             <div className="flex flex-col gap-4">
-              {/* آیکون */}
               <div className="flex flex-col items-center gap-3 mb-4">
                 <div
                   className="w-20 h-20 rounded-full flex items-center justify-center"
@@ -296,7 +280,6 @@ export default function AuthBottomSheet() {
                 }}
                 rightIcon={<FiUser size={18} style={{ color: colors.textSecondary }} />}
               />
-
               <Input
                 label="نام خانوادگی"
                 placeholder="مثال: حسینی"
@@ -306,7 +289,6 @@ export default function AuthBottomSheet() {
                   if (error) setError('');
                 }}
               />
-
               <Input
                 label="شماره موبایل"
                 placeholder="۰۹۱۲۳۴۵۶۷۸۹"
@@ -318,7 +300,6 @@ export default function AuthBottomSheet() {
                 rightIcon={<FiSmartphone size={18} style={{ color: colors.textSecondary }} />}
               />
 
-              {/* چک‌باکس قوانین */}
               <label className="flex items-start gap-3 cursor-pointer py-2">
                 <button
                   onClick={() => setTermsAccepted(!termsAccepted)}
@@ -352,7 +333,6 @@ export default function AuthBottomSheet() {
                 size="lg"
                 fullWidth
               />
-
               <div className="flex items-center justify-center gap-2 py-2">
                 <FiShield size={14} style={{ color: colors.textSecondary }} />
                 <span
@@ -393,7 +373,6 @@ export default function AuthBottomSheet() {
                 </div>
               </div>
 
-              {/* OTP Inputs */}
               <div className="flex justify-center gap-2" dir="ltr">
                 {otp.map((digit, index) => (
                   <input
@@ -413,8 +392,8 @@ export default function AuthBottomSheet() {
                         error && digit === ''
                           ? '#E57373'
                           : currentBox === index
-                          ? colors.primary
-                          : colors.border,
+                            ? colors.primary
+                            : colors.border,
                       borderWidth: currentBox === index ? 2 : 1.5,
                       color: colors.textMain,
                     }}
@@ -470,7 +449,6 @@ export default function AuthBottomSheet() {
                 size="lg"
                 fullWidth
               />
-
               <div
                 className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border"
                 style={{

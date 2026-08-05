@@ -19,7 +19,6 @@ import WeeklyRevenueChart from '@/components/manageBusiness/WeeklyRevenueChart';
 import TodayAppointments from '@/components/manageBusiness/TodayAppointments';
 import { toPersianDigit } from '@/utils/numberUtils';
 import ManageHeader from '@/components/manageBusiness/ManageHeader';
-import BusinessStatsCard from '@/components/manageBusiness/BusinessStatsCard';
 
 
 export default function ManageBusinessPage() {
@@ -78,13 +77,13 @@ export default function ManageBusinessPage() {
       <ManageHeader />
 
       {/* ═══════ کارت‌های آماری ═══════ */}
-      <StatsSection stats={stats} />
+      {/* <StatsSection stats={stats} /> */}
 
       {/* ═══════ نوبت‌های امروز ═══════ */}
-      <TodayAppointments />
+      {/* <TodayAppointments /> */}
 
       {/* ═══════ نمودار درآمد هفتگی ═══════ */}
-      <WeeklyRevenueChart />
+      {/* <WeeklyRevenueChart /> */}
 
       {/* ═══════ دسترسی سریع ═══════ */}
       <QuickAccessGrid

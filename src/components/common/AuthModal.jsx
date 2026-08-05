@@ -8,7 +8,7 @@ import { useAuthModal } from '@/stores/useAuth';
 import Button from './Button';
 import Input from './Input';
 import { validatePhone } from '@/utils/phoneUtils';
-import { toPersianDigit } from '@/utils/numberUtils';
+import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 const OTP_LENGTH = 5;
@@ -96,7 +96,7 @@ export default function AuthModal() {
 
   // ═══ هندلر تغییر شماره ═══
   const handlePhoneChange = (text) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
+    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     if (cleaned.length <= 11) {
       setPhone(cleaned);
       if (error) setError('');

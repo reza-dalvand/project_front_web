@@ -8,7 +8,8 @@ import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button, Input } from '@/components/common';
 import { validatePhone } from '@/utils/phoneUtils';
-import { toPersianDigit } from '@/utils/numberUtils';
+import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
 
   const handlePhoneChange = (text) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
+    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     if (cleaned.length <= 11) {
       setPhone(cleaned);
       if (error) setError('');
