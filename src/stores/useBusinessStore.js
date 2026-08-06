@@ -1,6 +1,10 @@
 // src/stores/useBusinessStore.js
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { todayJalaali } from '@/utils/dateUtils';
+
+// ✅ تاریخ امروز به صورت داینامیک
+const today = todayJalaali();
 
 const INITIAL_BUSINESS_DATA = {
   id: 'biz_1',
@@ -61,18 +65,22 @@ const INITIAL_BUSINESS_DATA = {
   ],
   team: [],
   schedules: {},
+
+  // ═══════ ✅ ۱۰ نوبت با تاریخ امروز (داینامیک) ═══════
   appointments: [
+    // ── صبح: نوبت‌های انجام شده ──
     {
       id: 'apt_1',
       customerName: 'نازنین کریمی',
       customerPhone: '09121112233',
       serviceName: 'فیشیال تخصصی پوست',
       employeeName: 'سارا احمدی',
-      date: { jy: 1405, jm: 5, jd: 14 },
-      time: '۱۰:۳۰',
-      status: 'reserved',
+      date: today, // ✅ داینامیک
+      time: '۰۸:۳۰',
+      status: 'done',
       price: 675000,
       depositPaid: 200000,
+      verificationCode: '5892',
     },
     {
       id: 'apt_2',
@@ -80,11 +88,123 @@ const INITIAL_BUSINESS_DATA = {
       customerPhone: '09124445566',
       serviceName: 'کاشت ناخن ژلیش',
       employeeName: 'مریم رضایی',
-      date: { jy: 1405, jm: 5, jd: 14 },
-      time: '۱۴:۳۰',
+      date: today, // ✅ داینامیک
+      time: '۰۹:۳۰',
+      status: 'done',
+      price: 450000,
+      depositPaid: 100000,
+      verificationCode: '2571',
+    },
+    // ── صبح: نوبت‌های رزرو شده ──
+    {
+      id: 'apt_3',
+      customerName: 'زهرا حسینی',
+      customerPhone: '09127778899',
+      serviceName: 'لیزر فول بادی',
+      employeeName: 'دکتر رضایی',
+      date: today, // ✅ داینامیک
+      time: '۱۰:۳۰',
+      status: 'reserved',
+      price: 2125000,
+      depositPaid: 500000,
+      verificationCode: '7456',
+    },
+    {
+      id: 'apt_4',
+      customerName: 'مریم احمدی',
+      customerPhone: '09123334455',
+      serviceName: 'فیشیال تخصصی پوست',
+      employeeName: 'سارا احمدی',
+      date: today, // ✅ داینامیک
+      time: '۱۱:۳۰',
+      status: 'reserved',
+      price: 675000,
+      depositPaid: 200000,
+      verificationCode: '3841',
+    },
+    // ── ظهر: نوبت لغو شده ──
+    {
+      id: 'apt_5',
+      customerName: 'سمیرا قاسمی',
+      customerPhone: '09126665544',
+      serviceName: 'کاشت ناخن ژلیش',
+      employeeName: 'مریم رضایی',
+      date: today, // ✅ داینامیک
+      time: '۱۲:۳۰',
+      status: 'cancelled_by_salon',
+      price: 450000,
+      depositPaid: 100000,
+      cancellationReason: 'سالن در این ساعت تعطیل است',
+      refundAmount: 100000,
+    },
+    // ── بعدازظهر: نوبت‌های رزرو شده ──
+    {
+      id: 'apt_6',
+      customerName: 'پریسا نوری',
+      customerPhone: '09128889900',
+      serviceName: 'لیزر فول بادی',
+      employeeName: 'دکتر رضایی',
+      date: today, // ✅ داینامیک
+      time: '۱۴:۰۰',
+      status: 'reserved',
+      price: 2125000,
+      depositPaid: 500000,
+      verificationCode: '9213',
+    },
+    {
+      id: 'apt_7',
+      customerName: 'فاطمه رضوی',
+      customerPhone: '09121234567',
+      serviceName: 'فیشیال تخصصی پوست',
+      employeeName: 'سارا احمدی',
+      date: today, // ✅ داینامیک
+      time: '۱۵:۳۰',
+      status: 'reserved',
+      price: 675000,
+      depositPaid: 200000,
+      verificationCode: '6174',
+    },
+    {
+      id: 'apt_8',
+      customerName: 'شیما کاظمی',
+      customerPhone: '09129876543',
+      serviceName: 'کاشت ناخن ژلیش',
+      employeeName: 'مریم رضایی',
+      date: today, // ✅ داینامیک
+      time: '۱۶:۳۰',
       status: 'reserved',
       price: 450000,
       depositPaid: 100000,
+      verificationCode: '4528',
+    },
+    // ── عصر: نوبت لغو شده ──
+    {
+      id: 'apt_9',
+      customerName: 'نگار موسوی',
+      customerPhone: '09125556677',
+      serviceName: 'لیزر فول بادی',
+      employeeName: 'دکتر رضایی',
+      date: today, // ✅ داینامیک
+      time: '۱۷:۳۰',
+      status: 'cancelled_by_salon',
+      price: 2125000,
+      depositPaid: 500000,
+      cancellationReason: 'دستگاه لیزر در تعمیر است',
+      refundAmount: 500000,
+    },
+    // ── شب: نوبت رزرو شده ──
+    {
+      id: 'apt_10',
+      customerName: 'آیدا شریفی',
+      customerPhone: '09124443322',
+      serviceName: 'فیشیال تخصصی پوست',
+      employeeName: 'سارا احمدی',
+      date: today, // ✅ داینامیک
+      time: '۱۹:۰۰',
+      status: 'reserved',
+      price: 675000,
+      depositPaid: 200000,
+      verificationCode: '8367',
     },
   ],
   portfolios: [],
@@ -100,7 +220,10 @@ export const useBusinessStore = create(
         set((state) => ({
           businessData: {
             ...state.businessData,
-            services: [...state.businessData.services, { ...service, id: `svc_${Date.now()}` }],
+            services: [
+              ...state.businessData.services,
+              { ...service, id: `svc_${Date.now()}` },
+            ],
           },
         })),
 
@@ -118,7 +241,9 @@ export const useBusinessStore = create(
         set((state) => ({
           businessData: {
             ...state.businessData,
-            services: state.businessData.services.filter((s) => s.id !== serviceId),
+            services: state.businessData.services.filter(
+              (s) => s.id !== serviceId
+            ),
           },
         })),
 
@@ -127,7 +252,10 @@ export const useBusinessStore = create(
         set((state) => ({
           businessData: {
             ...state.businessData,
-            team: [...state.businessData.team, { ...member, id: `emp_${Date.now()}` }],
+            team: [
+              ...state.businessData.team,
+              { ...member, id: `emp_${Date.now()}` },
+            ],
           },
         })),
 
@@ -176,7 +304,9 @@ export const useBusinessStore = create(
         set((state) => ({
           businessData: {
             ...state.businessData,
-            portfolios: state.businessData.portfolios.filter((p) => p.id !== portfolioId),
+            portfolios: state.businessData.portfolios.filter(
+              (p) => p.id !== portfolioId
+            ),
           },
         })),
 
@@ -197,12 +327,15 @@ export const useBusinessStore = create(
       },
 
       // ═══════ Selectors ═══════
-      getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
+      getActiveServices: () =>
+        get().businessData.services.filter((s) => s.isActive !== false),
     }),
     {
       name: 'zibano-business-storage',
       storage: createJSONStorage(() =>
-        typeof window !== 'undefined' ? localStorage : { getItem: () => null, setItem: () => {} }
+        typeof window !== 'undefined'
+          ? localStorage
+          : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
       partialize: (state) => ({
         businessData: state.businessData,
