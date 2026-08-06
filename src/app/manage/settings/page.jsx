@@ -2,13 +2,14 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  FiStore,
+  FiBriefcase,
   FiMapPin,
   FiPhone,
   FiClock,
   FiCheck,
   FiAlertCircle,
   FiTrash2,
+  FiUser,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -24,10 +25,12 @@ import dynamic from 'next/dynamic';
 import ImageUploader from '@/components/common/ImageUploader';
 import SectionHeader from '@/components/common/SectionHeader';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
+
 const MapPicker = dynamic(
   () => import('@/components/common/MapPicker'),
-  { ssr: false }  // ← کلید اصلی: نه SSR، نه Turbopack problem
+  { ssr: false }
 );
+
 const BUSINESS_CATEGORIES = [
   { id: 'salon', label: 'سالن زیبایی (چند منظوره)' },
   { id: 'clinic', label: 'کلینیک پوست و مو' },
@@ -52,12 +55,13 @@ export default function BusinessSettingsPage() {
   const [formData, setFormData] = useState({
     name: businessData.name || '',
     categoryId: businessData.categoryId || null,
-    provinceId: null,
-    cityId: null,
+    provinceId: businessData.provinceId || null,
+    cityId: businessData.cityId || null,
     address: businessData.address || '',
     phone: businessData.phone || '',
     workingHours: businessData.workingHours || '',
     coverUrl: businessData.coverUrl || null,
+    ownerPhoto: businessData.ownerPhoto || null,
     location: businessData.location || null,
   });
 
@@ -70,11 +74,19 @@ export default function BusinessSettingsPage() {
     if (errors[key]) setErrors((e) => ({ ...e, [key]: '' }));
   };
 
+  const handleProvinceChange = (provinceId) => {
+    updateField('provinceId', provinceId);
+    updateField('cityId', null);
+    updateField('location', null);
+  };
+
   const handleSave = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'نام کسب‌وکار الزامی است';
     if (!formData.categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
     if (!formData.address.trim()) newErrors.address = 'آدرس الزامی است';
+    if (!formData.ownerPhoto) newErrors.ownerPhoto = 'تصویر صاحب کسب‌وکار الزامی است';
+
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -83,10 +95,13 @@ export default function BusinessSettingsPage() {
       updateBusinessInfo({
         name: formData.name.trim(),
         categoryId: formData.categoryId,
+        provinceId: formData.provinceId,
+        cityId: formData.cityId,
         address: formData.address.trim(),
         phone: formData.phone.trim(),
         workingHours: formData.workingHours.trim(),
         coverUrl: formData.coverUrl,
+        ownerPhoto: formData.ownerPhoto,
         location: formData.location,
       });
       setSaving(false);
@@ -113,27 +128,51 @@ export default function BusinessSettingsPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.back()} />
-
       <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
-        {/* ═══════ کاور کسب‌وکار ═══════ */}
+        {/* ═══════ تصاویر ═══════ */}
         <div className="space-y-3">
           <SectionHeader
-            icon={<FiStore size={18} />}
+            icon={<FiBriefcase size={18} />}
             iconColor={colors.primary}
-            title="تصویر کاور"
+            title="تصاویر کسب‌وکار"
           />
-          <ImageUploader
-            value={formData.coverUrl}
-            onChange={(url) => updateField('coverUrl', url)}
-            variant="cover"
-            hint="تصویر با کیفیت از محیط سالن"
-          />
+          
+          {/* تصویر کاور */}
+          <Card variant="elevated" padding={16} radius={18}>
+            <label className="block text-sm mb-2 text-right font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
+              تصویر کاور سالن
+            </label>
+            <ImageUploader
+              value={formData.coverUrl}
+              onChange={(url) => updateField('coverUrl', url)}
+              variant="cover"
+              hint="تصویر با کیفیت از محیط سالن (۱۲۰۰×۴۰۰)"
+            />
+          </Card>
+
+          {/* تصویر صاحب کسب‌وکار */}
+          <Card variant="elevated" padding={16} radius={18}>
+            <label className="block text-sm mb-2 text-right font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
+              تصویر صاحب کسب‌وکار <span style={{ color: '#E53935' }}>*</span>
+            </label>
+            <div className="flex flex-col items-center gap-3">
+              <ImageUploader
+                value={formData.ownerPhoto}
+                onChange={(url) => updateField('ownerPhoto', url)}
+                variant="avatar"
+                error={errors.ownerPhoto}
+              />
+              <p className="text-xs font-[Vazir] text-center" style={{ color: colors.textSecondary }}>
+                عکس واقعی مدیر کسب‌وکار (جهت احراز هویت و اعتماد مشتریان)
+              </p>
+            </div>
+          </Card>
         </div>
 
         {/* ═══════ اطلاعات پایه ═══════ */}
         <div className="space-y-3">
           <SectionHeader
-            icon={<FiStore size={18} />}
+            icon={<FiBriefcase size={18} />}
             iconColor={colors.primary}
             title="اطلاعات پایه"
           />
@@ -185,6 +224,21 @@ export default function BusinessSettingsPage() {
             title="موقعیت مکانی"
           />
           <Card variant="elevated" padding={16} radius={18}>
+            <Dropdown
+              label="استان *"
+              placeholder="انتخاب استان"
+              value={formData.provinceId}
+              options={PROVINCES}
+              onSelect={handleProvinceChange}
+            />
+            <Dropdown
+              label="شهر *"
+              placeholder={formData.provinceId ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
+              value={formData.cityId}
+              options={formData.provinceId ? CITIES[formData.provinceId] || [] : []}
+              onSelect={(val) => updateField('cityId', val)}
+              disabled={!formData.provinceId}
+            />
             <Input
               label="آدرس دقیق *"
               placeholder="خیابان، کوچه، پلاک، واحد..."
@@ -267,22 +321,18 @@ export default function BusinessSettingsPage() {
             >
               <FiTrash2 size={40} color="#E53935" />
             </div>
-
             <h3
               className="text-xl font-[Vazir-Bold] text-center"
               style={{ color: colors.textMain }}
             >
               حذف کسب و کار
             </h3>
-
             <p
               className="text-sm text-center leading-6"
               style={{ color: colors.textSecondary }}
             >
               آیا مطمئن هستید که می‌خواهید کسب‌وکار خود را حذف کنید؟ این عمل قابل بازگشت نیست.
             </p>
-
-            {/* لیست اتفاقات */}
             <div
               className="w-full p-4 rounded-xl space-y-2"
               style={{ backgroundColor: '#E5393508', border: '1px solid #E5393530' }}
@@ -293,9 +343,7 @@ export default function BusinessSettingsPage() {
                 'این عمل غیرقابل بازگشت است',
               ].map((text, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <span className="text-xs mt-0.5" style={{ color: '#E53935' }}>
-                    •
-                  </span>
+                  <span className="text-xs mt-0.5" style={{ color: '#E53935' }}>•</span>
                   <span
                     className="text-xs font-[Vazir] leading-5 flex-1"
                     style={{ color: colors.textSecondary }}
@@ -305,7 +353,6 @@ export default function BusinessSettingsPage() {
                 </div>
               ))}
             </div>
-
             <div className="flex gap-3 w-full mt-2">
               <Button
                 title="انصراف"

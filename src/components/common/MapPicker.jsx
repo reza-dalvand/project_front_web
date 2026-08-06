@@ -4,9 +4,6 @@ import { FiMapPin, FiNavigation, FiCheck, FiX, FiEdit } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
 import Card from './Card';
-
-// ✅ حذف import استاتیک - از Dynamic Import استفاده می‌کنیم
-// import Map, { Marker, NavigationControl } from 'react-map-gl/maplibre';  ❌ حذف
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 const DEFAULT_LOCATION = {
@@ -46,8 +43,8 @@ export default function MapPicker({
   const [tempLocation, setTempLocation] = useState(null);
   const [tempAddress, setTempAddress] = useState('در حال دریافت آدرس...');
   const [loading, setLoading] = useState(false);
-  
-  // ✅ اضافه شد - Dynamic Import برای maplibre
+
+  // Dynamic Import برای maplibre
   const [MapLib, setMapLib] = useState(null);
   const [mapLoading, setMapLoading] = useState(true);
 
@@ -266,18 +263,21 @@ export default function MapPicker({
                     latitude={tempLocation.latitude}
                     anchor="bottom"
                   >
-                    <div className="relative flex flex-col items-center">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
-                        style={{ backgroundColor: '#E53935' }}
-                      >
-                        <FiMapPin size={20} color="#fff" />
-                      </div>
-                      <div
-                        className="w-4 h-2 rounded-full mt-[-2px]"
-                        style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
+                    {/* ✅ مارکر قرمز بدون دایره دور - فقط خود پین */}
+                    <svg
+                      width="36"
+                      height="48"
+                      viewBox="0 0 36 48"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))' }}
+                    >
+                      <path
+                        d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z"
+                        fill="#E53935"
                       />
-                    </div>
+                      <circle cx="18" cy="18" r="7" fill="#fff" />
+                    </svg>
                   </MapLib.Marker>
                 )}
               </MapLib.Map>
