@@ -1,6 +1,6 @@
 'use client';
-
 import { useState, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation'; // ✅ ۱. ایمپورت useRouter
 import { FiSliders, FiGrid } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -26,7 +26,7 @@ const INITIAL_FILTERS = {
 const PAGE_SIZE = 12;
 const MAX_PAGES = 10;
 
-// تولید پست‌های بیشتر برای لیزی لودینگ
+// ✅ ۲. تولید پست‌های بیشتر (این تابع باید کاملاً Pure باشد و هیچ هوکی داخل آن استفاده نشود)
 const generateMorePosts = (page, size) => {
   if (page > MAX_PAGES) return [];
   const samplePosts = MOCK_POSTS.filter((p) => p.source === 'business');
@@ -51,6 +51,7 @@ const generateMorePosts = (page, size) => {
 };
 
 export default function ExplorePage() {
+  const router = useRouter(); // ✅ ۳. مقداردهی هوک useRouter در بدنه اصلی کامپوننت
   const { colors } = useTheme();
 
   // State های لیزی لودینگ
@@ -71,24 +72,20 @@ export default function ExplorePage() {
       if (filters.city && post.cityId !== filters.city) return false;
       if (filters.businessType && post.businessTypeId !== filters.businessType)
         return false;
-
       if (filters.source !== 'all') {
         if (filters.source === 'business' && post.source === 'magazine')
           return false;
         if (filters.source === 'magazine' && post.source !== 'magazine')
           return false;
       }
-
       if (filters.mainCategory !== 'all') {
         if (post.mainCategory && post.mainCategory !== filters.mainCategory)
           return false;
       }
-
       if (filters.subCategory !== 'all' && filters.mainCategory !== 'all') {
         if (post.subCategory && post.subCategory !== filters.subCategory)
           return false;
       }
-
       return true;
     });
   }, [allPosts, filters]);
@@ -104,22 +101,17 @@ export default function ExplorePage() {
   // لود پست‌های بیشتر
   const loadMorePosts = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
-
     setIsLoadingMore(true);
     await new Promise((r) => setTimeout(r, 800 + Math.random() * 700));
-
     const nextPage = page + 1;
     const newPosts = generateMorePosts(nextPage, PAGE_SIZE);
-
     if (newPosts.length === 0 || nextPage >= MAX_PAGES) {
       setHasMore(false);
     }
-
     if (newPosts.length > 0) {
       setAllPosts((prev) => [...prev, ...newPosts]);
       setPage(nextPage);
     }
-
     setIsLoadingMore(false);
   }, [isLoadingMore, hasMore, page]);
 
@@ -133,10 +125,11 @@ export default function ExplorePage() {
     }
   };
 
-  // Navigation to profile (TODO: integrate with router)
+  // ✅ ۴. رفع خطای router is not defined
   const handleNavigateToProfile = (businessId) => {
-    console.log('Navigate to business:', businessId);
-    // router.push(`/business/${businessId}`);
+    if (businessId && businessId !== 'magazine') {
+      router.push(`/business/${businessId}`);
+    }
   };
 
   const handleClearFilters = () => setFilters(INITIAL_FILTERS);
@@ -155,12 +148,12 @@ export default function ExplorePage() {
           icon={<FiGrid size={18} />}
           iconColor={colors.primary}
           title="ویترین"
-          subtitle="نمونه کار‌های تمام خدمات در زیبانو"
+          subtitle="نمونه‌کار کسب‌وکارها در زیبانو"
           rightElement={
             <button
               onClick={() => setFilterVisible(true)}
               className="w-10 h-10 rounded-xl border flex items-center justify-center
-                         relative transition-colors hover:opacity-80"
+                relative transition-colors hover:opacity-80"
               style={{
                 backgroundColor: hasActiveFilter
                   ? colors.primary + '15'

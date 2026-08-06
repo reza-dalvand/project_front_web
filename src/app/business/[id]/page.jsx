@@ -244,7 +244,7 @@ export default function BusinessDetailsPage() {
       </div>
 
       {/* ═══ Sticky Booking Bar ═══ */}
-      <StickyBookingBar minPrice={minServicePrice} onBookPress={openBooking} />
+      {/* <StickyBookingBar minPrice={minServicePrice} onBookPress={openBooking} /> */}
 
       {/* ═══ Booking Modal ═══ */}
       <BookingModal

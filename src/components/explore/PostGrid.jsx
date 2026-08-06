@@ -1,6 +1,5 @@
 'use client';
-
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { FiCheckCircle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import PostThumbnail from './PostThumbnail';
@@ -17,43 +16,25 @@ export default function PostGrid({
   totalLoaded = 0,
 }) {
   const { colors } = useTheme();
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const sentinelRef = useRef(null);
 
-  // شبیه‌سازی لود اولیه
-  useEffect(() => {
-    const timer = setTimeout(() => setIsInitialLoad(false), 300);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Intersection Observer برای Lazy Loading
+  // ═══════ Intersection Observer برای لود صفحه بعدی ═══════
   useEffect(() => {
     if (!onLoadMore || !hasMore || isLoadingMore) return;
+    if (!sentinelRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+        if (entries[0].isIntersecting) {
           onLoadMore();
         }
       },
-      { threshold: 0.1 }
+      { rootMargin: '300px', threshold: 0 }
     );
 
-    if (sentinelRef.current) {
-      observer.observe(sentinelRef.current);
-    }
-
+    observer.observe(sentinelRef.current);
     return () => observer.disconnect();
   }, [onLoadMore, hasMore, isLoadingMore]);
-
-  // حالت لود اولیه
-  if (isInitialLoad) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <LoadingSpinner size="lg" label="در حال بارگذاری پست‌ها..." />
-      </div>
-    );
-  }
 
   // حالت خالی
   if (!posts || posts.length === 0) {
@@ -73,33 +54,28 @@ export default function PostGrid({
       {/* Grid سه‌ستونه */}
       <div className="grid grid-cols-3 gap-1">
         {posts.map((post) => (
-          <PostThumbnail
-            key={post.id}
-            post={post}
-            onPress={onPostPress}
-          />
+          <PostThumbnail key={post.id} post={post} onPress={onPostPress} />
         ))}
       </div>
 
-      {/* Sentinel برای Lazy Loading */}
-      {hasMore && (
-        <div ref={sentinelRef} className="h-20 flex items-center justify-center py-8">
-          {isLoadingMore && (
-            <div className="flex items-center gap-3">
-              <LoadingSpinner size="sm" />
-              <span
-                className="text-sm"
-                style={{ color: colors.textSecondary, fontFamily: 'Vazir-Medium' }}
-              >
-                در حال بارگذاری پست‌های بیشتر...
-              </span>
-            </div>
-          )}
+      {/* Sentinel نامرئی برای trigger لود بعدی */}
+      {hasMore && <div ref={sentinelRef} className="h-1" />}
+
+      {/* اسپینر لود صفحه بعدی */}
+      {isLoadingMore && (
+        <div className="flex items-center justify-center gap-3 py-6">
+          <LoadingSpinner size="sm" />
+          <span
+            className="text-sm"
+            style={{ color: colors.textSecondary, fontFamily: 'Vazir-Medium' }}
+          >
+            در حال بارگذاری پست‌های بیشتر...
+          </span>
         </div>
       )}
 
       {/* پیام پایان لیست */}
-      {!hasMore && posts.length > 0 && (
+      {!hasMore && !isLoadingMore && posts.length > 0 && (
         <div className="flex items-center justify-center gap-3 py-8 px-6">
           <div className="flex-1 h-px" style={{ backgroundColor: colors.border }} />
           <div
