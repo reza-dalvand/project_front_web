@@ -64,7 +64,7 @@ export default function Dropdown({
 
   const content = visible ? (
     <div
-      className="fixed inset-0 z-[9998] flex flex-col justify-end"
+      className="fixed inset-0 z-[10001] flex flex-col justify-end"
       style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
       onClick={() => setVisible(false)}
     >

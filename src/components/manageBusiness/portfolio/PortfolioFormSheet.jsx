@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { FiX, FiImage, FiTag, FiCheck, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiX, FiImage, FiTag, FiCheck, FiPlus } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import BottomSheet from '@/components/common/BottomSheet';
 import Input from '@/components/common/Input';
@@ -8,6 +8,11 @@ import Button from '@/components/common/Button';
 import Dropdown from '@/components/common/Dropdown';
 import CharCounter from '@/components/common/CharCounter';
 import { toPersianDigit } from '@/utils/numberUtils';
+import {
+  SERVICE_CATEGORIES,
+  getSubServicesByCategory,
+  getCategoryById,
+} from '@/constants/serviceTypes';
 
 const MAX_DESCRIPTION_LENGTH = 300;
 const MAX_IMAGES = 5;
@@ -21,13 +26,16 @@ export default function PortfolioFormSheet({
 }) {
   const { colors } = useTheme();
   const isEditMode = !!editingPortfolio;
-
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [serviceId, setServiceId] = useState(null);
+  const [categoryId, setCategoryId] = useState(null);
+  const [subServiceId, setSubServiceId] = useState(null);
   const [images, setImages] = useState([]);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+
+  // لیست زیرخدمات بر اساس دسته‌بندی انتخاب شده
+  const availableSubServices = categoryId ? getSubServicesByCategory(categoryId) : [];
 
   // Reset form when modal opens
   useEffect(() => {
@@ -35,7 +43,8 @@ export default function PortfolioFormSheet({
       if (editingPortfolio) {
         setTitle(editingPortfolio.title || '');
         setDescription(editingPortfolio.description || '');
-        setServiceId(editingPortfolio.serviceId || null);
+        setCategoryId(editingPortfolio.categoryId || null);
+        setSubServiceId(editingPortfolio.subServiceId || null);
         setImages(
           editingPortfolio.images ||
             (editingPortfolio.coverImage ? [editingPortfolio.coverImage] : [])
@@ -43,7 +52,8 @@ export default function PortfolioFormSheet({
       } else {
         setTitle('');
         setDescription('');
-        setServiceId(null);
+        setCategoryId(null);
+        setSubServiceId(null);
         setImages([]);
       }
       setErrors({});
@@ -51,14 +61,16 @@ export default function PortfolioFormSheet({
     }
   }, [visible, editingPortfolio]);
 
-  const serviceOptions = services.map((s) => ({
-    id: s.id,
-    label: s.name,
-  }));
+  // وقتی دسته‌بندی عوض شد، نوع خدمت ریست شود
+  const handleCategoryChange = (catId) => {
+    setCategoryId(catId);
+    setSubServiceId(null); // ریست نوع خدمت
+    if (errors.categoryId) setErrors((prev) => ({ ...prev, categoryId: '' }));
+    if (errors.subServiceId) setErrors((prev) => ({ ...prev, subServiceId: '' }));
+  };
 
   const handleAddImage = () => {
     if (images.length >= MAX_IMAGES) return;
-    // شبیه‌سازی آپلود تصویر
     const randomId = Math.floor(Math.random() * 1000);
     const newImage = `https://picsum.photos/800/800?random=${randomId}`;
     setImages((prev) => [...prev, newImage]);
@@ -71,29 +83,36 @@ export default function PortfolioFormSheet({
 
   const handleSave = async () => {
     const newErrors = {};
-
     if (!title.trim()) {
       newErrors.title = 'عنوان نمونه‌کار الزامی است';
     } else if (title.trim().length < 3) {
       newErrors.title = 'عنوان باید حداقل ۳ کاراکتر باشد';
     }
-
+    if (!categoryId) {
+      newErrors.categoryId = 'دسته‌بندی خدمات را انتخاب کنید';
+    }
+    if (!subServiceId) {
+      newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
+    }
     if (images.length === 0) {
       newErrors.images = 'حداقل یک تصویر اضافه کنید';
     }
-
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
     setIsSaving(true);
-
-    // شبیه‌سازی تاخیر ذخیره
     await new Promise((r) => setTimeout(r, 600));
+
+    const category = getCategoryById(categoryId);
+    const subService = availableSubServices.find((s) => s.id === subServiceId);
 
     const portfolioData = {
       title: title.trim(),
       description: description.trim(),
-      serviceId,
+      categoryId,
+      categoryLabel: category?.label || '',
+      subServiceId,
+      subServiceLabel: subService?.label || '',
       coverImage: images[0],
       images,
     };
@@ -120,7 +139,6 @@ export default function PortfolioFormSheet({
             size="lg"
             disabled={isSaving}
             className="flex-1"
-            icon={!isSaving ? <FiCheck size={18} color="#fff" /> : null}
             iconPosition="right"
           />
         </div>
@@ -146,13 +164,11 @@ export default function PortfolioFormSheet({
               {toPersianDigit(images.length)} از {toPersianDigit(MAX_IMAGES)}
             </span>
           </div>
-
           {errors.images && (
             <p className="text-xs mb-2" style={{ color: '#E53935' }}>
               {errors.images}
             </p>
           )}
-
           {/* Grid تصاویر */}
           <div className="grid grid-cols-3 gap-2.5">
             {images.map((img, index) => (
@@ -177,7 +193,6 @@ export default function PortfolioFormSheet({
                 </button>
               </div>
             ))}
-
             {/* دکمه افزودن تصویر */}
             {images.length < MAX_IMAGES && (
               <button
@@ -195,10 +210,56 @@ export default function PortfolioFormSheet({
               </button>
             )}
           </div>
-
           <p className="text-[11px] mt-2" style={{ color: colors.textSecondary }}>
             اولین تصویر به عنوان کاور نمایش داده می‌شود
           </p>
+        </div>
+
+        {/* ═══════ بخش دسته‌بندی و نوع خدمت ═══════ */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: '#9C27B018' }}
+            >
+              <FiTag size={16} color="#9C27B0" />
+            </div>
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+              دسته‌بندی و نوع خدمت
+            </span>
+          </div>
+
+          {/* Dropdown سطح ۱: دسته‌بندی خدمات */}
+          <Dropdown
+            label="دسته‌بندی خدمات *"
+            placeholder="دسته‌بندی را انتخاب کنید"
+            value={categoryId}
+            options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
+            onSelect={handleCategoryChange}
+          />
+          {errors.categoryId && (
+            <p className="text-xs mt-[-8px] mb-3" style={{ color: '#E53935' }}>
+              {errors.categoryId}
+            </p>
+          )}
+
+          {/* Dropdown سطح ۲: نوع خدمت */}
+          <Dropdown
+            label="نوع خدمت *"
+            placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
+            value={subServiceId}
+            options={availableSubServices}
+            onSelect={(val) => {
+              setSubServiceId(val);
+              if (errors.subServiceId) setErrors((prev) => ({ ...prev, subServiceId: '' }));
+            }}
+            disabled={!categoryId}
+          />
+          {errors.subServiceId && (
+            <p className="text-xs mt-[-8px]" style={{ color: '#E53935' }}>
+              {errors.subServiceId}
+            </p>
+          )}
         </div>
 
         {/* ═══════ بخش اطلاعات ═══════ */}
@@ -214,10 +275,9 @@ export default function PortfolioFormSheet({
               اطلاعات نمونه‌کار
             </span>
           </div>
-
           <Input
             label="عنوان نمونه‌کار *"
-            placeholder="مثال: فیشیال VIP عروس"
+            placeholder="مثال: پدیکور VIP با طراحی مینیمال"
             value={title}
             onChangeText={(t) => {
               setTitle(t);
@@ -225,15 +285,6 @@ export default function PortfolioFormSheet({
             }}
             error={errors.title}
           />
-
-          <Dropdown
-            label="خدمت مرتبط (اختیاری)"
-            placeholder="خدمت مرتبط را انتخاب کنید"
-            value={serviceId}
-            options={serviceOptions}
-            onSelect={setServiceId}
-          />
-
           <div className="mb-1">
             <Input
               label="توضیحات (اختیاری)"

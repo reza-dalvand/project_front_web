@@ -266,7 +266,7 @@ export default function ShareBookingLinkModal({ visible, onClose, bookingLink })
           </div>
 
           {/* QR Code */}
-          <QRCodeSection bookingLink={bookingLink} />
+          {/* <QRCodeSection bookingLink={bookingLink} /> */}
 
           {/* راهنما */}
           <div

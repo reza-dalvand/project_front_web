@@ -10,10 +10,10 @@ import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 const STATUS_CONFIG = {
-  reserved:           { label: 'رزرو شده',  color: '#2196F3', bg: '#2196F318' },
-  confirmed:          { label: 'تایید شده', color: '#FF9800', bg: '#FF980018' },
-  done:               { label: 'انجام شده', color: '#43A047', bg: '#43A04718' },
-  cancelled_by_salon: { label: 'لغو شده',   color: '#E53935', bg: '#E5393518' },
+  reserved: { label: 'رزرو شده', color: '#2196F3', bg: '#2196F318' },
+  confirmed: { label: 'تایید شده', color: '#FF9800', bg: '#FF980018' },
+  done: { label: 'انجام شده', color: '#43A047', bg: '#43A04718' },
+  cancelled_by_salon: { label: 'لغو شده', color: '#E53935', bg: '#E5393518' },
 };
 
 const timeToMinutes = (timeStr) => {
@@ -39,11 +39,7 @@ export default function TodayScheduleTimeline() {
   const todayAppointments = useMemo(() => {
     const todayFiltered = appointments.filter((apt) => {
       if (!apt.date) return false;
-      return (
-        apt.date.jy === today.jy &&
-        apt.date.jm === today.jm &&
-        apt.date.jd === today.jd
-      );
+      return apt.date.jy === today.jy && apt.date.jm === today.jm && apt.date.jd === today.jd;
     });
     // ✅ FALLBACK: اگر نوبتی برای امروز نبود، همه نوبت‌ها را نشان بده
     if (todayFiltered.length === 0 && appointments.length > 0) {
@@ -273,10 +269,7 @@ export default function TodayScheduleTimeline() {
         >
           {Object.entries(STATUS_CONFIG).map(([key, config]) => (
             <div key={key} className="flex items-center gap-1">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: config.color }}
-              />
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} />
               <span className="text-[9px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                 {config.label}
               </span>
@@ -286,7 +279,8 @@ export default function TodayScheduleTimeline() {
           <div className="flex items-center gap-1">
             <FiClock size={10} style={{ color: colors.textSecondary }} />
             <span className="text-[9px] font-[Vazir]" style={{ color: colors.textSecondary }}>
-              {toPersianDigit(todayAppointments.length)} نوبت در {toPersianDigit(hoursWithAppointments)} ساعت
+              {toPersianDigit(todayAppointments.length)} نوبت در{' '}
+              {toPersianDigit(hoursWithAppointments)} ساعت
             </span>
           </div>
         </div>

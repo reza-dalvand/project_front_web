@@ -176,7 +176,6 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
           variant="primary"
           size="lg"
           className="flex-[2]"
-          icon={<FiCheck size={18} color="#fff" />}
           iconPosition="right"
         />
       </div>

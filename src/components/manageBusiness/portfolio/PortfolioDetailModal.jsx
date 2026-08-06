@@ -191,16 +191,49 @@ export default function PortfolioDetailModal({
               {portfolio.title || 'نمونه‌کار'}
             </p>
 
-            {/* خدمت مرتبط */}
-            {serviceName && (
-              <div
-                className="flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg self-start"
-                style={{ backgroundColor: colors.primary + '15' }}
-              >
-                <FiTag size={11} style={{ color: colors.primary }} />
-                <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                  {serviceName}
-                </span>
+            {/* خدمت مرتبط - ساختار سلسله‌مراتبی */}
+            {(portfolio.categoryLabel || portfolio.subServiceLabel || serviceName) && (
+              <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+                {portfolio.categoryLabel && (
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                    style={{ backgroundColor: '#9C27B015' }}
+                  >
+                    <FiTag size={11} color="#9C27B0" />
+                    <span className="text-[11px] font-[Vazir-Bold]" style={{ color: '#9C27B0' }}>
+                      {portfolio.categoryLabel}
+                    </span>
+                  </div>
+                )}
+                {portfolio.subServiceLabel && (
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                    style={{ backgroundColor: colors.primary + '15' }}
+                  >
+                    <FiTag size={11} style={{ color: colors.primary }} />
+                    <span
+                      className="text-[11px] font-[Vazir-Bold]"
+                      style={{ color: colors.primary }}
+                    >
+                      {portfolio.subServiceLabel}
+                    </span>
+                  </div>
+                )}
+                {/* Fallback برای داده‌های قدیمی */}
+                {!portfolio.categoryLabel && serviceName && (
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                    style={{ backgroundColor: colors.primary + '15' }}
+                  >
+                    <FiTag size={11} style={{ color: colors.primary }} />
+                    <span
+                      className="text-[11px] font-[Vazir-Bold]"
+                      style={{ color: colors.primary }}
+                    >
+                      {serviceName}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>

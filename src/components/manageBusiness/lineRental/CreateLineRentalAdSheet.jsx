@@ -342,7 +342,6 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           variant="primary"
           size="lg"
           fullWidth
-          icon={<FiCheck size={18} color="#fff" />}
           iconPosition="right"
         />
       </div>

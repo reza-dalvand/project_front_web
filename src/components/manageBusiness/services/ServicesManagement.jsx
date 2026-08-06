@@ -358,7 +358,6 @@ export default function ServicesManagement({ services = [], onChange }) {
             variant="primary"
             size="lg"
             fullWidth
-            icon={<FiCheck size={20} color="#fff" />}
             iconPosition="right"
           />
         }

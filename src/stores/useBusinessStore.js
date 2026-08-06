@@ -220,10 +220,7 @@ export const useBusinessStore = create(
         set((state) => ({
           businessData: {
             ...state.businessData,
-            services: [
-              ...state.businessData.services,
-              { ...service, id: `svc_${Date.now()}` },
-            ],
+            services: [...state.businessData.services, { ...service, id: `svc_${Date.now()}` }],
           },
         })),
 
@@ -241,9 +238,7 @@ export const useBusinessStore = create(
         set((state) => ({
           businessData: {
             ...state.businessData,
-            services: state.businessData.services.filter(
-              (s) => s.id !== serviceId
-            ),
+            services: state.businessData.services.filter((s) => s.id !== serviceId),
           },
         })),
 
@@ -252,10 +247,7 @@ export const useBusinessStore = create(
         set((state) => ({
           businessData: {
             ...state.businessData,
-            team: [
-              ...state.businessData.team,
-              { ...member, id: `emp_${Date.now()}` },
-            ],
+            team: [...state.businessData.team, { ...member, id: `emp_${Date.now()}` }],
           },
         })),
 
@@ -304,9 +296,7 @@ export const useBusinessStore = create(
         set((state) => ({
           businessData: {
             ...state.businessData,
-            portfolios: state.businessData.portfolios.filter(
-              (p) => p.id !== portfolioId
-            ),
+            portfolios: state.businessData.portfolios.filter((p) => p.id !== portfolioId),
           },
         })),
 
@@ -327,8 +317,7 @@ export const useBusinessStore = create(
       },
 
       // ═══════ Selectors ═══════
-      getActiveServices: () =>
-        get().businessData.services.filter((s) => s.isActive !== false),
+      getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
     }),
     {
       name: 'zibano-business-storage',

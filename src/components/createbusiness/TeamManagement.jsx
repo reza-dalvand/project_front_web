@@ -251,7 +251,6 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                 variant="primary"
                 size="lg"
                 className="flex-1"
-                icon={<FiCheck size={18} color="#fff" />}
                 iconPosition="right"
               />
             </div>

@@ -32,7 +32,7 @@ export default function ManagePortfolioPage() {
 
   const portfolios = businessData?.portfolios || [];
   const services = businessData?.services || [];
-
+  const addPortfolio = useBusinessStore((s) => s.addPortfolio);
   // آمار
   const stats = useMemo(() => {
     const totalImages = portfolios.reduce(
@@ -64,10 +64,11 @@ export default function ManagePortfolioPage() {
 
   const handleSave = (portfolioData, editingId) => {
     if (editingId) {
-      // ویرایش
+      // ویرایش - در production باید updatePortfolio صدا زده شود
       showToast('✓ نمونه‌کار با موفقیت ویرایش شد', 'success');
     } else {
       // افزودن جدید
+      addPortfolio(portfolioData);
       showToast('✓ نمونه‌کار جدید اضافه شد', 'success');
     }
     setFormVisible(false);
@@ -128,14 +129,6 @@ export default function ManagePortfolioPage() {
                   label="تصویر"
                   value={toPersianDigit(stats.totalImages)}
                   color="#2196F3"
-                  variant="compact"
-                />
-                <div className="w-px h-10 mx-2" style={{ backgroundColor: colors.border }} />
-                <StatsCard
-                  icon="💆‍♀️"
-                  label="با خدمت"
-                  value={toPersianDigit(stats.withService)}
-                  color="#4CAF50"
                   variant="compact"
                 />
               </div>
