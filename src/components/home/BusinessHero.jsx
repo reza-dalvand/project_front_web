@@ -1,22 +1,20 @@
 "use client";
-
 import { useState } from "react";
-import { FiShare2, FiHeart, FiArrowRight, FiImage } from "react-icons/fi";
+import { FiShare2, FiBookmark, FiArrowRight } from "react-icons/fi";
 import Image from "next/image";
 import { useTheme } from "@/stores/useThemeStore";
 import { useAuth } from "@/stores/useAuth";
-import { toPersianDigit } from "@/utils/numberUtils";
 
 /**
- * 🏪 BusinessHero - هدر تصویری صفحه جزئیات کسب‌وکار
- *
- * @param {Array<string>} gallery - آرایه تصاویر گالری
- * @param {string} businessId - شناسه کسب‌وکار
- * @param {string} businessName - نام کسب‌وکار
- * @param {function} onBackPress - هندلر دکمه بازگشت
- * @param {boolean} isFavorite - آیا در علاقه‌مندی‌ها هست؟
- * @param {function} onFavoritePress - هندلر کلیک روی علاقه‌مندی
- */
+* 🏪 BusinessHero - هدر تصویری صفحه جزئیات کسب‌وکار
+*
+* @param {Array<string>} gallery - آرایه تصاویر گالری (فقط اولین تصویر به عنوان کاور استفاده می‌شود)
+* @param {string} businessId - شناسه کسب‌وکار
+* @param {string} businessName - نام کسب‌وکار
+* @param {function} onBackPress - هندلر دکمه بازگشت
+* @param {boolean} isFavorite - آیا در علاقه‌مندی‌ها (ذخیره‌ها) هست؟
+* @param {function} onFavoritePress - هندلر کلیک روی دکمه ذخیره
+*/
 export default function BusinessHero({
   gallery = [],
   businessId,
@@ -27,23 +25,23 @@ export default function BusinessHero({
 }) {
   const { colors } = useTheme();
   const { isAuthenticated, requireAuth } = useAuth();
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [showShareToast, setShowShareToast] = useState(false);
 
+  // فقط اولین تصویر به عنوان کاور ثابت
   const coverImage = gallery[0] || "https://picsum.photos/800/600?random=45";
-  const hasMultipleImages = gallery.length > 1;
 
   // لینک رزرو اختصاصی
   const bookingLink = `https://zibano.app/book/${businessId || "biz_1"}`;
 
+  // ═══════ هندلر اشتراک‌گذاری (بومی وب + فال‌بک کلیپ‌بورد) ═══════
   // ═══════ هندلر اشتراک‌گذاری ═══════
   const handleShare = async () => {
     const shareMessage = `🌸 ${businessName || "سالن زیبایی"}
-📱 با این لینک می‌توانید مستقیماً از من نوبت بگیرید:
-${bookingLink}
-✨ رزرو از اپلیکیشن زیبانو`;
+  📱 با این لینک می‌توانید مستقیماً از من نوبت بگیرید:
+  ${bookingLink}
+  ✨ رزرو از اپلیکیشن زیبانو`;
 
-    // استفاده از Web Share API در صورت پشتیبانی
+    // ۱. استفاده از Web Share API در صورت پشتیبانی (موبایل)
     if (navigator.share) {
       try {
         await navigator.share({
@@ -53,21 +51,50 @@ ${bookingLink}
         });
         return;
       } catch (err) {
-        console.log("Share cancelled");
+        console.log("Share cancelled or failed");
       }
     }
 
-    // Fallback: کپی در کلیپ‌بورد
+    // ۲. Fallback: کپی در کلیپ‌بورد
     try {
-      await navigator.clipboard.writeText(shareMessage);
-      setShowShareToast(true);
-      setTimeout(() => setShowShareToast(false), 2000);
+      let copied = false;
+      
+      // بررسی وجود Clipboard API
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(shareMessage);
+        copied = true;
+      } else {
+        // Fallback برای WebView اینستاگرام/تلگرام و مرورگرهای قدیمی
+        const textarea = document.createElement('textarea');
+        textarea.value = shareMessage;
+        
+        // مخفی کردن textarea از صفحه
+        textarea.style.position = 'fixed';
+        textarea.style.top = '0';
+        textarea.style.left = '0';
+        textarea.style.opacity = '0';
+        
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        
+        copied = document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+
+      if (copied) {
+        setShowShareToast(true);
+        setTimeout(() => setShowShareToast(false), 2000);
+      } else {
+        alert('امکان کپی کردن لینک وجود ندارد. لطفاً لینک را دستی کپی کنید.');
+      }
     } catch (err) {
       console.error("Failed to copy:", err);
+      alert('خطا در کپی کردن لینک.');
     }
   };
 
-  // ═══════ هندلر علاقه‌مندی ═══════
+  // ═══════ هندلر ذخیره (علاقه‌مندی) ═══════
   const handleFavorite = () => {
     if (!isAuthenticated) {
       requireAuth(() => {
@@ -78,47 +105,21 @@ ${bookingLink}
     onFavoritePress?.();
   };
 
-  // ═══════ هندلرهای ناوبری گالری ═══════
-  const goToPrev = () => {
-    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
-  };
-
-  const goToNext = () => {
-    if (currentIndex < gallery.length - 1) setCurrentIndex(currentIndex + 1);
-  };
-
-  const goToIndex = (index) => {
-    setCurrentIndex(index);
-  };
-
   return (
     <div className="relative w-full h-[320px] bg-black overflow-hidden">
-      {/* ═══════ تصویر اصلی ═══════ */}
-      {hasMultipleImages ? (
-        <div className="relative w-full h-full">
-          <Image
-            src={gallery[currentIndex]}
-            alt={businessName || "تصویر کسب‌وکار"}
-            fill
-            className="object-cover transition-opacity duration-300"
-            sizes="100vw"
-            priority
-          />
-        </div>
-      ) : (
-        <div className="relative w-full h-full">
-          <Image
-            src={coverImage}
-            alt={businessName || "تصویر کسب‌وکار"}
-            fill
-            className="object-cover"
-            sizes="100vw"
-            priority
-          />
-        </div>
-      )}
+      {/* ═══════ تصویر اصلی (فقط یک عکس ثابت) ═══════ */}
+      <div className="relative w-full h-full">
+        <Image
+          src={coverImage}
+          alt={businessName || "تصویر کسب‌وکار"}
+          fill
+          className="object-cover"
+          sizes="100vw"
+          priority
+        />
+      </div>
 
-      {/* ═══════ گرادیان پایین ═══════ */}
+      {/* ═══════ گرادیان پایین برای خوانایی دکمه‌ها ═══════ */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
         style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
@@ -152,105 +153,24 @@ ${bookingLink}
           <FiShare2 size={20} color="#fff" />
         </button>
 
-        {/* دکمه علاقه‌مندی */}
-        {isAuthenticated && (
-          <button
-            onClick={handleFavorite}
-            className="w-11 h-11 rounded-full flex items-center justify-center
-              border border-white/15 backdrop-blur-sm
-              transition-all hover:scale-110 active:scale-95"
-            style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
-            aria-label={isFavorite ? "حذف از علاقه‌مندی" : "افزودن به علاقه‌مندی"}
-          >
-            <FiHeart
-              size={22}
-              color={isFavorite ? "#FFD700" : "#fff"}
-              fill={isFavorite ? "#FFD700" : "transparent"}
-            />
-          </button>
-        )}
+        {/* دکمه ذخیره (جایگزین لایک/قلب) */}
+        <button
+          onClick={handleFavorite}
+          className="w-11 h-11 rounded-full flex items-center justify-center
+                     border border-white/15 backdrop-blur-sm
+                     transition-all hover:scale-110 active:scale-95"
+          style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+          aria-label={isFavorite ? "حذف از ذخیره‌ها" : "افزودن به ذخیره‌ها"}
+        >
+          <FiBookmark
+            size={22}
+            color={isFavorite ? "#FFD700" : "#fff"}
+            fill={isFavorite ? "#FFD700" : "transparent"}
+          />
+        </button>
       </div>
 
-      {/* ═══════ فلش‌های ناوبری گالری ═══════ */}
-      {hasMultipleImages && currentIndex > 0 && (
-        <button
-          onClick={goToPrev}
-          className="absolute top-1/2 -translate-y-1/2 right-3
-                     w-12 h-12 rounded-full flex items-center justify-center
-                     border border-white/25 backdrop-blur-sm
-                     transition-all hover:scale-110 active:scale-95 z-10"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-          aria-label="تصویر قبلی"
-        >
-          <FiArrowRight size={24} color="#fff" />
-        </button>
-      )}
-
-      {hasMultipleImages && currentIndex < gallery.length - 1 && (
-        <button
-          onClick={goToNext}
-          className="absolute top-1/2 -translate-y-1/2 left-3
-                     w-12 h-12 rounded-full flex items-center justify-center
-                     border border-white/25 backdrop-blur-sm
-                     transition-all hover:scale-110 active:scale-95 z-10"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-          aria-label="تصویر بعدی"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#fff"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-      )}
-
-      {/* ═══════ Badge تعداد تصاویر ═══════ */}
-      {hasMultipleImages && (
-        <div
-          className="absolute bottom-4 right-4 flex items-center gap-1.5
-                     px-3 py-1.5 rounded-xl z-10"
-          style={{ backgroundColor: "rgba(0,0,0,0.65)" }}
-        >
-          <FiImage size={13} color="#fff" />
-          <span className="text-xs font-[Vazir-Bold] text-white" dir="rtl">
-            {toPersianDigit(currentIndex + 1)} از{" "}
-            {toPersianDigit(gallery.length)}
-          </span>
-        </div>
-      )}
-
-      {/* ═══════ Indicator Dots ═══════ */}
-      {hasMultipleImages && (
-        <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2
-                        flex items-center gap-1.5 z-10"
-        >
-          {gallery.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goToIndex(i)}
-              className="h-1.5 rounded-full transition-all duration-300"
-              style={{
-                backgroundColor:
-                  i === currentIndex
-                    ? "rgba(255,255,255,0.95)"
-                    : "rgba(255,255,255,0.5)",
-                width: i === currentIndex ? "20px" : "6px",
-              }}
-              aria-label={`رفتن به تصویر ${i + 1}`}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* ═══════ Toast کپی ═══════ */}
+      {/* ═══════ Toast کپی شدن لینک ═══════ */}
       {showShareToast && (
         <div
           className="absolute top-20 left-1/2 -translate-x-1/2
