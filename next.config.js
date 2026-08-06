@@ -13,9 +13,6 @@ const nextConfig = {
       { protocol: 'https', hostname: 'api.maptiler.com' },
     ],
   },
-
-  // ✅ فقط transpilePackages - حذف serverExternalPackages برای maplibre
-  transpilePackages: ['maplibre-gl'],
   
   experimental: {
     optimizePackageImports: ['react-icons'],

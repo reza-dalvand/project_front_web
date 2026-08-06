@@ -1,264 +1,716 @@
 'use client';
-import { FiTag, FiTrendingUp, FiCreditCard, FiDollarSign, FiBox } from 'react-icons/fi';
+import { useState, useEffect, useRef } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
+import {
+  FiArrowRight,
+  FiMapPin,
+  FiNavigation,
+  FiShare2,
+  FiPhone,
+  FiCopy,
+  FiCheck,
+  FiX,
+  FiExternalLink,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import Card from './Card';
-import Divider from './Divider';
-import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
+import ScreenWrapper from '@/components/common/ScreenWrapper';
+import Button from '@/components/common/Button';
+import Card from '@/components/common/Card';
+import { toPersianDigit } from '@/utils/numberUtils';
+import { cleanPhone } from '@/utils/phoneUtils';
+import { useToast } from '@/hooks/useToast';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
-// ✅ تغییرات:
-// FiCalculator → FiTrendingUp
-// FiStore → FiBox
+// ═══════════════════════════════════════════════════════
+//                    MOCK DATA
+// ═══════════════════════════════════════════════════════
+const MOCK_BUSINESSES = {
+  '1': {
+    id: '1',
+    name: 'مجموعه زیبایی و سلامت نیلارام',
+    category: 'کلینیک پوست و مو',
+    address: 'سعادت‌آباد، خیابان سرو غربی، ساختمان پزشکان نگین، طبقه ۳',
+    phone: '۰۲۱-۲۲۳۳۴۴۵۵',
+    workingHours: 'شنبه تا پنج‌شنبه: ۱۰:۰۰ الی ۲۰:۰۰',
+    location: {
+      latitude: 35.7898,
+      longitude: 51.3768,
+    },
+  },
+  '2': {
+    id: '2',
+    name: 'سالن زیبایی لاویا',
+    category: 'سالن زیبایی',
+    address: 'نیاوران، خیابان باهنر، پلاک ۱۲۴',
+    phone: '۰۲۱-۲۲۷۷۸۸۹۹',
+    workingHours: 'شنبه تا پنج‌شنبه: ۰۹:۰۰ الی ۲۱:۰۰',
+    location: {
+      latitude: 35.8069,
+      longitude: 51.4744,
+    },
+  },
+  '3': {
+    id: '3',
+    name: 'مرکز لیزر رویال',
+    category: 'مرکز لیزر',
+    address: 'شهرک غرب، خیابان ایران زمین، مجتمع رویال',
+    phone: '۰۲۱-۸۸۶۶۵۵۴۴',
+    workingHours: 'شنبه تا پنج‌شنبه: ۱۰:۰۰ الی ۲۲:۰۰',
+    location: {
+      latitude: 35.7807,
+      longitude: 51.3735,
+    },
+  },
+};
 
-export default function PriceBreakdown({
-  originalPrice = 0,
-  discountPercent = 0,
-  finalPrice,
-  hasDeposit = false,
-  depositPercent = 30,
-  depositAmount,
-  showRemaining = true,
-  variant = 'card',
-}) {
+// ═══════════════════════════════════════════════════════
+//              MapLibre Style (OpenStreetMap)
+// ═══════════════════════════════════════════════════════
+const MAP_STYLE = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '© OpenStreetMap contributors',
+    },
+  },
+  layers: [
+    {
+      id: 'osm',
+      type: 'raster',
+      source: 'osm',
+    },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════
+//              تنظیمات اپلیکیشن‌های مسیریاب
+// ═══════════════════════════════════════════════════════
+const NAVIGATION_APPS = [
+  {
+    id: 'balad',
+    name: 'بلد',
+    subtitle: 'مسیریاب ایرانی',
+    icon: '🗺️',
+    color: '#00B4AA',
+    deepLink: (lat, lng) => `balad://route?destination=${lat},${lng}`,
+    webUrl: (lat, lng) =>
+      `https://balad.ir/route?destination=${lat},${lng}`,
+  },
+  {
+    id: 'neshan',
+    name: 'نشان',
+    subtitle: 'مسیریاب ایرانی',
+    icon: '📍',
+    color: '#FF6600',
+    deepLink: (lat, lng) => `neshan://route?destination=${lat},${lng}`,
+    webUrl: (lat, lng) =>
+      `https://neshan.org/route?destination=${lat},${lng}`,
+  },
+  {
+    id: 'google',
+    name: 'گوگل مپ',
+    subtitle: 'Google Maps',
+    icon: '🌍',
+    color: '#4285F4',
+    deepLink: (lat, lng) => {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) return `comgooglemaps://?daddr=${lat},${lng}`;
+      return `google.navigation:q=${lat},${lng}`;
+    },
+    webUrl: (lat, lng) =>
+      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+  },
+];
+
+export default function BusinessMapPage() {
+  const params = useParams();
+  const router = useRouter();
   const { colors } = useTheme();
+  const { showToast } = useToast();
 
-  const discountAmount = Math.round((originalPrice * discountPercent) / 100);
-  const calculatedFinal = Math.max(0, originalPrice - discountAmount);
-  const actualFinal = finalPrice ?? calculatedFinal;
-  const calculatedDeposit = hasDeposit
-    ? Math.round((actualFinal * depositPercent) / 100)
-    : actualFinal;
-  const actualDeposit = depositAmount ?? calculatedDeposit;
-  const remaining = actualFinal - actualDeposit;
+  const [MapLib, setMapLib] = useState(null);
+  const [mapLoading, setMapLoading] = useState(true);
+  const [mapError, setMapError] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [navModalVisible, setNavModalVisible] = useState(false);
+  const [navLoading, setNavLoading] = useState(null);
+  const navTimerRef = useRef(null);
 
-  // ═══════ حالت inline ═══════
-  if (variant === 'inline') {
-    return (
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-1.5">
-          {discountPercent > 0 && (
-            <span
-              className="text-[11px] font-[Vazir] line-through"
-              style={{ color: colors.textSecondary }}
-            >
-              {formatPrice(originalPrice)}
-            </span>
-          )}
-          <span
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.primary }}
-          >
-            {formatPrice(actualDeposit)}
-          </span>
-          {discountPercent > 0 && (
-            <div
-              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-[6px]"
-              style={{ backgroundColor: '#4CAF5020' }}
-            >
-              <FiTag size={10} color="#4CAF50" />
-              <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
-                {toPersianDigit(discountPercent)}٪
-              </span>
-            </div>
-          )}
-        </div>
-        {hasDeposit && showRemaining && remaining > 0 && (
-          <span
-            className="text-[10px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
-            + {formatPrice(remaining)} در سالن
-          </span>
-        )}
-      </div>
-    );
-  }
+  const businessId = params.id || '1';
+  const business = MOCK_BUSINESSES[businessId] || MOCK_BUSINESSES['1'];
 
-  // ═══════ حالت detailed ═══════
-  if (variant === 'detailed') {
-    return (
-      <Card variant="default" padding={16} radius={18}>
-        <div className="flex items-center gap-2 mb-1">
+  // ═══════ Dynamic Import react-map-gl/maplibre ═══════
+  useEffect(() => {
+    import('react-map-gl/maplibre')
+      .then((mod) => {
+        setMapLib({
+          Map: mod.default,
+          Marker: mod.Marker,
+          NavigationControl: mod.NavigationControl,
+        });
+        setMapLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load maplibre:', err);
+        setMapError(true);
+        setMapLoading(false);
+      });
+  }, []);
+
+  // ═══════ Cleanup تایمر ═══════
+  useEffect(() => {
+    return () => {
+      if (navTimerRef.current) {
+        clearTimeout(navTimerRef.current);
+      }
+    };
+  }, []);
+
+  // ✅ بعد (با flag جلوگیری از اجرای دو باره + حذف امن)
+  const openNavigationApp = (app) => {
+    const { latitude, longitude } = business.location;
+    setNavLoading(app.id);
+
+    const deepLink = app.deepLink(latitude, longitude);
+    const webUrl = app.webUrl(latitude, longitude);
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = deepLink;
+    document.body.appendChild(iframe);
+
+    // ✅ flag برای جلوگیری از اجرای دو باره cleanup
+    let isHandled = false;
+
+    const cleanup = () => {
+      if (isHandled) return;
+      isHandled = true;
+      clearTimeout(navTimerRef.current);
+      removeIframeSafely(iframe);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      setNavLoading(null);
+      setNavModalVisible(false);
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden && !isHandled) {
+        cleanup();
+      }
+    };
+
+    // اگر بعد از ۲.۵ ثانیه اپ باز نشد → نسخه وب
+    navTimerRef.current = setTimeout(() => {
+      if (!isHandled) {
+        cleanup();
+        window.open(webUrl, '_blank');
+        showToast(
+          `اپلیکیشن ${app.name} یافت نشد، نسخه وب باز شد`,
+          'info'
+        );
+      }
+    }, 2500);
+
+    document.addEventListener('visibilitychange', handleVisibility);
+  };
+
+  // ═══════ Handlers ═══════
+  const handleNavigation = () => {
+    setNavModalVisible(true);
+  };
+
+
+    // ═══════ تابع کمکی: حذف امن iframe ═══════
+  const removeIframeSafely = (iframe) => {
+    if (iframe && iframe.parentNode) {
+      iframe.parentNode.removeChild(iframe);
+    }
+  };
+
+  // ═══════ تابع کمکی: کپی در کلیپ‌بورد با fallback ═══════
+  const copyTextToClipboard = async (text) => {
+    // روش ۱: Clipboard API مدرن (فقط HTTPS/localhost)
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.log('Clipboard API failed:', err);
+      }
+    }
+
+    // روش ۲: execCommand fallback (برای HTTP و WebView)
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return success;
+    } catch (err) {
+      console.log('execCommand copy failed:', err);
+      return false;
+    }
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/business/${business.id}`;
+    const shareMessage = `📍 موقعیت ${business.name}\n🏠 ${business.address}\n🔗 ${shareUrl}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: business.name,
+          text: shareMessage,
+          url: shareUrl,
+        });
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareMessage);
+        showToast('لینک موقعیت کپی شد', 'success');
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    }
+  };
+
+  const handleCall = () => {
+    const phone = cleanPhone(business.phone);
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    } else {
+      showToast('شماره تماسی ثبت نشده است', 'error');
+    }
+  };
+
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(business.address);
+      setCopied(true);
+      showToast('آدرس کپی شد', 'success');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+  
+
+  // ═══════ Render Navigation Modal ═══════
+  const renderNavModal = () => {
+    if (!navModalVisible) return null;
+
+    return createPortal(
+      <div
+        className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center"
+        style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setNavModalVisible(false);
+        }}
+      >
+        <div
+          className="w-full max-w-md rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden"
+          style={{
+            backgroundColor: colors.cardBackground,
+            borderTop: `1px solid ${colors.border}`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* هدر */}
           <div
-            className="w-9 h-9 rounded-[11px] flex items-center justify-center"
-            style={{ backgroundColor: '#43A04715' }}
+            className="flex items-center justify-between px-5 py-4 border-b"
+            style={{ borderColor: colors.border }}
           >
-            <FiCreditCard size={20} color="#43A047" />
-          </div>
-          <span
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
-            خلاصه پرداخت
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center py-0.5">
-          <div className="flex items-center gap-1.5">
-            <FiDollarSign size={14} style={{ color: colors.textSecondary }} />
-            <span className="text-[12.5px] font-[Vazir]" style={{ color: colors.textSecondary }}>
-              قیمت اصلی خدمت
-            </span>
-          </div>
-          <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-            {formatPrice(originalPrice)}
-          </span>
-        </div>
-
-        {discountPercent > 0 && (
-          <div className="flex justify-between items-center py-0.5">
-            <div className="flex items-center gap-1.5">
-              <FiTag size={14} color="#43A047" />
-              <span className="text-[12.5px] font-[Vazir]" style={{ color: colors.textSecondary }}>
-                تخفیف ({toPersianDigit(discountPercent)}٪)
-              </span>
-            </div>
-            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: '#43A047' }}>
-              - {formatPrice(discountAmount)}
-            </span>
-          </div>
-        )}
-
-        <Divider spacing={8} />
-
-        <div className="flex justify-between items-center py-0.5">
-          <div className="flex items-center gap-1.5">
-            <FiTrendingUp size={14} style={{ color: colors.textMain }} />
-            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              قیمت نهایی خدمت
-            </span>
-          </div>
-          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-            {formatPrice(actualFinal)}
-          </span>
-        </div>
-
-        {hasDeposit && (
-          <div
-            className="flex items-center justify-between p-3 rounded-[14px] border mt-1"
-            style={{
-              backgroundColor: colors.primary + '10',
-              borderColor: colors.primary + '35',
-            }}
-          >
-            <div className="flex items-center gap-2.5 flex-1">
+            <div className="flex items-center gap-3 flex-1">
               <div
-                className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
-                style={{ backgroundColor: colors.primary }}
+                className="w-11 h-11 rounded-[14px] flex items-center justify-center"
+                style={{ backgroundColor: '#43A04715' }}
               >
-                <FiCreditCard size={14} color="#fff" />
+                <FiNavigation size={22} color="#43A047" />
               </div>
-              <div>
-                <span
+              <div className="flex-1">
+                <h3
+                  className="text-base font-[Vazir-Bold]"
+                  style={{ color: colors.textMain }}
+                >
+                  مسیریابی
+                </h3>
+                <p
                   className="text-[11px] font-[Vazir]"
                   style={{ color: colors.textSecondary }}
                 >
-                  مبلغ بیعانه (پرداخت آنلاین)
-                </span>
-                <div
-                  className="text-[15px] font-[Vazir-Bold] mt-0.5"
-                  style={{ color: colors.primary }}
-                >
-                  {formatPrice(actualDeposit)}
-                </div>
+                  اپلیکیشن مسیریاب خود را انتخاب کنید
+                </p>
               </div>
             </div>
+            <button
+              onClick={() => setNavModalVisible(false)}
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: colors.background }}
+            >
+              <FiX size={20} style={{ color: colors.textMain }} />
+            </button>
           </div>
-        )}
 
-        {hasDeposit && remaining > 0 && (
-          <div
-            className="flex items-center gap-2.5 p-3 rounded-[14px] border"
-            style={{
-              backgroundColor: '#2196F308',
-              borderColor: '#2196F330',
-            }}
-          >
-            <FiBox size={18} color="#2196F3" />
-            <div>
-              <span
-                className="text-[11px] font-[Vazir]"
+          {/* لیست اپلیکیشن‌ها */}
+          <div className="p-5 space-y-3">
+            {NAVIGATION_APPS.map((app) => {
+              const isLoading = navLoading === app.id;
+              return (
+                <button
+                  key={app.id}
+                  onClick={() => openNavigationApp(app)}
+                  disabled={isLoading}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
+                  style={{
+                    backgroundColor: isLoading
+                      ? app.color + '10'
+                      : colors.cardBackground,
+                    borderColor: isLoading
+                      ? app.color
+                      : colors.border,
+                  }}
+                >
+                  {/* آیکون */}
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                    style={{ backgroundColor: app.color + '18' }}
+                  >
+                    {app.icon}
+                  </div>
+
+                  {/* اطلاعات */}
+                  <div className="flex-1 text-right">
+                    <p
+                      className="text-[15px] font-[Vazir-Bold]"
+                      style={{ color: colors.textMain }}
+                    >
+                      {app.name}
+                    </p>
+                    <p
+                      className="text-[11px] font-[Vazir] mt-0.5"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {app.subtitle}
+                    </p>
+                  </div>
+
+                  {/* لودینگ یا فلش */}
+                  {isLoading ? (
+                    <div
+                      className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin"
+                      style={{ color: app.color }}
+                    />
+                  ) : (
+                    <FiExternalLink
+                      size={18}
+                      style={{ color: colors.textSecondary }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+
+            {/* راهنما */}
+            <div
+              className="flex items-start gap-2.5 p-3 rounded-xl border"
+              style={{
+                backgroundColor: colors.primary + '08',
+                borderColor: colors.primary + '25',
+              }}
+            >
+              <span className="text-base flex-shrink-0">💡</span>
+              <p
+                className="text-[11px] font-[Vazir] leading-5 flex-1"
                 style={{ color: colors.textSecondary }}
               >
-                مابقی مبلغ (پرداخت در سالن)
-              </span>
-              <div
-                className="text-[15px] font-[Vazir-Bold] mt-0.5"
-                style={{ color: '#2196F3' }}
-              >
-                {formatPrice(remaining)}
-              </div>
+                اگر اپلیکیشن مسیریاب روی گوشی شما نصب باشد، مستقیماً باز
+                می‌شود. در غیر این صورت، نسخه وب آن باز خواهد شد.
+              </p>
             </div>
           </div>
-        )}
-      </Card>
+        </div>
+      </div>,
+      document.body
     );
-  }
+  };
 
-  // ═══════ حالت card ═══════
+  // ═══════ Render ═══════
   return (
-    <Card variant="elevated" padding={14} radius={16}>
-      {discountPercent > 0 && (
-        <div className="flex justify-between items-center">
-          <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-            قیمت اصلی
-          </span>
-          <span
-            className="text-xs font-[Vazir] line-through"
-            style={{ color: colors.textSecondary }}
+    <ScreenWrapper padding={0}>
+      <div
+        className="flex flex-col h-screen"
+        style={{ backgroundColor: colors.background }}
+      >
+        {/* هدر */}
+        <div
+          className="flex items-center justify-between px-5 py-4 border-b z-10 relative"
+          style={{
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          }}
+        >
+          <button
+            onClick={() => router.back()}
+            className="w-10 h-10 rounded-full flex items-center justify-center border"
+            style={{
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+            }}
           >
-            {formatPrice(originalPrice)}
-          </span>
-        </div>
-      )}
-      <div className="flex justify-between items-center">
-        <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-          {hasDeposit ? 'مبلغ کل خدمت' : 'مبلغ قابل پرداخت'}
-        </span>
-        <div className="flex items-center gap-1">
-          <span className="text-[18px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-            {formatPrice(hasDeposit ? actualFinal : actualDeposit)}
-          </span>
-          <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
-            تومان
-          </span>
-          {discountPercent > 0 && (
-            <div
-              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-[6px] mr-1"
-              style={{ backgroundColor: '#4CAF5020' }}
+            <FiArrowRight size={22} style={{ color: colors.textMain }} />
+          </button>
+          <div className="flex-1 text-center px-4 min-w-0">
+            <h1
+              className="text-base font-[Vazir-Bold] truncate"
+              style={{ color: colors.textMain }}
             >
-              <FiTag size={10} color="#4CAF50" />
-              <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
-                {toPersianDigit(discountPercent)}٪
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-      {hasDeposit && (
-        <>
-          <Divider spacing={6} />
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              <FiCreditCard size={13} style={{ color: colors.primary }} />
-              <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                بیعانه رزرو
-              </span>
-            </div>
-            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-              {formatPrice(actualDeposit)}{' '}
-              <span className="text-[11px] font-[Vazir]">تومان</span>
-            </span>
-          </div>
-          {showRemaining && remaining > 0 && (
-            <span
-              className="text-[10px] font-[Vazir] text-right block"
+              موقعیت روی نقشه
+            </h1>
+            <p
+              className="text-xs font-[Vazir] mt-0.5 truncate"
               style={{ color: colors.textSecondary }}
             >
-              مابقی ({formatPrice(remaining)}) در محل پرداخت می‌شود
-            </span>
+              {business.name}
+            </p>
+          </div>
+          <div className="w-10" />
+        </div>
+
+        {/* نقشه */}
+        <div className="flex-1 relative">
+          {MapLib && !mapError ? (
+            <MapLib.Map
+              initialViewState={{
+                longitude: business.location.longitude,
+                latitude: business.location.latitude,
+                zoom: 15,
+              }}
+              style={{ width: '100%', height: '100%' }}
+              mapStyle={MAP_STYLE}
+            >
+              <MapLib.NavigationControl position="top-right" />
+
+              {/* Marker قرمز کلاسیک */}
+              <MapLib.Marker
+                longitude={business.location.longitude}
+                latitude={business.location.latitude}
+                anchor="bottom"
+              >
+                <svg
+                  width="36"
+                  height="48"
+                  viewBox="0 0 36 48"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{
+                    filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))',
+                  }}
+                >
+                  <path
+                    d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z"
+                    fill="#E53935"
+                  />
+                  <circle cx="18" cy="18" r="7" fill="#fff" />
+                </svg>
+              </MapLib.Marker>
+            </MapLib.Map>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="flex flex-col items-center gap-3">
+                {mapLoading ? (
+                  <>
+                    <div
+                      className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin"
+                      style={{ color: colors.primary }}
+                    />
+                    <p
+                      className="text-sm font-[Vazir]"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      در حال بارگذاری نقشه...
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className="w-20 h-20 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: '#E5393518' }}
+                    >
+                      <FiMapPin size={40} color="#E53935" />
+                    </div>
+                    <div className="text-center">
+                      <p
+                        className="text-base font-[Vazir-Bold] mb-1"
+                        style={{ color: colors.textMain }}
+                      >
+                        خطا در بارگذاری نقشه
+                      </p>
+                      <p
+                        className="text-xs font-[Vazir]"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        لطفاً اتصال اینترنت خود را بررسی کنید
+                      </p>
+                    </div>
+                    <Button
+                      title="تلاش مجدد"
+                      onPress={() => window.location.reload()}
+                      variant="outline"
+                      size="md"
+                    />
+                  </>
+                )}
+              </div>
+            </div>
           )}
-        </>
-      )}
-    </Card>
+        </div>
+
+        {/* پنل اطلاعات پایین */}
+        <div
+          className="border-t p-5 space-y-4"
+          style={{
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          }}
+        >
+          {/* اطلاعات کسب‌وکار */}
+          <Card variant="default" padding={14} radius={16}>
+            <div className="flex items-start gap-3">
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: colors.primary + '18' }}
+              >
+                <FiMapPin size={22} style={{ color: colors.primary }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3
+                  className="text-sm font-[Vazir-Bold] mb-1"
+                  style={{ color: colors.textMain }}
+                >
+                  {business.name}
+                </h3>
+                <p
+                  className="text-xs font-[Vazir] leading-5"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {business.address}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span
+                    className="text-[10px] font-[Vazir-Bold] px-2 py-0.5 rounded-md"
+                    style={{
+                      backgroundColor: colors.primary + '15',
+                      color: colors.primary,
+                    }}
+                  >
+                    {business.category}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleCopyAddress}
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all hover:scale-105 active:scale-95"
+                style={{
+                  backgroundColor: copied
+                    ? '#43A04718'
+                    : colors.primary + '10',
+                }}
+              >
+                {copied ? (
+                  <FiCheck size={18} color="#43A047" />
+                ) : (
+                  <FiCopy size={18} style={{ color: colors.primary }} />
+                )}
+              </button>
+            </div>
+
+            {/* مختصات */}
+            <div
+              className="flex items-center gap-2 mt-3 pt-3 border-t"
+              style={{ borderColor: colors.border }}
+            >
+              <span className="text-xs" style={{ color: colors.textSecondary }}>
+                📍 مختصات:
+              </span>
+              <span
+                className="text-[11px] font-[Vazir] font-mono"
+                style={{
+                  color: colors.textSecondary,
+                  direction: 'ltr',
+                }}
+              >
+                {toPersianDigit(business.location.latitude.toFixed(4))}°N,{' '}
+                {toPersianDigit(business.location.longitude.toFixed(4))}°E
+              </span>
+            </div>
+          </Card>
+
+          {/* دکمه‌های اکشن */}
+          <div className="flex gap-3">
+            <Button
+              title="مسیریابی"
+              onPress={handleNavigation}
+              variant="primary"
+              size="lg"
+              className="flex-[2]"
+              icon={<FiNavigation size={18} color="#fff" />}
+              iconPosition="right"
+              style={{ backgroundColor: '#43A047' }}
+            />
+            <button
+              onClick={handleCall}
+              className="flex-1 h-14 rounded-2xl flex items-center justify-center border-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                backgroundColor: '#2196F315',
+                borderColor: '#2196F3',
+              }}
+            >
+              <div className="flex flex-col items-center gap-0.5">
+                <FiPhone size={20} color="#2196F3" />
+                <span
+                  className="text-[10px] font-[Vazir-Bold]"
+                  style={{ color: '#2196F3' }}
+                >
+                  تماس
+                </span>
+              </div>
+            </button>
+            <button
+              onClick={handleShare}
+              className="flex-1 h-14 rounded-2xl flex items-center justify-center border-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                borderColor: colors.primary,
+                backgroundColor: colors.primary + '10',
+              }}
+            >
+              <div className="flex flex-col items-center gap-0.5">
+                <FiShare2 size={18} style={{ color: colors.primary }} />
+                <span
+                  className="text-[10px] font-[Vazir-Bold]"
+                  style={{ color: colors.primary }}
+                >
+                  اشتراک
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* مدال انتخاب مسیریاب */}
+      {renderNavModal()}
+    </ScreenWrapper>
   );
 }
