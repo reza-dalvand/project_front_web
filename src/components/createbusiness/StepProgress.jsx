@@ -1,12 +1,12 @@
 'use client';
 
-import { FiStore, FiShieldCheck } from 'react-icons/fi';
+import { FiBriefcase, FiShield } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
 const STEPS = [
-  { id: 1, label: 'اطلاعات', icon: FiStore },
-  { id: 2, label: 'احراز هویت', icon: FiShieldCheck },
+  { id: 1, label: 'اطلاعات', icon: FiBriefcase },
+  { id: 2, label: 'احراز هویت', icon: FiShield },
 ];
 
 export default function StepProgress({ currentStep, totalSteps }) {

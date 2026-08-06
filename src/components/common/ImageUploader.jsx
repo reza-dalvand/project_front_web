@@ -1,20 +1,13 @@
+// src/components/common/ImageUploader.jsx
 'use client';
 
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import Image from 'next/image';
 import { FiCamera, FiEdit, FiX, FiUpload } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 
 /**
- * کامپوننت آپلود تصویر
- * @param {string} value - URL تصویر فعلی
- * @param {function} onChange - تابع تغییر (URL جدید)
- * @param {'cover'|'avatar'|'square'} variant - نوع نمایش
- * @param {string} label - برچسب
- * @param {string} hint - راهنما
- * @param {boolean} required - الزامی بودن
- * @param {string} error - پیام خطا
+ * کامپوننت آپلود تصویر (اصلاح شده برای پشتیبانی از Blob URL)
  */
 export default function ImageUploader({
   value,
@@ -26,20 +19,30 @@ export default function ImageUploader({
   error,
 }) {
   const { colors } = useTheme();
-  const [preview, setPreview] = useState(value || null);
+  // state داخلی برای نگهداری blob url موقت
+  const [localPreview, setLocalPreview] = useState(value);
 
-  const onDrop = useCallback((acceptedFiles) => {
-    const file = acceptedFiles[0];
-    if (!file) return;
+  // همگام‌سازی با prop ورودی (مثلاً وقتی فرم ریست می‌شود)
+  useState(() => {
+    if (value !== localPreview) {
+      setLocalPreview(value);
+    }
+  }, [value]);
 
-    // ایجاد URL موقت برای پیش‌نمایش
-    const previewUrl = URL.createObjectURL(file);
-    setPreview(previewUrl);
+  const onDrop = useCallback(
+    (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      if (!file) return;
 
-    // در production واقعی: آپلود به سرور و دریافت URL
-    // برای demo: استفاده از URL موقت
-    onChange?.(previewUrl);
-  }, [onChange]);
+      // ایجاد URL موقت برای پیش‌نمایش آنی
+      const previewUrl = URL.createObjectURL(file);
+      setLocalPreview(previewUrl);
+      
+      // ارسال به والد
+      onChange?.(previewUrl);
+    },
+    [onChange]
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -52,18 +55,18 @@ export default function ImageUploader({
 
   const handleRemove = (e) => {
     e.stopPropagation();
-    setPreview(null);
+    setLocalPreview(null);
     onChange?.(null);
   };
 
   // ابعاد بر اساس variant
   const dimensions = {
-    cover: { width: '100%', height: '200px', ratio: '2/1' },
-    avatar: { width: '120px', height: '120px', ratio: '1/1' },
-    square: { width: '100%', height: '250px', ratio: '1/1' },
+    cover: { width: '100%', height: '200px' },
+    avatar: { width: '120px', height: '120px' },
+    square: { width: '100%', height: '250px' },
   };
 
-  const { width, height } = dimensions[variant] || dimensions.cover;
+  const styleDim = dimensions[variant] || dimensions.cover;
 
   return (
     <div className="w-full">
@@ -81,42 +84,39 @@ export default function ImageUploader({
         {...getRootProps()}
         className={`
           relative overflow-hidden rounded-2xl border-2 cursor-pointer
-          transition-all duration-200 group
+          transition-all duration-200 group flex items-center justify-center
           ${isDragActive ? 'scale-[1.02]' : 'hover:scale-[1.01]'}
           ${variant === 'avatar' ? 'mx-auto' : ''}
         `}
         style={{
-          width,
-          height,
-          aspectRatio: dimensions[variant].ratio,
+          width: styleDim.width,
+          height: styleDim.height,
           borderColor: error
             ? '#E53935'
-            : preview
-            ? colors.primary
-            : isDragActive
-            ? colors.primary
-            : colors.border,
-          borderStyle: preview ? 'solid' : 'dashed',
+            : localPreview
+              ? colors.primary
+              : isDragActive
+                ? colors.primary
+                : colors.border,
+          borderStyle: localPreview ? 'solid' : 'dashed',
           backgroundColor: colors.cardBackground,
         }}
       >
         <input {...getInputProps()} />
 
-        {preview ? (
+        {localPreview ? (
           <>
-            <Image
-              src={preview}
+            {/* ✅ FIX: استفاده از تگ img استاندارد برای نمایش Blob URL */}
+            <img
+              src={localPreview}
               alt="preview"
-              fill
-              className="object-cover"
-              sizes={variant === 'avatar' ? '120px' : '600px'}
-              unoptimized={preview.startsWith('blob:')}
+              className="object-cover w-full h-full"
             />
-            
+
             {/* Overlay با دکمه تغییر */}
             <div
               className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100
-                         transition-opacity duration-200 flex items-center justify-center"
+                transition-opacity duration-200 flex items-center justify-center z-10"
             >
               <div
                 className="flex items-center gap-2 px-4 py-2 rounded-xl"
@@ -133,7 +133,7 @@ export default function ImageUploader({
             <button
               onClick={handleRemove}
               className="absolute top-3 left-3 w-9 h-9 rounded-full flex items-center
-                         justify-center shadow-lg transition-transform hover:scale-110"
+                justify-center shadow-lg transition-transform hover:scale-110 z-20"
               style={{ backgroundColor: '#E53935' }}
             >
               <FiX size={16} color="#fff" />

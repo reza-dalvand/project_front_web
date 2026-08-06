@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { FiStore, FiCamera, FiMapPin, FiInfo, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiBriefcase, FiCamera, FiMapPin, FiInfo, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Card from '@/components/common/Card';
@@ -226,7 +226,7 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
           onChangeText={(txt) => handleFieldChange('name', txt)}
           onBlur={() => markTouched('name')}
           error={showError('name') ? errors.name : ''}
-          rightIcon={<FiStore size={18} style={{ color: colors.textSecondary }} />}
+          rightIcon={<FiBriefcase size={18} style={{ color: colors.textSecondary }} />}
         />
 
         <Dropdown

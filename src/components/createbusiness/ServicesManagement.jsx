@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiTag, FiCalculator, FiInfo, FiCheck, FiDollarSign, FiPercent } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiTag, FiTrendingUp, FiInfo, FiCheck, FiDollarSign, FiPercent } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
 import Input from '@/components/common/Input';
@@ -409,7 +409,7 @@ export default function ServicesManagement({ services = [], onChange }) {
           {/* قیمت‌گذاری */}
           <div className="space-y-3">
             <SectionHeader
-              icon={<FiCalculator size={18} />}
+              icon={<FiTrendingUp size={18} />}
               iconColor="#4CAF50"
               title="قیمت‌گذاری"
             />
@@ -423,7 +423,7 @@ export default function ServicesManagement({ services = [], onChange }) {
                 borderColor: '#4CAF5040',
               }}
             >
-              <FiCalculator size={18} color="#4CAF50" />
+              <FiTrendingUp size={18} color="#4CAF50" />
               <div className="flex-1 text-right">
                 <p className="text-sm font-[Vazir-Bold] text-[#4CAF50]">
                   راهنمای قیمت‌گذاری

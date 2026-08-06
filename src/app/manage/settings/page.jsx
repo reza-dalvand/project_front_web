@@ -1,4 +1,6 @@
+// src/app/manage/settings/page.jsx
 'use client';
+
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,6 +17,7 @@ import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useToast } from '@/hooks/useToast'; // ✅ اضافه شد
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Input from '@/components/common/Input';
@@ -51,6 +54,7 @@ export default function BusinessSettingsPage() {
   const businessData = useBusinessStore((s) => s.businessData);
   const updateBusinessInfo = useBusinessStore((s) => s.updateBusinessInfo);
   const deleteBusiness = useBusinessStore((s) => s.deleteBusiness);
+  const { showToast } = useToast(); // ✅ مقداردهی Toast
 
   const [formData, setFormData] = useState({
     name: businessData.name || '',
@@ -85,12 +89,20 @@ export default function BusinessSettingsPage() {
     if (!formData.name.trim()) newErrors.name = 'نام کسب‌وکار الزامی است';
     if (!formData.categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
     if (!formData.address.trim()) newErrors.address = 'آدرس الزامی است';
-    if (!formData.ownerPhoto) newErrors.ownerPhoto = 'تصویر صاحب کسب‌وکار الزامی است';
+    // ✅ سخت‌گیری کمتر برای عکس در حالت ویرایش اگر قبلاً عکس داشته
+    if (!formData.ownerPhoto && !businessData.ownerPhoto) 
+      newErrors.ownerPhoto = 'تصویر صاحب کسب‌وکار الزامی است';
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+
+    if (Object.keys(newErrors).length > 0) {
+      showToast('لطفاً خطاهای فرم را برطرف کنید', 'error');
+      return;
+    }
 
     setSaving(true);
+
+    // شبیه‌سازی تاخیر شبکه
     setTimeout(() => {
       updateBusinessInfo({
         name: formData.name.trim(),
@@ -104,14 +116,21 @@ export default function BusinessSettingsPage() {
         ownerPhoto: formData.ownerPhoto,
         location: formData.location,
       });
+
       setSaving(false);
-      router.back();
-    }, 800);
+      showToast('✓ تغییرات با موفقیت ذخیره شد', 'success');
+      
+      // ✅ بازگشت قطعی به صفحه قبل
+      setTimeout(() => {
+        router.back();
+      }, 800);
+    }, 1000);
   };
 
   const handleDelete = () => {
     deleteBusiness();
     setDeleteModalVisible(false);
+    showToast('کسب‌وکار حذف شد', 'info');
     router.push('/create-business');
   };
 
@@ -128,6 +147,7 @@ export default function BusinessSettingsPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.back()} />
+      
       <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
         {/* ═══════ تصاویر ═══════ */}
         <div className="space-y-3">
