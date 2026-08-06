@@ -81,6 +81,7 @@ export default function Input({
             onBlur?.(e);
           }}
           rows={multiline ? 3 : undefined}
+          suppressHydrationWarning // ✅ این خط را اضافه کنید
           className={`
             flex-1 bg-transparent outline-none
             text-right

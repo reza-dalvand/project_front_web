@@ -1,5 +1,6 @@
+// src/components/manageBusiness/services/ServiceCard.jsx
 'use client';
-import { FiEdit2, FiTrash2, FiClock } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiClock, FiDollarSign, FiRefreshCw } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ServiceTypeIcon from './ServiceTypeIcon';
 import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
@@ -120,7 +121,7 @@ export default function ServiceCard({ service, onEdit, onToggle, onDelete }) {
           className="flex items-center gap-2 mt-3 pt-3 border-t"
           style={{ borderTopColor: colors.border }}
         >
-          <span className="text-sm">💰</span>
+          <FiDollarSign size={14} color="#FF9800" />
           <span className="text-[11px]" style={{ color: colors.textSecondary }}>
             بیعانه رزرو:
           </span>
@@ -130,18 +131,21 @@ export default function ServiceCard({ service, onEdit, onToggle, onDelete }) {
         </div>
       )}
 
-      {/* راهنما */}
-      <div
-        className="flex items-center gap-2 mt-3 pt-3 border-t"
-        style={{ borderTopColor: colors.border }}
-      >
-        <span className="text-[10px]" style={{ color: colors.textSecondary }}>
-          👆
-        </span>
-        <span className="text-[10px] flex-1" style={{ color: colors.textSecondary }}>
-          برای ویرایش کامل، روی کارت کلیک کنید
-        </span>
-      </div>
+      {/* یادآوری تمدید */}
+      {service.renewalDays > 0 && (
+        <div
+          className="flex items-center gap-2 mt-3 pt-3 border-t"
+          style={{ borderTopColor: colors.border }}
+        >
+          <FiRefreshCw size={14} color="#FF9800" />
+          <span className="text-[11px]" style={{ color: colors.textSecondary }}>
+            یادآوری تمدید:
+          </span>
+          <span className="text-xs font-[Vazir-Bold] mr-auto" style={{ color: '#FF9800' }}>
+            {toPersianDigit(service.renewalDays)} روز بعد
+          </span>
+        </div>
+      )}
     </div>
   );
 }

@@ -14,7 +14,6 @@ import TermsAndConditionsStep from '@/components/createbusiness/TermsAndConditio
 import BasicInfoStep from '@/components/createbusiness/BasicInfoStep';
 import NationalIdVerificationStep from '@/components/createbusiness/NationalIdVerificationStep';
 import SuccessModal from '@/components/common/SuccessModal';
-import ServicesManagement from '@/components/createbusiness/ServicesManagement';
 import SocialMediaStep from '@/components/createbusiness/SocialMediaStep';
 
 export default function CreateBusinessPage() {

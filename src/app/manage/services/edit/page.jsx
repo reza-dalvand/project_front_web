@@ -9,7 +9,7 @@ import {
   FiTag,
   FiShield,
   FiRefreshCw,
-  FiClock,
+  FiChevronLeft, // ← اضافه شد
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -212,18 +212,39 @@ export default function EditServicePage() {
 
         {/* قیمت‌گذاری */}
         <SectionHeader icon={<FiDollarSign size={18} />} iconColor="#43A047" title="قیمت‌گذاری" />
-        {/* دکمه راهنمای قیمت‌گذاری */}
+        {/* ✅ دکمه راهنمای قیمت‌گذاری - طراحی جدید (شبیه دکمه واقعی) */}
         <button
           onClick={() => setPriceGuideVisible(true)}
-          className="w-full flex items-center gap-3 py-3 px-4 rounded-2xl border"
-          style={{ backgroundColor: '#4CAF5010', borderColor: '#4CAF5040' }}
+          className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl border-2 mb-4 transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] shadow-sm"
+          style={{
+            backgroundColor: colors.cardBackground,
+            borderColor: '#4CAF5060',
+          }}
         >
-          <FiDollarSign size={18} color="#4CAF50" />
+          {/* آیکون در باکس رنگی */}
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: '#4CAF5018' }}
+          >
+            <FiDollarSign size={22} color="#4CAF50" />
+          </div>
+
+          {/* متن‌ها */}
           <div className="flex-1 text-right">
-            <p className="text-sm font-[Vazir-Bold] text-[#4CAF50]">راهنمای قیمت‌گذاری</p>
-            <p className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }}>
-              مشاهده هزینه خدمات‌رسانی زیبانو
+            <p className="text-sm font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
+              راهنمای قیمت‌گذاری
             </p>
+            <p className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }}>
+              هزینه خدمات‌رسانی زیبانو چقدر است؟
+            </p>
+          </div>
+
+          {/* فلش کلیک */}
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: '#4CAF5018' }}
+          >
+            <FiChevronLeft size={18} color="#4CAF50" />
           </div>
         </button>
         <Card variant="elevated" padding={16} radius={18}>
@@ -286,32 +307,6 @@ export default function EditServicePage() {
           />
         </Card>
 
-        {/* ⏰ یادآوری تمدید مجدد */}
-        <SectionHeader
-          icon={<FiRefreshCw size={18} />}
-          iconColor="#FF9800"
-          title="یادآوری تمدید مجدد"
-        />
-        <Card variant="elevated" padding={16} radius={18}>
-          <div
-            className="flex items-start gap-2 mb-3 p-3 rounded-xl border"
-            style={{ backgroundColor: '#FF980008', borderColor: '#FF980025' }}
-          >
-            <FiInfo size={16} color="#FF9800" className="flex-shrink-0 mt-0.5" />
-            <p className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
-              پس از انجام این خدمت، سیستم به صورت خودکار پس از تعداد روزهای مشخص شده به مشتری پیام
-              یادآوری ارسال می‌کند تا برای تمدید مجدد اقدام کند.
-            </p>
-          </div>
-          <Dropdown
-            label="زمان یادآوری مجدد"
-            placeholder="انتخاب کنید"
-            value={renewalDays}
-            options={RENEWAL_OPTIONS}
-            onSelect={(val) => setRenewalDays(val)}
-          />
-        </Card>
-
         {/* تنظیمات */}
         <SectionHeader icon={<FiInfo size={18} />} iconColor="#2196F3" title="تنظیمات" />
         <Card variant="elevated" padding={16} radius={18}>
@@ -358,7 +353,6 @@ export default function EditServicePage() {
           variant="primary"
           size="lg"
           fullWidth
-          icon={<FiCheck size={20} color="#fff" />}
           iconPosition="right"
         />
       </div>
