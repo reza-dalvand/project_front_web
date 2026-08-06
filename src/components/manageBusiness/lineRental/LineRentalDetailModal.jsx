@@ -186,12 +186,6 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
               <p className="text-sm font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
                 اطلاعات تماس
               </p>
-              <InfoRow
-                icon="📞"
-                label="شماره تماس"
-                value={toPersianDigit(ad.contactPhone)}
-                monospace
-              />
               <Button
                 title="تماس مستقیم"
                 onPress={handleCall}

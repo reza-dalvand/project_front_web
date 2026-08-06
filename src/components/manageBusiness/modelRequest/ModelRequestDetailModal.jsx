@@ -166,12 +166,6 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
                   اطلاعات تماس
                 </span>
               </div>
-              <InfoRow
-                icon="📞"
-                label="شماره تماس مدل‌ها"
-                value={toPersianDigit(request.contactPhone)}
-                monospace
-              />
               <Button
                 title="تماس مستقیم"
                 onPress={handleCall}
