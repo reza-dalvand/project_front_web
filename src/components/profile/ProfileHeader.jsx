@@ -12,7 +12,7 @@ export default function ProfileHeader({ user }) {
       style={{ backgroundColor: colors.primary }}
     >
       <h2
-        className="text-xl text-center mb-5 font-[Vazir-Bold]"
+        className="text-xl text-right mb-5 font-[Vazir-Bold]"
         style={{ color: '#ffffff' }}
       >
         پروفایل من
