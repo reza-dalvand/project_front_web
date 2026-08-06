@@ -9,7 +9,7 @@ import {
   FiCalendar,
   FiChevronLeft,
   FiInfo,
-  FiLightbulb,
+  FiZap,
 } from "react-icons/fi";
 import { MdAutoAwesome, MdVerified } from "react-icons/md";
 import { createPortal } from "react-dom";
@@ -345,7 +345,7 @@ export default function PostModal({
               borderColor: isMagazine ? "#9C27B025" : colors.primary + "25",
             }}
           >
-            <FiLightbulb
+            <FiZap
               size={16}
               style={{ color: isMagazine ? "#9C27B0" : colors.primary }}
             />

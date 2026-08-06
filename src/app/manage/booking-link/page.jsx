@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiLink, FiLightbulb, FiShare2, FiAward } from 'react-icons/fi';
+import { FiLink, FiZap, FiShare2, FiAward } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -80,7 +80,7 @@ export default function BookingLinkPage() {
         {/* راهنمای استفاده */}
         <Card variant="elevated" padding={16} radius={16}>
           <div className="flex items-center gap-2 mb-4">
-            <FiLightbulb size={20} color="#FFC107" />
+            <FiZap size={20} color="#FFC107" />
             <h3 className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               چگونه استفاده کنم؟
             </h3>
