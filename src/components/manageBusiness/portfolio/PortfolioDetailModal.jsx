@@ -1,6 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { FiX, FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2, FiImage, FiTag } from 'react-icons/fi';
+import {
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+  FiEdit2,
+  FiTrash2,
+  FiImage,
+  FiTag,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
 import { toPersianDigit } from '@/utils/numberUtils';
@@ -60,7 +68,10 @@ export default function PortfolioDetailModal({
           </span>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { onClose(); setTimeout(() => onEdit?.(portfolio), 300); }}
+              onClick={() => {
+                onClose();
+                setTimeout(() => onEdit?.(portfolio), 300);
+              }}
               className="w-9 h-9 rounded-full flex items-center justify-center"
               style={{ backgroundColor: colors.primary + '15' }}
             >
@@ -98,7 +109,10 @@ export default function PortfolioDetailModal({
             <button
               onClick={goToPrev}
               className="absolute top-1/2 -translate-y-1/2 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
-              style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.25)' }}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                border: '1px solid rgba(255,255,255,0.25)',
+              }}
             >
               <FiChevronRight size={24} color="#fff" />
             </button>
@@ -109,7 +123,10 @@ export default function PortfolioDetailModal({
             <button
               onClick={goToNext}
               className="absolute top-1/2 -translate-y-1/2 left-3 w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
-              style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.25)' }}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                border: '1px solid rgba(255,255,255,0.25)',
+              }}
             >
               <FiChevronLeft size={24} color="#fff" />
             </button>
@@ -133,7 +150,10 @@ export default function PortfolioDetailModal({
         {images.length > 1 && (
           <div
             className="flex items-center justify-center gap-1.5 py-3"
-            style={{ backgroundColor: colors.cardBackground, borderBottom: `1px solid ${colors.border}` }}
+            style={{
+              backgroundColor: colors.cardBackground,
+              borderBottom: `1px solid ${colors.border}`,
+            }}
           >
             {images.map((_, i) => (
               <button
@@ -229,7 +249,10 @@ export default function PortfolioDetailModal({
           <div className="flex gap-3">
             <Button
               title="ویرایش"
-              onPress={() => { onClose(); setTimeout(() => onEdit?.(portfolio), 300); }}
+              onPress={() => {
+                onClose();
+                setTimeout(() => onEdit?.(portfolio), 300);
+              }}
               variant="outline"
               size="lg"
               className="flex-1"

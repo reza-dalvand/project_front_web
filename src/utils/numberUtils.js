@@ -1,8 +1,7 @@
 // src/utils/numberUtils.js
 
 // تبدیل اعداد انگلیسی به فارسی
-export const toPersianDigit = (str) =>
-  String(str ?? '').replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
+export const toPersianDigit = (str) => String(str ?? '').replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
 
 // تبدیل اعداد فارسی/عربی به انگلیسی
 export const toEnglishDigits = (str) =>
@@ -17,8 +16,7 @@ export const parseNumber = (str) => {
 };
 
 // فرمت قیمت با تومان
-export const formatPrice = (num) =>
-  `${toPersianDigit((num || 0).toLocaleString('en-US'))} تومان`;
+export const formatPrice = (num) => `${toPersianDigit((num || 0).toLocaleString('en-US'))} تومان`;
 
 // فرمت کوتاه قیمت (K و M)
 export const formatPriceShort = (num) => {
@@ -40,7 +38,6 @@ export const formatPercentInput = (text) => {
   if (!cleaned) return '';
   return toPersianDigit(String(Math.min(parseInt(cleaned, 10), 100)));
 };
-
 
 // ═══════════════════════════════════════════════════════
 //    محاسبه کارمزد اپلیکیشن
@@ -77,7 +74,7 @@ export const APP_FEE_TIERS = [
 export const getCurrentFeeTier = (basePrice) => {
   if (!basePrice || basePrice <= 0) return APP_FEE_TIERS[0];
   // پیدا کردن ردیف مناسب
-  const tier = APP_FEE_TIERS.find(t => basePrice >= t.min && basePrice <= t.max);
+  const tier = APP_FEE_TIERS.find((t) => basePrice >= t.min && basePrice <= t.max);
   if (tier) return tier;
   // اگر بالاتر از جدول باشد، آخرین ردیف
   if (basePrice > 1500000) return APP_FEE_TIERS[APP_FEE_TIERS.length - 1];

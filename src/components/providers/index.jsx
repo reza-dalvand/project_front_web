@@ -49,9 +49,7 @@ export default function Providers({ children }) {
         <StoreInitializers />
         <ToastProvider />
         <OfflineBanner />
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
         <UpdateModal />
         <MaintenanceModal />
       </ThemeProvider>

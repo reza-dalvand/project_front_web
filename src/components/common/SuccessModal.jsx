@@ -68,10 +68,7 @@ export default function SuccessModal({
           </div>
         </div>
 
-        <h2
-          className="text-2xl font-[Vazir-Bold] text-center"
-          style={{ color: colors.textMain }}
-        >
+        <h2 className="text-2xl font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
           {title}
         </h2>
 
@@ -117,7 +114,7 @@ export default function SuccessModal({
               description: 'نتیجه از طریق پیامک و نوتیفیکیشن ارسال می‌شود',
             },
             {
-              icon: FiSend,  // ✅ FiRocket به FiSend تغییر یافت
+              icon: FiSend, // ✅ FiRocket به FiSend تغییر یافت
               iconColor: '#4CAF50',
               title: 'شروع فعالیت',
               description: 'پس از تایید، کسب‌وکار شما فعال می‌شود',
@@ -136,7 +133,10 @@ export default function SuccessModal({
                   <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     {item.title}
                   </p>
-                  <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
+                  <p
+                    className="text-xs font-[Vazir] leading-5"
+                    style={{ color: colors.textSecondary }}
+                  >
                     {item.description}
                   </p>
                 </div>

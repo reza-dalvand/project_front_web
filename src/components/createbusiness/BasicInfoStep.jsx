@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { FiBriefcase, FiCamera, FiMapPin, FiInfo, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import {
+  FiBriefcase,
+  FiCamera,
+  FiMapPin,
+  FiInfo,
+  FiCheckCircle,
+  FiAlertCircle,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Card from '@/components/common/Card';
@@ -12,7 +19,7 @@ import SectionHeader from '@/components/common/SectionHeader';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
 const MapPicker = dynamic(
   () => import('@/components/common/MapPicker'),
-  { ssr: false }  // ← کلید اصلی: نه SSR، نه Turbopack problem
+  { ssr: false } // ← کلید اصلی: نه SSR، نه Turbopack problem
 );
 const BUSINESS_CATEGORIES = [
   { id: 'salon', label: 'سالن زیبایی (چند منظوره)' },
@@ -70,7 +77,16 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
 
   // اعتبارسنجی همه فیلدها
   const validateAll = useCallback(() => {
-    const fields = ['name', 'coverUrl', 'ownerPhoto', 'categoryId', 'provinceId', 'cityId', 'address', 'location'];
+    const fields = [
+      'name',
+      'coverUrl',
+      'ownerPhoto',
+      'categoryId',
+      'provinceId',
+      'cityId',
+      'address',
+      'location',
+    ];
     const newErrors = {};
     let hasError = false;
     fields.forEach((field) => {
@@ -96,9 +112,19 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
     if (onValidationChange) {
       onValidationChange(currentValid);
     }
-  }, [formData.name, formData.coverUrl, formData.ownerPhoto, formData.categoryId,
-      formData.provinceId, formData.cityId, formData.address, formData.location,
-      touched, validateAll, onValidationChange]);
+  }, [
+    formData.name,
+    formData.coverUrl,
+    formData.ownerPhoto,
+    formData.categoryId,
+    formData.provinceId,
+    formData.cityId,
+    formData.address,
+    formData.location,
+    touched,
+    validateAll,
+    onValidationChange,
+  ]);
 
   const handleFieldChange = (field, value) => {
     onUpdate(field, value);
@@ -138,11 +164,7 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
     <div className="px-5 pt-4 pb-6 space-y-6">
       {/* ═══════ بخش ۱: تصاویر ═══════ */}
       <div className="space-y-3">
-        <SectionHeader
-          icon={<FiCamera size={18} />}
-          iconColor="#E91E63"
-          title="تصاویر"
-        />
+        <SectionHeader icon={<FiCamera size={18} />} iconColor="#E91E63" title="تصاویر" />
 
         {/* کاور کسب‌وکار */}
         <Card variant="default" padding={16} radius={20}>
@@ -189,7 +211,9 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             />
 
             <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-              {formData.ownerPhoto ? 'برای تغییر عکس، روی آن ضربه بزنید' : 'عکس واقعی خود را آپلود کنید'}
+              {formData.ownerPhoto
+                ? 'برای تغییر عکس، روی آن ضربه بزنید'
+                : 'عکس واقعی خود را آپلود کنید'}
             </p>
 
             <div
@@ -200,7 +224,10 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
               }}
             >
               <FiInfo size={16} style={{ color: colors.primary, flexShrink: 0 }} />
-              <p className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: colors.textSecondary }}>
+              <p
+                className="text-xs font-[Vazir] leading-5 flex-1"
+                style={{ color: colors.textSecondary }}
+              >
                 قرار دادن عکس واقعی مدیر،{' '}
                 <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
                   اعتماد مشتریان را افزایش می‌دهد
@@ -252,11 +279,7 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
 
       {/* ═══════ بخش ۳: موقعیت مکانی ═══════ */}
       <div className="space-y-3">
-        <SectionHeader
-          icon={<FiMapPin size={18} />}
-          iconColor="#E53935"
-          title="موقعیت مکانی"
-        />
+        <SectionHeader icon={<FiMapPin size={18} />} iconColor="#E53935" title="موقعیت مکانی" />
 
         <Dropdown
           label="استان *"
@@ -354,7 +377,8 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
           >
             <FiMapPin size={14} style={{ color: colors.primary }} />
             <span className="text-xs font-[Vazir-Medium] flex-1" style={{ color: colors.primary }}>
-              مختصات: {formData.location.latitude.toFixed(6)}, {formData.location.longitude.toFixed(6)}
+              مختصات: {formData.location.latitude.toFixed(6)},{' '}
+              {formData.location.longitude.toFixed(6)}
             </span>
             <FiCheckCircle size={16} color="#4CAF50" />
           </div>
@@ -370,8 +394,8 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
           </span>
         </div>
         <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
-          فیلدهای ستاره‌دار (<span style={{ color: '#E53935' }}>*</span>) الزامی هستند.
-          پس از تکمیل همه فیلدها، دکمه «مرحله بعد» فعال می‌شود.
+          فیلدهای ستاره‌دار (<span style={{ color: '#E53935' }}>*</span>) الزامی هستند. پس از تکمیل
+          همه فیلدها، دکمه «مرحله بعد» فعال می‌شود.
         </p>
       </Card>
     </div>

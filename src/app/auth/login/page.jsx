@@ -10,7 +10,6 @@ import { Button, Input } from '@/components/common';
 import { validatePhone } from '@/utils/phoneUtils';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 
-
 export default function LoginPage() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -63,7 +62,7 @@ export default function LoginPage() {
     setPendingAuth(phone, firstName, lastName);
     setLoading(false);
 
-    router.push('/auth/verify-otp')
+    router.push('/auth/verify-otp');
   };
 
   const canSubmit =
@@ -116,10 +115,7 @@ export default function LoginPage() {
           >
             زیبانو
           </h1>
-          <p
-            className="text-sm text-center"
-            style={{ color: colors.textSecondary }}
-          >
+          <p className="text-sm text-center" style={{ color: colors.textSecondary }}>
             رزرو آنلاین خدمات زیبایی و سلامت
           </p>
         </div>
@@ -141,16 +137,10 @@ export default function LoginPage() {
               <FiUser size={22} style={{ color: colors.primary }} />
             </div>
             <div>
-              <h2
-                className="text-lg font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <h2 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 خوش آمدید
               </h2>
-              <p
-                className="text-xs"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-xs" style={{ color: colors.textSecondary }}>
                 برای ادامه، اطلاعات خود را وارد کنید
               </p>
             </div>
@@ -192,10 +182,7 @@ export default function LoginPage() {
                 borderColor: colors.primary + '25',
               }}
             >
-              <span
-                className="text-xs font-[Vazir-Medium]"
-                style={{ color: colors.primary }}
-              >
+              <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
                 {toPersianDigit(phone.length)} از ۱۱ رقم وارد شده
               </span>
             </div>
@@ -214,10 +201,7 @@ export default function LoginPage() {
             >
               {termsAccepted && <FiCheck size={14} style={{ color: '#fff' }} />}
             </button>
-            <span
-              className="text-[13px] leading-5"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[13px] leading-5" style={{ color: colors.textMain }}>
               با{' '}
               <span className="font-[Vazir-Bold] underline" style={{ color: colors.primary }}>
                 قوانین و مقررات
@@ -253,17 +237,11 @@ export default function LoginPage() {
             }}
           >
             <FiShield size={14} style={{ color: colors.primary }} />
-            <span
-              className="text-xs font-[Vazir-Medium]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
               ورود امن و رمزنگاری شده
             </span>
           </div>
-          <span
-            className="text-xs"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-xs" style={{ color: colors.textSecondary }}>
             زیبانو — نسخه ۱.۰.۰
           </span>
         </div>

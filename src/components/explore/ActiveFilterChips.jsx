@@ -25,8 +25,7 @@ export default function ActiveFilterChips({ filters, onChange }) {
 
   if (!hasActive) return null;
 
-  const getSourceLabel = (sourceId) =>
-    SOURCE_FILTERS.find((s) => s.id === sourceId)?.label;
+  const getSourceLabel = (sourceId) => SOURCE_FILTERS.find((s) => s.id === sourceId)?.label;
 
   const getMainCategoryLabel = (categoryId) =>
     MAIN_CATEGORIES.find((c) => c.id === categoryId)?.label;
@@ -83,19 +82,14 @@ export default function ActiveFilterChips({ filters, onChange }) {
           <Chip
             label={PROVINCES.find((p) => p.id === filters.province)?.label}
             selected
-            onRemove={() =>
-              onChange({ ...filters, province: null, city: null })
-            }
+            onRemove={() => onChange({ ...filters, province: null, city: null })}
           />
         )}
 
         {/* فیلتر شهر */}
         {filters.city && (
           <Chip
-            label={
-              CITIES[filters.province]?.find((c) => c.id === filters.city)
-                ?.label
-            }
+            label={CITIES[filters.province]?.find((c) => c.id === filters.city)?.label}
             selected
             onRemove={() => onChange({ ...filters, city: null })}
           />
@@ -104,9 +98,7 @@ export default function ActiveFilterChips({ filters, onChange }) {
         {/* فیلتر نوع کسب‌وکار */}
         {filters.businessType && (
           <Chip
-            label={
-              BUSINESS_TYPES.find((t) => t.id === filters.businessType)?.label
-            }
+            label={BUSINESS_TYPES.find((t) => t.id === filters.businessType)?.label}
             selected
             onRemove={() => onChange({ ...filters, businessType: null })}
           />

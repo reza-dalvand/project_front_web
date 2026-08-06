@@ -53,9 +53,7 @@ export default function AllAdsPage() {
 
       <div className="p-4 pb-32 space-y-4">
         {ads.length > 0 ? (
-          ads.map((ad) => (
-            <AllAdsCard key={ad.id} ad={ad} onPress={handleAdPress} />
-          ))
+          ads.map((ad) => <AllAdsCard key={ad.id} ad={ad} onPress={handleAdPress} />)
         ) : (
           <EmptyState
             icon="🔥"

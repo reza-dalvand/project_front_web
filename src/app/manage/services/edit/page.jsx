@@ -1,8 +1,15 @@
+// src/app/manage/services/edit/page.jsx
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  FiInfo, FiDollarSign, FiCheck, FiTag, FiShield,
+  FiInfo,
+  FiDollarSign,
+  FiCheck,
+  FiTag,
+  FiShield,
+  FiRefreshCw,
+  FiClock,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -19,7 +26,12 @@ import CharCounter from '@/components/common/CharCounter';
 import PriceBreakdown from '@/components/common/PriceBreakdown';
 import PriceGuideModal from '@/components/common/PriceGuideModal';
 import ServiceTypeIcon from '@/components/manageBusiness/services/ServiceTypeIcon';
-import { SERVICE_TYPES } from '@/constants/serviceTypes';
+import {
+  SERVICE_CATEGORIES,
+  RENEWAL_OPTIONS,
+  getSubServicesByCategory,
+  getServiceTypeInfo,
+} from '@/constants/serviceTypes';
 import {
   toPersianDigit,
   formatPrice,
@@ -42,16 +54,18 @@ export default function EditServicePage() {
   const businessData = useBusinessStore((s) => s.businessData);
   const addService = useBusinessStore((s) => s.addService);
   const updateService = useBusinessStore((s) => s.updateService);
-
   const existingService = serviceId
     ? businessData?.services?.find((s) => s.id === serviceId)
     : null;
   const isEditMode = !!existingService;
 
+  // استخراج categoryId از typeId سرویس موجود
+  const existingTypeInfo = existingService ? getServiceTypeInfo(existingService.typeId) : null;
+
   // State فرم
   const [name, setName] = useState(existingService?.name || '');
+  const [categoryId, setCategoryId] = useState(existingTypeInfo?.categoryId || null);
   const [typeId, setTypeId] = useState(existingService?.typeId || null);
-  const [customTypeName, setCustomTypeName] = useState(existingService?.customTypeName || '');
   const [originalPrice, setOriginalPrice] = useState(
     existingService?.originalPrice ? formatPriceInput(String(existingService.originalPrice)) : ''
   );
@@ -63,6 +77,7 @@ export default function EditServicePage() {
   );
   const [isActive, setIsActive] = useState(existingService?.isActive !== false);
   const [description, setDescription] = useState(existingService?.description || '');
+  const [renewalDays, setRenewalDays] = useState(existingService?.renewalDays || 0);
   const [errors, setErrors] = useState({});
   const [priceGuideVisible, setPriceGuideVisible] = useState(false);
 
@@ -73,12 +88,21 @@ export default function EditServicePage() {
   const finalPrice = Math.max(0, originalNum - discountAmount);
   const appFee = calculateAppFee(finalPrice);
 
+  // لیست زیرخدمات بر اساس دسته‌بندی انتخاب شده
+  const availableSubServices = categoryId ? getSubServicesByCategory(categoryId) : [];
+
+  const handleCategoryChange = (val) => {
+    setCategoryId(val);
+    setTypeId(null); // ریست نوع خدمت وقتی دسته عوض شد
+    if (errors.categoryId) setErrors((p) => ({ ...p, categoryId: '' }));
+    if (errors.typeId) setErrors((p) => ({ ...p, typeId: '' }));
+  };
+
   const handleSave = () => {
     const newErrors = {};
     if (!name.trim()) newErrors.name = 'نام خدمت الزامی است';
+    if (!categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
     if (!typeId) newErrors.typeId = 'نوع خدمت را انتخاب کنید';
-    if (typeId === 'other' && !customTypeName.trim())
-      newErrors.customTypeName = 'نام نوع خدمت را وارد کنید';
     if (originalNum <= 0) newErrors.originalPrice = 'قیمت اصلی باید بیشتر از صفر باشد';
     if (discountNum > 100) newErrors.discountPercent = 'درصد تخفیف نمی‌تواند بیشتر از ۱۰۰ باشد';
     if (finalPrice > 0 && finalPrice < MIN_FINAL_PRICE)
@@ -92,12 +116,13 @@ export default function EditServicePage() {
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    const serviceType = SERVICE_TYPES.find((t) => t.id === typeId);
+    const typeInfo = getServiceTypeInfo(typeId);
     const serviceData = {
       name: name.trim(),
+      categoryId,
       typeId,
-      typeName: typeId === 'other' ? customTypeName.trim() : serviceType.label,
-      customTypeName: typeId === 'other' ? customTypeName.trim() : '',
+      typeName: typeInfo.typeLabel,
+      categoryLabel: typeInfo.categoryLabel,
       originalPrice: originalNum,
       discountPercent: discountNum,
       discountAmount,
@@ -108,14 +133,15 @@ export default function EditServicePage() {
       isActive,
       description: description.trim(),
       duration: 60,
+      renewalDays,
     };
 
     if (isEditMode) {
       updateService(serviceId, serviceData);
-      showToast('خدمت با موفقیت ویرایش شد', 'success');
+      showToast('✓ خدمت با موفقیت ویرایش شد', 'success');
     } else {
       addService(serviceData);
-      showToast('خدمت جدید اضافه شد', 'success');
+      showToast('✓ خدمت جدید اضافه شد', 'success');
     }
     router.push('/manage/services');
   };
@@ -126,47 +152,66 @@ export default function EditServicePage() {
         title={isEditMode ? 'ویرایش خدمت' : 'افزودن خدمت جدید'}
         onBackPress={() => router.back()}
       />
-
       <div className="overflow-y-auto pb-32 px-5 pt-3 space-y-5">
         {/* هدر با آیکون */}
         <div className="flex flex-col items-center gap-2 py-3">
-          <ServiceTypeIcon typeId={typeId || 'other'} size={80} />
+          <ServiceTypeIcon typeId={typeId || 'custom_service'} size={80} />
           <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {isEditMode ? 'ویرایش اطلاعات خدمت' : 'تعریف خدمت جدید'}
           </h3>
         </div>
 
-        {/* اطلاعات پایه */}
-        <SectionHeader icon={<FiInfo size={18} />} iconColor={colors.primary} title="اطلاعات پایه" />
+        {/* اطلاعات پایه - Dropdown دو سطحی */}
+        <SectionHeader
+          icon={<FiInfo size={18} />}
+          iconColor={colors.primary}
+          title="اطلاعات پایه"
+        />
         <Card variant="elevated" padding={16} radius={18}>
           <Input
             label="نام خدمت *"
-            placeholder="مثال: فیشیال VIP پوست صورت"
+            placeholder="مثال: پدیکور تخصصی پا"
             value={name}
-            onChangeText={(t) => { setName(t); setErrors((p) => ({ ...p, name: '' })); }}
+            onChangeText={(t) => {
+              setName(t);
+              setErrors((p) => ({ ...p, name: '' }));
+            }}
             error={errors.name}
           />
+          {/* Dropdown سطح ۱: دسته‌بندی */}
+          <Dropdown
+            label="دسته‌بندی خدمات *"
+            placeholder="دسته‌بندی را انتخاب کنید"
+            value={categoryId}
+            options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
+            onSelect={handleCategoryChange}
+          />
+          {errors.categoryId && (
+            <p className="text-xs mt-1 mb-3" style={{ color: '#E53935' }}>
+              {errors.categoryId}
+            </p>
+          )}
+          {/* Dropdown سطح ۲: نوع خدمت */}
           <Dropdown
             label="نوع خدمت *"
-            placeholder="نوع خدمت را انتخاب کنید"
+            placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
             value={typeId}
-            options={SERVICE_TYPES}
-            onSelect={(val) => { setTypeId(val); setErrors((p) => ({ ...p, typeId: '' })); }}
+            options={availableSubServices}
+            onSelect={(val) => {
+              setTypeId(val);
+              setErrors((p) => ({ ...p, typeId: '' }));
+            }}
+            disabled={!categoryId}
           />
-          {typeId === 'other' && (
-            <Input
-              label="نام نوع خدمت *"
-              placeholder="نام نوع خدمت خود را وارد کنید"
-              value={customTypeName}
-              onChangeText={(t) => { setCustomTypeName(t); setErrors((p) => ({ ...p, customTypeName: '' })); }}
-              error={errors.customTypeName}
-            />
+          {errors.typeId && (
+            <p className="text-xs mt-1" style={{ color: '#E53935' }}>
+              {errors.typeId}
+            </p>
           )}
         </Card>
 
         {/* قیمت‌گذاری */}
         <SectionHeader icon={<FiDollarSign size={18} />} iconColor="#43A047" title="قیمت‌گذاری" />
-
         {/* دکمه راهنمای قیمت‌گذاری */}
         <button
           onClick={() => setPriceGuideVisible(true)}
@@ -181,13 +226,15 @@ export default function EditServicePage() {
             </p>
           </div>
         </button>
-
         <Card variant="elevated" padding={16} radius={18}>
           <Input
             label="قیمت اصلی (تومان) *"
             placeholder="مثال: ۷۵۰,۰۰۰"
             value={originalPrice}
-            onChangeText={(t) => { setOriginalPrice(formatPriceInput(t)); setErrors((p) => ({ ...p, originalPrice: '' })); }}
+            onChangeText={(t) => {
+              setOriginalPrice(formatPriceInput(t));
+              setErrors((p) => ({ ...p, originalPrice: '' }));
+            }}
             error={errors.originalPrice}
           />
           <Input
@@ -230,9 +277,38 @@ export default function EditServicePage() {
             label="مبلغ بیعانه (تومان)"
             placeholder="مثال: ۲۰۰,۰۰۰"
             value={depositAmount}
-            onChangeText={(t) => { setDepositAmount(formatPriceInput(t)); setErrors((p) => ({ ...p, depositAmount: '' })); }}
+            onChangeText={(t) => {
+              setDepositAmount(formatPriceInput(t));
+              setErrors((p) => ({ ...p, depositAmount: '' }));
+            }}
             error={errors.depositAmount}
             hint={`حداقل: ${formatPrice(MIN_DEPOSIT)}`}
+          />
+        </Card>
+
+        {/* ⏰ یادآوری تمدید مجدد */}
+        <SectionHeader
+          icon={<FiRefreshCw size={18} />}
+          iconColor="#FF9800"
+          title="یادآوری تمدید مجدد"
+        />
+        <Card variant="elevated" padding={16} radius={18}>
+          <div
+            className="flex items-start gap-2 mb-3 p-3 rounded-xl border"
+            style={{ backgroundColor: '#FF980008', borderColor: '#FF980025' }}
+          >
+            <FiInfo size={16} color="#FF9800" className="flex-shrink-0 mt-0.5" />
+            <p className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
+              پس از انجام این خدمت، سیستم به صورت خودکار پس از تعداد روزهای مشخص شده به مشتری پیام
+              یادآوری ارسال می‌کند تا برای تمدید مجدد اقدام کند.
+            </p>
+          </div>
+          <Dropdown
+            label="زمان یادآوری مجدد"
+            placeholder="انتخاب کنید"
+            value={renewalDays}
+            options={RENEWAL_OPTIONS}
+            onSelect={(val) => setRenewalDays(val)}
           />
         </Card>
 
@@ -267,7 +343,9 @@ export default function EditServicePage() {
             label="توضیحات (اختیاری)"
             placeholder="توضیحاتی درباره این خدمت..."
             value={description}
-            onChangeText={(t) => { if (t.length <= MAX_DESCRIPTION_LENGTH) setDescription(t); }}
+            onChangeText={(t) => {
+              if (t.length <= MAX_DESCRIPTION_LENGTH) setDescription(t);
+            }}
             multiline
           />
           <CharCounter current={description.length} max={MAX_DESCRIPTION_LENGTH} />
@@ -284,7 +362,6 @@ export default function EditServicePage() {
           iconPosition="right"
         />
       </div>
-
       {/* مدال راهنمای قیمت‌گذاری */}
       <PriceGuideModal
         visible={priceGuideVisible}

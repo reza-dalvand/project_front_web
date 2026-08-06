@@ -81,10 +81,7 @@ export default function AppointmentsPage() {
   };
 
   return (
-    <div
-      className="min-h-screen pb-20"
-      style={{ backgroundColor: colors.background }}
-    >
+    <div className="min-h-screen pb-20" style={{ backgroundColor: colors.background }}>
       {/* Tabs */}
       <div className="px-4 pt-3 pb-2">
         <div
@@ -104,8 +101,7 @@ export default function AppointmentsPage() {
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg
                          transition-colors"
               style={{
-                backgroundColor:
-                  activeTab === tab.id ? colors.primary : 'transparent',
+                backgroundColor: activeTab === tab.id ? colors.primary : 'transparent',
               }}
             >
               <span
@@ -121,9 +117,7 @@ export default function AppointmentsPage() {
                            text-[11px] font-[Vazir-Bold]"
                 style={{
                   backgroundColor:
-                    activeTab === tab.id
-                      ? 'rgba(255,255,255,0.3)'
-                      : colors.primary + '20',
+                    activeTab === tab.id ? 'rgba(255,255,255,0.3)' : colors.primary + '20',
                   color: activeTab === tab.id ? '#fff' : colors.primary,
                 }}
               >
@@ -158,10 +152,7 @@ export default function AppointmentsPage() {
                       >
                         {apt.businessName}
                       </span>
-                      <span
-                        className="text-xs"
-                        style={{ color: colors.textSecondary }}
-                      >
+                      <span className="text-xs" style={{ color: colors.textSecondary }}>
                         {apt.serviceName}
                       </span>
                     </div>
@@ -182,28 +173,19 @@ export default function AppointmentsPage() {
                   <div className="flex flex-wrap gap-3 mb-3">
                     <div className="flex items-center gap-1">
                       <FiUser size={14} color={colors.textSecondary} />
-                      <span
-                        className="text-xs"
-                        style={{ color: colors.textMain }}
-                      >
+                      <span className="text-xs" style={{ color: colors.textMain }}>
                         {apt.employeeName}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <FiCalendar size={14} color={colors.textSecondary} />
-                      <span
-                        className="text-xs"
-                        style={{ color: colors.textMain }}
-                      >
+                      <span className="text-xs" style={{ color: colors.textMain }}>
                         {apt.date}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <FiClock size={14} color={colors.textSecondary} />
-                      <span
-                        className="text-xs"
-                        style={{ color: colors.textMain }}
-                      >
+                      <span className="text-xs" style={{ color: colors.textMain }}>
                         {apt.time}
                       </span>
                     </div>
@@ -218,10 +200,7 @@ export default function AppointmentsPage() {
                     }}
                   >
                     <div className="flex justify-between items-center">
-                      <span
-                        className="text-xs"
-                        style={{ color: colors.textSecondary }}
-                      >
+                      <span className="text-xs" style={{ color: colors.textSecondary }}>
                         مبلغ کل خدمت
                       </span>
                       <span
@@ -233,10 +212,7 @@ export default function AppointmentsPage() {
                     </div>
                     {apt.depositPaid > 0 && (
                       <div className="flex justify-between items-center">
-                        <span
-                          className="text-xs"
-                          style={{ color: colors.textSecondary }}
-                        >
+                        <span className="text-xs" style={{ color: colors.textSecondary }}>
                           بیعانه پرداختی
                         </span>
                         <span
@@ -273,10 +249,7 @@ export default function AppointmentsPage() {
                         >
                           کد تایید نوبت
                         </span>
-                        <span
-                          className="text-[11px]"
-                          style={{ color: colors.textSecondary }}
-                        >
+                        <span className="text-[11px]" style={{ color: colors.textSecondary }}>
                           پس از انجام خدمت به سالن‌دار ارائه دهید
                         </span>
                       </div>
@@ -324,13 +297,8 @@ export default function AppointmentsPage() {
           })
         ) : (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <span className="text-5xl">
-              {activeTab === 'upcoming' ? '📅' : '📜'}
-            </span>
-            <h3
-              className="text-lg font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-5xl">{activeTab === 'upcoming' ? '📅' : '📜'}</span>
+            <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               {activeTab === 'upcoming' ? 'نوبت آینده‌ای ندارید' : 'سابقه‌ای ثبت نشده'}
             </h3>
           </div>

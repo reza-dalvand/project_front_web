@@ -110,8 +110,7 @@ export default function CategoryBusinessesPage() {
 
   // تشخیص فیلتر فعال
   const hasActiveFilter =
-    (filters.serviceType && filters.serviceType !== 'all') ||
-    filters.sortBy !== 'all';
+    (filters.serviceType && filters.serviceType !== 'all') || filters.sortBy !== 'all';
 
   // فیلتر و جستجو
   const filteredData = useMemo(() => {
@@ -177,9 +176,7 @@ export default function CategoryBusinessesPage() {
             icon="🔍"
             title="کسب‌وکاری یافت نشد"
             description={
-              search
-                ? 'با این عبارت جستجو نتیجه‌ای پیدا نشد'
-                : 'فیلترهای خود را تغییر دهید'
+              search ? 'با این عبارت جستجو نتیجه‌ای پیدا نشد' : 'فیلترهای خود را تغییر دهید'
             }
             actionLabel={search ? 'پاک کردن جستجو' : 'حذف فیلترها'}
             onAction={() => {

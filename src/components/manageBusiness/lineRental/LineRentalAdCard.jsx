@@ -27,13 +27,7 @@ export default function LineRentalAdCard({ ad, onPress }) {
       {/* Thumbnail لاین */}
       {ad.lineImage ? (
         <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
-          <Image
-            src={ad.lineImage}
-            alt={ad.title}
-            fill
-            className="object-cover"
-            sizes="56px"
-          />
+          <Image src={ad.lineImage} alt={ad.title} fill className="object-cover" sizes="56px" />
         </div>
       ) : (
         <div
@@ -46,24 +40,13 @@ export default function LineRentalAdCard({ ad, onPress }) {
 
       {/* محتوا */}
       <div className="flex-1 min-w-0 gap-1.5">
-        <h4
-          className="text-sm font-[Vazir-Bold] line-clamp-1"
-          style={{ color: colors.textMain }}
-        >
+        <h4 className="text-sm font-[Vazir-Bold] line-clamp-1" style={{ color: colors.textMain }}>
           {ad.title}
         </h4>
         <div className="flex items-center gap-2">
-          <CollabBadge
-            type={ad.collabType}
-            priceDisplay={ad.priceDisplay}
-            variant="compact"
-          />
+          <CollabBadge type={ad.collabType} priceDisplay={ad.priceDisplay} variant="compact" />
           <div className="flex-1" />
-          <Badge
-            label={currentStatus.label}
-            variant={currentStatus.variant}
-            size="sm"
-          />
+          <Badge label={currentStatus.label} variant={currentStatus.variant} size="sm" />
         </div>
       </div>
 

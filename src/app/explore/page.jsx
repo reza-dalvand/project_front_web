@@ -5,12 +5,7 @@ import { FiSliders, FiGrid } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import SectionHeader from '@/components/common/SectionHeader';
-import {
-  FilterModal,
-  PostModal,
-  PostGrid,
-  ActiveFilterChips,
-} from '@/components/explore';
+import { FilterModal, PostModal, PostGrid, ActiveFilterChips } from '@/components/explore';
 import { MOCK_POSTS } from '@/constants/exploreFilters';
 
 const INITIAL_FILTERS = {
@@ -39,11 +34,9 @@ const generateMorePosts = (page, size) => {
       ...sample,
       id: `p_${page}_${i}_${randomId}`,
       businessLogo: `https://picsum.photos/100/100?random=${randomImageId}`,
-      gallery:
-        sample.gallery?.map(
-          (_, idx) =>
-            `https://picsum.photos/800/800?random=${randomImageId + idx}`
-        ) || [`https://picsum.photos/800/800?random=${randomImageId}`],
+      gallery: sample.gallery?.map(
+        (_, idx) => `https://picsum.photos/800/800?random=${randomImageId + idx}`
+      ) || [`https://picsum.photos/800/800?random=${randomImageId}`],
       saved: false,
     });
   }
@@ -70,21 +63,16 @@ export default function ExplorePage() {
     return allPosts.filter((post) => {
       if (filters.province && post.provinceId !== filters.province) return false;
       if (filters.city && post.cityId !== filters.city) return false;
-      if (filters.businessType && post.businessTypeId !== filters.businessType)
-        return false;
+      if (filters.businessType && post.businessTypeId !== filters.businessType) return false;
       if (filters.source !== 'all') {
-        if (filters.source === 'business' && post.source === 'magazine')
-          return false;
-        if (filters.source === 'magazine' && post.source !== 'magazine')
-          return false;
+        if (filters.source === 'business' && post.source === 'magazine') return false;
+        if (filters.source === 'magazine' && post.source !== 'magazine') return false;
       }
       if (filters.mainCategory !== 'all') {
-        if (post.mainCategory && post.mainCategory !== filters.mainCategory)
-          return false;
+        if (post.mainCategory && post.mainCategory !== filters.mainCategory) return false;
       }
       if (filters.subCategory !== 'all' && filters.mainCategory !== 'all') {
-        if (post.subCategory && post.subCategory !== filters.subCategory)
-          return false;
+        if (post.subCategory && post.subCategory !== filters.subCategory) return false;
       }
       return true;
     });
@@ -117,9 +105,7 @@ export default function ExplorePage() {
 
   // Save/Unsave
   const handleSave = (postId) => {
-    setAllPosts((prev) =>
-      prev.map((p) => (p.id === postId ? { ...p, saved: !p.saved } : p))
-    );
+    setAllPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, saved: !p.saved } : p)));
     if (activePost?.id === postId) {
       setActivePost((prev) => ({ ...prev, saved: !prev.saved }));
     }
@@ -155,12 +141,8 @@ export default function ExplorePage() {
               className="w-10 h-10 rounded-xl border flex items-center justify-center
                 relative transition-colors hover:opacity-80"
               style={{
-                backgroundColor: hasActiveFilter
-                  ? colors.primary + '15'
-                  : colors.cardBackground,
-                borderColor: hasActiveFilter
-                  ? colors.primary
-                  : colors.border,
+                backgroundColor: hasActiveFilter ? colors.primary + '15' : colors.cardBackground,
+                borderColor: hasActiveFilter ? colors.primary : colors.border,
               }}
             >
               <FiSliders

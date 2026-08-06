@@ -161,10 +161,7 @@ export const MOCK_POSTS = [
     source: 'business',
     mainCategory: 'makeup',
     subCategory: 'bridal_makeup',
-    gallery: [
-      'https://picsum.photos/800/800?random=4',
-      'https://picsum.photos/800/800?random=5',
-    ],
+    gallery: ['https://picsum.photos/800/800?random=4', 'https://picsum.photos/800/800?random=5'],
   },
   {
     id: 'p3',
@@ -199,9 +196,7 @@ export const MOCK_POSTS = [
     source: 'magazine',
     mainCategory: 'skin',
     subCategory: 'skin_cleansing',
-    gallery: [
-      'https://picsum.photos/800/800?random=20',
-    ],
+    gallery: ['https://picsum.photos/800/800?random=20'],
   },
 ];
 

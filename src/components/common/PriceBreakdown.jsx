@@ -40,10 +40,7 @@ export default function PriceBreakdown({
               {formatPrice(originalPrice)}
             </span>
           )}
-          <span
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.primary }}
-          >
+          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
             {formatPrice(actualDeposit)}
           </span>
           {discountPercent > 0 && (
@@ -59,10 +56,7 @@ export default function PriceBreakdown({
           )}
         </div>
         {hasDeposit && showRemaining && remaining > 0 && (
-          <span
-            className="text-[10px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             + {formatPrice(remaining)} در سالن
           </span>
         )}
@@ -82,10 +76,7 @@ export default function PriceBreakdown({
           >
             <FiCreditCard size={20} color="#43A047" />
           </div>
-          <span
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             خلاصه پرداخت
           </span>
         </div>
@@ -150,10 +141,7 @@ export default function PriceBreakdown({
                 <FiCreditCard size={14} color="#fff" />
               </div>
               <div>
-                <span
-                  className="text-[11px] font-[Vazir]"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                   مبلغ بیعانه (پرداخت آنلاین)
                 </span>
                 <div
@@ -178,16 +166,10 @@ export default function PriceBreakdown({
           >
             <FiBox size={18} color="#2196F3" />
             <div>
-              <span
-                className="text-[11px] font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                 مابقی مبلغ (پرداخت در سالن)
               </span>
-              <div
-                className="text-[15px] font-[Vazir-Bold] mt-0.5"
-                style={{ color: '#2196F3' }}
-              >
+              <div className="text-[15px] font-[Vazir-Bold] mt-0.5" style={{ color: '#2196F3' }}>
                 {formatPrice(remaining)}
               </div>
             </div>
@@ -248,8 +230,7 @@ export default function PriceBreakdown({
               </span>
             </div>
             <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-              {formatPrice(actualDeposit)}{' '}
-              <span className="text-[11px] font-[Vazir]">تومان</span>
+              {formatPrice(actualDeposit)} <span className="text-[11px] font-[Vazir]">تومان</span>
             </span>
           </div>
           {showRemaining && remaining > 0 && (

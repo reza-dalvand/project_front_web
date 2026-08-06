@@ -12,9 +12,7 @@ export default function ServiceCard({ service, onPress }) {
   const { colors } = useTheme();
 
   const hasDiscount = service.discount > 0;
-  const finalPrice = hasDiscount
-    ? service.price * (1 - service.discount / 100)
-    : service.price;
+  const finalPrice = hasDiscount ? service.price * (1 - service.discount / 100) : service.price;
 
   return (
     <button
@@ -44,17 +42,11 @@ export default function ServiceCard({ service, onPress }) {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1.5">
             {hasDiscount && (
-              <span
-                className="text-[13px] line-through"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-[13px] line-through" style={{ color: colors.textSecondary }}>
                 {service.price.toLocaleString('fa-IR')}
               </span>
             )}
-            <span
-              className="text-[15px] font-semibold"
-              style={{ color: colors.primary }}
-            >
+            <span className="text-[15px] font-semibold" style={{ color: colors.primary }}>
               {finalPrice.toLocaleString('fa-IR')} تومان
             </span>
           </div>

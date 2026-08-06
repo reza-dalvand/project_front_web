@@ -41,10 +41,7 @@ export default function RulesCard({ colors }) {
         >
           <FiShield size={20} color="#9C27B0" />
         </div>
-        <span
-          className="text-[15px] font-[Vazir-Bold]"
-          style={{ color: colors.textMain }}
-        >
+        <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           قوانین و مقررات رزرو
         </span>
       </div>
@@ -58,10 +55,7 @@ export default function RulesCard({ colors }) {
               key={index}
               className="flex gap-2.5 py-2.5 items-start"
               style={{
-                borderBottom:
-                  index < rules.length - 1
-                    ? `0.5px solid ${colors.border}`
-                    : 'none',
+                borderBottom: index < rules.length - 1 ? `0.5px solid ${colors.border}` : 'none',
               }}
             >
               <div
@@ -71,10 +65,7 @@ export default function RulesCard({ colors }) {
                 <Icon size={18} style={{ color: rule.iconColor }} />
               </div>
               <div className="flex flex-col gap-0.5 flex-1">
-                <span
-                  className="text-[13px] font-[Vazir-Bold]"
-                  style={{ color: colors.textMain }}
-                >
+                <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                   {rule.title}
                 </span>
                 <span
@@ -98,10 +89,7 @@ export default function RulesCard({ colors }) {
         }}
       >
         <FiShield size={16} color="#43A047" />
-        <span
-          className="text-[11px] font-[Vazir-Bold] flex-1"
-          style={{ color: '#43A047' }}
-        >
+        <span className="text-[11px] font-[Vazir-Bold] flex-1" style={{ color: '#43A047' }}>
           پرداخت شما از طریق درگاه امن بانکی و با رمزنگاری SSL انجام می‌شود
         </span>
       </div>

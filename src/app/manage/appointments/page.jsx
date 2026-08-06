@@ -147,12 +147,15 @@ export default function AllAppointmentsPage() {
   }, [appointments, activeFilter, searchQuery, dateFilter]);
 
   // شمارش‌ها
-  const counts = useMemo(() => ({
-    all: appointments.length,
-    reserved: appointments.filter((a) => a.status === 'reserved').length,
-    cancelled: appointments.filter((a) => a.status === 'cancelled_by_salon').length,
-    done: appointments.filter((a) => a.status === 'done').length,
-  }), [appointments]);
+  const counts = useMemo(
+    () => ({
+      all: appointments.length,
+      reserved: appointments.filter((a) => a.status === 'reserved').length,
+      cancelled: appointments.filter((a) => a.status === 'cancelled_by_salon').length,
+      done: appointments.filter((a) => a.status === 'done').length,
+    }),
+    [appointments]
+  );
 
   // هندلرها
   const handleOpenVerify = (apt) => {
@@ -180,7 +183,12 @@ export default function AllAppointmentsPage() {
     setAppointments((prev) =>
       prev.map((a) =>
         a.id === aptId
-          ? { ...a, status: 'cancelled_by_salon', cancellationReason: reason, refundAmount: a.depositPaid }
+          ? {
+              ...a,
+              status: 'cancelled_by_salon',
+              cancellationReason: reason,
+              refundAmount: a.depositPaid,
+            }
           : a
       )
     );
@@ -200,13 +208,33 @@ export default function AllAppointmentsPage() {
 
   const getEmptyConfig = () => {
     if (searchQuery || dateFilter) {
-      return { icon: '🔍', title: 'نتیجه‌ای یافت نشد', description: 'فیلترهای جستجو را تغییر دهید' };
+      return {
+        icon: '🔍',
+        title: 'نتیجه‌ای یافت نشد',
+        description: 'فیلترهای جستجو را تغییر دهید',
+      };
     }
     const configs = {
-      all: { icon: '📅', title: 'هنوز نوبتی ثبت نشده', description: 'پس از رزرو اولین نوبت، اینجا نمایش داده می‌شود' },
-      reserved: { icon: '📋', title: 'نوبت رزرو شده‌ای وجود ندارد', description: 'در حال حاضر نوبت فعالی نیست' },
-      cancelled: { icon: '❌', title: 'نوبت لغو شده‌ای وجود ندارد', description: 'هیچ نوبتی لغو نشده' },
-      done: { icon: '✅', title: 'نوبت انجام شده‌ای وجود ندارد', description: 'هنوز خدمتی تکمیل نشده' },
+      all: {
+        icon: '📅',
+        title: 'هنوز نوبتی ثبت نشده',
+        description: 'پس از رزرو اولین نوبت، اینجا نمایش داده می‌شود',
+      },
+      reserved: {
+        icon: '📋',
+        title: 'نوبت رزرو شده‌ای وجود ندارد',
+        description: 'در حال حاضر نوبت فعالی نیست',
+      },
+      cancelled: {
+        icon: '❌',
+        title: 'نوبت لغو شده‌ای وجود ندارد',
+        description: 'هیچ نوبتی لغو نشده',
+      },
+      done: {
+        icon: '✅',
+        title: 'نوبت انجام شده‌ای وجود ندارد',
+        description: 'هنوز خدمتی تکمیل نشده',
+      },
     };
     return configs[activeFilter] || configs.all;
   };
@@ -232,11 +260,7 @@ export default function AllAppointmentsPage() {
         onDateFilterChange={setDateFilter}
       />
 
-      <AppointmentFilters
-        activeFilter={activeFilter}
-        counts={counts}
-        onChange={setActiveFilter}
-      />
+      <AppointmentFilters activeFilter={activeFilter} counts={counts} onChange={setActiveFilter} />
 
       {/* لیست نوبت‌ها */}
       <div className="flex-1 overflow-y-auto p-4 pb-32">
@@ -261,14 +285,20 @@ export default function AllAppointmentsPage() {
       <VerifyCodeModal
         visible={verifyVisible}
         appointment={verifyTarget}
-        onClose={() => { setVerifyVisible(false); setVerifyTarget(null); }}
+        onClose={() => {
+          setVerifyVisible(false);
+          setVerifyTarget(null);
+        }}
         onConfirm={handleConfirmVerify}
       />
 
       <CancelReasonModal
         visible={cancelVisible}
         appointment={cancelTarget}
-        onClose={() => { setCancelVisible(false); setCancelTarget(null); }}
+        onClose={() => {
+          setCancelVisible(false);
+          setCancelTarget(null);
+        }}
         onConfirm={handleConfirmCancel}
       />
       <AppointmentDetailSheet

@@ -9,10 +9,7 @@ export default function AllAdsHeader({ adsCount = 0 }) {
   const router = useRouter();
 
   return (
-    <div
-      className="rounded-b-3xl pb-6 pt-4 px-5"
-      style={{ backgroundColor: colors.primary }}
-    >
+    <div className="rounded-b-3xl pb-6 pt-4 px-5" style={{ backgroundColor: colors.primary }}>
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
@@ -31,12 +28,8 @@ export default function AllAdsHeader({ adsCount = 0 }) {
             <span className="text-2xl">🔥</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-white/80 font-[Vazir]">
-              پیشنهادات ویژه
-            </span>
-            <h1 className="text-lg font-[Vazir-Bold] text-white">
-              تخفیف‌ها و جشنواره‌ها
-            </h1>
+            <span className="text-xs text-white/80 font-[Vazir]">پیشنهادات ویژه</span>
+            <h1 className="text-lg font-[Vazir-Bold] text-white">تخفیف‌ها و جشنواره‌ها</h1>
           </div>
         </div>
 
@@ -44,12 +37,8 @@ export default function AllAdsHeader({ adsCount = 0 }) {
           className="px-3.5 py-2 rounded-2xl flex flex-col items-center"
           style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
         >
-          <span className="text-lg font-[Vazir-Bold] text-white">
-            {toPersianDigit(adsCount)}
-          </span>
-          <span className="text-[10px] text-white/85 font-[Vazir]">
-            پیشنهاد
-          </span>
+          <span className="text-lg font-[Vazir-Bold] text-white">{toPersianDigit(adsCount)}</span>
+          <span className="text-[10px] text-white/85 font-[Vazir]">پیشنهاد</span>
         </div>
       </div>
     </div>

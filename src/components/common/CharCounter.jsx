@@ -32,10 +32,7 @@ export default function CharCounter({ current, max }) {
       <div className="flex items-center gap-3 -mt-2.5 mb-1.5 px-1">
         <div className="flex items-center gap-1">
           <FiEdit size={12} style={{ color: statusColor }} />
-          <span
-            className="text-xs font-[Vazir-Medium]"
-            style={{ color: statusColor }}
-          >
+          <span className="text-xs font-[Vazir-Medium]" style={{ color: statusColor }}>
             {toPersianDigit(current)} از {toPersianDigit(max)} کاراکتر
           </span>
         </div>
@@ -67,10 +64,7 @@ export default function CharCounter({ current, max }) {
           <span className="text-xs" style={{ color: '#FF9800' }}>
             ⚠️
           </span>
-          <span
-            className="text-xs font-[Vazir-Medium]"
-            style={{ color: '#FF9800' }}
-          >
+          <span className="text-xs font-[Vazir-Medium]" style={{ color: '#FF9800' }}>
             فقط {toPersianDigit(remaining)} کاراکتر باقی مانده است
           </span>
         </div>
@@ -88,10 +82,7 @@ export default function CharCounter({ current, max }) {
           <span className="text-xs" style={{ color: '#E53935' }}>
             ❌
           </span>
-          <span
-            className="text-xs font-[Vazir-Medium]"
-            style={{ color: '#E53935' }}
-          >
+          <span className="text-xs font-[Vazir-Medium]" style={{ color: '#E53935' }}>
             به حداکثر تعداد کاراکتر رسیدید
           </span>
         </div>

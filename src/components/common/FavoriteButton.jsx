@@ -1,17 +1,17 @@
 // src/components/common/FavoriteButton.jsx
-"use client";
-import { useState } from "react";
-import { FiBookmark } from "react-icons/fi";
-import { useAuth } from "@/stores/useAuth";
-import { useTheme } from "@/stores/useThemeStore";
+'use client';
+import { useState } from 'react';
+import { FiBookmark } from 'react-icons/fi';
+import { useAuth } from '@/stores/useAuth';
+import { useTheme } from '@/stores/useThemeStore';
 
 export default function FavoriteButton({
   isFavorite = false,
   onPress,
   size = 24,
-  color = "#fff",
-  activeColor = "#E91E63",
-  className = "",
+  color = '#fff',
+  activeColor = '#E91E63',
+  className = '',
 }) {
   const { isAuthenticated } = useAuth();
   const [localFavorite, setLocalFavorite] = useState(isFavorite);
@@ -30,13 +30,13 @@ export default function FavoriteButton({
       onClick={handleClick}
       className={`transition-transform hover:scale-110 active:scale-95 ${className}`}
       type="button"
-      aria-label={localFavorite ? "حذف از علاقه‌مندی" : "افزودن به علاقه‌مندی"}
+      aria-label={localFavorite ? 'حذف از علاقه‌مندی' : 'افزودن به علاقه‌مندی'}
     >
       <FiBookmark
         size={size}
         style={{
           color: localFavorite ? activeColor : color,
-          fill: localFavorite ? activeColor : "transparent",
+          fill: localFavorite ? activeColor : 'transparent',
         }}
       />
     </button>

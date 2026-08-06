@@ -113,7 +113,10 @@ export default function WorkingHoursStep({
               icon="▶️"
               color="#43A047"
             />
-            <div className="hidden sm:flex items-end pb-3 text-lg" style={{ color: colors.textSecondary }}>
+            <div
+              className="hidden sm:flex items-end pb-3 text-lg"
+              style={{ color: colors.textSecondary }}
+            >
               ←
             </div>
             {/* ✅ رنگ آیکون ساعت پایان هم‌رنگ بقیه (primary به جای قرمز) */}
@@ -132,7 +135,10 @@ export default function WorkingHoursStep({
               style={{ backgroundColor: '#43A04710', borderColor: '#43A04740' }}
             >
               <FiCheck size={13} color="#43A047" className="flex-shrink-0" />
-              <span className="text-[11px] font-[Vazir-Bold] leading-relaxed" style={{ color: '#43A047' }}>
+              <span
+                className="text-[11px] font-[Vazir-Bold] leading-relaxed"
+                style={{ color: '#43A047' }}
+              >
                 از {format24(workStart)} تا {format24(workEnd)}
                 {' • '}
                 مجموع: {toPersianDigit(Math.floor((workEndMin - workStartMin) / 60))} ساعت
@@ -146,7 +152,10 @@ export default function WorkingHoursStep({
               style={{ backgroundColor: '#E5393510', borderColor: '#E5393540' }}
             >
               <FiX size={13} color="#E53935" className="flex-shrink-0" />
-              <span className="text-[11px] font-[Vazir-Bold] leading-relaxed" style={{ color: '#E53935' }}>
+              <span
+                className="text-[11px] font-[Vazir-Bold] leading-relaxed"
+                style={{ color: '#E53935' }}
+              >
                 ساعت پایان باید بعد از ساعت شروع باشد
               </span>
             </div>
@@ -308,7 +317,10 @@ export default function WorkingHoursStep({
                     >
                       {toPersianDigit(index + 1)}
                     </div>
-                    <span className="text-[13px] font-[Vazir-Bold] flex-1 truncate" style={{ color: colors.textMain }}>
+                    <span
+                      className="text-[13px] font-[Vazir-Bold] flex-1 truncate"
+                      style={{ color: colors.textMain }}
+                    >
                       استراحت {toPersianDigit(index + 1)}
                     </span>
                     {breakDuration > 0 && (
@@ -338,7 +350,10 @@ export default function WorkingHoursStep({
                       icon="▶️"
                       color="#FF9800"
                     />
-                    <div className="hidden sm:flex items-end pb-3 text-xs" style={{ color: colors.textSecondary }}>
+                    <div
+                      className="hidden sm:flex items-end pb-3 text-xs"
+                      style={{ color: colors.textSecondary }}
+                    >
                       تا
                     </div>
                     <TimePickerField
@@ -352,7 +367,9 @@ export default function WorkingHoursStep({
 
                   {!isBreakValid && workStartMin > 0 && workEndMin > 0 && (
                     <div className="flex items-start gap-1 mt-2">
-                      <span className="text-[10px] flex-shrink-0" style={{ color: '#E53935' }}>⚠️</span>
+                      <span className="text-[10px] flex-shrink-0" style={{ color: '#E53935' }}>
+                        ⚠️
+                      </span>
                       <span className="text-[10px] leading-relaxed" style={{ color: '#E53935' }}>
                         بازه باید بین {format24(workStart)} تا {format24(workEnd)} باشد
                       </span>

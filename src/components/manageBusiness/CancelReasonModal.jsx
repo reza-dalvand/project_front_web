@@ -81,7 +81,10 @@ export default function CancelReasonModal({ visible, appointment, onClose, onCon
             <span className="text-[13px] font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
               بیعانه به مشتری مسترد می‌شود
             </span>
-            <span className="text-[11px] font-[Vazir] leading-[18px]" style={{ color: colors.textSecondary }}>
+            <span
+              className="text-[11px] font-[Vazir] leading-[18px]"
+              style={{ color: colors.textSecondary }}
+            >
               با لغو نوبت، کل بیعانه پرداخت شده ظرف ۴۸ ساعت به حساب مشتری واریز می‌شود.
             </span>
           </div>
@@ -89,7 +92,10 @@ export default function CancelReasonModal({ visible, appointment, onClose, onCon
 
         {/* دلایل پیشنهادی */}
         <div>
-          <span className="text-[13px] font-[Vazir-Bold] block mb-2" style={{ color: colors.textMain }}>
+          <span
+            className="text-[13px] font-[Vazir-Bold] block mb-2"
+            style={{ color: colors.textMain }}
+          >
             دلایل پیشنهادی:
           </span>
           <div className="flex flex-wrap gap-1.5">
@@ -99,7 +105,8 @@ export default function CancelReasonModal({ visible, appointment, onClose, onCon
                 onClick={() => setReason(suggestion)}
                 className="px-3 py-1.5 rounded-[14px] border text-xs font-[Vazir-Medium] transition-colors"
                 style={{
-                  backgroundColor: reason === suggestion ? colors.primary + '20' : colors.background,
+                  backgroundColor:
+                    reason === suggestion ? colors.primary + '20' : colors.background,
                   borderColor: reason === suggestion ? colors.primary : colors.border,
                   color: reason === suggestion ? colors.primary : colors.textMain,
                 }}
@@ -123,7 +130,10 @@ export default function CancelReasonModal({ visible, appointment, onClose, onCon
         <div className="flex gap-3 mt-2">
           <Button
             title="انصراف"
-            onPress={() => { setReason(''); onClose(); }}
+            onPress={() => {
+              setReason('');
+              onClose();
+            }}
             variant="outline"
             size="lg"
             className="flex-1"

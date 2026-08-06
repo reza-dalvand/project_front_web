@@ -20,10 +20,7 @@ export default function BankInfoCard({
       {/* عنوان بخش */}
       <div className="flex items-center gap-2 mb-3 px-0.5">
         <FiCreditCard size={20} style={{ color: colors.primary }} />
-        <h3
-          className="text-sm font-[Vazir-Bold]"
-          style={{ color: colors.textMain }}
-        >
+        <h3 className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           حساب بانکی تسویه
         </h3>
       </div>
@@ -50,7 +47,8 @@ export default function BankInfoCard({
                 className="text-[11px] font-[Vazir] leading-[18px]"
                 style={{ color: colors.textSecondary }}
               >
-                برای دریافت {bankInfo.isRegistered ? '' : 'تسویه‌ها'} باید حساب تایید شده‌ای داشته باشید
+                برای دریافت {bankInfo.isRegistered ? '' : 'تسویه‌ها'} باید حساب تایید شده‌ای داشته
+                باشید
               </p>
             </div>
           </div>
@@ -114,13 +112,7 @@ export default function BankInfoCard({
 
           {/* ردیف‌های اطلاعات */}
           <div className="flex flex-col">
-            <InfoRow
-              icon="🔖"
-              label="شماره شبا"
-              value={bankInfo.sheba}
-              monospace
-              showDivider
-            />
+            <InfoRow icon="🔖" label="شماره شبا" value={bankInfo.sheba} monospace showDivider />
             <InfoRow
               icon="💳"
               label="شماره کارت"
@@ -129,12 +121,7 @@ export default function BankInfoCard({
               showDivider
             />
             {bankInfo.accountNumber && (
-              <InfoRow
-                icon="🔢"
-                label="شماره حساب"
-                value={bankInfo.accountNumber}
-                monospace
-              />
+              <InfoRow icon="🔢" label="شماره حساب" value={bankInfo.accountNumber} monospace />
             )}
           </div>
 
@@ -178,8 +165,8 @@ export default function BankInfoCard({
                 className="text-xs leading-[20px] max-w-[280px]"
                 style={{ color: colors.textSecondary }}
               >
-                برای دریافت تسویه‌های خودکار، ابتدا شماره شبا و کارت خود را وارد کنید.
-                حساب حتماً باید به نام صاحب کسب‌وکار (تطبیق با احراز هویت) باشد.
+                برای دریافت تسویه‌های خودکار، ابتدا شماره شبا و کارت خود را وارد کنید. حساب حتماً
+                باید به نام صاحب کسب‌وکار (تطبیق با احراز هویت) باشد.
               </p>
             </div>
             <button
@@ -187,13 +174,11 @@ export default function BankInfoCard({
               className="px-6 py-3 rounded-xl transition-all hover:scale-105 active:scale-95"
               style={{ backgroundColor: colors.primary }}
             >
-              <span className="text-sm font-[Vazir-Bold] text-white">
-                ثبت حساب بانکی
-              </span>
+              <span className="text-sm font-[Vazir-Bold] text-white">ثبت حساب بانکی</span>
             </button>
           </div>
         </Card>
       )}
     </div>
   );
-}   
+}

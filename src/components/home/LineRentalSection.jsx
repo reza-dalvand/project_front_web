@@ -31,9 +31,7 @@ export default function LineRentalSection() {
         title="فرصت‌های همکاری"
         subtitle="با اجاره لاین، کسب‌وکار خود را گسترش دهید"
         iconColor="#667eea"
-        rightElement={
-          <SeeAllButton onPress={handleSeeAll} count={MOCK_LINE_RENTALS.length} />
-        }
+        rightElement={<SeeAllButton onPress={handleSeeAll} count={MOCK_LINE_RENTALS.length} />}
       />
 
       {/* اسکرول افقی */}

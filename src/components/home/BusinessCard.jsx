@@ -41,16 +41,10 @@ export default function BusinessCard({ business, onPress }) {
 
         {/* اطلاعات */}
         <div className="flex-1 min-w-0 gap-1">
-          <p
-            className="text-sm font-[Vazir-Bold] truncate"
-            style={{ color: colors.textMain }}
-          >
+          <p className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
             {business.name}
           </p>
-          <p
-            className="text-xs font-[Vazir-Medium] truncate"
-            style={{ color: colors.primary }}
-          >
+          <p className="text-xs font-[Vazir-Medium] truncate" style={{ color: colors.primary }}>
             {business.category}
           </p>
           <div className="flex items-center gap-1.5 mt-1">
@@ -68,23 +62,14 @@ export default function BusinessCard({ business, onPress }) {
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
           <div className="flex items-center gap-1">
             <FiStar size={12} color="#FFC107" fill="#FFC107" />
-            <span
-              className="text-xs font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               {toPersianDigit(business.rating)}
             </span>
-            <span
-              className="text-[10px] font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
               ({toPersianDigit(business.reviewsCount)})
             </span>
           </div>
-          <span
-            className="text-[10px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             {toPersianDigit(business.servicesCount)} خدمت
           </span>
         </div>

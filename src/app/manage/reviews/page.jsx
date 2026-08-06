@@ -1,13 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  FiStar,
-  FiMessageSquare,
-  FiThumbsUp,
-  FiFilter,
-  FiUser,
-} from 'react-icons/fi';
+import { FiStar, FiMessageSquare, FiThumbsUp, FiFilter, FiUser } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -38,8 +32,7 @@ const MOCK_REVIEWS = [
     rating: 4,
     date: '۱ هفته پیش',
     serviceName: 'کاشت ناخن ژلیش',
-    comment:
-      'کارشون حرف نداشت. مژه‌ها خیلی طبیعی شدن و ماندگاری خوبی داشتن.',
+    comment: 'کارشون حرف نداشت. مژه‌ها خیلی طبیعی شدن و ماندگاری خوبی داشتن.',
   },
   {
     id: 'r3',
@@ -48,8 +41,7 @@ const MOCK_REVIEWS = [
     rating: 5,
     date: '۲ هفته پیش',
     serviceName: 'لیزر فول بادی',
-    comment:
-      'دستگاه پیشرفته و بدون درد. نتیجه فوق‌العاده بود. ممنون از تیم حرفه‌ای.',
+    comment: 'دستگاه پیشرفته و بدون درد. نتیجه فوق‌العاده بود. ممنون از تیم حرفه‌ای.',
   },
   {
     id: 'r4',
@@ -67,8 +59,7 @@ const MOCK_REVIEWS = [
     rating: 5,
     date: '۱ ماه پیش',
     serviceName: 'رنگ مو',
-    comment:
-      'بهترین تجربه رنگ مو که تا حالا داشتم. رنگ دقیقاً همونی شد که می‌خواستم.',
+    comment: 'بهترین تجربه رنگ مو که تا حالا داشتم. رنگ دقیقاً همونی شد که می‌خواستم.',
   },
   {
     id: 'r6',
@@ -101,8 +92,7 @@ export default function ReviewsPage() {
   // آمار کلی
   const stats = useMemo(() => {
     const total = reviews.length;
-    const avg =
-      total > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0;
+    const avg = total > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0;
     const dist = [5, 4, 3, 2, 1].map((star) => ({
       star,
       count: reviews.filter((r) => Math.round(r.rating) === star).length,
@@ -136,17 +126,11 @@ export default function ReviewsPage() {
           <div className="flex items-center gap-6">
             {/* امتیاز کلی */}
             <div className="flex flex-col items-center gap-2 min-w-[100px]">
-              <span
-                className="text-5xl font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-5xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 {toPersianDigit(stats.avg.toFixed(1))}
               </span>
               <StarRating value={stats.avg} size="md" />
-              <span
-                className="text-xs font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
                 {toPersianDigit(stats.total)} نظر
               </span>
             </div>
@@ -154,8 +138,7 @@ export default function ReviewsPage() {
             {/* نوارهای توزیع */}
             <div className="flex-1 space-y-1.5">
               {stats.dist.map((item) => {
-                const percentage =
-                  stats.total > 0 ? (item.count / stats.total) * 100 : 0;
+                const percentage = stats.total > 0 ? (item.count / stats.total) * 100 : 0;
                 return (
                   <div key={item.star} className="flex items-center gap-2">
                     <span
@@ -229,11 +212,7 @@ export default function ReviewsPage() {
               <Card key={review.id} variant="elevated" padding={16} radius={18}>
                 {/* هدر نظر */}
                 <div className="flex items-start gap-3 mb-3">
-                  <Avatar
-                    uri={review.userAvatar}
-                    name={review.userName}
-                    size="md"
-                  />
+                  <Avatar uri={review.userAvatar} name={review.userName} size="md" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span

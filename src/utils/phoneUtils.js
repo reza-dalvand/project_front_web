@@ -17,5 +17,4 @@ export const maskPhone = (phone) => {
 };
 
 // تمیز کردن شماره (فقط ارقام و +)
-export const cleanPhone = (phone) =>
-  toEnglishDigits(phone).replace(/[^0-9+]/g, '');
+export const cleanPhone = (phone) => toEnglishDigits(phone).replace(/[^0-9+]/g, '');

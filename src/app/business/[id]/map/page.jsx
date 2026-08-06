@@ -26,7 +26,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 //                    MOCK DATA
 // ═══════════════════════════════════════════════════════
 const MOCK_BUSINESSES = {
-  '1': {
+  1: {
     id: '1',
     name: 'مجموعه زیبایی و سلامت نیلارام',
     category: 'کلینیک پوست و مو',
@@ -38,7 +38,7 @@ const MOCK_BUSINESSES = {
       longitude: 51.3768,
     },
   },
-  '2': {
+  2: {
     id: '2',
     name: 'سالن زیبایی لاویا',
     category: 'سالن زیبایی',
@@ -50,7 +50,7 @@ const MOCK_BUSINESSES = {
       longitude: 51.4744,
     },
   },
-  '3': {
+  3: {
     id: '3',
     name: 'مرکز لیزر رویال',
     category: 'مرکز لیزر',
@@ -97,8 +97,7 @@ const NAVIGATION_APPS = [
     icon: '🗺️',
     color: '#00B4AA',
     deepLink: (lat, lng) => `balad://route?destination=${lat},${lng}`,
-    webUrl: (lat, lng) =>
-      `https://balad.ir/route?destination=${lat},${lng}`,
+    webUrl: (lat, lng) => `https://balad.ir/route?destination=${lat},${lng}`,
   },
   {
     id: 'neshan',
@@ -107,8 +106,7 @@ const NAVIGATION_APPS = [
     icon: '📍',
     color: '#FF6600',
     deepLink: (lat, lng) => `neshan://route?destination=${lat},${lng}`,
-    webUrl: (lat, lng) =>
-      `https://neshan.org/route?destination=${lat},${lng}`,
+    webUrl: (lat, lng) => `https://neshan.org/route?destination=${lat},${lng}`,
   },
   {
     id: 'google',
@@ -121,8 +119,7 @@ const NAVIGATION_APPS = [
       if (isIOS) return `comgooglemaps://?daddr=${lat},${lng}`;
       return `google.navigation:q=${lat},${lng}`;
     },
-    webUrl: (lat, lng) =>
-      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+    webUrl: (lat, lng) => `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
   },
 ];
 
@@ -207,10 +204,7 @@ export default function BusinessMapPage() {
       if (!isHandled) {
         cleanup();
         window.open(webUrl, '_blank');
-        showToast(
-          `اپلیکیشن ${app.name} یافت نشد، نسخه وب باز شد`,
-          'info'
-        );
+        showToast(`اپلیکیشن ${app.name} یافت نشد، نسخه وب باز شد`, 'info');
       }
     }, 2500);
 
@@ -222,8 +216,7 @@ export default function BusinessMapPage() {
     setNavModalVisible(true);
   };
 
-
-    // ═══════ تابع کمکی: حذف امن iframe ═══════
+  // ═══════ تابع کمکی: حذف امن iframe ═══════
   const removeIframeSafely = (iframe) => {
     if (iframe && iframe.parentNode) {
       iframe.parentNode.removeChild(iframe);
@@ -305,7 +298,6 @@ export default function BusinessMapPage() {
       console.error('Failed to copy:', err);
     }
   };
-  
 
   // ═══════ Render Navigation Modal ═══════
   const renderNavModal = () => {
@@ -340,16 +332,10 @@ export default function BusinessMapPage() {
                 <FiNavigation size={22} color="#43A047" />
               </div>
               <div className="flex-1">
-                <h3
-                  className="text-base font-[Vazir-Bold]"
-                  style={{ color: colors.textMain }}
-                >
+                <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                   مسیریابی
                 </h3>
-                <p
-                  className="text-[11px] font-[Vazir]"
-                  style={{ color: colors.textSecondary }}
-                >
+                <p className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                   اپلیکیشن مسیریاب خود را انتخاب کنید
                 </p>
               </div>
@@ -374,12 +360,8 @@ export default function BusinessMapPage() {
                   disabled={isLoading}
                   className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
                   style={{
-                    backgroundColor: isLoading
-                      ? app.color + '10'
-                      : colors.cardBackground,
-                    borderColor: isLoading
-                      ? app.color
-                      : colors.border,
+                    backgroundColor: isLoading ? app.color + '10' : colors.cardBackground,
+                    borderColor: isLoading ? app.color : colors.border,
                   }}
                 >
                   {/* آیکون */}
@@ -392,10 +374,7 @@ export default function BusinessMapPage() {
 
                   {/* اطلاعات */}
                   <div className="flex-1 text-right">
-                    <p
-                      className="text-[15px] font-[Vazir-Bold]"
-                      style={{ color: colors.textMain }}
-                    >
+                    <p className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                       {app.name}
                     </p>
                     <p
@@ -413,10 +392,7 @@ export default function BusinessMapPage() {
                       style={{ color: app.color }}
                     />
                   ) : (
-                    <FiExternalLink
-                      size={18}
-                      style={{ color: colors.textSecondary }}
-                    />
+                    <FiExternalLink size={18} style={{ color: colors.textSecondary }} />
                   )}
                 </button>
               );
@@ -435,8 +411,8 @@ export default function BusinessMapPage() {
                 className="text-[11px] font-[Vazir] leading-5 flex-1"
                 style={{ color: colors.textSecondary }}
               >
-                اگر اپلیکیشن مسیریاب روی گوشی شما نصب باشد، مستقیماً باز
-                می‌شود. در غیر این صورت، نسخه وب آن باز خواهد شد.
+                اگر اپلیکیشن مسیریاب روی گوشی شما نصب باشد، مستقیماً باز می‌شود. در غیر این صورت،
+                نسخه وب آن باز خواهد شد.
               </p>
             </div>
           </div>
@@ -449,10 +425,7 @@ export default function BusinessMapPage() {
   // ═══════ Render ═══════
   return (
     <ScreenWrapper padding={0}>
-      <div
-        className="flex flex-col h-screen"
-        style={{ backgroundColor: colors.background }}
-      >
+      <div className="flex flex-col h-screen" style={{ backgroundColor: colors.background }}>
         {/* هدر */}
         <div
           className="flex items-center justify-between px-5 py-4 border-b z-10 relative"
@@ -472,10 +445,7 @@ export default function BusinessMapPage() {
             <FiArrowRight size={22} style={{ color: colors.textMain }} />
           </button>
           <div className="flex-1 text-center px-4 min-w-0">
-            <h1
-              className="text-base font-[Vazir-Bold] truncate"
-              style={{ color: colors.textMain }}
-            >
+            <h1 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               موقعیت روی نقشه
             </h1>
             <p
@@ -535,10 +505,7 @@ export default function BusinessMapPage() {
                       className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin"
                       style={{ color: colors.primary }}
                     />
-                    <p
-                      className="text-sm font-[Vazir]"
-                      style={{ color: colors.textSecondary }}
-                    >
+                    <p className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
                       در حال بارگذاری نقشه...
                     </p>
                   </>
@@ -557,10 +524,7 @@ export default function BusinessMapPage() {
                       >
                         خطا در بارگذاری نقشه
                       </p>
-                      <p
-                        className="text-xs font-[Vazir]"
-                        style={{ color: colors.textSecondary }}
-                      >
+                      <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
                         لطفاً اتصال اینترنت خود را بررسی کنید
                       </p>
                     </div>
@@ -595,10 +559,7 @@ export default function BusinessMapPage() {
                 <FiMapPin size={22} style={{ color: colors.primary }} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3
-                  className="text-sm font-[Vazir-Bold] mb-1"
-                  style={{ color: colors.textMain }}
-                >
+                <h3 className="text-sm font-[Vazir-Bold] mb-1" style={{ color: colors.textMain }}>
                   {business.name}
                 </h3>
                 <p
@@ -623,9 +584,7 @@ export default function BusinessMapPage() {
                 onClick={handleCopyAddress}
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all hover:scale-105 active:scale-95"
                 style={{
-                  backgroundColor: copied
-                    ? '#43A04718'
-                    : colors.primary + '10',
+                  backgroundColor: copied ? '#43A04718' : colors.primary + '10',
                 }}
               >
                 {copied ? (
@@ -679,10 +638,7 @@ export default function BusinessMapPage() {
             >
               <div className="flex flex-col items-center gap-0.5">
                 <FiPhone size={20} color="#2196F3" />
-                <span
-                  className="text-[10px] font-[Vazir-Bold]"
-                  style={{ color: '#2196F3' }}
-                >
+                <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
                   تماس
                 </span>
               </div>
@@ -697,10 +653,7 @@ export default function BusinessMapPage() {
             >
               <div className="flex flex-col items-center gap-0.5">
                 <FiShare2 size={18} style={{ color: colors.primary }} />
-                <span
-                  className="text-[10px] font-[Vazir-Bold]"
-                  style={{ color: colors.primary }}
-                >
+                <span className="text-[10px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
                   اشتراک
                 </span>
               </div>

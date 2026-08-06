@@ -17,17 +17,11 @@ export default function BusinessAbout({ business }) {
       <Card variant="elevated" padding={20} radius={20}>
         <div className="flex items-center gap-2 mb-3">
           <FiInfo size={22} style={{ color: colors.primary }} />
-          <h3
-            className="text-base font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             درباره کسب‌وکار
           </h3>
         </div>
-        <p
-          className="text-sm leading-6 text-justify"
-          style={{ color: colors.textSecondary }}
-        >
+        <p className="text-sm leading-6 text-justify" style={{ color: colors.textSecondary }}>
           {business.about}
         </p>
       </Card>
@@ -40,13 +34,7 @@ export default function BusinessAbout({ business }) {
 
       {/* اطلاعات تکمیلی */}
       <Card variant="elevated" padding={16} radius={16}>
-        <InfoRow
-          icon="📍"
-          iconColor="#E53935"
-          label="آدرس"
-          value={business.address}
-          showDivider
-        />
+        <InfoRow icon="📍" iconColor="#E53935" label="آدرس" value={business.address} showDivider />
         <InfoRow
           icon="📞"
           iconColor="#4CAF50"
@@ -55,12 +43,7 @@ export default function BusinessAbout({ business }) {
           showDivider
           monospace
         />
-        <InfoRow
-          icon="🕐"
-          iconColor="#2196F3"
-          label="ساعات کاری"
-          value={business.workingHours}
-        />
+        <InfoRow icon="🕐" iconColor="#2196F3" label="ساعات کاری" value={business.workingHours} />
       </Card>
     </div>
   );

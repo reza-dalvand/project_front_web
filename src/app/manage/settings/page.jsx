@@ -29,10 +29,7 @@ import ImageUploader from '@/components/common/ImageUploader';
 import SectionHeader from '@/components/common/SectionHeader';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
 
-const MapPicker = dynamic(
-  () => import('@/components/common/MapPicker'),
-  { ssr: false }
-);
+const MapPicker = dynamic(() => import('@/components/common/MapPicker'), { ssr: false });
 
 const BUSINESS_CATEGORIES = [
   { id: 'salon', label: 'سالن زیبایی (چند منظوره)' },
@@ -90,7 +87,7 @@ export default function BusinessSettingsPage() {
     if (!formData.categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
     if (!formData.address.trim()) newErrors.address = 'آدرس الزامی است';
     // ✅ سخت‌گیری کمتر برای عکس در حالت ویرایش اگر قبلاً عکس داشته
-    if (!formData.ownerPhoto && !businessData.ownerPhoto) 
+    if (!formData.ownerPhoto && !businessData.ownerPhoto)
       newErrors.ownerPhoto = 'تصویر صاحب کسب‌وکار الزامی است';
 
     setErrors(newErrors);
@@ -119,7 +116,7 @@ export default function BusinessSettingsPage() {
 
       setSaving(false);
       showToast('✓ تغییرات با موفقیت ذخیره شد', 'success');
-      
+
       // ✅ بازگشت قطعی به صفحه قبل
       setTimeout(() => {
         router.back();
@@ -147,7 +144,7 @@ export default function BusinessSettingsPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.back()} />
-      
+
       <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
         {/* ═══════ تصاویر ═══════ */}
         <div className="space-y-3">
@@ -156,10 +153,13 @@ export default function BusinessSettingsPage() {
             iconColor={colors.primary}
             title="تصاویر کسب‌وکار"
           />
-          
+
           {/* تصویر کاور */}
           <Card variant="elevated" padding={16} radius={18}>
-            <label className="block text-sm mb-2 text-right font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
+            <label
+              className="block text-sm mb-2 text-right font-[Vazir-Medium]"
+              style={{ color: colors.textSecondary }}
+            >
               تصویر کاور سالن
             </label>
             <ImageUploader
@@ -172,7 +172,10 @@ export default function BusinessSettingsPage() {
 
           {/* تصویر صاحب کسب‌وکار */}
           <Card variant="elevated" padding={16} radius={18}>
-            <label className="block text-sm mb-2 text-right font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
+            <label
+              className="block text-sm mb-2 text-right font-[Vazir-Medium]"
+              style={{ color: colors.textSecondary }}
+            >
               تصویر صاحب کسب‌وکار <span style={{ color: '#E53935' }}>*</span>
             </label>
             <div className="flex flex-col items-center gap-3">
@@ -182,7 +185,10 @@ export default function BusinessSettingsPage() {
                 variant="avatar"
                 error={errors.ownerPhoto}
               />
-              <p className="text-xs font-[Vazir] text-center" style={{ color: colors.textSecondary }}>
+              <p
+                className="text-xs font-[Vazir] text-center"
+                style={{ color: colors.textSecondary }}
+              >
                 عکس واقعی مدیر کسب‌وکار (جهت احراز هویت و اعتماد مشتریان)
               </p>
             </div>
@@ -238,11 +244,7 @@ export default function BusinessSettingsPage() {
 
         {/* ═══════ موقعیت مکانی ═══════ */}
         <div className="space-y-3">
-          <SectionHeader
-            icon={<FiMapPin size={18} />}
-            iconColor="#E53935"
-            title="موقعیت مکانی"
-          />
+          <SectionHeader icon={<FiMapPin size={18} />} iconColor="#E53935" title="موقعیت مکانی" />
           <Card variant="elevated" padding={16} radius={18}>
             <Dropdown
               label="استان *"
@@ -347,10 +349,7 @@ export default function BusinessSettingsPage() {
             >
               حذف کسب و کار
             </h3>
-            <p
-              className="text-sm text-center leading-6"
-              style={{ color: colors.textSecondary }}
-            >
+            <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
               آیا مطمئن هستید که می‌خواهید کسب‌وکار خود را حذف کنید؟ این عمل قابل بازگشت نیست.
             </p>
             <div
@@ -363,7 +362,9 @@ export default function BusinessSettingsPage() {
                 'این عمل غیرقابل بازگشت است',
               ].map((text, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <span className="text-xs mt-0.5" style={{ color: '#E53935' }}>•</span>
+                  <span className="text-xs mt-0.5" style={{ color: '#E53935' }}>
+                    •
+                  </span>
                   <span
                     className="text-xs font-[Vazir] leading-5 flex-1"
                     style={{ color: colors.textSecondary }}

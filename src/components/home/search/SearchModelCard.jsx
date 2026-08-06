@@ -66,10 +66,7 @@ export default function SearchModelCard({ request, onPress }) {
             </span>
           </div>
           {request.discount > 0 && (
-            <div
-              className="flex items-center gap-1 mt-1"
-              style={{ color: '#E53935' }}
-            >
+            <div className="flex items-center gap-1 mt-1" style={{ color: '#E53935' }}>
               <FiTag size={11} />
               <span className="text-[10px] font-[Vazir-Bold]">
                 {toPersianDigit(request.discount)}٪ تخفیف

@@ -111,9 +111,7 @@ export default function NotificationModal({ visible, onClose }) {
   };
 
   const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
   };
 
   const deleteNotification = (id) => {
@@ -203,9 +201,7 @@ export default function NotificationModal({ visible, onClose }) {
                     backgroundColor: notification.isRead
                       ? colors.background
                       : notification.color + '08',
-                    borderColor: notification.isRead
-                      ? colors.border
-                      : notification.color + '30',
+                    borderColor: notification.isRead ? colors.border : notification.color + '30',
                   }}
                   onClick={() => markAsRead(notification.id)}
                 >
@@ -239,7 +235,10 @@ export default function NotificationModal({ visible, onClose }) {
                     >
                       {notification.message}
                     </p>
-                    <p className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary + '90' }}>
+                    <p
+                      className="text-[10px] font-[Vazir]"
+                      style={{ color: colors.textSecondary + '90' }}
+                    >
                       {notification.time}
                     </p>
                   </div>
@@ -261,13 +260,7 @@ export default function NotificationModal({ visible, onClose }) {
 
         {/* فوتر */}
         <div className="px-5 py-3 border-t" style={{ borderColor: colors.border }}>
-          <Button
-            title="بستن"
-            onPress={onClose}
-            variant="outline"
-            size="lg"
-            fullWidth
-          />
+          <Button title="بستن" onPress={onClose} variant="outline" size="lg" fullWidth />
         </div>
       </div>
     </div>

@@ -92,9 +92,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
 
   const toggleService = (id) => {
     setSelectedServices((prev) =>
-      prev.includes(id)
-        ? prev.filter((i) => i !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
@@ -118,8 +116,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
     }
   };
 
-  const getServiceName = (id) =>
-    services.find((s) => s.id === id)?.name || 'خدمت';
+  const getServiceName = (id) => services.find((s) => s.id === id)?.name || 'خدمت';
 
   return (
     <div className="flex flex-col gap-4">
@@ -127,17 +124,11 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <FiUsers size={20} style={{ color: colors.primary }} />
-          <span
-            className="text-base font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             اعضای تیم
           </span>
         </div>
-        <span
-          className="text-sm font-[Vazir]"
-          style={{ color: colors.textSecondary }}
-        >
+        <span className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
           {toPersianDigit(team.length)} کارمند
         </span>
       </div>
@@ -158,10 +149,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                   </h4>
                   <div className="flex items-center gap-1 mt-1">
                     <FiPhone size={12} color={colors.textSecondary} />
-                    <span
-                      className="text-xs font-[Vazir]"
-                      style={{ color: colors.textSecondary }}
-                    >
+                    <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
                       {toPersianDigit(member.phone)}
                     </span>
                   </div>
@@ -283,10 +271,9 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                         modalStep > i
                           ? colors.primary
                           : modalStep === i + 1
-                          ? colors.primary + '20'
-                          : colors.cardBackground,
-                      borderColor:
-                        modalStep >= i + 1 ? colors.primary : colors.border,
+                            ? colors.primary + '20'
+                            : colors.cardBackground,
+                      borderColor: modalStep >= i + 1 ? colors.primary : colors.border,
                     }}
                   >
                     {modalStep > i + 1 ? (
@@ -295,10 +282,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                       <span
                         className="text-xs font-[Vazir-Bold]"
                         style={{
-                          color:
-                            modalStep === i + 1
-                              ? colors.primary
-                              : colors.textSecondary,
+                          color: modalStep === i + 1 ? colors.primary : colors.textSecondary,
                         }}
                       >
                         {toPersianDigit(i + 1)}
@@ -308,10 +292,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                   <span
                     className="text-[10px] font-[Vazir]"
                     style={{
-                      color:
-                        modalStep >= i + 1
-                          ? colors.textMain
-                          : colors.textSecondary,
+                      color: modalStep >= i + 1 ? colors.textMain : colors.textSecondary,
                     }}
                   >
                     {label}
@@ -321,8 +302,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                   <div
                     className="w-12 h-0.5 mb-5 rounded-full"
                     style={{
-                      backgroundColor:
-                        modalStep > i + 1 ? colors.primary : colors.border,
+                      backgroundColor: modalStep > i + 1 ? colors.primary : colors.border,
                     }}
                   />
                 )}
@@ -342,9 +322,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                   if (errors.name) setErrors((e) => ({ ...e, name: '' }));
                 }}
                 error={errors.name}
-                rightIcon={
-                  <FiUser size={18} color={colors.textSecondary} />
-                }
+                rightIcon={<FiUser size={18} color={colors.textSecondary} />}
               />
               <Input
                 label="شماره موبایل *"
@@ -357,9 +335,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                 type="tel"
                 maxLength={11}
                 error={errors.phone}
-                rightIcon={
-                  <FiPhone size={18} color={colors.textSecondary} />
-                }
+                rightIcon={<FiPhone size={18} color={colors.textSecondary} />}
               />
             </div>
           )}
@@ -367,10 +343,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
           {/* مرحله ۲: انتخاب خدمات */}
           {modalStep === 2 && (
             <div className="space-y-3">
-              <p
-                className="text-sm font-[Vazir-Medium] mb-3"
-                style={{ color: colors.textMain }}
-              >
+              <p className="text-sm font-[Vazir-Medium] mb-3" style={{ color: colors.textMain }}>
                 خدماتی که این کارمند ارائه می‌دهد را انتخاب کنید:
               </p>
 
@@ -379,10 +352,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                   className="p-6 rounded-2xl border-2 border-dashed text-center"
                   style={{ borderColor: colors.border }}
                 >
-                  <p
-                    className="text-sm font-[Vazir]"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <p className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
                     هنوز خدمتی ثبت نشده است.
                     <br />
                     ابتدا در بخش «مدیریت خدمات»، خدمات را اضافه کنید.
@@ -398,9 +368,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                         onClick={() => toggleService(service.id)}
                         className="w-full flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-right"
                         style={{
-                          borderColor: isSelected
-                            ? colors.primary
-                            : colors.border,
+                          borderColor: isSelected ? colors.primary : colors.border,
                           backgroundColor: isSelected
                             ? colors.primary + '08'
                             : colors.cardBackground,
@@ -409,9 +377,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                         <div
                           className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
                           style={{
-                            backgroundColor: isSelected
-                              ? colors.primary
-                              : colors.border + '50',
+                            backgroundColor: isSelected ? colors.primary : colors.border + '50',
                           }}
                         >
                           {isSelected && <FiCheck size={14} color="#fff" />}
@@ -435,7 +401,9 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                           style={{ color: colors.primary }}
                         >
                           {toPersianDigit(
-                            (service.finalPrice || service.originalPrice || 0).toLocaleString('en-US')
+                            (service.finalPrice || service.originalPrice || 0).toLocaleString(
+                              'en-US'
+                            )
                           )}{' '}
                           ت
                         </span>
@@ -455,10 +423,7 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                   }}
                 >
                   <FiCheck size={16} style={{ color: colors.primary }} />
-                  <span
-                    className="text-sm font-[Vazir-Bold]"
-                    style={{ color: colors.primary }}
-                  >
+                  <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
                     {toPersianDigit(selectedServices.length)} خدمت انتخاب شده
                   </span>
                 </div>

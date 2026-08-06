@@ -43,20 +43,27 @@ export default function FaqSection() {
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {FAQ_CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat.id;
-          const count = cat.id === 'all'
-            ? FAQ_ITEMS.length
-            : FAQ_ITEMS.filter((f) => f.categoryId === cat.id).length;
+          const count =
+            cat.id === 'all'
+              ? FAQ_ITEMS.length
+              : FAQ_ITEMS.filter((f) => f.categoryId === cat.id).length;
           return (
             <button
               key={cat.id}
-              onClick={() => { setActiveCategory(cat.id); setExpandedId(null); }}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                setExpandedId(null);
+              }}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-[14px] border-[1.5px] whitespace-nowrap transition-all flex-shrink-0"
               style={{
                 backgroundColor: isActive ? cat.color : colors.cardBackground,
                 borderColor: isActive ? cat.color : colors.border,
               }}
             >
-              <span className="text-xs font-[Vazir-Bold]" style={{ color: isActive ? '#fff' : colors.textMain }}>
+              <span
+                className="text-xs font-[Vazir-Bold]"
+                style={{ color: isActive ? '#fff' : colors.textMain }}
+              >
                 {cat.label}
               </span>
               <span
@@ -125,7 +132,10 @@ export default function FaqSection() {
                       className="flex items-center gap-1.5 mt-3 self-start inline-flex px-2.5 py-1 rounded-lg"
                       style={{ backgroundColor: (category?.color || '#607D8B') + '15' }}
                     >
-                      <span className="text-[10px] font-[Vazir-Bold]" style={{ color: category?.color || '#607D8B' }}>
+                      <span
+                        className="text-[10px] font-[Vazir-Bold]"
+                        style={{ color: category?.color || '#607D8B' }}
+                      >
                         {category?.label}
                       </span>
                     </div>

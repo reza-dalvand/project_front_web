@@ -10,11 +10,7 @@ import { useTheme } from '@/stores/useThemeStore';
  * @param {boolean} isSelected - آیا انتخاب شده
  * @param {function} onPress - تابع کلیک
  */
-export default function TeamMemberCard({
-  member,
-  isSelected = false,
-  onPress,
-}) {
+export default function TeamMemberCard({ member, isSelected = false, onPress }) {
   const { colors } = useTheme();
 
   return (

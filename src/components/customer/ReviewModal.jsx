@@ -18,12 +18,7 @@ const REVIEW_TAGS = [
   { id: 'recommend', label: 'پیشنهاد می‌کنم' },
 ];
 
-export default function ReviewModal({
-  visible,
-  appointment,
-  onClose,
-  onSubmit,
-}) {
+export default function ReviewModal({ visible, appointment, onClose, onSubmit }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
   const [mounted, setMounted] = useState(false);
@@ -70,9 +65,7 @@ export default function ReviewModal({
 
   const toggleTag = (tagId) => {
     setSelectedTags((prev) =>
-      prev.includes(tagId)
-        ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
     );
   };
 
@@ -122,10 +115,7 @@ export default function ReviewModal({
       >
         {/* Handle Bar (موبایل) */}
         <div className="flex justify-center pt-3 pb-1 md:hidden">
-          <div
-            className="w-10 h-1 rounded-full"
-            style={{ backgroundColor: colors.border }}
-          />
+          <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </div>
 
         {/* هدر */}
@@ -133,22 +123,12 @@ export default function ReviewModal({
           className="flex items-center gap-3 px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
         >
-          <Avatar
-            uri={appointment.businessLogo}
-            name={appointment.businessName}
-            size="sm"
-          />
+          <Avatar uri={appointment.businessLogo} name={appointment.businessName} size="sm" />
           <div className="flex flex-col gap-0.5 flex-1">
-            <span
-              className="text-sm font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               {appointment.businessName}
             </span>
-            <span
-              className="text-xs font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
               {appointment.serviceName}
             </span>
           </div>
@@ -193,10 +173,7 @@ export default function ReviewModal({
                   }}
                 >
                   <FiStar size={14} color="#43A047" />
-                  <span
-                    className="text-xs font-[Vazir-Bold]"
-                    style={{ color: '#43A047' }}
-                  >
+                  <span className="text-xs font-[Vazir-Bold]" style={{ color: '#43A047' }}>
                     {selectedTags.length} مورد ثبت شد
                   </span>
                 </div>
@@ -212,22 +189,14 @@ export default function ReviewModal({
                 >
                   <FiStar size={18} style={{ color: colors.primary }} />
                 </div>
-                <span
-                  className="text-[15px] font-[Vazir-Bold]"
-                  style={{ color: colors.textMain }}
-                >
+                <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                   تجربه‌تان چطور بود؟
                 </span>
               </div>
 
               {/* ═══ ستاره‌ها ═══ */}
               <div className="flex justify-center py-2">
-                <StarRating
-                  value={rating}
-                  size="lg"
-                  interactive
-                  onRate={setRating}
-                />
+                <StarRating value={rating} size="lg" interactive onRate={setRating} />
               </div>
 
               {/* ═══ تگ‌ها ═══ */}
@@ -252,20 +221,14 @@ export default function ReviewModal({
                           backgroundColor: isSelected
                             ? colors.primary + '22'
                             : colors.cardBackground,
-                          borderColor: isSelected
-                            ? colors.primary
-                            : colors.border,
+                          borderColor: isSelected ? colors.primary : colors.border,
                         }}
                       >
-                        {isSelected && (
-                          <FiCheck size={14} style={{ color: colors.primary }} />
-                        )}
+                        {isSelected && <FiCheck size={14} style={{ color: colors.primary }} />}
                         <span
                           className="text-[13px] font-[Vazir-Medium]"
                           style={{
-                            color: isSelected
-                              ? colors.primary
-                              : colors.textSecondary,
+                            color: isSelected ? colors.primary : colors.textSecondary,
                           }}
                         >
                           {tag.label}
@@ -314,10 +277,7 @@ export default function ReviewModal({
 
         {/* فوتر */}
         {!showSuccess && (
-          <div
-            className="px-5 py-4 border-t space-y-3"
-            style={{ borderColor: colors.border }}
-          >
+          <div className="px-5 py-4 border-t space-y-3" style={{ borderColor: colors.border }}>
             <Button
               title={isSubmitting ? 'در حال ثبت...' : 'ثبت نظر'}
               onPress={handleSubmit}
@@ -329,14 +289,8 @@ export default function ReviewModal({
               icon={<FiSend size={18} color="#fff" />}
               iconPosition="right"
             />
-            <button
-              onClick={onClose}
-              className="w-full py-2 text-center"
-            >
-              <span
-                className="text-sm font-[Vazir-Medium]"
-                style={{ color: colors.textSecondary }}
-              >
+            <button onClick={onClose} className="w-full py-2 text-center">
+              <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
                 بعداً
               </span>
             </button>

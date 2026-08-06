@@ -15,11 +15,12 @@ export default function ManageHeader() {
 
   // خوشامدگویی بر اساس ساعت
   const hour = new Date().getHours();
-  const greeting = hour < 12
-    ? { text: 'صبح بخیر', emoji: '🌅' }
-    : hour < 17
-    ? { text: 'ظهر بخیر', emoji: '☀️' }
-    : { text: 'عصر بخیر', emoji: '🌆' };
+  const greeting =
+    hour < 12
+      ? { text: 'صبح بخیر', emoji: '🌅' }
+      : hour < 17
+        ? { text: 'ظهر بخیر', emoji: '☀️' }
+        : { text: 'عصر بخیر', emoji: '🌆' };
 
   return (
     <div
@@ -44,9 +45,7 @@ export default function ManageHeader() {
           <p className="text-sm text-white/80 mb-1">
             {greeting.emoji} {greeting.text}
           </p>
-          <h1 className="text-2xl font-[Vazir-Bold] text-white">
-            {user?.name || 'مدیر سالن'}
-          </h1>
+          <h1 className="text-2xl font-[Vazir-Bold] text-white">{user?.name || 'مدیر سالن'}</h1>
         </div>
 
         {/* کارت کسب‌وکار */}
@@ -72,14 +71,10 @@ export default function ManageHeader() {
                 </div>
               )}
             </div>
-            <p className="text-[11px] text-white/85 mt-0.5">
-              {businessData?.category}
-            </p>
+            <p className="text-[11px] text-white/85 mt-0.5">{businessData?.category}</p>
             <div className="flex items-center gap-1 mt-1">
               <FiMapPin size={11} className="text-white/75" />
-              <span className="text-[10px] text-white/75">
-                {businessData?.city}
-              </span>
+              <span className="text-[10px] text-white/75">{businessData?.city}</span>
             </div>
           </div>
 

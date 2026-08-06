@@ -65,7 +65,10 @@ export default function BookingLinkCard({ bookingLink, onShare, onCopy }) {
         }}
       >
         <span className="text-base flex-shrink-0">💡</span>
-        <p className="text-[11px] font-[Vazir] leading-[18px] flex-1" style={{ color: colors.textSecondary }}>
+        <p
+          className="text-[11px] font-[Vazir] leading-[18px] flex-1"
+          style={{ color: colors.textSecondary }}
+        >
           مشتریان با کلیک روی این لینک مستقیماً به صفحه رزرو شما در اپلیکیشن هدایت می‌شوند
         </p>
       </div>

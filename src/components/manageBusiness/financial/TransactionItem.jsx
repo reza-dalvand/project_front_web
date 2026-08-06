@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  FiClock,
-  FiRefreshCw,
-  FiCheckCircle,
-  FiRotateCcw,
-  FiChevronLeft,
-} from 'react-icons/fi';
+import { FiClock, FiRefreshCw, FiCheckCircle, FiRotateCcw, FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
 import InfoRow from '@/components/common/InfoRow';
@@ -34,9 +28,7 @@ export default function TransactionItem({ tx, onPress }) {
 
   const { value, color: amtColor } = getSignAndColor();
   const mainTitle =
-    tx.type === 'deposit' || tx.type === 'refund'
-      ? tx.customerName
-      : tx.title || 'تراکنش';
+    tx.type === 'deposit' || tx.type === 'refund' ? tx.customerName : tx.title || 'تراکنش';
 
   return (
     <button onClick={() => onPress?.(tx)} className="w-full text-right mb-3">
@@ -53,10 +45,7 @@ export default function TransactionItem({ tx, onPress }) {
             <StatusIcon size={22} style={{ color: meta.color }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p
-              className="text-sm font-[Vazir-Bold] truncate"
-              style={{ color: colors.textMain }}
-            >
+            <p className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               {mainTitle}
             </p>
             {tx.serviceName && (
@@ -100,20 +89,14 @@ export default function TransactionItem({ tx, onPress }) {
                 valueBold
               />
               {tx.destinationBank && (
-                <InfoRow
-                  icon="🏦"
-                  label="مقصد:"
-                  value={`حساب تایید شده • ${tx.destinationBank}`}
-                />
+                <InfoRow icon="🏦" label="مقصد:" value={`حساب تایید شده • ${tx.destinationBank}`} />
               )}
             </>
           )}
           {tx.type === 'refund' && (
             <>
               <InfoRow icon="⏰" label="تاریخ استرداد:" value={tx.createdAt} />
-              {tx.reason && (
-                <InfoRow icon="⚠️" label="دلیل:" value={tx.reason} warn />
-              )}
+              {tx.reason && <InfoRow icon="⚠️" label="دلیل:" value={tx.reason} warn />}
             </>
           )}
           {tx.status === 'settling' && tx.estimatedSettlement && (

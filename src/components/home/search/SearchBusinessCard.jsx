@@ -57,21 +57,12 @@ export default function SearchBusinessCard({ business, onPress }) {
               >
                 {business.city}
               </span>
-              <div
-                className="w-1 h-1 rounded-full"
-                style={{ backgroundColor: colors.border }}
-              />
+              <div className="w-1 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
               <FiStar size={11} color="#FFC107" fill="#FFC107" />
-              <span
-                className="text-xs font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 {toPersianDigit(business.rating)}
               </span>
-              <span
-                className="text-[10px] font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                 ({toPersianDigit(business.reviewsCount)})
               </span>
             </div>

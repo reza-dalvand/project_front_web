@@ -136,10 +136,7 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
           {/* عنوان */}
           {portfolio.title && (
             <div>
-              <h3
-                className="text-lg font-[Vazir-Bold] mb-2"
-                style={{ color: colors.textMain }}
-              >
+              <h3 className="text-lg font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
                 {portfolio.title}
               </h3>
             </div>
@@ -147,17 +144,11 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
 
           {/* توضیحات */}
           {portfolio.description ? (
-            <p
-              className="text-sm leading-6 text-justify"
-              style={{ color: colors.textSecondary }}
-            >
+            <p className="text-sm leading-6 text-justify" style={{ color: colors.textSecondary }}>
               {portfolio.description}
             </p>
           ) : (
-            <p
-              className="text-sm italic"
-              style={{ color: colors.textSecondary }}
-            >
+            <p className="text-sm italic" style={{ color: colors.textSecondary }}>
               توضیحاتی برای این نمونه‌کار ثبت نشده است
             </p>
           )}
@@ -175,8 +166,7 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
                 onClick={() => setCurrentIndex(i)}
                 className="h-1.5 rounded-full transition-all duration-300"
                 style={{
-                  backgroundColor:
-                    i === currentIndex ? colors.primary : colors.border,
+                  backgroundColor: i === currentIndex ? colors.primary : colors.border,
                   width: i === currentIndex ? '20px' : '6px',
                 }}
               />

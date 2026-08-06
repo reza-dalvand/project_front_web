@@ -8,7 +8,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 const DEFAULT_LOCATION = {
   latitude: 35.6997,
-  longitude: 51.3380,
+  longitude: 51.338,
   zoom: 13,
 };
 
@@ -31,11 +31,7 @@ const MAP_STYLE = {
   ],
 };
 
-export default function MapPicker({
-  initialLocation,
-  onLocationSelect,
-  readOnly = false,
-}) {
+export default function MapPicker({ initialLocation, onLocationSelect, readOnly = false }) {
   const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [confirmedLocation, setConfirmedLocation] = useState(initialLocation || null);
@@ -49,17 +45,19 @@ export default function MapPicker({
   const [mapLoading, setMapLoading] = useState(true);
 
   useEffect(() => {
-    import('react-map-gl/maplibre').then((mod) => {
-      setMapLib({
-        Map: mod.default,
-        Marker: mod.Marker,
-        NavigationControl: mod.NavigationControl,
+    import('react-map-gl/maplibre')
+      .then((mod) => {
+        setMapLib({
+          Map: mod.default,
+          Marker: mod.Marker,
+          NavigationControl: mod.NavigationControl,
+        });
+        setMapLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load maplibre:', err);
+        setMapLoading(false);
       });
-      setMapLoading(false);
-    }).catch((err) => {
-      console.error('Failed to load maplibre:', err);
-      setMapLoading(false);
-    });
   }, []);
 
   const getAddressFromCoordinates = async (lat, lng) => {
@@ -148,10 +146,7 @@ export default function MapPicker({
               <FiMapPin size={22} style={{ color: colors.primary }} />
             </div>
             <div className="flex-1 text-right min-w-0">
-              <p
-                className="text-xs font-[Vazir] mb-1"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-xs font-[Vazir] mb-1" style={{ color: colors.textSecondary }}>
                 موقعیت انتخاب شده
               </p>
               <p
@@ -179,16 +174,10 @@ export default function MapPicker({
               <FiMapPin size={22} style={{ color: colors.textSecondary }} />
             </div>
             <div className="flex-1 text-right">
-              <p
-                className="text-xs font-[Vazir] mb-1"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-xs font-[Vazir] mb-1" style={{ color: colors.textSecondary }}>
                 موقعیت مکانی
               </p>
-              <p
-                className="text-sm font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
                 برای انتخاب روی نقشه، ضربه بزنید
               </p>
             </div>
@@ -227,16 +216,10 @@ export default function MapPicker({
               <FiX size={20} style={{ color: colors.textMain }} />
             </button>
             <div className="flex-1 text-center px-4">
-              <h3
-                className="text-base font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 انتخاب موقعیت مکانی
               </h3>
-              <p
-                className="text-xs font-[Vazir] mt-1"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-xs font-[Vazir] mt-1" style={{ color: colors.textSecondary }}>
                 روی نقشه کلیک کنید تا نشانگر روی محل دقیق قرار گیرد
               </p>
             </div>
@@ -314,10 +297,7 @@ export default function MapPicker({
                       className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
                       style={{ color: colors.primary }}
                     />
-                    <span
-                      className="text-xs font-[Vazir]"
-                      style={{ color: colors.textSecondary }}
-                    >
+                    <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
                       در حال جستجوی موقعیت...
                     </span>
                   </div>

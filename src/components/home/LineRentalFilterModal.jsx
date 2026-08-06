@@ -8,32 +8,27 @@ import Chip from '@/components/common/Chip';
 import Divider from '@/components/common/Divider';
 
 const SERVICE_FILTER_OPTIONS = [
-  { id: 'all',        label: 'همه خدمات' },
-  { id: 'facial',     label: 'فیشیال و پوست' },
-  { id: 'nail',       label: 'کاشت ناخن' },
+  { id: 'all', label: 'همه خدمات' },
+  { id: 'facial', label: 'فیشیال و پوست' },
+  { id: 'nail', label: 'کاشت ناخن' },
   { id: 'hair_color', label: 'رنگ و لایت مو' },
-  { id: 'keratin',    label: 'کراتین و احیا' },
-  { id: 'laser',      label: 'لیزر' },
-  { id: 'makeup',     label: 'میکاپ و گریم' },
-  { id: 'eyelash',    label: 'کاشت مژه' },
-  { id: 'massage',    label: 'ماساژ' },
-  { id: 'hair_cut',   label: 'کوتاهی مو' },
-  { id: 'bridal',     label: 'خدمات عروس' },
+  { id: 'keratin', label: 'کراتین و احیا' },
+  { id: 'laser', label: 'لیزر' },
+  { id: 'makeup', label: 'میکاپ و گریم' },
+  { id: 'eyelash', label: 'کاشت مژه' },
+  { id: 'massage', label: 'ماساژ' },
+  { id: 'hair_cut', label: 'کوتاهی مو' },
+  { id: 'bridal', label: 'خدمات عروس' },
 ];
 
 const COLLAB_FILTER_OPTIONS = [
-  { id: 'all',     label: 'همه',     icon: '📋' },
-  { id: 'percent', label: 'درصدی',   icon: '📊' },
-  { id: 'fixed',   label: 'اجاره ثابت', icon: '💰' },
-  { id: 'hourly',  label: 'ساعتی',   icon: '⏰' },
+  { id: 'all', label: 'همه', icon: '📋' },
+  { id: 'percent', label: 'درصدی', icon: '📊' },
+  { id: 'fixed', label: 'اجاره ثابت', icon: '💰' },
+  { id: 'hourly', label: 'ساعتی', icon: '⏰' },
 ];
 
-export default function LineRentalFilterModal({
-  visible,
-  onClose,
-  onApply,
-  currentFilters,
-}) {
+export default function LineRentalFilterModal({ visible, onClose, onApply, currentFilters }) {
   const { colors } = useTheme();
   const [collabType, setCollabType] = useState('all');
   const [serviceType, setServiceType] = useState('all');
@@ -94,10 +89,7 @@ export default function LineRentalFilterModal({
             >
               <FiHome size={16} color="#667eea" />
             </div>
-            <span
-              className="text-sm font-bold"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-bold" style={{ color: colors.textMain }}>
               نوع همکاری
             </span>
           </div>
@@ -124,10 +116,7 @@ export default function LineRentalFilterModal({
             >
               <FiGrid size={16} color="#E91E63" />
             </div>
-            <span
-              className="text-sm font-bold"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-bold" style={{ color: colors.textMain }}>
               نوع خدمت لاین
             </span>
           </div>

@@ -34,12 +34,7 @@ export default function HomeFilterModal({ visible, onClose, onApply, currentFilt
   const hasActiveFilter = province || city;
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onClose}
-      title="فیلتر موقعیت مکانی"
-      snapPoint={0.7}
-    >
+    <BottomSheet visible={visible} onClose={onClose} title="فیلتر موقعیت مکانی" snapPoint={0.7}>
       <div className="space-y-5 pb-5">
         {/* راهنما */}
         <div
@@ -50,7 +45,10 @@ export default function HomeFilterModal({ visible, onClose, onApply, currentFilt
           }}
         >
           <FiInfo size={16} color="#2196F3" className="flex-shrink-0 mt-0.5" />
-          <p className="text-xs font-[Vazir] flex-1 leading-[19px]" style={{ color: colors.textSecondary }}>
+          <p
+            className="text-xs font-[Vazir] flex-1 leading-[19px]"
+            style={{ color: colors.textSecondary }}
+          >
             استان و شهر موردنظر خود را انتخاب کنید تا فقط کسب‌وکارهای آن منطقه نمایش داده شود
           </p>
         </div>

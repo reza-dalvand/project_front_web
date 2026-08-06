@@ -51,7 +51,10 @@ export default function ScheduleEditor({ schedule = {}, onChange }) {
                 }}
               />
             </button>
-            <span className="text-sm font-[Vazir-Medium] mr-3 flex-1" style={{ color: colors.textMain }}>
+            <span
+              className="text-sm font-[Vazir-Medium] mr-3 flex-1"
+              style={{ color: colors.textMain }}
+            >
               {label}
             </span>
             {day.active && (

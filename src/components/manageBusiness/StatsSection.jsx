@@ -63,16 +63,10 @@ export default function StatsSection({ stats }) {
             >
               <span style={{ color: stat.color }}>{stat.icon}</span>
             </div>
-            <span
-              className="text-2xl font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-2xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               {formatValue(stats[stat.key], stat.format)}
             </span>
-            <span
-              className="text-xs font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
               {stat.label}
             </span>
           </div>

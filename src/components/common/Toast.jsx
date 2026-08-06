@@ -63,9 +63,8 @@ export default function Toast({
   const config = TYPE_CONFIG[type] || TYPE_CONFIG.info;
   const Icon = config.icon;
 
-  const positionClasses = position === 'top'
-    ? 'top-6 left-1/2 -translate-x-1/2'
-    : 'bottom-6 left-1/2 -translate-x-1/2';
+  const positionClasses =
+    position === 'top' ? 'top-6 left-1/2 -translate-x-1/2' : 'bottom-6 left-1/2 -translate-x-1/2';
 
   return (
     <div
@@ -80,10 +79,7 @@ export default function Toast({
       style={{ backgroundColor: config.bg, maxWidth: '90vw' }}
     >
       <Icon size={20} color="#fff" className="flex-shrink-0" />
-      <span
-        className="text-white text-sm font-[Vazir] text-right"
-        dir="rtl"
-      >
+      <span className="text-white text-sm font-[Vazir] text-right" dir="rtl">
         {message}
       </span>
     </div>

@@ -41,9 +41,7 @@ export default function Header({
             borderColor: colors.border + '60',
           }}
         >
-          {backIcon || (
-            <FiChevronRight size={24} style={{ color: colors.textMain }} />
-          )}
+          {backIcon || <FiChevronRight size={24} style={{ color: colors.textMain }} />}
         </button>
       </div>
 

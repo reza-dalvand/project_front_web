@@ -9,10 +9,7 @@ const DEFAULT_STEPS = [
   { id: 3, label: 'ساعت', icon: FiClock },
 ];
 
-export default function BookingStepIndicator({
-  currentStep,
-  steps = DEFAULT_STEPS,
-}) {
+export default function BookingStepIndicator({ currentStep, steps = DEFAULT_STEPS }) {
   const { colors } = useTheme();
 
   return (
@@ -32,10 +29,9 @@ export default function BookingStepIndicator({
                   backgroundColor: isCompleted
                     ? colors.primary
                     : isActive
-                    ? colors.primary + '20'
-                    : colors.cardBackground,
-                  borderColor:
-                    isCompleted || isActive ? colors.primary : colors.border,
+                      ? colors.primary + '20'
+                      : colors.cardBackground,
+                  borderColor: isCompleted || isActive ? colors.primary : colors.border,
                 }}
               >
                 {isCompleted ? (
@@ -52,10 +48,7 @@ export default function BookingStepIndicator({
               <span
                 className="text-[11px] font-[Vazir]"
                 style={{
-                  color:
-                    isCompleted || isActive
-                      ? colors.textMain
-                      : colors.textSecondary,
+                  color: isCompleted || isActive ? colors.textMain : colors.textSecondary,
                   fontFamily: isActive ? 'Vazir-Bold' : 'Vazir',
                 }}
               >
@@ -68,8 +61,7 @@ export default function BookingStepIndicator({
               <div
                 className="flex-1 h-0.5 mb-5 rounded-full transition-all duration-300"
                 style={{
-                  backgroundColor:
-                    currentStep > step.id ? colors.primary : colors.border,
+                  backgroundColor: currentStep > step.id ? colors.primary : colors.border,
                 }}
               />
             )}

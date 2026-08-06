@@ -43,26 +43,18 @@ export default function ProfileMenuCard({ item, onPress, rightElement = null }) 
 
         {/* متن */}
         <div className="flex flex-col gap-0.5 flex-1">
-          <span
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {item.title}
           </span>
           {item.subtitle && (
-            <span
-              className="text-xs"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-xs" style={{ color: colors.textSecondary }}>
               {item.subtitle}
             </span>
           )}
         </div>
       </div>
 
-      {rightElement || (
-        <FiChevronLeft size={24} color={colors.textSecondary} />
-      )}
+      {rightElement || <FiChevronLeft size={24} color={colors.textSecondary} />}
     </button>
   );
 }

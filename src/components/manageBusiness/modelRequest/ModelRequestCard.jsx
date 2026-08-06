@@ -46,20 +46,13 @@ export default function ModelRequestCard({ request, onPress }) {
 
       {/* محتوا */}
       <div className="flex-1 min-w-0 gap-1.5">
-        <h4
-          className="text-sm font-[Vazir-Bold] line-clamp-1"
-          style={{ color: colors.textMain }}
-        >
+        <h4 className="text-sm font-[Vazir-Bold] line-clamp-1" style={{ color: colors.textMain }}>
           {request.title}
         </h4>
         <div className="flex items-center gap-2">
           <CostTypeBadge type={request.costType} variant="compact" />
           <div className="flex-1" />
-          <Badge
-            label={currentStatus.label}
-            variant={currentStatus.variant}
-            size="sm"
-          />
+          <Badge label={currentStatus.label} variant={currentStatus.variant} size="sm" />
         </div>
       </div>
 

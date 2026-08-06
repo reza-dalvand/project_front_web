@@ -1,13 +1,6 @@
 'use client';
 import { useState } from 'react';
-import {
-  FiImage,
-  FiTag,
-  FiFileText,
-  FiPhone,
-  FiDollarSign,
-  FiCheck,
-} from 'react-icons/fi';
+import { FiImage, FiTag, FiFileText, FiPhone, FiDollarSign, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
@@ -37,13 +30,7 @@ const COST_TYPE_OPTIONS = [
   },
 ];
 
-export default function ModelRequestForm({
-  services,
-  initialData,
-  defaultPhone,
-  onSave,
-  onClose,
-}) {
+export default function ModelRequestForm({ services, initialData, defaultPhone, onSave, onClose }) {
   const { colors } = useTheme();
   const [formData, setFormData] = useState({
     serviceId: initialData?.serviceId || null,
@@ -64,10 +51,8 @@ export default function ModelRequestForm({
     const newErrors = {};
     if (!formData.serviceId) newErrors.serviceId = 'خدمت را انتخاب کنید';
     if (!formData.title.trim()) newErrors.title = 'عنوان الزامی است';
-    if (!formData.description.trim())
-      newErrors.description = 'توضیحات الزامی است';
-    if (!formData.serviceImage)
-      newErrors.serviceImage = 'تصویر خدمت الزامی است';
+    if (!formData.description.trim()) newErrors.description = 'توضیحات الزامی است';
+    if (!formData.serviceImage) newErrors.serviceImage = 'تصویر خدمت الزامی است';
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
@@ -84,11 +69,7 @@ export default function ModelRequestForm({
     <div className="p-5 space-y-6 pb-32">
       {/* ═══════ بخش ۱: تصویر خدمت ═══════ */}
       <div className="space-y-3">
-        <SectionHeader
-          icon={<FiImage size={18} />}
-          iconColor="#FF9800"
-          title="تصویر خدمت"
-        />
+        <SectionHeader icon={<FiImage size={18} />} iconColor="#FF9800" title="تصویر خدمت" />
         <ImageUploader
           value={formData.serviceImage}
           onChange={(url) => updateField('serviceImage', url)}
@@ -113,9 +94,7 @@ export default function ModelRequestForm({
             options={serviceOptions}
             onSelect={(val) => updateField('serviceId', val)}
           />
-          {errors.serviceId && (
-            <p className="text-xs text-[#E53935] mt-1">{errors.serviceId}</p>
-          )}
+          {errors.serviceId && <p className="text-xs text-[#E53935] mt-1">{errors.serviceId}</p>}
 
           <Input
             label="عنوان درخواست *"
@@ -138,9 +117,7 @@ export default function ModelRequestForm({
             label="شماره تماس برای مدل‌ها *"
             placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹"
             value={toPersianDigit(formData.contactPhone)}
-            onChangeText={(t) =>
-              updateField('contactPhone', t.replace(/[^0-9]/g, ''))
-            }
+            onChangeText={(t) => updateField('contactPhone', t.replace(/[^0-9]/g, ''))}
             type="tel"
             maxLength={11}
           />
@@ -149,11 +126,7 @@ export default function ModelRequestForm({
 
       {/* ═══════ بخش ۳: نوع هزینه ═══════ */}
       <div className="space-y-3">
-        <SectionHeader
-          icon={<FiDollarSign size={18} />}
-          iconColor="#4CAF50"
-          title="نوع هزینه"
-        />
+        <SectionHeader icon={<FiDollarSign size={18} />} iconColor="#4CAF50" title="نوع هزینه" />
         <div className="space-y-2.5">
           {COST_TYPE_OPTIONS.map((option) => {
             const isSelected = formData.costType === option.id;
@@ -164,18 +137,13 @@ export default function ModelRequestForm({
                 className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 text-right
                   transition-all"
                 style={{
-                  backgroundColor: isSelected
-                    ? colors.primary + '08'
-                    : colors.cardBackground,
+                  backgroundColor: isSelected ? colors.primary + '08' : colors.cardBackground,
                   borderColor: isSelected ? colors.primary : colors.border,
                 }}
               >
                 <CostTypeBadge type={option.id} variant="default" />
                 <div className="flex-1">
-                  <p
-                    className="text-sm font-[Vazir-Bold]"
-                    style={{ color: colors.textMain }}
-                  >
+                  <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     {option.label}
                   </p>
                   <p
@@ -201,13 +169,7 @@ export default function ModelRequestForm({
 
       {/* ═══════ دکمه‌ها ═══════ */}
       <div className="flex gap-3 pt-4">
-        <Button
-          title="انصراف"
-          onPress={onClose}
-          variant="outline"
-          size="lg"
-          className="flex-1"
-        />
+        <Button title="انصراف" onPress={onClose} variant="outline" size="lg" className="flex-1" />
         <Button
           title={initialData ? 'ذخیره تغییرات' : 'ایجاد درخواست'}
           onPress={handleSave}

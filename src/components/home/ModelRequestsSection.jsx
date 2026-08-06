@@ -31,9 +31,7 @@ export default function ModelRequestsSection() {
         title="فرصت‌های مدلینگ"
         subtitle="با تخفیف ویژه مدل شوید و نمونه‌کار بسازید"
         iconColor="#E91E63"
-        rightElement={
-          <SeeAllButton onPress={handleSeeAll} count={MOCK_MODEL_REQUESTS.length} />
-        }
+        rightElement={<SeeAllButton onPress={handleSeeAll} count={MOCK_MODEL_REQUESTS.length} />}
       />
 
       {/* اسکرول افقی */}

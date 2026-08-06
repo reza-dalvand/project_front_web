@@ -6,9 +6,7 @@ import { lightColors, darkColors } from '../theme/colors';
 // تشخیص تم سیستم
 const getSystemTheme = () => {
   if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
 const getResolvedTheme = (theme) => {
@@ -26,8 +24,8 @@ export const useThemeStore = create(
   persist(
     (set, get) => ({
       theme: 'system',
-      resolvedTheme: 'light',    // ← همیشه light در ابتدا (SSR-safe)
-      colors: lightColors,       // ← همیشه lightColors در ابتدا
+      resolvedTheme: 'light', // ← همیشه light در ابتدا (SSR-safe)
+      colors: lightColors, // ← همیشه lightColors در ابتدا
       _hydrated: false,
 
       setHydrated: () => set({ _hydrated: true }),
@@ -56,9 +54,9 @@ export const useThemeStore = create(
       name: 'zibano-theme-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
-            ? localStorage
-            : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
-        ),
+          ? localStorage
+          : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
+      ),
       partialize: (state) => ({
         theme: state.theme,
       }),

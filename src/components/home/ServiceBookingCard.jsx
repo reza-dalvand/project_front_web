@@ -23,9 +23,7 @@ export default function ServiceBookingCard({ service, onBook }) {
               style={{ backgroundColor: '#E53935' }}
             >
               <span className="text-[9px]">🏷️</span>
-              <span className="text-[10px] font-[Vazir-Bold] text-white">
-                {service.discount}٪
-              </span>
+              <span className="text-[10px] font-[Vazir-Bold] text-white">{service.discount}٪</span>
             </div>
           )}
         </div>
@@ -43,17 +41,11 @@ export default function ServiceBookingCard({ service, onBook }) {
           <div className="flex items-center justify-between mt-auto">
             <div className="flex flex-col gap-0.5 flex-1">
               {hasDiscount && (
-                <span
-                  className="text-[11px] line-through"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-[11px] line-through" style={{ color: colors.textSecondary }}>
                   {formatPrice(service.originalPrice)}
                 </span>
               )}
-              <span
-                className="text-sm font-[Vazir-Bold]"
-                style={{ color: colors.primary }}
-              >
+              <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
                 {formatPrice(service.price)}
               </span>
             </div>
@@ -65,9 +57,7 @@ export default function ServiceBookingCard({ service, onBook }) {
               style={{ backgroundColor: '#43A047' }}
             >
               <FiCalendar size={14} color="#fff" />
-              <span className="text-sm font-[Vazir-Bold] text-white">
-                رزرو
-              </span>
+              <span className="text-sm font-[Vazir-Bold] text-white">رزرو</span>
             </button>
           </div>
         </div>

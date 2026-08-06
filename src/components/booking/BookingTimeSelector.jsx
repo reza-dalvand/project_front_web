@@ -4,11 +4,7 @@ import { FiClock, FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-export default function BookingTimeSelector({
-  slots = [],
-  selectedId,
-  onSelect,
-}) {
+export default function BookingTimeSelector({ slots = [], selectedId, onSelect }) {
   const { colors } = useTheme();
   const availableCount = slots.filter((s) => s.isAvailable).length;
 
@@ -23,16 +19,10 @@ export default function BookingTimeSelector({
           <FiClock size={18} style={{ color: colors.primary }} />
         </div>
         <div className="flex flex-col gap-0.5 flex-1">
-          <span
-            className="text-sm font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             ساعت مورد نظر را انتخاب کنید
           </span>
-          <span
-            className="text-[11px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             {toPersianDigit(availableCount)} ساعت آزاد
           </span>
         </div>
@@ -54,13 +44,13 @@ export default function BookingTimeSelector({
                 backgroundColor: isSelected
                   ? colors.primary
                   : isAvailable
-                  ? colors.cardBackground
-                  : colors.background,
+                    ? colors.cardBackground
+                    : colors.background,
                 borderColor: isSelected
                   ? colors.primary
                   : isAvailable
-                  ? colors.border
-                  : colors.border + '60',
+                    ? colors.border
+                    : colors.border + '60',
               }}
             >
               <span
@@ -69,8 +59,8 @@ export default function BookingTimeSelector({
                   color: isSelected
                     ? '#fff'
                     : isAvailable
-                    ? colors.textMain
-                    : colors.textSecondary + '60',
+                      ? colors.textMain
+                      : colors.textSecondary + '60',
                 }}
               >
                 {slot.time}

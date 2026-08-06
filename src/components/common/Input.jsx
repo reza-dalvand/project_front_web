@@ -27,14 +27,9 @@ export default function Input({
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const borderColor = error
-    ? '#E57373'
-    : focused
-    ? colors.primary
-    : colors.border;
+  const borderColor = error ? '#E57373' : focused ? colors.primary : colors.border;
 
-  const bgColor =
-    variant === 'filled' ? colors.cardBackground : 'transparent';
+  const bgColor = variant === 'filled' ? colors.cardBackground : 'transparent';
 
   const InputComponent = multiline ? 'textarea' : 'input';
 
@@ -98,9 +93,7 @@ export default function Input({
           }}
         />
 
-        {leftIcon && !secureTextEntry && (
-          <span className="mr-3 flex items-center">{leftIcon}</span>
-        )}
+        {leftIcon && !secureTextEntry && <span className="mr-3 flex items-center">{leftIcon}</span>}
 
         {secureTextEntry && (
           <button
@@ -108,10 +101,7 @@ export default function Input({
             className="mr-3 flex items-center"
             type="button"
           >
-            <span
-              className="text-xs"
-              style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
-            >
+            <span className="text-xs" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
               {showPassword ? 'پنهان' : 'نمایش'}
             </span>
           </button>
@@ -119,10 +109,7 @@ export default function Input({
       </div>
 
       {error && (
-        <p
-          className="text-right text-xs mt-1"
-          style={{ color: '#E57373', fontFamily: 'Vazir' }}
-        >
+        <p className="text-right text-xs mt-1" style={{ color: '#E57373', fontFamily: 'Vazir' }}>
           {error}
         </p>
       )}

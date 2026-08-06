@@ -22,10 +22,7 @@ export default function LineRentalStats({ ads }) {
           color="#667eea"
           variant="compact"
         />
-        <div
-          className="w-px h-10 mx-2"
-          style={{ backgroundColor: colors.border }}
-        />
+        <div className="w-px h-10 mx-2" style={{ backgroundColor: colors.border }} />
         <StatsCard
           icon="✅"
           label="فعال"

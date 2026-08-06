@@ -1,6 +1,6 @@
-"use client";
-import { useEffect, useState, useRef } from "react";
-import Image from "next/image";
+'use client';
+import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import {
   FiX,
   FiShare2,
@@ -10,32 +10,25 @@ import {
   FiChevronLeft,
   FiInfo,
   FiZap,
-} from "react-icons/fi";
-import { MdAutoAwesome, MdVerified } from "react-icons/md";
-import { createPortal } from "react-dom";
-import { useTheme } from "@/stores/useThemeStore";
-import { useAuth } from "@/stores/useAuth";
-import { useToast } from "@/hooks/useToast";
-import GallerySlider from "./GallerySlider";
-import StarRating from "@/components/common/StarRating";
-import Avatar from "@/components/common/Avatar";
-import Button from "@/components/common/Button";
-import { acquireScrollLock, releaseScrollLock } from "@/utils/scrollLock";
+} from 'react-icons/fi';
+import { MdAutoAwesome, MdVerified } from 'react-icons/md';
+import { createPortal } from 'react-dom';
+import { useTheme } from '@/stores/useThemeStore';
+import { useAuth } from '@/stores/useAuth';
+import { useToast } from '@/hooks/useToast';
+import GallerySlider from './GallerySlider';
+import StarRating from '@/components/common/StarRating';
+import Avatar from '@/components/common/Avatar';
+import Button from '@/components/common/Button';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-export default function PostModal({
-  post,
-  visible,
-  onClose,
-  onSave,
-  onNavigateToProfile,
-}) {
+export default function PostModal({ post, visible, onClose, onSave, onNavigateToProfile }) {
   const { colors } = useTheme();
   const { isAuthenticated, requireAuth } = useAuth();
   const [isSaved, setIsSaved] = useState(post?.saved || false);
   const [mounted, setMounted] = useState(false);
-  const instanceId = useRef("post-modal");
-  const { showToast } = useToast();  
-
+  const instanceId = useRef('post-modal');
+  const { showToast } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -67,15 +60,15 @@ export default function PostModal({
   useEffect(() => {
     if (!visible) return;
     const handleEscape = (e) => {
-      if (e.key === "Escape") onClose?.();
+      if (e.key === 'Escape') onClose?.();
     };
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
   }, [visible, onClose]);
 
   if (!mounted || !visible || !post) return null;
 
-  const isMagazine = post.source === "magazine";
+  const isMagazine = post.source === 'magazine';
   const media = post.gallery || post.images || [];
 
   // ✅ بعد (جدید — با toast و fallback)
@@ -88,26 +81,26 @@ export default function PostModal({
         await navigator.clipboard.writeText(text);
         return true;
       } catch (err) {
-        console.log("Clipboard API failed:", err);
+        console.log('Clipboard API failed:', err);
       }
     }
 
     // روش ۲: execCommand fallback (برای محیط‌های قدیمی و HTTP)
     try {
-      const textArea = document.createElement("textarea");
+      const textArea = document.createElement('textarea');
       textArea.value = text;
-      textArea.style.position = "fixed";
-      textArea.style.left = "-9999px";
-      textArea.style.top = "-9999px";
-      textArea.style.opacity = "0";
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      textArea.style.top = '-9999px';
+      textArea.style.opacity = '0';
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      const success = document.execCommand("copy");
+      const success = document.execCommand('copy');
       document.body.removeChild(textArea);
       return success;
     } catch (err) {
-      console.log("execCommand copy failed:", err);
+      console.log('execCommand copy failed:', err);
       return false;
     }
   };
@@ -115,35 +108,35 @@ export default function PostModal({
   const handleShare = async () => {
     // ساخت لینک اختصاصی پست
     const postUrl =
-      typeof window !== "undefined"
+      typeof window !== 'undefined'
         ? `${window.location.origin}/post/${post.id}`
         : `https://zibano.app/post/${post.id}`;
 
     // ساخت پیام کامل اشتراک‌گذاری
     const shareMessage = [
-      `🌟 ${post.businessName || "زیبانو"}`,
-      post.caption ? post.caption : "",
-      "",
+      `🌟 ${post.businessName || 'زیبانو'}`,
+      post.caption ? post.caption : '',
+      '',
       `🔗 ${postUrl}`,
-      "📱 مشاهده در اپلیکیشن زیبانو",
+      '📱 مشاهده در اپلیکیشن زیبانو',
     ]
       .filter(Boolean)
-      .join("\n");
+      .join('\n');
 
     // روش ۱: Web Share API (موبایل و مرورگرهای مدرن)
     if (navigator.share) {
       try {
         await navigator.share({
-          title: post.businessName || "زیبانو",
-          text: post.caption || "",
+          title: post.businessName || 'زیبانو',
+          text: post.caption || '',
           url: postUrl,
         });
         return;
       } catch (err) {
         // اگر کاربر خودش لغو کرد، خروج
-        if (err.name === "AbortError") return;
+        if (err.name === 'AbortError') return;
         // در غیر این صورت به fallback ادامه می‌دهیم
-        console.log("Web Share failed, trying clipboard...");
+        console.log('Web Share failed, trying clipboard...');
       }
     }
 
@@ -151,9 +144,9 @@ export default function PostModal({
     const copied = await copyTextToClipboard(shareMessage);
 
     if (copied) {
-      showToast("✓ لینک و توضیحات پست کپی شد", "success");
+      showToast('✓ لینک و توضیحات پست کپی شد', 'success');
     } else {
-      showToast("امکان اشتراک‌گذاری وجود ندارد", "error");
+      showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
     }
   };
 
@@ -182,7 +175,7 @@ export default function PostModal({
   const content = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose?.();
       }}
@@ -233,14 +226,14 @@ export default function PostModal({
               className="w-10 h-10 rounded-full flex items-center justify-center
                 border transition-colors hover:opacity-80"
               style={{
-                backgroundColor: isSaved ? colors.primary + "20" : colors.background,
+                backgroundColor: isSaved ? colors.primary + '20' : colors.background,
                 borderColor: isSaved ? colors.primary : colors.border,
               }}
             >
               <FiBookmark
                 size={18}
                 style={{ color: isSaved ? colors.primary : colors.textMain }}
-                fill={isSaved ? colors.primary : "transparent"}
+                fill={isSaved ? colors.primary : 'transparent'}
               />
             </button>
           )}
@@ -266,11 +259,7 @@ export default function PostModal({
                 onClick={handleProfilePress}
                 className="flex items-center gap-3 flex-1 text-right"
               >
-                <Avatar
-                  uri={post.businessLogo}
-                  name={post.businessName}
-                  size="md"
-                />
+                <Avatar uri={post.businessLogo} name={post.businessName} size="md" />
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5">
                     <span
@@ -281,10 +270,7 @@ export default function PostModal({
                     </span>
                     <MdVerified size={14} color="#4FC3F7" />
                   </div>
-                  <span
-                    className="text-xs"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <span className="text-xs" style={{ color: colors.textSecondary }}>
                     مشاهده پروفایل
                   </span>
                 </div>
@@ -294,7 +280,7 @@ export default function PostModal({
                 onClick={handleBooking}
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl
                 shadow-md transition-all hover:shadow-lg"
-                style={{ backgroundColor: "#43A047" }}
+                style={{ backgroundColor: '#43A047' }}
               >
                 <FiCalendar size={14} color="#fff" />
                 <span className="text-xs font-bold text-white">رزرو</span>
@@ -313,18 +299,15 @@ export default function PostModal({
             >
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "#9C27B020" }}
+                style={{ backgroundColor: '#9C27B020' }}
               >
                 <MdAutoAwesome size={22} color="#9C27B0" />
               </div>
               <div className="flex-1">
-                <span
-                  className="text-sm font-bold line-clamp-1"
-                  style={{ color: colors.textMain }}
-                >
+                <span className="text-sm font-bold line-clamp-1" style={{ color: colors.textMain }}>
                   {post.businessName}
                 </span>
-                <span className="text-xs" style={{ color: "#9C27B0" }}>
+                <span className="text-xs" style={{ color: '#9C27B0' }}>
                   مقاله و محتوای آموزشی
                 </span>
               </div>
@@ -343,23 +326,14 @@ export default function PostModal({
             >
               <div className="flex items-center gap-2">
                 <FiStar size={18} color="#FFC107" fill="#FFC107" />
-                <span
-                  className="text-lg font-bold"
-                  style={{ color: colors.textMain }}
-                >
+                <span className="text-lg font-bold" style={{ color: colors.textMain }}>
                   {post.rating.toFixed(1)}
                 </span>
-                <span
-                  className="text-xs"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-xs" style={{ color: colors.textSecondary }}>
                   از ۵
                 </span>
               </div>
-              <div
-                className="w-px h-6"
-                style={{ backgroundColor: colors.border }}
-              />
+              <div className="w-px h-6" style={{ backgroundColor: colors.border }} />
               <StarRating value={post.rating} size="md" />
             </div>
           )}
@@ -376,9 +350,7 @@ export default function PostModal({
               <div
                 className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{
-                  backgroundColor: isMagazine
-                    ? "#9C27B015"
-                    : colors.primary + "15",
+                  backgroundColor: isMagazine ? '#9C27B015' : colors.primary + '15',
                 }}
               >
                 {isMagazine ? (
@@ -387,17 +359,11 @@ export default function PostModal({
                   <FiInfo size={14} style={{ color: colors.primary }} />
                 )}
               </div>
-              <span
-                className="text-xs font-bold"
-                style={{ color: colors.textSecondary }}
-              >
-                {isMagazine ? "متن مقاله" : "توضیحات"}
+              <span className="text-xs font-bold" style={{ color: colors.textSecondary }}>
+                {isMagazine ? 'متن مقاله' : 'توضیحات'}
               </span>
             </div>
-            <p
-              className="text-sm leading-7 text-justify"
-              style={{ color: colors.textMain }}
-            >
+            <p className="text-sm leading-7 text-justify" style={{ color: colors.textMain }}>
               {post.caption}
             </p>
           </div>
@@ -407,21 +373,15 @@ export default function PostModal({
             className="flex items-center gap-2.5 p-3 mx-4 mt-4 mb-4
             rounded-xl border"
             style={{
-              backgroundColor: isMagazine ? "#9C27B008" : colors.primary + "08",
-              borderColor: isMagazine ? "#9C27B025" : colors.primary + "25",
+              backgroundColor: isMagazine ? '#9C27B008' : colors.primary + '08',
+              borderColor: isMagazine ? '#9C27B025' : colors.primary + '25',
             }}
           >
-            <FiZap
-              size={16}
-              style={{ color: isMagazine ? "#9C27B0" : colors.primary }}
-            />
-            <span
-              className="text-xs leading-5 flex-1"
-              style={{ color: colors.textSecondary }}
-            >
+            <FiZap size={16} style={{ color: isMagazine ? '#9C27B0' : colors.primary }} />
+            <span className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
               {isMagazine
-                ? "این مقاله توسط تیم تحریریه مجله زیبانو تهیه شده است"
-                : "با رزرو نوبت از این کسب‌وکار، از تخفیف‌های ویژه بهره‌مند شوید"}
+                ? 'این مقاله توسط تیم تحریریه مجله زیبانو تهیه شده است'
+                : 'با رزرو نوبت از این کسب‌وکار، از تخفیف‌های ویژه بهره‌مند شوید'}
             </span>
           </div>
         </div>

@@ -12,10 +12,10 @@ import { SERVICE_TYPES } from '@/constants/serviceTypes';
 
 // ═══════════ گزینه‌های نوع هزینه ═══════════
 const COST_FILTER_OPTIONS = [
-  { id: 'all',           label: 'همه',           icon: FiGrid,        color: '#607D8B' },
-  { id: 'free',          label: 'رایگان',        icon: FiGift,        color: '#4CAF50' },
-  { id: 'material_cost', label: 'هزینه مواد',    icon: FiBox,         color: '#FF9800' },
-  { id: 'paid',          label: 'با هزینه',      icon: FiDollarSign,  color: '#2196F3' },
+  { id: 'all', label: 'همه', icon: FiGrid, color: '#607D8B' },
+  { id: 'free', label: 'رایگان', icon: FiGift, color: '#4CAF50' },
+  { id: 'material_cost', label: 'هزینه مواد', icon: FiBox, color: '#FF9800' },
+  { id: 'paid', label: 'با هزینه', icon: FiDollarSign, color: '#2196F3' },
 ];
 
 // ═══════════ گزینه‌های نوع خدمت (برای Dropdown) ═══════════
@@ -33,12 +33,7 @@ const SERVICE_FILTER_OPTIONS = [
  * @param {function} onApply        - اعمال فیلترها
  * @param {object}   currentFilters - فیلترهای فعلی { costType, serviceType }
  */
-export default function ModelRequestFilterModal({
-  visible,
-  onClose,
-  onApply,
-  currentFilters,
-}) {
+export default function ModelRequestFilterModal({ visible, onClose, onApply, currentFilters }) {
   const { colors } = useTheme();
   const [costType, setCostType] = useState('all');
   const [serviceType, setServiceType] = useState('all');
@@ -66,9 +61,7 @@ export default function ModelRequestFilterModal({
   };
 
   // تعداد فیلترهای فعال
-  const activeCount =
-    (costType !== 'all' ? 1 : 0) +
-    (serviceType !== 'all' ? 1 : 0);
+  const activeCount = (costType !== 'all' ? 1 : 0) + (serviceType !== 'all' ? 1 : 0);
 
   return (
     <BottomSheet
@@ -108,16 +101,10 @@ export default function ModelRequestFilterModal({
               <FiDollarSign size={16} color="#4CAF50" />
             </div>
             <div className="flex-1">
-              <span
-                className="text-sm font-[Vazir-Bold] block"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-sm font-[Vazir-Bold] block" style={{ color: colors.textMain }}>
                 نوع هزینه
               </span>
-              <span
-                className="text-[11px] font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                 مشخص کنید چه نوع فرصت‌هایی را می‌خواهید ببینید
               </span>
             </div>
@@ -158,10 +145,7 @@ export default function ModelRequestFilterModal({
               <FiStar size={16} color="#E91E63" />
             </div>
             <div className="flex-1">
-              <span
-                className="text-sm font-[Vazir-Bold] block"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-sm font-[Vazir-Bold] block" style={{ color: colors.textMain }}>
                 نوع خدمت
               </span>
             </div>
@@ -185,10 +169,7 @@ export default function ModelRequestFilterModal({
             }}
           >
             <FiCheck size={14} style={{ color: colors.primary }} />
-            <span
-              className="text-xs font-[Vazir-Bold] flex-1"
-              style={{ color: colors.primary }}
-            >
+            <span className="text-xs font-[Vazir-Bold] flex-1" style={{ color: colors.primary }}>
               {activeCount === 1 ? '۱ فیلتر فعال' : '۲ فیلتر فعال'}
             </span>
           </div>

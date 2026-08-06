@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  FiCalendar,
-  FiBox,
-  FiClock,
-  FiImage,
-  FiLink,
-  FiUser,
-  FiHome,
-} from 'react-icons/fi';
+import { FiCalendar, FiBox, FiClock, FiImage, FiLink, FiUser, FiHome } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
@@ -76,10 +68,7 @@ export default function QuickAccessGrid({ onNavigate, badge = 0 }) {
 
   return (
     <div className="px-5 mt-7">
-      <h2
-        className="text-base font-[Vazir-Bold] mb-4"
-        style={{ color: colors.textMain }}
-      >
+      <h2 className="text-base font-[Vazir-Bold] mb-4" style={{ color: colors.textMain }}>
         دسترسی سریع
       </h2>
 
@@ -116,10 +105,7 @@ export default function QuickAccessGrid({ onNavigate, badge = 0 }) {
                 <span style={{ color: item.color }}>{item.icon}</span>
               </div>
 
-              <span
-                className="text-sm font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 {item.label}
               </span>
               <span

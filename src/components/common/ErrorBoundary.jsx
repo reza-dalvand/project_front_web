@@ -57,10 +57,7 @@ function ErrorFallback({ error, onRetry }) {
         </div>
 
         {/* عنوان */}
-        <h1
-          className="text-xl mb-3"
-          style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}
-        >
+        <h1 className="text-xl mb-3" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
           خطایی رخ داد
         </h1>
 

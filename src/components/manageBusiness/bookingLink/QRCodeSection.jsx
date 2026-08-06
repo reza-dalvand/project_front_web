@@ -13,7 +13,7 @@ function generateSimpleQRPattern(data) {
   let hash = 0;
   for (let i = 0; i < data.length; i++) {
     const char = data.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
 
@@ -26,9 +26,7 @@ function generateSimpleQRPattern(data) {
     for (let col = 0; col < size; col++) {
       // الگوهای گوشه (مثل QR واقعی)
       const isCorner =
-        (row < 7 && col < 7) ||
-        (row < 7 && col >= size - 7) ||
-        (row >= size - 7 && col < 7);
+        (row < 7 && col < 7) || (row < 7 && col >= size - 7) || (row >= size - 7 && col < 7);
 
       if (isCorner) {
         const localRow = row < 7 ? row : row - (size - 7);
@@ -43,7 +41,7 @@ function generateSimpleQRPattern(data) {
 
       // الگوی شبه‌تصادفی برای بقیه
       seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      const filled = (seed % 3) !== 0;
+      const filled = seed % 3 !== 0;
       cells.push({ row, col, filled });
     }
   }
@@ -87,7 +85,13 @@ export default function QRCodeSection({ bookingLink }) {
   const cellSize = 100 / qrPattern.size;
 
   return (
-    <Card variant="default" padding={16} radius={16} className="border" style={{ borderColor: colors.border }}>
+    <Card
+      variant="default"
+      padding={16}
+      radius={16}
+      className="border"
+      style={{ borderColor: colors.border }}
+    >
       {/* هدر */}
       <div className="flex items-center gap-2 mb-4">
         <div
@@ -124,14 +128,7 @@ export default function QRCodeSection({ bookingLink }) {
             {qrPattern.cells
               .filter((c) => c.filled)
               .map((c, i) => (
-                <rect
-                  key={i}
-                  x={c.col}
-                  y={c.row}
-                  width="1"
-                  height="1"
-                  fill="#1a1a1a"
-                />
+                <rect key={i} x={c.col} y={c.row} width="1" height="1" fill="#1a1a1a" />
               ))}
           </svg>
         </div>
@@ -176,8 +173,12 @@ export default function QRCodeSection({ bookingLink }) {
         style={{ backgroundColor: colors.background }}
       >
         <FiInfo size={14} style={{ color: colors.textSecondary, flexShrink: 0, marginTop: 2 }} />
-        <p className="text-[10px] font-[Vazir] leading-4 flex-1" style={{ color: colors.textSecondary }}>
-          این کد را می‌توانید چاپ کرده و روی میز پذیرش یا دیوار سالن نصب کنید. مشتریان با اسکن آن مستقیماً به صفحه رزرو هدایت می‌شوند.
+        <p
+          className="text-[10px] font-[Vazir] leading-4 flex-1"
+          style={{ color: colors.textSecondary }}
+        >
+          این کد را می‌توانید چاپ کرده و روی میز پذیرش یا دیوار سالن نصب کنید. مشتریان با اسکن آن
+          مستقیماً به صفحه رزرو هدایت می‌شوند.
         </p>
       </div>
     </Card>

@@ -1,13 +1,6 @@
 // src/components/common/BottomTabBar.jsx
 'use client';
-import {
-  FiHome,
-  FiGrid,
-  FiPlusCircle,
-  FiCreditCard,
-  FiUser,
-  FiLogIn,
-} from 'react-icons/fi';
+import { FiHome, FiGrid, FiPlusCircle, FiCreditCard, FiUser, FiLogIn } from 'react-icons/fi';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuth';
@@ -22,9 +15,7 @@ export default function BottomTabBar() {
 
   // ─── تشخیص داشتن کسب‌وکار فعال ───
   const hasBusiness = Boolean(
-    businessData?.id &&
-    businessData?.name &&
-    businessData?.isActive !== false
+    businessData?.id && businessData?.name && businessData?.isActive !== false
   );
   // ─── ساخت تب‌ها بر اساس وضعیت احراز هویت ───
   const tabs = isAuthenticated

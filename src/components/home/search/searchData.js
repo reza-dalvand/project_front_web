@@ -367,8 +367,7 @@ export const MOCK_MODEL_REQUESTS = [
     discount: 0,
     isUrgent: true,
     costType: 'material_cost',
-    description:
-      'تست دستگاه جدید لیزر الکساندرایت ۲۰۲۴. بدون درد و با خنک‌کننده قوی.',
+    description: 'تست دستگاه جدید لیزر الکساندرایت ۲۰۲۴. بدون درد و با خنک‌کننده قوی.',
     contactPhone: '09124445566',
     createdAt: '۱۴۰۳/۰۴/۰۳',
     expiresAt: '۱۴۰۳/۰۴/۱۳',
@@ -391,8 +390,7 @@ export const MOCK_LINE_RENTALS = [
     city: 'تهران، سعادت‌آباد',
     lineImage: 'https://picsum.photos/400/300?random=70',
     contactPhone: '09121234567',
-    description:
-      'لاین ناخن کامل با میز حرفه‌ای، دستگاه UV/LED، و مجموعه کامل لاک ژل.',
+    description: 'لاین ناخن کامل با میز حرفه‌ای، دستگاه UV/LED، و مجموعه کامل لاک ژل.',
     createdAt: '۱۴۰۳/۰۴/۱۱',
     expiresAt: '۱۴۰۳/۰۵/۱۱',
     serviceTypeId: 'nail',
@@ -412,8 +410,7 @@ export const MOCK_LINE_RENTALS = [
     city: 'تهران، نیاوران',
     lineImage: 'https://picsum.photos/400/300?random=71',
     contactPhone: '09129876543',
-    description:
-      'لاین میکاپ با نور طبیعی، آینه LED حرفه‌ای و میز گریم کامل.',
+    description: 'لاین میکاپ با نور طبیعی، آینه LED حرفه‌ای و میز گریم کامل.',
     createdAt: '۱۴۰۳/۰۴/۰۴',
     expiresAt: '۱۴۰۳/۰۵/۰۴',
     serviceTypeId: 'makeup',
@@ -433,8 +430,7 @@ export const MOCK_LINE_RENTALS = [
     city: 'اصفهان',
     lineImage: 'https://picsum.photos/400/300?random=72',
     contactPhone: '09121112233',
-    description:
-      'لاین لیزر با دستگاه الکساندرایت ۲۰۲۴، اتاق اختصاصی با تهویه مناسب.',
+    description: 'لاین لیزر با دستگاه الکساندرایت ۲۰۲۴، اتاق اختصاصی با تهویه مناسب.',
     createdAt: '۱۴۰۳/۰۳/۲۷',
     expiresAt: '۱۴۰۳/۰۴/۲۷',
     serviceTypeId: 'laser',
@@ -458,40 +454,22 @@ export const searchAll = (query) => {
   const matches = (text) => text && text.toLowerCase().includes(q);
 
   const businesses = MOCK_BUSINESSES.filter(
-    (b) =>
-      matches(b.name) ||
-      matches(b.serviceType) ||
-      matches(b.category) ||
-      matches(b.address)
+    (b) => matches(b.name) || matches(b.serviceType) || matches(b.category) || matches(b.address)
   );
 
   const services = MOCK_SERVICES.filter(
-    (s) =>
-      matches(s.name) ||
-      matches(s.typeName) ||
-      matches(s.businessName)
+    (s) => matches(s.name) || matches(s.typeName) || matches(s.businessName)
   );
 
-  const posts = MOCK_POSTS.filter(
-    (p) =>
-      matches(p.businessName) ||
-      matches(p.caption)
-  );
+  const posts = MOCK_POSTS.filter((p) => matches(p.businessName) || matches(p.caption));
 
   const modelRequests = MOCK_MODEL_REQUESTS.filter(
-    (m) =>
-      matches(m.title) ||
-      matches(m.serviceName) ||
-      matches(m.businessName) ||
-      matches(m.city)
+    (m) => matches(m.title) || matches(m.serviceName) || matches(m.businessName) || matches(m.city)
   );
 
   const lineRentals = MOCK_LINE_RENTALS.filter(
     (l) =>
-      matches(l.title) ||
-      matches(l.serviceTypeName) ||
-      matches(l.businessName) ||
-      matches(l.city)
+      matches(l.title) || matches(l.serviceTypeName) || matches(l.businessName) || matches(l.city)
   );
 
   return { businesses, services, posts, modelRequests, lineRentals };

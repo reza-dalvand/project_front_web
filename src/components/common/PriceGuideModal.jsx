@@ -2,8 +2,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  FiX, FiCheck, FiInfo, FiTrendingUp,
-  FiDollarSign, FiAlertCircle, FiCheckCircle
+  FiX,
+  FiCheck,
+  FiInfo,
+  FiTrendingUp,
+  FiDollarSign,
+  FiAlertCircle,
+  FiCheckCircle,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
@@ -68,10 +73,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
       >
         {/* Handle Bar (موبایل) */}
         <div className="flex justify-center py-3 md:hidden">
-          <div
-            className="w-10 h-1 rounded-full"
-            style={{ backgroundColor: colors.border }}
-          />
+          <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </div>
 
         {/* Header */}
@@ -87,10 +89,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
               <FiDollarSign size={22} color="#4CAF50" />
             </div>
             <div className="flex-1">
-              <h3
-                className="text-base font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 راهنمای قیمت‌گذاری
               </h3>
               <p
@@ -125,21 +124,16 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
               className="text-xs font-[Vazir] leading-6 flex-1"
               style={{ color: colors.textSecondary }}
             >
-              زیبانو برای ارائه خدماتی مانند پشتیبانی، پردازش پرداخت، مدیریت نوبت‌ها و اطلاع‌رسانی خودکار، هزینه‌ای ثابت و شفاف از هر رزرو دریافت می‌کند.{' '}
-              <span
-                className="font-[Vazir-Bold]"
-                style={{ color: '#2196F3' }}
-              >
+              زیبانو برای ارائه خدماتی مانند پشتیبانی، پردازش پرداخت، مدیریت نوبت‌ها و اطلاع‌رسانی
+              خودکار، هزینه‌ای ثابت و شفاف از هر رزرو دریافت می‌کند.{' '}
+              <span className="font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
                 این هزینه به قیمت خدمت اضافه و توسط مشتری پرداخت می‌شود.
               </span>
             </p>
           </div>
 
           {/* عنوان جدول */}
-          <h4
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <h4 className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             جدول هزینه خدمات‌رسانی
           </h4>
 
@@ -183,18 +177,14 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                 <div
                   key={tier.min}
                   className={`flex items-center justify-between px-4 py-3 ${
-                    isCurrent
-                      ? 'border-2 border-[#4CAF5040] bg-[#4CAF5015] rounded-xl my-1'
-                      : ''
+                    isCurrent ? 'border-2 border-[#4CAF5040] bg-[#4CAF5015] rounded-xl my-1' : ''
                   } ${!isLast && !isCurrent ? 'border-b' : ''}`}
                   style={{
                     borderColor: !isCurrent && !isLast ? colors.border : undefined,
                   }}
                 >
                   <div className="flex items-center gap-2 flex-1">
-                    {isCurrent && (
-                      <FiTrendingUp size={14} color="#4CAF50" />
-                    )}
+                    {isCurrent && <FiTrendingUp size={14} color="#4CAF50" />}
                     <span
                       className={`text-xs flex-1 ${
                         isCurrent ? 'font-[Vazir-Bold]' : 'font-[Vazir-Medium]'
@@ -243,10 +233,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                 className="px-3 py-1.5 rounded-xl"
                 style={{ backgroundColor: colors.primary + '15' }}
               >
-                <span
-                  className="text-xs font-[Vazir-Bold]"
-                  style={{ color: colors.primary }}
-                >
+                <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
                   +۱۰K
                 </span>
               </div>
@@ -264,16 +251,10 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
             >
               <FiCheckCircle size={20} color="#4CAF50" className="flex-shrink-0" />
               <div className="flex-1">
-                <p
-                  className="text-xs font-[Vazir-Medium]"
-                  style={{ color: colors.textMain }}
-                >
+                <p className="text-xs font-[Vazir-Medium]" style={{ color: colors.textMain }}>
                   هزینه زیبانو برای خدمت شما
                 </p>
-                <p
-                  className="text-sm font-[Vazir-Bold] mt-1"
-                  style={{ color: '#4CAF50' }}
-                >
+                <p className="text-sm font-[Vazir-Bold] mt-1" style={{ color: '#4CAF50' }}>
                   {formatPrice(currentTier.fee)}
                 </p>
               </div>
@@ -290,10 +271,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
           >
             <div className="flex items-center gap-2">
               <FiInfo size={18} color="#FFC107" />
-              <h5
-                className="text-sm font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <h5 className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 نکات مهم
               </h5>
             </div>
@@ -322,10 +300,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
         </div>
 
         {/* Footer */}
-        <div
-          className="px-5 py-4 border-t"
-          style={{ borderColor: colors.border }}
-        >
+        <div className="px-5 py-4 border-t" style={{ borderColor: colors.border }}>
           <Button
             title="متوجه شدم"
             onPress={onClose}

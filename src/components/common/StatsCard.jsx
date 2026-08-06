@@ -23,10 +23,7 @@ export default function StatsCard({
         >
           {icon}
         </div>
-        <span
-          className="text-[17px] font-[Vazir-Bold]"
-          style={{ color: colors.textMain }}
-        >
+        <span className="text-[17px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           {value}
         </span>
         <span
@@ -50,10 +47,7 @@ export default function StatsCard({
           >
             {icon}
           </div>
-          <span
-            className="text-[15px] font-[Vazir-Bold] mt-0.5"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[15px] font-[Vazir-Bold] mt-0.5" style={{ color: colors.textMain }}>
             {value}
           </span>
           <span
@@ -84,10 +78,7 @@ export default function StatsCard({
       >
         {icon}
       </div>
-      <span
-        className="text-[22px] font-[Vazir-Bold]"
-        style={{ color: colors.textMain }}
-      >
+      <span className="text-[22px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
         {value}
       </span>
       <span

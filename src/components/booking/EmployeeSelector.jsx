@@ -6,28 +6,24 @@ import Avatar from '@/components/common/Avatar';
 import { toPersianDigit } from '@/utils/numberUtils';
 
 const ROLE_ICONS = {
-  'ناخن‌کار': '💅',
-  'آرایشگر': '💄',
+  ناخن‌کار: '💅',
+  آرایشگر: '💄',
   'متخصص پوست': '🧖‍♀️',
-  'لیزر': '⚡',
-  'میکاپ': '✨',
+  لیزر: '⚡',
+  میکاپ: '✨',
   default: '👤',
 };
 
 const ROLE_COLORS = {
-  'ناخن‌کار': '#E91E63',
-  'آرایشگر': '#9C27B0',
+  ناخن‌کار: '#E91E63',
+  آرایشگر: '#9C27B0',
   'متخصص پوست': '#4CAF50',
-  'لیزر': '#2196F3',
-  'میکاپ': '#FF9800',
+  لیزر: '#2196F3',
+  میکاپ: '#FF9800',
   default: '#607D8B',
 };
 
-export default function EmployeeSelector({
-  employees = [],
-  selectedId,
-  onSelect,
-}) {
+export default function EmployeeSelector({ employees = [], selectedId, onSelect }) {
   const { colors } = useTheme();
 
   return (
@@ -40,17 +36,11 @@ export default function EmployeeSelector({
         >
           <FiUsers size={18} style={{ color: colors.primary }} />
         </div>
-        <span
-          className="text-[15px] font-[Vazir-Bold]"
-          style={{ color: colors.textMain }}
-        >
+        <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           انتخاب کارمند
         </span>
         <div className="flex-1" />
-        <span
-          className="text-xs font-[Vazir]"
-          style={{ color: colors.textSecondary }}
-        >
+        <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
           {toPersianDigit(employees.length)} نفر
         </span>
       </div>
@@ -69,9 +59,7 @@ export default function EmployeeSelector({
               className="relative flex flex-col items-center gap-2.5 p-3.5 pt-4 rounded-[20px] border w-[135px] flex-shrink-0 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               style={{
                 borderColor: isSelected ? colors.primary : colors.border,
-                backgroundColor: isSelected
-                  ? colors.primary + '08'
-                  : colors.cardBackground,
+                backgroundColor: isSelected ? colors.primary + '08' : colors.cardBackground,
                 borderWidth: isSelected ? 2 : 1,
                 boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
               }}
@@ -122,10 +110,7 @@ export default function EmployeeSelector({
                 style={{ borderColor: colors.border }}
               >
                 <FiStar size={11} color="#FFC107" />
-                <span
-                  className="text-[10px] font-[Vazir]"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                   {emp.experience}
                 </span>
               </div>

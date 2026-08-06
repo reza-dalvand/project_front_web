@@ -126,10 +126,7 @@ export default function BottomSheet({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div
-            className="w-10 h-1 rounded-full"
-            style={{ backgroundColor: colors.border }}
-          />
+          <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </div>
 
         {title && (
@@ -156,9 +153,7 @@ export default function BottomSheet({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
 
         {footer && (
           <div

@@ -221,9 +221,7 @@ export default function HomePage() {
   };
 
   // ─── تشخیص فیلتر فعال ───
-  const hasActiveHomeFilter = Object.values(filters).some(
-    (v) => v && v !== 'all'
-  );
+  const hasActiveHomeFilter = Object.values(filters).some((v) => v && v !== 'all');
 
   return (
     <div className="min-h-screen pb-28" style={{ backgroundColor: colors.background }}>
@@ -254,11 +252,7 @@ export default function HomePage() {
       />
 
       {/* ═══════════ نوار فیلترهای فعال ═══════════ */}
-      <ActiveFiltersBar
-        filters={filters}
-        onChange={setFilters}
-        onClearAll={() => setFilters({})}
-      />
+      <ActiveFiltersBar filters={filters} onChange={setFilters} onClearAll={() => setFilters({})} />
 
       {/* ═══════════ بنر دعوت به ثبت‌نام (فقط لاگین‌نشده) ═══════════ */}
       {!isAuthenticated && (
@@ -313,7 +307,6 @@ export default function HomePage() {
 
       {/* ═══════════ محتوای اصلی ═══════════ */}
       <div className="px-5 pt-4 flex flex-col gap-6">
-
         {/* ─── ۱. اسلایدر تبلیغات ─── */}
         <section>
           <SectionHeader
@@ -321,10 +314,7 @@ export default function HomePage() {
             iconColor={colors.primary}
             title="پیشنهادات ویژه"
             rightElement={
-              <SeeAllButton
-                onPress={() => router.push('/ads')}
-                count={MOCK_ADS.length}
-              />
+              <SeeAllButton onPress={() => router.push('/ads')} count={MOCK_ADS.length} />
             }
           />
           <AdSlider ads={MOCK_ADS} onPress={handleAdPress} />
@@ -332,11 +322,7 @@ export default function HomePage() {
 
         {/* ─── ۲. دسته‌بندی خدمات ─── */}
         <section>
-          <SectionHeader
-            icon={<FiGrid size={18} />}
-            iconColor="#FF9800"
-            title="دسته‌بندی خدمات"
-          />
+          <SectionHeader icon={<FiGrid size={18} />} iconColor="#FF9800" title="دسته‌بندی خدمات" />
           <CategoryGrid
             categories={MOCK_CATEGORIES}
             selectedId={selectedCategory}
@@ -383,15 +369,15 @@ export default function HomePage() {
                         request.costType === 'free'
                           ? '#4CAF50'
                           : request.costType === 'paid'
-                          ? '#2196F3'
-                          : '#FF9800',
+                            ? '#2196F3'
+                            : '#FF9800',
                     }}
                   >
                     {request.costType === 'free'
                       ? 'رایگان'
                       : request.costType === 'paid'
-                      ? 'با هزینه'
-                      : 'هزینه مواد'}
+                        ? 'با هزینه'
+                        : 'هزینه مواد'}
                   </div>
                   {/* Badge فوری */}
                   {request.isUrgent && (
@@ -421,10 +407,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-sm">📍</span>
-                    <span
-                      className="text-[10px]"
-                      style={{ color: colors.textSecondary }}
-                    >
+                    <span className="text-[10px]" style={{ color: colors.textSecondary }}>
                       {request.city}
                     </span>
                   </div>
@@ -460,11 +443,7 @@ export default function HomePage() {
                 }}
               >
                 <div className="relative h-[130px] w-full">
-                  <img
-                    src={ad.lineImage}
-                    alt={ad.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={ad.lineImage} alt={ad.title} className="w-full h-full object-cover" />
                   <div
                     className="absolute top-2 left-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
                     style={{ backgroundColor: '#667eea' }}
@@ -489,16 +468,13 @@ export default function HomePage() {
                     {ad.collabType === 'percent'
                       ? 'درصدی'
                       : ad.collabType === 'hourly'
-                      ? 'ساعتی'
-                      : 'اجاره ثابت'}
+                        ? 'ساعتی'
+                        : 'اجاره ثابت'}
                     {ad.priceDisplay && ` • ${ad.priceDisplay}`}
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-sm">📍</span>
-                    <span
-                      className="text-[10px]"
-                      style={{ color: colors.textSecondary }}
-                    >
+                    <span className="text-[10px]" style={{ color: colors.textSecondary }}>
                       {ad.city}
                     </span>
                   </div>

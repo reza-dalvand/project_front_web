@@ -9,7 +9,7 @@ import { useTheme } from '@/stores/useThemeStore';
 export default function GallerySlider({ gallery = [] }) {
   const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+  const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false,
     align: 'start',
     skipSnaps: false,
@@ -35,10 +35,7 @@ export default function GallerySlider({ gallery = [] }) {
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex">
           {gallery.map((img, index) => (
-            <div
-              key={index}
-              className="flex-[0_0_100%] min-w-0 relative aspect-square"
-            >
+            <div key={index} className="flex-[0_0_100%] min-w-0 relative aspect-square">
               <Image
                 src={img}
                 alt={`gallery-${index}`}
@@ -89,8 +86,7 @@ export default function GallerySlider({ gallery = [] }) {
               onClick={() => emblaApi?.scrollTo(i)}
               className="h-1.5 rounded-full transition-all duration-300"
               style={{
-                backgroundColor:
-                  i === currentIndex ? colors.primary : colors.border,
+                backgroundColor: i === currentIndex ? colors.primary : colors.border,
                 width: i === currentIndex ? '20px' : '6px',
               }}
             />

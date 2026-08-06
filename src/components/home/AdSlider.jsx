@@ -43,18 +43,25 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
                 className="object-cover rounded-3xl"
                 sizes="(max-width: 768px) 100vw, 768px"
               />
-              <div className="absolute bottom-0 left-0 right-0 h-[62%] rounded-b-3xl pointer-events-none"
-                   style={{ backgroundColor: 'rgba(0,0,0,0.30)' }} />
-              
+              <div
+                className="absolute bottom-0 left-0 right-0 h-[62%] rounded-b-3xl pointer-events-none"
+                style={{ backgroundColor: 'rgba(0,0,0,0.30)' }}
+              />
+
               <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col gap-2">
                 <h3 className="text-[18px] font-[Vazir-Bold] text-white leading-6 line-clamp-2 drop-shadow-lg">
                   {ad.title}
                 </h3>
                 {ad.subtitle && (
-                  <p className="text-[13px] font-[Vazir] text-white/92 line-clamp-1">{ad.subtitle}</p>
+                  <p className="text-[13px] font-[Vazir] text-white/92 line-clamp-1">
+                    {ad.subtitle}
+                  </p>
                 )}
                 <button
-                  onClick={(e) => { e.stopPropagation(); onPress?.(ad); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPress?.(ad);
+                  }}
                   className="flex items-center gap-1.5 self-start bg-[#43A047] px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-shadow"
                 >
                   <FiCalendar size={14} color="#fff" />

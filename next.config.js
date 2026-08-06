@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins: ['192.168.1.43', 'localhost', '127.0.0.1'],
-  
+
   // ✅ غیرفعال کردن بهینه‌سازی تصویر برای جلوگیری از ETIMEDOUT
   images: {
     unoptimized: true, // ← این خط بسیار مهم است
@@ -13,7 +13,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'api.maptiler.com' },
     ],
   },
-  
+
   experimental: {
     optimizePackageImports: ['react-icons'],
   },

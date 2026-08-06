@@ -57,8 +57,8 @@ export default function Dropdown({
   const inputBorderColor = disabled
     ? colors.border + '60'
     : visible
-    ? colors.primary
-    : colors.border;
+      ? colors.primary
+      : colors.border;
 
   if (!mounted) return null;
 
@@ -77,20 +77,14 @@ export default function Dropdown({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center pt-3 pb-1">
-          <div
-            className="w-10 h-1 rounded-full"
-            style={{ backgroundColor: colors.border }}
-          />
+          <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </div>
 
         <div
           className="flex items-center justify-between px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
         >
-          <h3
-            className="text-base font-[Vazir-Bold] flex-1"
-            style={{ color: colors.textMain }}
-          >
+          <h3 className="text-base font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
             {label || placeholder}
           </h3>
           <button
@@ -105,10 +99,7 @@ export default function Dropdown({
         <div className="flex-1 overflow-y-auto py-2">
           {options.length === 0 ? (
             <div className="py-12 text-center">
-              <p
-                className="text-sm"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-sm" style={{ color: colors.textSecondary }}>
                 گزینه‌ای موجود نیست
               </p>
             </div>
@@ -121,9 +112,7 @@ export default function Dropdown({
                   onClick={() => handleSelect(item)}
                   className="w-full flex items-center justify-between px-5 py-4 border-b transition-colors hover:opacity-80"
                   style={{
-                    backgroundColor: isSelected
-                      ? colors.primary + '12'
-                      : 'transparent',
+                    backgroundColor: isSelected ? colors.primary + '12' : 'transparent',
                     borderColor: colors.border + '40',
                   }}
                 >
@@ -136,9 +125,7 @@ export default function Dropdown({
                   >
                     {item.label}
                   </span>
-                  {isSelected && (
-                    <FiCheck size={20} style={{ color: colors.primary }} />
-                  )}
+                  {isSelected && <FiCheck size={20} style={{ color: colors.primary }} />}
                 </button>
               );
             })
@@ -182,18 +169,14 @@ export default function Dropdown({
           <FiChevronUp
             size={20}
             style={{
-              color: disabled
-                ? colors.textSecondary + '60'
-                : colors.primary,
+              color: disabled ? colors.textSecondary + '60' : colors.primary,
             }}
           />
         ) : (
           <FiChevronDown
             size={20}
             style={{
-              color: disabled
-                ? colors.textSecondary + '60'
-                : colors.textSecondary,
+              color: disabled ? colors.textSecondary + '60' : colors.textSecondary,
             }}
           />
         )}

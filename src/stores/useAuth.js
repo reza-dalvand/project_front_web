@@ -51,7 +51,7 @@ export const useAuth = () => {
     isAuthenticated,
     user,
     requireAuth,
-    openAuthModal, 
+    openAuthModal,
   };
 };
 
@@ -60,7 +60,7 @@ export const useAuth = () => {
 // ═══════════════════════════════════════════
 export const useAuthModal = () => {
   const showAuthModal = useAuthModalStore((s) => s.showAuthModal);
-  const openAuthModal = useAuthModalStore((s) => s.openAuthModal); 
+  const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
   const closeAuthModal = useAuthModalStore((s) => s.closeAuthModal);
   const cancelAuthModal = useAuthModalStore((s) => s.cancelAuthModal);
 

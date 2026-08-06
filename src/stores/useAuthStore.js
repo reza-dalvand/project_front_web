@@ -4,14 +4,14 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 export const useAuthStore = create(
   persist(
-  (set, get) => ({
-    isAuthenticated: false,
-    user: null,
-    pendingAction: null,
-    pendingPhone: null,
-    pendingName: null,
-    _hydrated: false,          // ← اضافه شد
-    setHydrated: () => set({ _hydrated: true }),
+    (set, get) => ({
+      isAuthenticated: false,
+      user: null,
+      pendingAction: null,
+      pendingPhone: null,
+      pendingName: null,
+      _hydrated: false, // ← اضافه شد
+      setHydrated: () => set({ _hydrated: true }),
 
       // ذخیره شماره و نام برای مرحله بعد (OTP)
       setPendingAuth: (phone, firstName, lastName) => {

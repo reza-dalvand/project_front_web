@@ -12,13 +12,7 @@ import Button from './Button';
  * @param {string} actionLabel - متن دکمه اکشن
  * @param {function} onAction - هندلر دکمه
  */
-export default function EmptyState({
-  icon,
-  title,
-  description,
-  actionLabel,
-  onAction,
-}) {
+export default function EmptyState({ icon, title, description, actionLabel, onAction }) {
   const { colors } = useTheme();
 
   return (
@@ -32,20 +26,13 @@ export default function EmptyState({
             borderColor: colors.border,
           }}
         >
-          {typeof icon === 'string' ? (
-            <span className="text-4xl">{icon}</span>
-          ) : (
-            icon
-          )}
+          {typeof icon === 'string' ? <span className="text-4xl">{icon}</span> : icon}
         </div>
       )}
 
       {/* عنوان */}
       {title && (
-        <h3
-          className="text-lg mb-2 font-[Vazir-Bold]"
-          style={{ color: colors.textMain }}
-        >
+        <h3 className="text-lg mb-2 font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           {title}
         </h3>
       )}
@@ -62,12 +49,7 @@ export default function EmptyState({
 
       {/* دکمه اکشن */}
       {actionLabel && onAction && (
-        <Button
-          title={actionLabel}
-          onPress={onAction}
-          variant="outline"
-          size="md"
-        />
+        <Button title={actionLabel} onPress={onAction} variant="outline" size="md" />
       )}
     </div>
   );

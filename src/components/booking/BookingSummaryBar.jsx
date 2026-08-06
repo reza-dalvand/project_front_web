@@ -38,10 +38,7 @@ export default function BookingSummaryBar({
       <div className="space-y-2 mb-2.5">
         {discountPercent > 0 && (
           <div className="flex justify-between items-center">
-            <span
-              className="text-xs font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
               قیمت اصلی
             </span>
             <span
@@ -53,23 +50,14 @@ export default function BookingSummaryBar({
           </div>
         )}
         <div className="flex justify-between items-center">
-          <span
-            className="text-xs font-[Vazir]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-xs font-[Vazir]" style={{ color: colors.textMain }}>
             {hasDeposit ? 'مبلغ کل خدمت' : 'مبلغ قابل پرداخت'}
           </span>
           <div className="flex items-center gap-1">
-            <span
-              className="text-[18px] font-[Vazir-Bold]"
-              style={{ color: colors.primary }}
-            >
+            <span className="text-[18px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
               {formatPrice(hasDeposit ? finalPrice : depositAmount)}
             </span>
-            <span
-              className="text-[11px] font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
               تومان
             </span>
             {discountPercent > 0 && (
@@ -78,10 +66,7 @@ export default function BookingSummaryBar({
                 style={{ backgroundColor: '#4CAF5020' }}
               >
                 <span className="text-[9px]">🏷️</span>
-                <span
-                  className="text-[10px] font-[Vazir-Bold]"
-                  style={{ color: '#4CAF50' }}
-                >
+                <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
                   {toPersianDigit(discountPercent)}٪
                 </span>
               </div>
@@ -90,26 +75,16 @@ export default function BookingSummaryBar({
         </div>
         {hasDeposit && (
           <>
-            <div
-              className="h-px my-0.5"
-              style={{ backgroundColor: colors.border }}
-            />
+            <div className="h-px my-0.5" style={{ backgroundColor: colors.border }} />
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1">
                 <span className="text-xs">💳</span>
-                <span
-                  className="text-[13px] font-[Vazir-Bold]"
-                  style={{ color: colors.textMain }}
-                >
+                <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                   بیعانه رزرو
                 </span>
               </div>
-              <span
-                className="text-[15px] font-[Vazir-Bold]"
-                style={{ color: colors.primary }}
-              >
-                {formatPrice(depositAmount)}{' '}
-                <span className="text-[11px] font-[Vazir]">تومان</span>
+              <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                {formatPrice(depositAmount)} <span className="text-[11px] font-[Vazir]">تومان</span>
               </span>
             </div>
             <span
@@ -141,10 +116,7 @@ export default function BookingSummaryBar({
       {/* خط اعتماد */}
       <div className="flex items-center justify-center gap-1 mt-2.5">
         <span className="text-xs">🛡️</span>
-        <span
-          className="text-[10px] font-[Vazir]"
-          style={{ color: colors.textSecondary }}
-        >
+        <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
           پرداخت امن با درگاه بانکی
         </span>
       </div>

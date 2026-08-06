@@ -29,7 +29,10 @@ export default function ServiceCard({ service, onEdit, onToggle, onDelete }) {
       <div className="flex items-start gap-3">
         <ServiceTypeIcon typeId={service.typeId} size={56} />
         <div className="flex-1 gap-1">
-          <p className="text-base font-[Vazir-Bold] line-clamp-1" style={{ color: colors.textMain }}>
+          <p
+            className="text-base font-[Vazir-Bold] line-clamp-1"
+            style={{ color: colors.textMain }}
+          >
             {service.name}
           </p>
           <p className="text-xs font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
@@ -113,7 +116,10 @@ export default function ServiceCard({ service, onEdit, onToggle, onDelete }) {
 
       {/* بیعانه */}
       {service.hasDeposit && service.depositAmount > 0 && (
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t" style={{ borderTopColor: colors.border }}>
+        <div
+          className="flex items-center gap-2 mt-3 pt-3 border-t"
+          style={{ borderTopColor: colors.border }}
+        >
           <span className="text-sm">💰</span>
           <span className="text-[11px]" style={{ color: colors.textSecondary }}>
             بیعانه رزرو:
@@ -125,8 +131,13 @@ export default function ServiceCard({ service, onEdit, onToggle, onDelete }) {
       )}
 
       {/* راهنما */}
-      <div className="flex items-center gap-2 mt-3 pt-3 border-t" style={{ borderTopColor: colors.border }}>
-        <span className="text-[10px]" style={{ color: colors.textSecondary }}>👆</span>
+      <div
+        className="flex items-center gap-2 mt-3 pt-3 border-t"
+        style={{ borderTopColor: colors.border }}
+      >
+        <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+          👆
+        </span>
         <span className="text-[10px] flex-1" style={{ color: colors.textSecondary }}>
           برای ویرایش کامل، روی کارت کلیک کنید
         </span>

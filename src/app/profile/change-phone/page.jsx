@@ -136,9 +136,7 @@ export default function ChangePhonePage() {
     return toPersianDigit(`${m}:${s.toString().padStart(2, '0')}`);
   };
 
-  const maskedPhone = newPhone
-    ? newPhone.slice(0, 4) + '***' + newPhone.slice(-4)
-    : '';
+  const maskedPhone = newPhone ? newPhone.slice(0, 4) + '***' + newPhone.slice(-4) : '';
 
   return (
     <ScreenWrapper padding={0}>
@@ -165,13 +163,19 @@ export default function ChangePhonePage() {
             </div>
 
             {/* هشدار */}
-            <Card variant="default" padding={14} radius={14}
+            <Card
+              variant="default"
+              padding={14}
+              radius={14}
               className="border"
               style={{ backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }}
             >
               <div className="flex items-start gap-3">
                 <span className="text-lg flex-shrink-0">ℹ️</span>
-                <p className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: colors.textMain }}>
+                <p
+                  className="text-xs font-[Vazir] leading-5 flex-1"
+                  style={{ color: colors.textMain }}
+                >
                   پس از تغییر شماره، برای ورود به حساب از شماره جدید استفاده خواهید کرد
                 </p>
               </div>
@@ -243,7 +247,12 @@ export default function ChangePhonePage() {
                   className="w-14 h-16 rounded-2xl text-center text-2xl font-[Vazir-Bold] outline-none transition-all"
                   style={{
                     backgroundColor: colors.cardBackground,
-                    borderColor: otpError && digit === '' ? '#E57373' : currentBox === index ? colors.primary : colors.border,
+                    borderColor:
+                      otpError && digit === ''
+                        ? '#E57373'
+                        : currentBox === index
+                          ? colors.primary
+                          : colors.border,
                     borderWidth: currentBox === index ? 2 : 1.5,
                     color: colors.textMain,
                   }}
@@ -252,7 +261,9 @@ export default function ChangePhonePage() {
             </div>
 
             {otpError && (
-              <p className="text-center text-sm" style={{ color: '#E57373' }}>{otpError}</p>
+              <p className="text-center text-sm" style={{ color: '#E57373' }}>
+                {otpError}
+              </p>
             )}
 
             {/* ارسال مجدد / ویرایش */}

@@ -4,11 +4,7 @@ import { useMemo } from 'react';
 import { FiCalendar, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import SectionHeader from '@/components/common/SectionHeader';
-import {
-  toJalaali,
-  PERSIAN_MONTHS,
-  PERSIAN_WEEKDAYS,
-} from '@/utils/dateUtils';
+import { toJalaali, PERSIAN_MONTHS, PERSIAN_WEEKDAYS } from '@/utils/dateUtils';
 import { toPersianDigit } from '@/utils/numberUtils';
 
 // تولید روزهای قابل رزرو (۳۰ روز آینده، بدون جمعه‌ها)
@@ -24,7 +20,7 @@ const generateAvailableDates = () => {
     dates.push({
       ...j,
       dayOfWeek,
-      isFriday,          // ← علامت‌گذاری جمعه
+      isFriday, // ← علامت‌گذاری جمعه
       disabled: isFriday, // ← جمعه‌ها غیرقابل انتخاب
       weekdayName: PERSIAN_WEEKDAYS[(dayOfWeek + 1) % 7],
       key: `${j.jy}-${j.jm}-${j.jd}`,
@@ -55,8 +51,7 @@ export default function BookingDateSelector({ selectedDate, onDateSelect }) {
     return Object.values(groups);
   }, [availableDates]);
 
-  const isSameDate = (d1, d2) =>
-    d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
+  const isSameDate = (d1, d2) => d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
 
   const today = useMemo(() => {
     const now = new Date();
@@ -76,10 +71,7 @@ export default function BookingDateSelector({ selectedDate, onDateSelect }) {
       <div className="flex flex-col gap-3.5 max-h-[400px] overflow-y-auto px-1">
         {groupedByMonth.map((group) => (
           <div key={group.label} className="flex flex-col gap-2">
-            <span
-              className="text-[13px] font-[Vazir-Bold] mr-1"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[13px] font-[Vazir-Bold] mr-1" style={{ color: colors.textMain }}>
               {group.label}
             </span>
 
@@ -96,14 +88,12 @@ export default function BookingDateSelector({ selectedDate, onDateSelect }) {
                     disabled={date.disabled}
                     className="relative w-[52px] flex flex-col items-center justify-center py-2 rounded-xl border-[1.5px] transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
                     style={{
-                      backgroundColor: isSelected
-                        ? colors.primary
-                        : colors.cardBackground,
+                      backgroundColor: isSelected ? colors.primary : colors.cardBackground,
                       borderColor: isSelected
                         ? colors.primary
                         : isToday
-                        ? colors.primary + '60'
-                        : colors.border,
+                          ? colors.primary + '60'
+                          : colors.border,
                     }}
                   >
                     <span
@@ -112,8 +102,8 @@ export default function BookingDateSelector({ selectedDate, onDateSelect }) {
                         color: isSelected
                           ? '#ffffffcc'
                           : date.isFriday
-                          ? '#E57373'
-                          : colors.textSecondary,
+                            ? '#E57373'
+                            : colors.textSecondary,
                       }}
                     >
                       {date.weekdayName}
@@ -159,14 +149,9 @@ export default function BookingDateSelector({ selectedDate, onDateSelect }) {
           }}
         >
           <FiCalendar size={16} style={{ color: colors.primary }} />
-          <span
-            className="text-[13px] font-[Vazir-Bold]"
-            style={{ color: colors.primary }}
-          >
-            {PERSIAN_WEEKDAYS[(selectedDate.dayOfWeek + 1) % 7]}{' '}
-            {toPersianDigit(selectedDate.jd)}{' '}
-            {PERSIAN_MONTHS[selectedDate.jm - 1]}{' '}
-            {toPersianDigit(selectedDate.jy)}
+          <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
+            {PERSIAN_WEEKDAYS[(selectedDate.dayOfWeek + 1) % 7]} {toPersianDigit(selectedDate.jd)}{' '}
+            {PERSIAN_MONTHS[selectedDate.jm - 1]} {toPersianDigit(selectedDate.jy)}
           </span>
         </div>
       )}

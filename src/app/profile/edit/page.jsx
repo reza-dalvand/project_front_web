@@ -80,10 +80,7 @@ export default function EditProfilePage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header
-        title="ویرایش پروفایل"
-        onBackPress={() => router.back()}
-      />
+      <Header title="ویرایش پروفایل" onBackPress={() => router.back()} />
 
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-6">
         {/* لوگو */}
@@ -99,10 +96,7 @@ export default function EditProfilePage() {
               <span className="text-4xl">🌸</span>
             </div>
           </div>
-          <span
-            className="text-base font-[Vazir-Bold] mt-1"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-base font-[Vazir-Bold] mt-1" style={{ color: colors.textMain }}>
             {displayName}
           </span>
         </div>
@@ -116,10 +110,7 @@ export default function EditProfilePage() {
             >
               <FiUser size={16} style={{ color: colors.primary }} />
             </div>
-            <span
-              className="text-sm font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               اطلاعات شخصی
             </span>
           </div>
@@ -158,10 +149,7 @@ export default function EditProfilePage() {
             >
               <FiSmartphone size={16} color="#2196F3" />
             </div>
-            <span
-              className="text-sm font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               شماره موبایل
             </span>
           </div>
@@ -179,10 +167,7 @@ export default function EditProfilePage() {
             >
               <FiSmartphone size={14} color="#2196F3" />
             </div>
-            <span
-              className="text-sm font-[Vazir-Bold] flex-1"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
               {toPersianDigit(maskPhone(user?.phone || '09123456789'))}
             </span>
             <div
@@ -209,7 +194,10 @@ export default function EditProfilePage() {
           </button>
 
           <div className="flex items-start gap-2 mt-3 px-1">
-            <FiShield size={14} style={{ color: colors.textSecondary, flexShrink: 0, marginTop: 2 }} />
+            <FiShield
+              size={14}
+              style={{ color: colors.textSecondary, flexShrink: 0, marginTop: 2 }}
+            />
             <span
               className="text-[11px] font-[Vazir] leading-5"
               style={{ color: colors.textSecondary }}
@@ -231,16 +219,8 @@ export default function EditProfilePage() {
         />
 
         {/* ناحیه خطرناک */}
-        <Card
-          variant="default"
-          padding={0}
-          radius={16}
-          className="overflow-hidden"
-        >
-          <div
-            className="p-4 flex items-center gap-3"
-            style={{ backgroundColor: '#E5393508' }}
-          >
+        <Card variant="default" padding={0} radius={16} className="overflow-hidden">
+          <div className="p-4 flex items-center gap-3" style={{ backgroundColor: '#E5393508' }}>
             <div
               className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: '#E5393520' }}
@@ -296,10 +276,7 @@ export default function EditProfilePage() {
               حذف حساب کاربری
             </h3>
 
-            <p
-              className="text-sm text-center leading-6"
-              style={{ color: colors.textSecondary }}
-            >
+            <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
               آیا از حذف دائمی حساب کاربری خود مطمئن هستید؟ این عمل قابل بازگشت نیست.
             </p>
 

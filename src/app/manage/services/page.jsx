@@ -32,9 +32,7 @@ export default function ManageServicesPage() {
     if (!searchQuery.trim()) return services;
     const q = searchQuery.trim().toLowerCase();
     return services.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.typeName?.toLowerCase().includes(q)
+      (s) => s.name.toLowerCase().includes(q) || s.typeName?.toLowerCase().includes(q)
     );
   }, [services, searchQuery]);
 
@@ -50,10 +48,7 @@ export default function ManageServicesPage() {
     const service = services.find((s) => s.id === serviceId);
     if (service) {
       updateService(serviceId, { isActive: !service.isActive });
-      showToast(
-        service.isActive ? 'خدمت غیرفعال شد' : 'خدمت فعال شد',
-        'success'
-      );
+      showToast(service.isActive ? 'خدمت غیرفعال شد' : 'خدمت فعال شد', 'success');
     }
   };
 

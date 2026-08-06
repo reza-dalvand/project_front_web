@@ -47,10 +47,7 @@ export default function StarRating({
         return star;
       })}
       {showLabel && (
-        <span
-          className="mr-1.5 font-[Vazir] text-[13px]"
-          style={{ color: colors.textSecondary }}
-        >
+        <span className="mr-1.5 font-[Vazir] text-[13px]" style={{ color: colors.textSecondary }}>
           {value > 0 ? value.toFixed(1) : '—'}
         </span>
       )}

@@ -1,13 +1,13 @@
 // src/constants/collabTypes.js
 /**
-* 📦 گزینه‌های همکاری لاین و هزینه مدلینگ
-*
-* استفاده شده در:
-* - CreateLineRentalAdSheet
-* - LineRentalFilterModal
-* - ModelRequestForm
-* - ModelRequestFilterModal
-*/
+ * 📦 گزینه‌های همکاری لاین و هزینه مدلینگ
+ *
+ * استفاده شده در:
+ * - CreateLineRentalAdSheet
+ * - LineRentalFilterModal
+ * - ModelRequestForm
+ * - ModelRequestFilterModal
+ */
 
 // ═══════════════════════════════════════
 //    گزینه‌های نوع همکاری لاین (Line Rental)
@@ -67,29 +67,29 @@ export const COST_TYPE_OPTIONS = [
 //    گزینه‌های فیلتر نوع خدمت (لایه بالا)
 // ═══════════════════════════════════════
 export const SERVICE_FILTER_OPTIONS = [
-  { id: 'all',        label: 'همه خدمات' },
-  { id: 'facial',     label: 'فیشیال و پوست' },
-  { id: 'nail',       label: 'کاشت ناخن' },
+  { id: 'all', label: 'همه خدمات' },
+  { id: 'facial', label: 'فیشیال و پوست' },
+  { id: 'nail', label: 'کاشت ناخن' },
   { id: 'hair_color', label: 'رنگ و لایت مو' },
-  { id: 'hair',       label: 'رنگ و لایت مو' }, // alias
-  { id: 'keratin',    label: 'کراتین و احیا' },
-  { id: 'laser',      label: 'لیزر' },
-  { id: 'makeup',     label: 'میکاپ و گریم' },
-  { id: 'eyelash',    label: 'کاشت مژه' },
-  { id: 'massage',    label: 'ماساژ' },
-  { id: 'hair_cut',   label: 'کوتاهی مو' },
-  { id: 'bridal',     label: 'خدمات عروس' },
+  { id: 'hair', label: 'رنگ و لایت مو' }, // alias
+  { id: 'keratin', label: 'کراتین و احیا' },
+  { id: 'laser', label: 'لیزر' },
+  { id: 'makeup', label: 'میکاپ و گریم' },
+  { id: 'eyelash', label: 'کاشت مژه' },
+  { id: 'massage', label: 'ماساژ' },
+  { id: 'hair_cut', label: 'کوتاهی مو' },
+  { id: 'bridal', label: 'خدمات عروس' },
 ];
 
 // ═══════════════════════════════════════
 //    گزینه‌های مدت زمان هر نوبت
 // ═══════════════════════════════════════
 export const SLOT_DURATIONS = [
-  { id: 15,  label: '۱۵ دقیقه',  hint: 'کوتاه' },
-  { id: 30,  label: '۳۰ دقیقه',  hint: 'استاندارد' },
-  { id: 45,  label: '۴۵ دقیقه',  hint: 'متوسط' },
-  { id: 60,  label: '۶۰ دقیقه',  hint: 'یک ساعت' },
-  { id: 90,  label: '۹۰ دقیقه',  hint: 'طولانی' },
+  { id: 15, label: '۱۵ دقیقه', hint: 'کوتاه' },
+  { id: 30, label: '۳۰ دقیقه', hint: 'استاندارد' },
+  { id: 45, label: '۴۵ دقیقه', hint: 'متوسط' },
+  { id: 60, label: '۶۰ دقیقه', hint: 'یک ساعت' },
+  { id: 90, label: '۹۰ دقیقه', hint: 'طولانی' },
   { id: 120, label: '۱۲۰ دقیقه', hint: 'ویژه' },
 ];
 
@@ -97,30 +97,33 @@ export const SLOT_DURATIONS = [
 //    محدودیت‌های اعتبارسنجی
 // ═══════════════════════════════════════
 export const LIMITS = {
-  MIN_FINAL_PRICE: 100000,        // حداقل قیمت نهایی خدمت
-  MIN_DEPOSIT: 100000,            // حداقل مبلغ بیعانه
-  MAX_DESCRIPTION_LENGTH: 300,    // حداکثر طول توضیحات
-  MAX_TITLE_LENGTH: 100,          // حداکثر طول عنوان
-  OTP_LENGTH: 5,                  // طول کد تایید
-  VERIFICATION_CODE_LENGTH: 4,    // طول کد تایید نوبت
-  RESEND_OTP_SECONDS: 60,         // زمان انتظار ارسال مجدد OTP
-  REGENERATE_CODE_SECONDS: 300,   // زمان بین تولید مجدد کد تایید
+  MIN_FINAL_PRICE: 100000, // حداقل قیمت نهایی خدمت
+  MIN_DEPOSIT: 100000, // حداقل مبلغ بیعانه
+  MAX_DESCRIPTION_LENGTH: 300, // حداکثر طول توضیحات
+  MAX_TITLE_LENGTH: 100, // حداکثر طول عنوان
+  OTP_LENGTH: 5, // طول کد تایید
+  VERIFICATION_CODE_LENGTH: 4, // طول کد تایید نوبت
+  RESEND_OTP_SECONDS: 60, // زمان انتظار ارسال مجدد OTP
+  REGENERATE_CODE_SECONDS: 300, // زمان بین تولید مجدد کد تایید
 };
 
 // ═══════════════════════════════════════
 //    توابع کمکی
 // ═══════════════════════════════════════
-export const getCollabTypeById = (id) =>
-  COLLAB_TYPES.find((c) => c.id === id) || COLLAB_TYPES[0];
+export const getCollabTypeById = (id) => COLLAB_TYPES.find((c) => c.id === id) || COLLAB_TYPES[0];
 
 export const getCostTypeById = (id) =>
   COST_TYPE_OPTIONS.find((c) => c.id === id) || COST_TYPE_OPTIONS[1];
 
 export const getTitleForCollabType = (collabType) => {
   switch (collabType) {
-    case 'percent': return 'درصد تقسیم درآمد';
-    case 'fixed':   return 'مبلغ اجاره ماهانه + رهن';
-    case 'hourly':  return 'نرخ ساعتی';
-    default:        return 'قیمت';
+    case 'percent':
+      return 'درصد تقسیم درآمد';
+    case 'fixed':
+      return 'مبلغ اجاره ماهانه + رهن';
+    case 'hourly':
+      return 'نرخ ساعتی';
+    default:
+      return 'قیمت';
   }
 };

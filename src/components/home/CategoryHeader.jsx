@@ -29,10 +29,7 @@ export default function CategoryHeader({
   const meta = CATEGORY_META[categoryId] || { icon: '💆‍♀️', color: colors.primary };
 
   return (
-    <div
-      className="rounded-b-3xl pb-7 pt-4 px-5"
-      style={{ backgroundColor: meta.color }}
-    >
+    <div className="rounded-b-3xl pb-7 pt-4 px-5" style={{ backgroundColor: meta.color }}>
       {/* ردیف بالا */}
       <div className="flex items-center gap-3 mb-4">
         {/* دکمه بازگشت */}
@@ -54,12 +51,8 @@ export default function CategoryHeader({
             {meta.icon}
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-white/80 font-[Vazir]">
-              دسته‌بندی
-            </span>
-            <h1 className="text-lg font-[Vazir-Bold] text-white">
-              {categoryName}
-            </h1>
+            <span className="text-xs text-white/80 font-[Vazir]">دسته‌بندی</span>
+            <h1 className="text-lg font-[Vazir-Bold] text-white">{categoryName}</h1>
           </div>
         </div>
 
@@ -70,9 +63,7 @@ export default function CategoryHeader({
               flex-col gap-0.5"
             style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
           >
-            <span className="text-sm font-[Vazir-Bold] text-white">
-              {resultCount}
-            </span>
+            <span className="text-sm font-[Vazir-Bold] text-white">{resultCount}</span>
           </div>
           {onFilterPress && (
             <button

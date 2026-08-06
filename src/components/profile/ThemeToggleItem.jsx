@@ -20,23 +20,13 @@ export default function ThemeToggleItem({ isDark, onToggle }) {
           className="w-12 h-12 rounded-xl flex items-center justify-center"
           style={{ backgroundColor: '#FFC10720' }}
         >
-          {isDark ? (
-            <FiSun size={24} color="#FFC107" />
-          ) : (
-            <FiMoon size={24} color="#FFC107" />
-          )}
+          {isDark ? <FiSun size={24} color="#FFC107" /> : <FiMoon size={24} color="#FFC107" />}
         </div>
         <div className="flex flex-col gap-0.5 flex-1">
-          <span
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             حالت شب / روز
           </span>
-          <span
-            className="text-xs"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-xs" style={{ color: colors.textSecondary }}>
             {isDark ? 'تم تاریک فعال است' : 'تم روشن فعال است'}
           </span>
         </div>

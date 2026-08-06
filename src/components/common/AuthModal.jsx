@@ -249,9 +249,13 @@ export default function AuthModal() {
           className="fixed top-6 left-1/2 -translate-x-1/2 z-[10001] px-5 py-3 rounded-xl shadow-lg flex items-center gap-2"
           style={{
             backgroundColor:
-              toast.type === 'success' ? '#4CAF50' :
-              toast.type === 'warning' ? '#FF9800' :
-              toast.type === 'error' ? '#E57373' : colors.primary,
+              toast.type === 'success'
+                ? '#4CAF50'
+                : toast.type === 'warning'
+                  ? '#FF9800'
+                  : toast.type === 'error'
+                    ? '#E57373'
+                    : colors.primary,
             color: '#fff',
           }}
         >
@@ -301,16 +305,10 @@ export default function AuthModal() {
                   <FiUser size={40} style={{ color: colors.primary }} />
                 </div>
                 <div className="text-center">
-                  <h3
-                    className="text-lg font-[Vazir-Bold]"
-                    style={{ color: colors.textMain }}
-                  >
+                  <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     خوش آمدید
                   </h3>
-                  <p
-                    className="text-sm mt-1"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
                     برای ادامه، اطلاعات خود را وارد کنید
                   </p>
                 </div>
@@ -359,10 +357,7 @@ export default function AuthModal() {
                   }}
                 >
                   <FiEdit size={12} style={{ color: colors.primary }} />
-                  <span
-                    className="text-xs font-[Vazir-Medium]"
-                    style={{ color: colors.primary }}
-                  >
+                  <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
                     {toPersianDigit(phone.length)} از ۱۱ رقم وارد شده
                   </span>
                 </div>
@@ -379,9 +374,7 @@ export default function AuthModal() {
                   }}
                   type="button"
                 >
-                  {termsAccepted && (
-                    <FiCheck size={14} style={{ color: '#fff' }} />
-                  )}
+                  {termsAccepted && <FiCheck size={14} style={{ color: '#fff' }} />}
                 </button>
                 <span
                   className="text-[13px] font-[Vazir] leading-5"
@@ -422,9 +415,7 @@ export default function AuthModal() {
                 style={{ color: colors.textSecondary }}
               >
                 <FiShield size={14} />
-                <span className="text-xs font-[Vazir-Medium]">
-                  ورود امن و رمزنگاری شده
-                </span>
+                <span className="text-xs font-[Vazir-Medium]">ورود امن و رمزنگاری شده</span>
               </div>
             </div>
           )}
@@ -440,21 +431,13 @@ export default function AuthModal() {
                   <FiSmartphone size={40} style={{ color: colors.primary }} />
                 </div>
                 <div className="text-center">
-                  <h3
-                    className="text-lg font-[Vazir-Bold]"
-                    style={{ color: colors.textMain }}
-                  >
+                  <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     کد تایید را وارد کنید
                   </h3>
-                  <p
-                    className="text-sm mt-1"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
                     کد {toPersianDigit(OTP_LENGTH)} رقمی ارسال‌شده به{' '}
                     <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                      {toPersianDigit(
-                        phone.slice(0, 4) + '***' + phone.slice(-4)
-                      )}
+                      {toPersianDigit(phone.slice(0, 4) + '***' + phone.slice(-4))}
                     </span>
                   </p>
                 </div>
@@ -480,8 +463,8 @@ export default function AuthModal() {
                         error && digit === ''
                           ? '#E57373'
                           : currentBox === index
-                          ? colors.primary
-                          : colors.border,
+                            ? colors.primary
+                            : colors.border,
                       borderWidth: currentBox === index ? 2 : 1.5,
                       color: colors.textMain,
                     }}
@@ -491,10 +474,7 @@ export default function AuthModal() {
 
               {/* خطا */}
               {error && (
-                <p
-                  className="text-center text-sm font-[Vazir]"
-                  style={{ color: '#E57373' }}
-                >
+                <p className="text-center text-sm font-[Vazir]" style={{ color: '#E57373' }}>
                   {error}
                 </p>
               )}
@@ -507,27 +487,18 @@ export default function AuthModal() {
                   type="button"
                 >
                   <FiEdit size={14} style={{ color: colors.primary }} />
-                  <span
-                    className="text-sm font-[Vazir-Medium]"
-                    style={{ color: colors.primary }}
-                  >
+                  <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.primary }}>
                     ویرایش شماره
                   </span>
                 </button>
                 {canResend ? (
                   <button onClick={handleResend} type="button">
-                    <span
-                      className="text-sm font-[Vazir-Bold]"
-                      style={{ color: colors.primary }}
-                    >
+                    <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
                       ارسال مجدد کد
                     </span>
                   </button>
                 ) : (
-                  <span
-                    className="text-sm font-[Vazir]"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <span className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
                     ارسال مجدد تا {formatTime(timer)}
                   </span>
                 )}
@@ -553,8 +524,7 @@ export default function AuthModal() {
                 }}
               >
                 <span className="text-sm font-[Vazir]" style={{ color: colors.primary }}>
-                  حالت آزمایشی: کد تایید{' '}
-                  <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
+                  حالت آزمایشی: کد تایید <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
                 </span>
               </div>
             </div>
@@ -569,16 +539,10 @@ export default function AuthModal() {
                 <FiCheck size={50} style={{ color: '#fff' }} />
               </div>
               <div className="text-center">
-                <h3
-                  className="text-xl font-[Vazir-Bold]"
-                  style={{ color: colors.textMain }}
-                >
+                <h3 className="text-xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                   خوش آمدید! 🎉
                 </h3>
-                <p
-                  className="text-sm mt-2"
-                  style={{ color: colors.textSecondary }}
-                >
+                <p className="text-sm mt-2" style={{ color: colors.textSecondary }}>
                   {firstName} {lastName} عزیز، ورود شما با موفقیت انجام شد
                 </p>
               </div>

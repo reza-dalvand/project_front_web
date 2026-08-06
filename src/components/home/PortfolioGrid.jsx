@@ -23,10 +23,7 @@ export default function PortfolioGrid({ portfolios, onPortfolioPress }) {
 
   return (
     <div>
-      <h2
-        className="text-base font-[Vazir-Bold] mb-3"
-        style={{ color: colors.textMain }}
-      >
+      <h2 className="text-base font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
         گالری نمونه‌کارها
       </h2>
 
@@ -64,9 +61,7 @@ export default function PortfolioGrid({ portfolios, onPortfolioPress }) {
                   style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
                 >
                   <span className="text-[10px] text-white">🖼️</span>
-                  <span className="text-[10px] font-[Vazir-Bold] text-white">
-                    {imageCount}
-                  </span>
+                  <span className="text-[10px] font-[Vazir-Bold] text-white">{imageCount}</span>
                 </div>
               )}
 

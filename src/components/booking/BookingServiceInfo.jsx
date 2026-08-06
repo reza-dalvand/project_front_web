@@ -21,9 +21,7 @@ export default function BookingServiceInfo({ service }) {
   const finalPrice = Math.max(0, originalPrice - discountAmount);
   const hasDeposit = service.hasDeposit || false;
   const depositPercent = service.depositPercent || 30;
-  const depositAmount = hasDeposit
-    ? Math.round((finalPrice * depositPercent) / 100)
-    : finalPrice;
+  const depositAmount = hasDeposit ? Math.round((finalPrice * depositPercent) / 100) : finalPrice;
   const remainingAmount = finalPrice - depositAmount;
 
   return (
@@ -38,26 +36,17 @@ export default function BookingServiceInfo({ service }) {
           >
             {service.name}
           </h3>
-          <span
-            className="text-xs font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
             {service.businessName || 'کسب‌وکار'}
           </span>
         </div>
       </div>
 
       {/* ردیف قیمت */}
-      <div
-        className="p-4 pt-3 border-t space-y-2"
-        style={{ borderColor: colors.border }}
-      >
+      <div className="p-4 pt-3 border-t space-y-2" style={{ borderColor: colors.border }}>
         {discountPercent > 0 && (
           <div className="flex justify-between items-center">
-            <span
-              className="text-[13px] font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-[13px] font-[Vazir]" style={{ color: colors.textSecondary }}>
               قیمت اصلی
             </span>
             <span
@@ -69,17 +58,11 @@ export default function BookingServiceInfo({ service }) {
           </div>
         )}
         <div className="flex justify-between items-center">
-          <span
-            className="text-[13px] font-[Vazir]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[13px] font-[Vazir]" style={{ color: colors.textMain }}>
             قیمت نهایی
           </span>
           <div className="flex items-center gap-2">
-            <span
-              className="text-[17px] font-[Vazir-Bold]"
-              style={{ color: colors.primary }}
-            >
+            <span className="text-[17px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
               {formatPrice(finalPrice)}
             </span>
             {discountPercent > 0 && (
@@ -99,10 +82,7 @@ export default function BookingServiceInfo({ service }) {
 
       {/* بخش بیعانه */}
       {hasDeposit && (
-        <div
-          className="p-4 border-t space-y-2.5"
-          style={{ borderColor: colors.border }}
-        >
+        <div className="p-4 border-t space-y-2.5" style={{ borderColor: colors.border }}>
           {/* بیعانه قابل پرداخت */}
           <div
             className="flex items-center justify-between p-3 rounded-xl border"
@@ -119,16 +99,10 @@ export default function BookingServiceInfo({ service }) {
                 <span className="text-white text-sm">💰</span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span
-                  className="text-xs font-[Vazir]"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
                   مبلغ قابل پرداخت (بیعانه)
                 </span>
-                <span
-                  className="text-base font-[Vazir-Bold]"
-                  style={{ color: colors.primary }}
-                >
+                <span className="text-base font-[Vazir-Bold]" style={{ color: colors.primary }}>
                   {formatPrice(depositAmount)}
                 </span>
               </div>
@@ -139,16 +113,10 @@ export default function BookingServiceInfo({ service }) {
           {remainingAmount > 0 && (
             <div className="flex items-center gap-1.5 py-1">
               <span className="text-xs">🏪</span>
-              <span
-                className="text-xs font-[Vazir] flex-1"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-xs font-[Vazir] flex-1" style={{ color: colors.textSecondary }}>
                 باقیمانده در محل:
               </span>
-              <span
-                className="text-[13px] font-[Vazir-Bold]"
-                style={{ color: '#2196F3' }}
-              >
+              <span className="text-[13px] font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
                 {formatPrice(remainingAmount)}
               </span>
             </div>
@@ -167,8 +135,8 @@ export default function BookingServiceInfo({ service }) {
               className="text-[11px] font-[Vazir] leading-[18px] flex-1"
               style={{ color: colors.textSecondary }}
             >
-              پس از پرداخت بیعانه، نوبت شما تایید و رزرو می‌شود. باقیمانده
-              مبلغ پس از انجام خدمت در سالن پرداخت می‌شود.
+              پس از پرداخت بیعانه، نوبت شما تایید و رزرو می‌شود. باقیمانده مبلغ پس از انجام خدمت در
+              سالن پرداخت می‌شود.
             </span>
           </div>
         </div>

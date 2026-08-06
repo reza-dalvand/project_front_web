@@ -7,10 +7,10 @@ import Button from '@/components/common/Button';
 import { getSubServicesForCategory, SORT_OPTIONS } from '@/constants/categorySubServices';
 
 const SORT_ICONS = {
-  'all': FiGrid,
-  'top_rated': FiStar,
-  'most_booked': FiTrendingUp,
-  'highest_discount': FiTag,
+  all: FiGrid,
+  top_rated: FiStar,
+  most_booked: FiTrendingUp,
+  highest_discount: FiTag,
 };
 
 export default function CategoryFilterModal({
@@ -49,19 +49,11 @@ export default function CategoryFilterModal({
     onClose();
   };
 
-  const activeCount =
-    (serviceType && serviceType !== 'all' ? 1 : 0) +
-    (sortBy !== 'all' ? 1 : 0);
+  const activeCount = (serviceType && serviceType !== 'all' ? 1 : 0) + (sortBy !== 'all' ? 1 : 0);
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onClose}
-      title="فیلتر و مرتب‌سازی"
-      snapPoint={0.75}
-    >
+    <BottomSheet visible={visible} onClose={onClose} title="فیلتر و مرتب‌سازی" snapPoint={0.75}>
       <div className="flex flex-col gap-6 pb-4">
-
         {/* ═══════ بخش ۱: نوع خدمت (Dropdown ساده) ═══════ */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
@@ -130,7 +122,10 @@ export default function CategoryFilterModal({
                     color: isSelected ? colors.primary : colors.textMain,
                   }}
                 >
-                  <IconComponent size={14} color={isSelected ? colors.primary : colors.textSecondary} />
+                  <IconComponent
+                    size={14}
+                    color={isSelected ? colors.primary : colors.textSecondary}
+                  />
                   {option.label}
                 </button>
               );

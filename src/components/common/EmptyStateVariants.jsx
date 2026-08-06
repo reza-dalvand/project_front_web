@@ -17,8 +17,7 @@ const VARIANTS = {
   service: {
     emoji: '💆‍♀️',
     title: 'هنوز خدمتی ثبت نشده',
-    description:
-      'اولین خدمت خود را اضافه کنید تا مشتریان بتوانند نوبت رزرو کنند',
+    description: 'اولین خدمت خود را اضافه کنید تا مشتریان بتوانند نوبت رزرو کنند',
     actionLabel: 'افزودن اولین خدمت',
   },
   appointment: {
@@ -76,10 +75,7 @@ export default function EmptyStateVariants({
       </div>
 
       {/* عنوان */}
-      <h3
-        className="text-lg mb-2 font-[Vazir-Bold]"
-        style={{ color: colors.textMain }}
-      >
+      <h3 className="text-lg mb-2 font-[Vazir-Bold]" style={{ color: colors.textMain }}>
         {customTitle || config.title}
       </h3>
 
@@ -93,12 +89,7 @@ export default function EmptyStateVariants({
 
       {/* دکمه اکشن */}
       {config.actionLabel && onAction && (
-        <Button
-          title={config.actionLabel}
-          onPress={onAction}
-          variant="outline"
-          size="md"
-        />
+        <Button title={config.actionLabel} onPress={onAction} variant="outline" size="md" />
       )}
     </div>
   );

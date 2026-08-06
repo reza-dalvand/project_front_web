@@ -6,8 +6,7 @@ import { create } from 'zustand';
 const MOCK_REMOTE_CONFIG = {
   isMaintenance: false, // در production از API دریافت شود
   title: 'در حال بروزرسانی هستیم 🔧',
-  message:
-    'تیم فنی زیبانو در حال انجام بهبودهای لازم است. لطفاً دقایقی دیگر مراجعه فرمایید.',
+  message: 'تیم فنی زیبانو در حال انجام بهبودهای لازم است. لطفاً دقایقی دیگر مراجعه فرمایید.',
   estimatedEnd: 'امروز ساعت ۱۸:۰۰',
   reason: 'بروزرسانی سرورها',
   supportPhone: '۰۲۱-۹۱۰۰۱۲۳۴',

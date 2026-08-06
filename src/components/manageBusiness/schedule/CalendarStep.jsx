@@ -22,7 +22,11 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
 
   // ✅ FIX: هنگام mount یا تغییر existingDates، اگر selectedDates خالی است، پر شود
   useEffect(() => {
-    if (existingDates && existingDates.length > 0 && (!selectedDates || selectedDates.length === 0)) {
+    if (
+      existingDates &&
+      existingDates.length > 0 &&
+      (!selectedDates || selectedDates.length === 0)
+    ) {
       onDatesChange([...existingDates]);
     }
   }, [existingDates]);
@@ -54,8 +58,7 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
   const monthLength = jalaaliMonthLength(viewMonth.jy, viewMonth.jm);
   const firstDayOfWeek = getFirstDayOfWeekJalaali(viewMonth.jy, viewMonth.jm);
 
-  const isSameDate = (d1, d2) =>
-    d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
+  const isSameDate = (d1, d2) => d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
 
   const isSelected = (day) =>
     selectedDates.some((d) => isSameDate(d, { jy: viewMonth.jy, jm: viewMonth.jm, jd: day }));
@@ -195,16 +198,13 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
                     : isToday
                       ? colors.primary + '15'
                       : 'transparent',
-                color: selected
-                  ? '#fff'
-                  : !selected && existing
-                    ? '#43A047'
-                    : colors.textMain,
-                border: !selected && existing
-                  ? '2px solid #43A047'
-                  : isToday && !selected
-                    ? `2px solid ${colors.primary}`
-                    : 'none',
+                color: selected ? '#fff' : !selected && existing ? '#43A047' : colors.textMain,
+                border:
+                  !selected && existing
+                    ? '2px solid #43A047'
+                    : isToday && !selected
+                      ? `2px solid ${colors.primary}`
+                      : 'none',
                 opacity: disabled ? 0.3 : 1,
                 cursor: disabled ? 'not-allowed' : 'pointer',
               }}
@@ -219,7 +219,9 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
 
               {!selected && existing && (
                 <div className="absolute bottom-1 left-1">
-                  <span className="text-[8px]" style={{ color: '#43A047' }}>📅</span>
+                  <span className="text-[8px]" style={{ color: '#43A047' }}>
+                    📅
+                  </span>
                 </div>
               )}
 

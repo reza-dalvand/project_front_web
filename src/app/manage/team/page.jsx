@@ -20,9 +20,7 @@ export default function ManageTeamPage() {
     const currentTeam = businessData.team || [];
 
     // اضافه کردن اعضا جدید
-    const newMembers = updatedTeam.filter(
-      (m) => !currentTeam.find((cm) => cm.id === m.id)
-    );
+    const newMembers = updatedTeam.filter((m) => !currentTeam.find((cm) => cm.id === m.id));
     newMembers.forEach((m) => addTeamMember(m));
 
     // حذف اعضا

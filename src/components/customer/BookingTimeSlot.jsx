@@ -8,11 +8,7 @@ import { useTheme } from '@/stores/useThemeStore';
  * @param {'available'|'booked'|'selected'} status - وضعیت
  * @param {function} onPress - تابع کلیک
  */
-export default function BookingTimeSlot({
-  time,
-  status = 'available',
-  onPress,
-}) {
+export default function BookingTimeSlot({ time, status = 'available', onPress }) {
   const { colors } = useTheme();
 
   const isBooked = status === 'booked';
@@ -24,11 +20,7 @@ export default function BookingTimeSlot({
       ? colors.border
       : colors.cardBackground;
 
-  const textColor = isSelected
-    ? '#FFFFFF'
-    : isBooked
-      ? colors.textSecondary
-      : colors.textMain;
+  const textColor = isSelected ? '#FFFFFF' : isBooked ? colors.textSecondary : colors.textMain;
 
   return (
     <button
@@ -40,24 +32,14 @@ export default function BookingTimeSlot({
         disabled:cursor-not-allowed disabled:hover:scale-100"
       style={{
         backgroundColor,
-        borderColor: isSelected
-          ? colors.primary
-          : isBooked
-            ? colors.border + '60'
-            : colors.border,
+        borderColor: isSelected ? colors.primary : isBooked ? colors.border + '60' : colors.border,
       }}
     >
-      <span
-        className="text-[13px] font-[Vazir-Bold]"
-        style={{ color: textColor }}
-      >
+      <span className="text-[13px] font-[Vazir-Bold]" style={{ color: textColor }}>
         {time}
       </span>
       {isBooked && (
-        <span
-          className="text-[8px] font-[Vazir]"
-          style={{ color: colors.textSecondary + '80' }}
-        >
+        <span className="text-[8px] font-[Vazir]" style={{ color: colors.textSecondary + '80' }}>
           پر
         </span>
       )}

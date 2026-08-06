@@ -57,7 +57,10 @@ export const toJalaali = (year, month, day) => {
 //    @returns {{ year, month, day }}
 // ═══════════════════════════════════════════════════════
 export const toGregorian = (jy, jm, jd) => {
-  const m = moment().jYear(jy).jMonth(jm - 1).jDate(jd);
+  const m = moment()
+    .jYear(jy)
+    .jMonth(jm - 1)
+    .jDate(jd);
   return {
     year: m.year(),
     month: m.month() + 1,
@@ -97,8 +100,7 @@ export const jalaaliMonthLength = (jy, jm) => {
   if (jm <= 11) return 30;
   // اسفند (ماه ۱۲): سال کبیسه = ۳۰، عادی = ۲۹
   // الگوریتم تشخیص سال کبیسه جلالی
-  const isLeap = ((jy % 33) % 4) === 1 ||
-                 [1, 5, 9, 13, 17, 22, 26, 30].includes((jy % 33));
+  const isLeap = (jy % 33) % 4 === 1 || [1, 5, 9, 13, 17, 22, 26, 30].includes(jy % 33);
   return isLeap ? 30 : 29;
 };
 
@@ -113,7 +115,6 @@ export const getFirstDayOfWeekJalaali = (jy, jm) => {
   // تبدیل به هفته فارسی: شنبه=0
   return (dayOfWeek + 1) % 7;
 };
-
 
 // ═══════════════════════════════════════════════════════
 //    تبدیل ساعت (HH:MM) به دقیقه

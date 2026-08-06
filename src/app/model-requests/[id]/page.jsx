@@ -77,9 +77,7 @@ export default function ModelRequestDetailPage() {
           className="absolute bottom-4 left-4 flex items-center gap-1.5 px-3 py-2 rounded-xl"
           style={{ backgroundColor: 'rgba(233,30,99,0.85)' }}
         >
-          <span className="text-[11px] font-[Vazir-Bold] text-white">
-            ثبت: {request.createdAt}
-          </span>
+          <span className="text-[11px] font-[Vazir-Bold] text-white">ثبت: {request.createdAt}</span>
         </div>
       </div>
 
@@ -99,10 +97,7 @@ export default function ModelRequestDetailPage() {
           style={{ backgroundColor: colors.primary + '15' }}
         >
           <span className="text-sm">💆‍♀️</span>
-          <span
-            className="text-xs font-[Vazir-Bold]"
-            style={{ color: colors.primary }}
-          >
+          <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
             {request.serviceName}
           </span>
         </div>
@@ -126,10 +121,7 @@ export default function ModelRequestDetailPage() {
                 </span>
                 <div className="flex items-center gap-1 mt-0.5">
                   <FiMapPin size={12} color={colors.textSecondary} />
-                  <span
-                    className="text-xs"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <span className="text-xs" style={{ color: colors.textSecondary }}>
                     {request.city}
                   </span>
                 </div>
@@ -145,10 +137,7 @@ export default function ModelRequestDetailPage() {
         <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">💰</span>
-            <span
-              className="text-sm font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               شرایط هزینه
             </span>
           </div>
@@ -162,10 +151,7 @@ export default function ModelRequestDetailPage() {
               }}
             >
               <span className="text-sm">🏷️</span>
-              <span
-                className="text-sm font-[Vazir-Bold]"
-                style={{ color: '#E53935' }}
-              >
+              <span className="text-sm font-[Vazir-Bold]" style={{ color: '#E53935' }}>
                 {toPersianDigit(request.discount)}٪ تخفیف ویژه مدل‌ها
               </span>
             </div>
@@ -176,17 +162,11 @@ export default function ModelRequestDetailPage() {
         <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center gap-2 mb-3">
             <FiInfo size={18} color="#2196F3" />
-            <span
-              className="text-sm font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               توضیحات آگهی
             </span>
           </div>
-          <p
-            className="text-sm leading-[26px] text-justify"
-            style={{ color: colors.textMain }}
-          >
+          <p className="text-sm leading-[26px] text-justify" style={{ color: colors.textMain }}>
             {request.description}
           </p>
         </Card>
@@ -204,10 +184,7 @@ ${request.description || ''}
         <Card variant="default" padding={16} radius={18}>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">💡</span>
-            <span
-              className="text-sm font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               نکات مهم
             </span>
           </div>
@@ -222,10 +199,7 @@ ${request.description || ''}
                 <span className="text-xs mt-0.5" style={{ color: '#4CAF50' }}>
                   ✓
                 </span>
-                <span
-                  className="text-xs leading-5 flex-1"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
                   {tip}
                 </span>
               </div>

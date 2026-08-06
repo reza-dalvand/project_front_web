@@ -45,9 +45,7 @@ export default function FinancialManagementPage() {
   // محاسبه آمار
   const stats = useMemo(() => {
     const sumBy = (status) =>
-      transactions
-        .filter((t) => t.status === status)
-        .reduce((s, t) => s + (t.amount || 0), 0);
+      transactions.filter((t) => t.status === status).reduce((s, t) => s + (t.amount || 0), 0);
     const totalAmount = transactions.reduce((s, t) => s + (t.amount || 0), 0);
     return {
       blockedAmount: sumBy('blocked'),
@@ -107,10 +105,7 @@ export default function FinancialManagementPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header
-        title="مدیریت مالی و تسویه"
-        onBackPress={() => router.push('/manage')}
-      />
+      <Header title="مدیریت مالی و تسویه" onBackPress={() => router.push('/manage')} />
 
       <div className="flex-1 overflow-y-auto p-4 pb-32">
         {/* آمار */}

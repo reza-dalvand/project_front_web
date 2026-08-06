@@ -16,8 +16,10 @@ export default function StepProgress({ currentStep, totalSteps }) {
   return (
     <div className="px-5 py-6 space-y-5">
       {/* نوار پیشرفت */}
-      <div className="relative h-1 rounded-full overflow-hidden"
-           style={{ backgroundColor: colors.border }}>
+      <div
+        className="relative h-1 rounded-full overflow-hidden"
+        style={{ backgroundColor: colors.border }}
+      >
         <div
           className="absolute top-0 left-0 bottom-0 rounded-full transition-all duration-500"
           style={{
@@ -37,17 +39,11 @@ export default function StepProgress({ currentStep, totalSteps }) {
             const CurrentIcon = STEPS[currentStep - 1]?.icon || FiStore;
             return <CurrentIcon size={14} style={{ color: colors.primary }} />;
           })()}
-          <span
-            className="text-xs font-[Vazir-Bold]"
-            style={{ color: colors.primary }}
-          >
+          <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
             مرحله {toPersianDigit(currentStep)} از {toPersianDigit(totalSteps)}
           </span>
         </div>
-        <span
-          className="text-base font-[Vazir-Bold]"
-          style={{ color: colors.textMain }}
-        >
+        <span className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           {STEPS[currentStep - 1]?.label}
         </span>
       </div>
@@ -63,8 +59,7 @@ export default function StepProgress({ currentStep, totalSteps }) {
               key={step.id}
               className="rounded-full transition-all duration-300"
               style={{
-                backgroundColor:
-                  isCompleted || isActive ? colors.primary : colors.border,
+                backgroundColor: isCompleted || isActive ? colors.primary : colors.border,
                 width: isActive ? '24px' : isCompleted ? '10px' : '8px',
                 height: isActive ? '10px' : isCompleted ? '10px' : '8px',
                 opacity: isActive || isCompleted ? 1 : 0.5,

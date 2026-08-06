@@ -9,11 +9,7 @@ import { useTheme } from '@/stores/useThemeStore';
  * @param {'sm'|'md'|'lg'} size - اندازه
  * @param {boolean} overlay - نمایش تمام صفحه
  */
-export default function LoadingSpinner({
-  label,
-  size = 'md',
-  overlay = false,
-}) {
+export default function LoadingSpinner({ label, size = 'md', overlay = false }) {
   const { colors } = useTheme();
 
   const sizeClasses = {
@@ -34,10 +30,7 @@ export default function LoadingSpinner({
         style={{ color: colors.primary }}
       />
       {label && (
-        <p
-          className="text-sm text-center font-[Vazir]"
-          style={{ color: colors.textSecondary }}
-        >
+        <p className="text-sm text-center font-[Vazir]" style={{ color: colors.textSecondary }}>
           {label}
         </p>
       )}

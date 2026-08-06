@@ -10,11 +10,7 @@ import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
  * @param {boolean} canConfirm - آیا می‌توان تایید کرد
  * @param {function} onConfirm - تابع تایید
  */
-export default function BookingPaymentBar({
-  service,
-  canConfirm,
-  onConfirm,
-}) {
+export default function BookingPaymentBar({ service, canConfirm, onConfirm }) {
   const { colors } = useTheme();
 
   const originalPrice = service.originalPrice || service.price || 0;
@@ -25,9 +21,7 @@ export default function BookingPaymentBar({
   );
   const hasDeposit = service.hasDeposit || false;
   const depositPercent = service.depositPercent || 30;
-  const depositAmount = hasDeposit
-    ? Math.round((finalPrice * depositPercent) / 100)
-    : finalPrice;
+  const depositAmount = hasDeposit ? Math.round((finalPrice * depositPercent) / 100) : finalPrice;
 
   return (
     <div
@@ -41,10 +35,7 @@ export default function BookingPaymentBar({
       {/* خلاصه قیمت */}
       <div className="flex justify-between items-end mb-2">
         <div className="flex flex-col gap-0.5">
-          <span
-            className="text-[11px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             {hasDeposit ? 'بیعانه رزرو' : 'مبلغ قابل پرداخت'}
           </span>
           {discountPercent > 0 && (
@@ -57,10 +48,7 @@ export default function BookingPaymentBar({
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <span
-            className="text-[17px] font-[Vazir-Bold]"
-            style={{ color: colors.primary }}
-          >
+          <span className="text-[17px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
             {formatPrice(depositAmount)}
           </span>
           {discountPercent > 0 && (
@@ -69,10 +57,7 @@ export default function BookingPaymentBar({
               style={{ backgroundColor: '#4CAF5020' }}
             >
               <span className="text-[9px]">🏷️</span>
-              <span
-                className="text-[9px] font-[Vazir-Bold]"
-                style={{ color: '#4CAF50' }}
-              >
+              <span className="text-[9px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
                 {toPersianDigit(discountPercent)}٪
               </span>
             </div>
@@ -102,10 +87,7 @@ export default function BookingPaymentBar({
       {/* خط اعتماد */}
       <div className="flex items-center justify-center gap-1 mt-2">
         <span className="text-[9px]">🛡️</span>
-        <span
-          className="text-[9px] font-[Vazir]"
-          style={{ color: colors.textSecondary }}
-        >
+        <span className="text-[9px] font-[Vazir]" style={{ color: colors.textSecondary }}>
           پرداخت امن · امکان لغو نوبت در صورت رزرو وجود ندارد
         </span>
       </div>

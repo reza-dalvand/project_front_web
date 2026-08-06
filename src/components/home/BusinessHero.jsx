@@ -1,20 +1,20 @@
-"use client";
-import { useState } from "react";
-import { FiShare2, FiBookmark, FiArrowRight } from "react-icons/fi";
-import Image from "next/image";
-import { useTheme } from "@/stores/useThemeStore";
-import { useAuth } from "@/stores/useAuth";
+'use client';
+import { useState } from 'react';
+import { FiShare2, FiBookmark, FiArrowRight } from 'react-icons/fi';
+import Image from 'next/image';
+import { useTheme } from '@/stores/useThemeStore';
+import { useAuth } from '@/stores/useAuth';
 
 /**
-* 🏪 BusinessHero - هدر تصویری صفحه جزئیات کسب‌وکار
-*
-* @param {Array<string>} gallery - آرایه تصاویر گالری (فقط اولین تصویر به عنوان کاور استفاده می‌شود)
-* @param {string} businessId - شناسه کسب‌وکار
-* @param {string} businessName - نام کسب‌وکار
-* @param {function} onBackPress - هندلر دکمه بازگشت
-* @param {boolean} isFavorite - آیا در علاقه‌مندی‌ها (ذخیره‌ها) هست؟
-* @param {function} onFavoritePress - هندلر کلیک روی دکمه ذخیره
-*/
+ * 🏪 BusinessHero - هدر تصویری صفحه جزئیات کسب‌وکار
+ *
+ * @param {Array<string>} gallery - آرایه تصاویر گالری (فقط اولین تصویر به عنوان کاور استفاده می‌شود)
+ * @param {string} businessId - شناسه کسب‌وکار
+ * @param {string} businessName - نام کسب‌وکار
+ * @param {function} onBackPress - هندلر دکمه بازگشت
+ * @param {boolean} isFavorite - آیا در علاقه‌مندی‌ها (ذخیره‌ها) هست؟
+ * @param {function} onFavoritePress - هندلر کلیک روی دکمه ذخیره
+ */
 export default function BusinessHero({
   gallery = [],
   businessId,
@@ -28,15 +28,15 @@ export default function BusinessHero({
   const [showShareToast, setShowShareToast] = useState(false);
 
   // فقط اولین تصویر به عنوان کاور ثابت
-  const coverImage = gallery[0] || "https://picsum.photos/800/600?random=45";
+  const coverImage = gallery[0] || 'https://picsum.photos/800/600?random=45';
 
   // لینک رزرو اختصاصی
-  const bookingLink = `https://zibano.app/book/${businessId || "biz_1"}`;
+  const bookingLink = `https://zibano.app/book/${businessId || 'biz_1'}`;
 
   // ═══════ هندلر اشتراک‌گذاری (بومی وب + فال‌بک کلیپ‌بورد) ═══════
   // ═══════ هندلر اشتراک‌گذاری ═══════
   const handleShare = async () => {
-    const shareMessage = `🌸 ${businessName || "سالن زیبایی"}
+    const shareMessage = `🌸 ${businessName || 'سالن زیبایی'}
   📱 با این لینک می‌توانید مستقیماً از من نوبت بگیرید:
   ${bookingLink}
   ✨ رزرو از اپلیکیشن زیبانو`;
@@ -45,20 +45,20 @@ export default function BusinessHero({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: businessName || "رزرو نوبت",
+          title: businessName || 'رزرو نوبت',
           text: shareMessage,
           url: bookingLink,
         });
         return;
       } catch (err) {
-        console.log("Share cancelled or failed");
+        console.log('Share cancelled or failed');
       }
     }
 
     // ۲. Fallback: کپی در کلیپ‌بورد
     try {
       let copied = false;
-      
+
       // بررسی وجود Clipboard API
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         await navigator.clipboard.writeText(shareMessage);
@@ -67,17 +67,17 @@ export default function BusinessHero({
         // Fallback برای WebView اینستاگرام/تلگرام و مرورگرهای قدیمی
         const textarea = document.createElement('textarea');
         textarea.value = shareMessage;
-        
+
         // مخفی کردن textarea از صفحه
         textarea.style.position = 'fixed';
         textarea.style.top = '0';
         textarea.style.left = '0';
         textarea.style.opacity = '0';
-        
+
         document.body.appendChild(textarea);
         textarea.focus();
         textarea.select();
-        
+
         copied = document.execCommand('copy');
         document.body.removeChild(textarea);
       }
@@ -89,7 +89,7 @@ export default function BusinessHero({
         alert('امکان کپی کردن لینک وجود ندارد. لطفاً لینک را دستی کپی کنید.');
       }
     } catch (err) {
-      console.error("Failed to copy:", err);
+      console.error('Failed to copy:', err);
       alert('خطا در کپی کردن لینک.');
     }
   };
@@ -111,7 +111,7 @@ export default function BusinessHero({
       <div className="relative w-full h-full">
         <Image
           src={coverImage}
-          alt={businessName || "تصویر کسب‌وکار"}
+          alt={businessName || 'تصویر کسب‌وکار'}
           fill
           className="object-cover"
           sizes="100vw"
@@ -122,7 +122,7 @@ export default function BusinessHero({
       {/* ═══════ گرادیان پایین برای خوانایی دکمه‌ها ═══════ */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
-        style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
+        style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
       />
 
       {/* ═══════ دکمه‌های بالا ═══════ */}
@@ -133,7 +133,7 @@ export default function BusinessHero({
           className="w-11 h-11 rounded-full flex items-center justify-center
                      border border-white/15 backdrop-blur-sm
                      transition-all hover:scale-110 active:scale-95"
-          style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
           aria-label="بازگشت"
         >
           <FiArrowRight size={22} color="#fff" />
@@ -147,7 +147,7 @@ export default function BusinessHero({
           className="w-11 h-11 rounded-full flex items-center justify-center
                      border border-white/15 backdrop-blur-sm
                      transition-all hover:scale-110 active:scale-95"
-          style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
           aria-label="اشتراک‌گذاری"
         >
           <FiShare2 size={20} color="#fff" />
@@ -159,13 +159,13 @@ export default function BusinessHero({
           className="w-11 h-11 rounded-full flex items-center justify-center
                      border border-white/15 backdrop-blur-sm
                      transition-all hover:scale-110 active:scale-95"
-          style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
-          aria-label={isFavorite ? "حذف از ذخیره‌ها" : "افزودن به ذخیره‌ها"}
+          style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+          aria-label={isFavorite ? 'حذف از ذخیره‌ها' : 'افزودن به ذخیره‌ها'}
         >
           <FiBookmark
             size={22}
-            color={isFavorite ? "#FFD700" : "#fff"}
-            fill={isFavorite ? "#FFD700" : "transparent"}
+            color={isFavorite ? '#FFD700' : '#fff'}
+            fill={isFavorite ? '#FFD700' : 'transparent'}
           />
         </button>
       </div>
@@ -176,12 +176,10 @@ export default function BusinessHero({
           className="absolute top-20 left-1/2 -translate-x-1/2
                      px-4 py-2.5 rounded-xl shadow-lg z-20
                      animate-in fade-in slide-in-from-top-4 duration-300"
-          style={{ backgroundColor: "#4CAF50" }}
+          style={{ backgroundColor: '#4CAF50' }}
           dir="rtl"
         >
-          <span className="text-sm font-[Vazir-Bold] text-white">
-            ✓ لینک کپی شد
-          </span>
+          <span className="text-sm font-[Vazir-Bold] text-white">✓ لینک کپی شد</span>
         </div>
       )}
     </div>

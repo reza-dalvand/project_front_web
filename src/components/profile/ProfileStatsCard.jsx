@@ -20,16 +20,10 @@ export default function ProfileStatsCard({ stats }) {
               >
                 {Icon && <Icon size={24} color={stat.color} />}
               </div>
-              <span
-                className="text-xl font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 {toPersianDigit(stat.value)}
               </span>
-              <span
-                className="text-xs"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-xs" style={{ color: colors.textSecondary }}>
                 {stat.label}
               </span>
 

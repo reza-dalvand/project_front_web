@@ -25,10 +25,7 @@ export default function BusinessMapButton({ business, onPress }) {
       </div>
 
       <div className="flex-1 text-right">
-        <p
-          className="text-sm font-[Vazir-Bold] mb-0.5"
-          style={{ color: colors.textMain }}
-        >
+        <p className="text-sm font-[Vazir-Bold] mb-0.5" style={{ color: colors.textMain }}>
           آدرس روی نقشه
         </p>
         <p
@@ -44,9 +41,7 @@ export default function BusinessMapButton({ business, onPress }) {
         style={{ backgroundColor: colors.primary }}
       >
         <span className="text-sm">🧭</span>
-        <span className="text-[11px] font-[Vazir-Bold] text-white">
-          مسیریابی
-        </span>
+        <span className="text-[11px] font-[Vazir-Bold] text-white">مسیریابی</span>
       </div>
     </button>
   );

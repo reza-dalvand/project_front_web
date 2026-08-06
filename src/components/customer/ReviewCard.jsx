@@ -25,22 +25,12 @@ export default function ReviewCard({ review }) {
       {/* هدر: کاربر + امتیاز */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 flex-1">
-          <Avatar
-            uri={review.userAvatar}
-            name={review.userName}
-            size="md"
-          />
+          <Avatar uri={review.userAvatar} name={review.userName} size="md" />
           <div className="flex flex-col gap-1">
-            <span
-              className="text-sm font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               {review.userName}
             </span>
-            <span
-              className="text-[11px] font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
               {review.date}
             </span>
           </div>
@@ -51,10 +41,7 @@ export default function ReviewCard({ review }) {
           style={{ backgroundColor: '#FFC10720' }}
         >
           <FiStar size={12} color="#FFC107" fill="#FFC107" />
-          <span
-            className="text-xs font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {toPersianDigit(review.rating.toFixed(1))}
           </span>
         </div>
@@ -66,10 +53,7 @@ export default function ReviewCard({ review }) {
           className="self-start px-3 py-1.5 rounded-xl mb-3"
           style={{ backgroundColor: colors.primary + '15' }}
         >
-          <span
-            className="text-[11px] font-[Vazir-Bold]"
-            style={{ color: colors.primary }}
-          >
+          <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
             {review.serviceName}
           </span>
         </div>

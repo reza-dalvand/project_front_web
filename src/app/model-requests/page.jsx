@@ -63,7 +63,6 @@ export default function AllModelRequestsPage() {
   });
   const [filterVisible, setFilterVisible] = useState(false);
 
-
   const filteredRequests = useMemo(() => {
     let data = [...requests];
     if (filters.costType !== 'all') {
@@ -75,9 +74,7 @@ export default function AllModelRequestsPage() {
     return data;
   }, [requests, filters]);
 
-  const hasActiveFilter =
-    filters.costType !== 'all' || filters.serviceType !== 'all';
-
+  const hasActiveFilter = filters.costType !== 'all' || filters.serviceType !== 'all';
 
   const handleRequestPress = (request) => {
     router.push(`/model-requests/${request.id}`);
@@ -96,11 +93,7 @@ export default function AllModelRequestsPage() {
       <div className="p-4 pb-32 space-y-4">
         {filteredRequests.length > 0 ? (
           filteredRequests.map((request) => (
-            <AllModelRequestsCard
-              key={request.id}
-              request={request}
-              onPress={handleRequestPress}
-            />
+            <AllModelRequestsCard key={request.id} request={request} onPress={handleRequestPress} />
           ))
         ) : (
           <EmptyState

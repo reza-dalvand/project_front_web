@@ -30,10 +30,7 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
             >
               {business.serviceType || business.name}
             </h3>
-            <p
-              className="text-xs font-[Vazir-Medium] mt-0.5"
-              style={{ color: colors.primary }}
-            >
+            <p className="text-xs font-[Vazir-Medium] mt-0.5" style={{ color: colors.primary }}>
               {business.name}
             </p>
             <p
@@ -50,10 +47,7 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
             style={{ backgroundColor: '#FFC10720' }}
           >
             <FiStar size={12} color="#FFC107" fill="#FFC107" />
-            <span
-              className="text-xs font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               {toPersianDigit(business.rating)}
             </span>
           </div>
@@ -83,19 +77,14 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
         </div>
 
         {/* فوتر: دکمه رزرو */}
-        <div
-          className="mt-3 pt-3 border-t"
-          style={{ borderColor: colors.border }}
-        >
+        <div className="mt-3 pt-3 border-t" style={{ borderColor: colors.border }}>
           <div
             className="flex items-center justify-center gap-2 py-2.5 rounded-xl
               transition-all"
             style={{ backgroundColor: '#43A047' }}
           >
             <span className="text-sm">📅</span>
-            <span className="text-sm font-[Vazir-Bold] text-white">
-              رزرو و دیدن نمونه‌کارها
-            </span>
+            <span className="text-sm font-[Vazir-Bold] text-white">رزرو و دیدن نمونه‌کارها</span>
             <FiChevronLeft size={16} color="#fff" />
           </div>
         </div>

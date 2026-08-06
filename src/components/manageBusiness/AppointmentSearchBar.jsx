@@ -41,10 +41,7 @@ export default function AppointmentSearchBar({
           borderColor: focused ? colors.primary : colors.border,
         }}
       >
-        <FiSearch
-          size={20}
-          style={{ color: focused ? colors.primary : colors.textSecondary }}
-        />
+        <FiSearch size={20} style={{ color: focused ? colors.primary : colors.textSecondary }} />
         <input
           type="text"
           value={searchQuery}
@@ -75,10 +72,7 @@ export default function AppointmentSearchBar({
           borderColor: dateFilter ? colors.primary : colors.border,
         }}
       >
-        <FiCalendar
-          size={18}
-          style={{ color: dateFilter ? colors.primary : colors.textMain }}
-        />
+        <FiCalendar size={18} style={{ color: dateFilter ? colors.primary : colors.textMain }} />
         <span
           className="text-xs font-[Vazir-Bold] whitespace-nowrap"
           style={{ color: dateFilter ? colors.primary : colors.textMain }}

@@ -5,7 +5,7 @@ import { useTheme } from '@/stores/useThemeStore';
 import { SUPPORT_CHANNELS, SUPPORT_PHONE_DISPLAY, SUPPORT_HOURS_SIMPLE } from './constants';
 
 const CHANNEL_ICONS = {
-  'send': FiSend,
+  send: FiSend,
   'message-square': FiMessageSquare,
 };
 
@@ -50,7 +50,9 @@ export default function SupportChannels() {
           <span className="text-lg">🕐</span>
         </div>
         <div className="flex-1 gap-1">
-          <p className="text-xs" style={{ color: colors.textSecondary }}>ساعات پاسخگویی</p>
+          <p className="text-xs" style={{ color: colors.textSecondary }}>
+            ساعات پاسخگویی
+          </p>
           <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {SUPPORT_HOURS_SIMPLE}
           </p>

@@ -217,10 +217,7 @@ export default function AuthBottomSheet() {
       >
         {/* Handle Bar */}
         <div className="flex justify-center pt-3 pb-1 md:hidden">
-          <div
-            className="w-10 h-1 rounded-full"
-            style={{ backgroundColor: colors.border }}
-          />
+          <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </div>
 
         {/* Title */}
@@ -228,10 +225,7 @@ export default function AuthBottomSheet() {
           className="flex items-center justify-between px-6 py-4 border-b"
           style={{ borderColor: colors.border }}
         >
-          <h2
-            className="text-base font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <h2 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {getTitle()}
           </h2>
           <button
@@ -255,16 +249,10 @@ export default function AuthBottomSheet() {
                   <FiUser size={40} style={{ color: colors.primary }} />
                 </div>
                 <div className="text-center">
-                  <h3
-                    className="text-lg font-[Vazir-Bold]"
-                    style={{ color: colors.textMain }}
-                  >
+                  <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     خوش آمدید
                   </h3>
-                  <p
-                    className="text-sm mt-1"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
                     برای ادامه اطلاعات خود را وارد کنید
                   </p>
                 </div>
@@ -312,10 +300,7 @@ export default function AuthBottomSheet() {
                 >
                   {termsAccepted && <FiCheck size={14} style={{ color: '#fff' }} />}
                 </button>
-                <span
-                  className="text-[13px] leading-5"
-                  style={{ color: colors.textMain }}
-                >
+                <span className="text-[13px] leading-5" style={{ color: colors.textMain }}>
                   با{' '}
                   <span className="font-[Vazir-Bold] underline" style={{ color: colors.primary }}>
                     قوانین و مقررات
@@ -355,16 +340,10 @@ export default function AuthBottomSheet() {
                   <FiMessageSquare size={40} style={{ color: colors.primary }} />
                 </div>
                 <div className="text-center">
-                  <h3
-                    className="text-lg font-[Vazir-Bold]"
-                    style={{ color: colors.textMain }}
-                  >
+                  <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     کد تایید را وارد کنید
                   </h3>
-                  <p
-                    className="text-sm mt-1"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
                     کد ارسال‌شده به{' '}
                     <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
                       {toPersianDigit(phone.slice(0, 4) + '***' + phone.slice(-4))}
@@ -414,27 +393,18 @@ export default function AuthBottomSheet() {
                   type="button"
                 >
                   <FiUser size={14} style={{ color: colors.primary }} />
-                  <span
-                    className="text-sm font-[Vazir-Medium]"
-                    style={{ color: colors.primary }}
-                  >
+                  <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.primary }}>
                     ویرایش اطلاعات
                   </span>
                 </button>
                 {canResend ? (
                   <button onClick={handleResend} type="button">
-                    <span
-                      className="text-sm font-[Vazir-Bold]"
-                      style={{ color: colors.primary }}
-                    >
+                    <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
                       ارسال مجدد کد
                     </span>
                   </button>
                 ) : (
-                  <span
-                    className="text-sm"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <span className="text-sm" style={{ color: colors.textSecondary }}>
                     ارسال مجدد تا {formatTime(timer)}
                   </span>
                 )}
@@ -457,8 +427,7 @@ export default function AuthBottomSheet() {
                 }}
               >
                 <span className="text-xs" style={{ color: colors.primary }}>
-                  حالت آزمایشی: کد{' '}
-                  <span className="font-[Vazir-Bold]">۱۲۳۴۵</span>
+                  حالت آزمایشی: کد <span className="font-[Vazir-Bold]">۱۲۳۴۵</span>
                 </span>
               </div>
             </div>
@@ -473,16 +442,10 @@ export default function AuthBottomSheet() {
                 <FiCheck size={50} style={{ color: '#fff' }} />
               </div>
               <div className="text-center">
-                <h3
-                  className="text-xl font-[Vazir-Bold]"
-                  style={{ color: colors.textMain }}
-                >
+                <h3 className="text-xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                   خوش آمدید! 🎉
                 </h3>
-                <p
-                  className="text-sm mt-2"
-                  style={{ color: colors.textSecondary }}
-                >
+                <p className="text-sm mt-2" style={{ color: colors.textSecondary }}>
                   {firstName} {lastName} عزیز، ورود شما موفق بود
                 </p>
               </div>

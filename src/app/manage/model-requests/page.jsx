@@ -19,7 +19,8 @@ const MOCK_MODEL_REQUESTS = [
     serviceName: 'فیشیال تخصصی پوست',
     serviceImage: 'https://picsum.photos/200/200?random=50',
     title: 'مدل برای فیشیال VIP عروس',
-    description: 'نیاز به مدل برای تست محصولات جدید فیشیال. این خدمت شامل پاکسازی عمیق پوست، استفاده از ماسک طلای ۲۴ عیار و ماساژ صورت با روغن‌های طبیعی است.',
+    description:
+      'نیاز به مدل برای تست محصولات جدید فیشیال. این خدمت شامل پاکسازی عمیق پوست، استفاده از ماسک طلای ۲۴ عیار و ماساژ صورت با روغن‌های طبیعی است.',
     costType: 'paid',
     status: 'active',
     contactPhone: '09121234567',
@@ -32,7 +33,8 @@ const MOCK_MODEL_REQUESTS = [
     serviceName: 'کاشت ناخن ژله‌ای',
     serviceImage: 'https://picsum.photos/200/200?random=51',
     title: 'مدل برای طراحی ناخن جدید',
-    description: 'طراحی‌های جدید و خاص برای نمونه‌کار با تکنیک‌های روز دنیا. مناسب ناخن‌های طبیعی و سالم.',
+    description:
+      'طراحی‌های جدید و خاص برای نمونه‌کار با تکنیک‌های روز دنیا. مناسب ناخن‌های طبیعی و سالم.',
     costType: 'material_cost',
     status: 'active',
     contactPhone: '09129876543',
@@ -45,7 +47,8 @@ const MOCK_MODEL_REQUESTS = [
     serviceName: 'رنگ و لایت مو',
     serviceImage: 'https://picsum.photos/200/200?random=52',
     title: 'مدل برای تکنیک جدید بالیاژ',
-    description: 'تست تکنیک جدید بالیاژ فرانسوی با مواد اورجینال ایتالیایی. مناسب موهای بلند و سالم.',
+    description:
+      'تست تکنیک جدید بالیاژ فرانسوی با مواد اورجینال ایتالیایی. مناسب موهای بلند و سالم.',
     costType: 'free',
     status: 'inactive',
     contactPhone: '09121112233',
@@ -111,13 +114,18 @@ export default function ModelRequestsPage() {
           <h2 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             درخواست‌های مدل
           </h2>
-          <p className="text-xs font-[Vazir] text-center px-5" style={{ color: colors.textSecondary }}>
+          <p
+            className="text-xs font-[Vazir] text-center px-5"
+            style={{ color: colors.textSecondary }}
+          >
             برای مشاهده جزئیات، روی هر درخواست ضربه بزنید
           </p>
         </div>
 
         {requests.length > 0 && (
-          <div className="mb-4"><ModelRequestStats requests={requests} /></div>
+          <div className="mb-4">
+            <ModelRequestStats requests={requests} />
+          </div>
         )}
 
         {/* دکمه ایجاد */}
@@ -127,7 +135,10 @@ export default function ModelRequestsPage() {
             className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-4 transition-all hover:scale-[1.01] active:scale-[0.99]"
             style={{ backgroundColor: '#43A047' }}
           >
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+            >
               <FiPlus size={22} color="#fff" />
             </div>
             <div className="flex-1 text-right">
@@ -140,11 +151,7 @@ export default function ModelRequestsPage() {
         {/* لیست */}
         {requests.length > 0 ? (
           requests.map((request) => (
-            <ModelRequestCard
-              key={request.id}
-              request={request}
-              onPress={openDetail}
-            />
+            <ModelRequestCard key={request.id} request={request} onPress={openDetail} />
           ))
         ) : (
           <EmptyState

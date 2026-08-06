@@ -10,7 +10,7 @@ import {
   FiSmartphone,
   FiHelpCircle,
   FiLogOut,
-  FiGift,        // ← اضافه شد
+  FiGift, // ← اضافه شد
   FiShield,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -143,28 +143,17 @@ export default function ProfilePage() {
         <ProfileStatsCard stats={userStats} />
 
         {/* دسترسی سریع */}
-        <ProfileMenuList
-          title="دسترسی سریع"
-          items={quickMenuItems}
-          onItemPress={handleMenuPress}
-        />
+        <ProfileMenuList title="دسترسی سریع" items={quickMenuItems} onItemPress={handleMenuPress} />
 
         {/* تنظیمات */}
         <div className="mb-6">
-          <h3
-            className="text-base font-[Vazir-Bold] mb-3"
-            style={{ color: colors.textMain }}
-          >
+          <h3 className="text-base font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
             تنظیمات
           </h3>
           <div className="mb-2.5">
             <ThemeToggleItem isDark={isDark} onToggle={toggleTheme} />
           </div>
-          <ProfileMenuList
-            title=""
-            items={settingsMenuItems}
-            onItemPress={handleMenuPress}
-          />
+          <ProfileMenuList title="" items={settingsMenuItems} onItemPress={handleMenuPress} />
         </div>
 
         {/* دکمه خروج */}
@@ -180,10 +169,7 @@ export default function ProfilePage() {
             className="!border-[#E53935] !border-[1.5px]"
             style={{ color: '#E53935' }}
           />
-          <span
-            className="text-xs font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
             نسخه ۱.۰.۰ - زیبانو
           </span>
         </div>
@@ -197,9 +183,7 @@ export default function ProfilePage() {
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center p-6"
           style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
-          onClick={(e) =>
-            e.target === e.currentTarget && setShowLogoutConfirm(false)
-          }
+          onClick={(e) => e.target === e.currentTarget && setShowLogoutConfirm(false)}
         >
           <div
             className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-4"
@@ -217,10 +201,7 @@ export default function ProfilePage() {
             >
               خروج از حساب کاربری
             </h3>
-            <p
-              className="text-sm text-center leading-6"
-              style={{ color: colors.textSecondary }}
-            >
+            <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
               آیا از خروج از حساب کاربری خود مطمئن هستید؟
             </p>
             <div className="flex gap-3 w-full mt-2">

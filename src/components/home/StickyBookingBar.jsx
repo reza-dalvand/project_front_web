@@ -20,16 +20,10 @@ export default function StickyBookingBar({ minPrice, onBookPress }) {
     >
       <div className="flex items-center px-5 gap-3">
         <div className="flex-1 flex flex-col gap-0.5">
-          <span
-            className="text-[11px]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[11px]" style={{ color: colors.textSecondary }}>
             شروع از
           </span>
-          <span
-            className="text-base font-[Vazir-Bold]"
-            style={{ color: colors.primary }}
-          >
+          <span className="text-base font-[Vazir-Bold]" style={{ color: colors.primary }}>
             {formatPrice(minPrice)}
           </span>
         </div>

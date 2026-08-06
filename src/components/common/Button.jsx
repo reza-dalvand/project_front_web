@@ -126,13 +126,9 @@ export default function Button({
         />
       ) : (
         <>
-          {icon && iconPosition === 'left' && (
-            <span className="flex items-center">{icon}</span>
-          )}
+          {icon && iconPosition === 'left' && <span className="flex items-center">{icon}</span>}
           <span className="text-center flex-1">{title}</span>
-          {icon && iconPosition === 'right' && (
-            <span className="flex items-center">{icon}</span>
-          )}
+          {icon && iconPosition === 'right' && <span className="flex items-center">{icon}</span>}
         </>
       )}
     </button>

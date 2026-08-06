@@ -110,7 +110,16 @@ export default function ScheduleModal({
     }
     if (currentStep === 3) return selectedDates.length > 0;
     return false;
-  }, [currentStep, selectedServiceId, workStart, workEnd, slotDuration, breaks, selectedDates, computedSlotCount]);
+  }, [
+    currentStep,
+    selectedServiceId,
+    workStart,
+    workEnd,
+    slotDuration,
+    breaks,
+    selectedDates,
+    computedSlotCount,
+  ]);
 
   const handleNext = () => {
     if (currentStep < 3) setCurrentStep(currentStep + 1);
@@ -208,7 +217,10 @@ export default function ScheduleModal({
           className="flex items-center justify-between px-4 sm:px-5 py-4 border-b flex-shrink-0"
           style={{ borderColor: colors.border }}
         >
-          <h3 className="text-sm sm:text-base font-[Vazir-Bold] truncate pr-2" style={{ color: colors.textMain }}>
+          <h3
+            className="text-sm sm:text-base font-[Vazir-Bold] truncate pr-2"
+            style={{ color: colors.textMain }}
+          >
             {isEditMode ? 'ویرایش زمان‌بندی خدمت' : 'تنظیم زمان‌بندی خدمت'}
           </h3>
           <button

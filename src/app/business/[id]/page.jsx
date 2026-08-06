@@ -94,8 +94,7 @@ const MOCK_BUSINESS = {
         'https://picsum.photos/800/800?random=160',
         'https://picsum.photos/800/800?random=260',
       ],
-      description:
-        'فیشیال تخصصی عروس با استفاده از بهترین محصولات روز دنیا.',
+      description: 'فیشیال تخصصی عروس با استفاده از بهترین محصولات روز دنیا.',
     },
     {
       id: 'pf2',
@@ -188,21 +187,12 @@ export default function BusinessDetailsPage() {
         return (
           <div className="flex flex-col gap-3 pb-2">
             {biz.services.map((service) => (
-              <ServiceBookingCard
-                key={service.id}
-                service={service}
-                onBook={openBooking}
-              />
+              <ServiceBookingCard key={service.id} service={service} onBook={openBooking} />
             ))}
           </div>
         );
       case 'portfolio':
-        return (
-          <PortfolioGrid
-            portfolios={biz.portfolios}
-            onPortfolioPress={openPortfolio}
-          />
-        );
+        return <PortfolioGrid portfolios={biz.portfolios} onPortfolioPress={openPortfolio} />;
       case 'about':
         return <BusinessAbout business={biz} />;
       default:
@@ -233,11 +223,7 @@ export default function BusinessDetailsPage() {
         </div>
 
         {/* ─── 4. Tabs ─── */}
-        <BusinessTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          colors={colors}
-        />
+        <BusinessTabs activeTab={activeTab} onTabChange={setActiveTab} colors={colors} />
 
         {/* ─── 5. Tab Content ─── */}
         <div className="px-5 pt-1">{renderTabContent()}</div>

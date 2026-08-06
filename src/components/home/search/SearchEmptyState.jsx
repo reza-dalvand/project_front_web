@@ -29,10 +29,7 @@ export default function SearchEmptyState({ query, activeTab }) {
       >
         <span className="text-5xl">{icon}</span>
       </div>
-      <h3
-        className="text-lg font-[Vazir-Bold] text-center"
-        style={{ color: colors.textMain }}
-      >
+      <h3 className="text-lg font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
         {title}
       </h3>
       <p
@@ -52,10 +49,7 @@ export default function SearchEmptyState({ query, activeTab }) {
       >
         <div className="flex items-center gap-2 mb-2">
           <FiAlertCircle size={18} color={colors.primary} />
-          <span
-            className="text-sm font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             💡 پیشنهاد‌ها:
           </span>
         </div>
@@ -69,10 +63,7 @@ export default function SearchEmptyState({ query, activeTab }) {
               <span className="text-xs" style={{ color: colors.primary }}>
                 ✓
               </span>
-              <span
-                className="text-xs font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
                 {tip}
               </span>
             </div>

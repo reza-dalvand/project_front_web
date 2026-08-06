@@ -27,10 +27,7 @@ export default function TodayAppointments() {
   return (
     <div className="px-5 mt-7">
       <div className="flex items-center justify-between mb-4">
-        <h2
-          className="text-base font-[Vazir-Bold]"
-          style={{ color: colors.textMain }}
-        >
+        <h2 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           نوبت‌های امروز
         </h2>
         <button
@@ -75,10 +72,7 @@ export default function TodayAppointments() {
                 style={{ backgroundColor: '#667eea18' }}
               >
                 <FiClock size={12} style={{ color: '#667eea' }} />
-                <span
-                  className="text-[11px] font-[Vazir-Bold]"
-                  style={{ color: '#667eea' }}
-                >
+                <span className="text-[11px] font-[Vazir-Bold]" style={{ color: '#667eea' }}>
                   {apt.time}
                 </span>
               </div>

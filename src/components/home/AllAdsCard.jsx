@@ -29,9 +29,7 @@ export default function AllAdsCard({ ad, onPress }) {
               className="absolute top-3.5 left-3.5 flex items-center gap-1 px-2.5 py-1.5 rounded-xl shadow-md"
               style={{ backgroundColor: '#E53935' }}
             >
-              <span className="text-[11px] font-[Vazir-Bold] text-white">
-                {ad.badge}
-              </span>
+              <span className="text-[11px] font-[Vazir-Bold] text-white">{ad.badge}</span>
             </div>
           )}
         </div>

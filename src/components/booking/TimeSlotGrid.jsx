@@ -10,11 +10,7 @@ import { toPersianDigit } from '@/utils/numberUtils';
  * @param {string} selectedId - شناسه اسلات انتخاب شده
  * @param {function} onSelect - تابع انتخاب
  */
-export default function TimeSlotGrid({
-  slots = [],
-  selectedId,
-  onSelect,
-}) {
+export default function TimeSlotGrid({ slots = [], selectedId, onSelect }) {
   const { colors } = useTheme();
   const availableCount = slots.filter((s) => s.isAvailable).length;
 
@@ -28,10 +24,7 @@ export default function TimeSlotGrid({
         >
           <FiClock size={18} style={{ color: colors.primary }} />
         </div>
-        <span
-          className="text-[15px] font-[Vazir-Bold] flex-1"
-          style={{ color: colors.textMain }}
-        >
+        <span className="text-[15px] font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
           انتخاب ساعت
         </span>
         {/* Badge ساعت‌های آزاد */}
@@ -39,14 +32,8 @@ export default function TimeSlotGrid({
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-[10px]"
           style={{ backgroundColor: '#4CAF5015' }}
         >
-          <div
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: '#4CAF50' }}
-          />
-          <span
-            className="text-[11px] font-[Vazir-Bold]"
-            style={{ color: '#4CAF50' }}
-          >
+          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#4CAF50' }} />
+          <span className="text-[11px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
             {toPersianDigit(availableCount)} ساعت آزاد
           </span>
         </div>
@@ -81,10 +68,7 @@ export default function TimeSlotGrid({
               }}
             >
               {isBooked ? (
-                <FiXCircle
-                  size={14}
-                  style={{ color: colors.textSecondary + '80' }}
-                />
+                <FiXCircle size={14} style={{ color: colors.textSecondary + '80' }} />
               ) : (
                 <FiClock
                   size={14}

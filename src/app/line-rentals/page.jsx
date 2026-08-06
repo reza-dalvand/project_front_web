@@ -22,7 +22,8 @@ const MOCK_LINE_RENTALS = [
     percentSalon: 40,
     percentPartner: 60,
     priceDisplay: '۴۰-۶۰٪',
-    description: 'لاین ناخن کامل با میز حرفه‌ای، دستگاه UV/LED، و مجموعه کامل لاک ژل. مناسب ناخن‌کار حرفه‌ای با سابقه کار حداقل ۲ سال.',
+    description:
+      'لاین ناخن کامل با میز حرفه‌ای، دستگاه UV/LED، و مجموعه کامل لاک ژل. مناسب ناخن‌کار حرفه‌ای با سابقه کار حداقل ۲ سال.',
     lineImage: 'https://picsum.photos/400/300?random=70',
     businessName: 'سالن زیبایی نیلارام',
     city: 'تهران، سعادت‌آباد',
@@ -40,7 +41,8 @@ const MOCK_LINE_RENTALS = [
     collabLabel: 'ساعتی',
     hourlyRate: 150000,
     priceDisplay: '۱۵۰,۰۰۰ / ساعت',
-    description: 'لاین میکاپ با نور طبیعی، آینه LED حرفه‌ای و میز گریم کامل. مناسب میکاپ‌آرتیست‌های حرفه‌ای که برای پروژه‌های کوتاه‌مدت نیاز به فضا دارند.',
+    description:
+      'لاین میکاپ با نور طبیعی، آینه LED حرفه‌ای و میز گریم کامل. مناسب میکاپ‌آرتیست‌های حرفه‌ای که برای پروژه‌های کوتاه‌مدت نیاز به فضا دارند.',
     lineImage: 'https://picsum.photos/400/300?random=71',
     businessName: 'استودیو لاویا',
     city: 'تهران، نیاوران',
@@ -59,7 +61,8 @@ const MOCK_LINE_RENTALS = [
     fixedAmount: 5000000,
     fixedDeposit: 20000000,
     priceDisplay: '۵,۰۰۰,۰۰۰ + ۲۰,۰۰۰,۰۰۰ رهن',
-    description: 'لاین فیشیال VIP با تخت حرفه‌ای، دستگاه هیدروفیشیال، بخار ازن‌دار و مجموعه کامل محصولات پوستی کره‌ای.',
+    description:
+      'لاین فیشیال VIP با تخت حرفه‌ای، دستگاه هیدروفیشیال، بخار ازن‌دار و مجموعه کامل محصولات پوستی کره‌ای.',
     lineImage: 'https://picsum.photos/400/300?random=72',
     businessName: 'مرکز پوست صدف',
     city: 'تهران، ونک',
@@ -78,7 +81,8 @@ const MOCK_LINE_RENTALS = [
     fixedAmount: 8000000,
     fixedDeposit: 0,
     priceDisplay: '۸,۰۰۰,۰۰۰ تومان',
-    description: 'لاین لیزر با دستگاه الکساندرایت ۲۰۲۴، اتاق اختصاصی با تهویه مناسب و تجهیزات استریل. مناسب پزشکان و متخصصان پوست.',
+    description:
+      'لاین لیزر با دستگاه الکساندرایت ۲۰۲۴، اتاق اختصاصی با تهویه مناسب و تجهیزات استریل. مناسب پزشکان و متخصصان پوست.',
     lineImage: 'https://picsum.photos/400/300?random=73',
     businessName: 'کلینیک رویال',
     city: 'تهران، شهرک غرب',
@@ -97,7 +101,8 @@ const MOCK_LINE_RENTALS = [
     percentSalon: 50,
     percentPartner: 50,
     priceDisplay: '۵۰-۵۰٪',
-    description: 'لاین تخصصی کراتین و رنگ مو با مواد اورجینال برزیلی و ایتالیایی. مناسب آرایشگران حرفه‌ای با تجربه.',
+    description:
+      'لاین تخصصی کراتین و رنگ مو با مواد اورجینال برزیلی و ایتالیایی. مناسب آرایشگران حرفه‌ای با تجربه.',
     lineImage: 'https://picsum.photos/400/300?random=74',
     businessName: 'سالن زیبایی افرا',
     city: 'تهران، شهرک غرب',
@@ -115,7 +120,8 @@ const MOCK_LINE_RENTALS = [
     collabLabel: 'ساعتی',
     hourlyRate: 100000,
     priceDisplay: '۱۰۰,۰۰۰ / ساعت',
-    description: 'لاین کاشت مژه با تخت راحت، نور تخصصی و مجموعه کامل مژه‌های هالیوودی. مناسب متخصصان کاشت مژه.',
+    description:
+      'لاین کاشت مژه با تخت راحت، نور تخصصی و مجموعه کامل مژه‌های هالیوودی. مناسب متخصصان کاشت مژه.',
     lineImage: 'https://picsum.photos/400/300?random=75',
     businessName: 'سالن زیبایی ماهرو',
     city: 'کرج، فردیس',
@@ -149,8 +155,7 @@ export default function AllLineRentalsPage() {
     return data;
   }, [filters]);
 
-  const hasActiveFilter =
-    filters.collabType !== 'all' || filters.serviceType !== 'all';
+  const hasActiveFilter = filters.collabType !== 'all' || filters.serviceType !== 'all';
 
   const handleAdPress = (ad) => {
     router.push(`/line-rentals/${ad.id}`);
@@ -168,11 +173,7 @@ export default function AllLineRentalsPage() {
       <div className="flex-1 overflow-y-auto p-4 pb-28">
         {filteredAds.length > 0 ? (
           filteredAds.map((ad) => (
-            <AllLineRentalsCard
-              key={ad.id}
-              ad={ad}
-              onPress={handleAdPress}
-            />
+            <AllLineRentalsCard key={ad.id} ad={ad} onPress={handleAdPress} />
           ))
         ) : (
           <EmptyStateVariants

@@ -13,13 +13,7 @@ import { useTheme } from '@/stores/useThemeStore';
  * @param {boolean} showBorder - نمایش حاشیه
  * @param {string} className - کلاس‌های اضافی
  */
-export default function Avatar({
-  uri,
-  name,
-  size = 'md',
-  showBorder = false,
-  className = '',
-}) {
+export default function Avatar({ uri, name, size = 'md', showBorder = false, className = '' }) {
   const { colors } = useTheme();
 
   // اندازه‌های مختلف

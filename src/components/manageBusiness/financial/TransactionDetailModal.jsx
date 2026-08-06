@@ -106,16 +106,8 @@ export default function TransactionDetailModal({ visible, tx, onClose }) {
 
           {/* اطلاعات مشتری */}
           {tx.customerName && (
-            <div
-              className="p-4 rounded-2xl border"
-              style={{ borderColor: colors.border }}
-            >
-              <InfoRow
-                icon="👤"
-                label="نام مشتری"
-                value={tx.customerName}
-                showDivider
-              />
+            <div className="p-4 rounded-2xl border" style={{ borderColor: colors.border }}>
+              <InfoRow icon="👤" label="نام مشتری" value={tx.customerName} showDivider />
               {tx.serviceName && (
                 <InfoRow icon="💆‍♀️" label="خدمت" value={tx.serviceName} showDivider />
               )}
@@ -130,10 +122,7 @@ export default function TransactionDetailModal({ visible, tx, onClose }) {
           )}
 
           {/* اطلاعات زمانی */}
-          <div
-            className="p-4 rounded-2xl border"
-            style={{ borderColor: colors.border }}
-          >
+          <div className="p-4 rounded-2xl border" style={{ borderColor: colors.border }}>
             {(tx.createdAt || tx.completedAt) && (
               <InfoRow
                 icon="⏰"
@@ -141,8 +130,8 @@ export default function TransactionDetailModal({ visible, tx, onClose }) {
                   tx.status === 'settled'
                     ? 'تسویه در'
                     : tx.completedAt
-                    ? 'تایید خدمت در'
-                    : 'پرداخت در'
+                      ? 'تایید خدمت در'
+                      : 'پرداخت در'
                 }
                 value={tx.settledAt || tx.completedAt || tx.createdAt}
                 showDivider
@@ -166,9 +155,7 @@ export default function TransactionDetailModal({ visible, tx, onClose }) {
                 value={`حساب تایید شده - ${tx.destinationBank}`}
               />
             )}
-            {tx.reason && (
-              <InfoRow icon="⚠️" label="دلیل" value={tx.reason} warn />
-            )}
+            {tx.reason && <InfoRow icon="⚠️" label="دلیل" value={tx.reason} warn />}
           </div>
 
           {/* کد پیگیری */}

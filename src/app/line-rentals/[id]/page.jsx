@@ -1,14 +1,7 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import {
-  FiArrowRight,
-  FiShare2,
-  FiMapPin,
-  FiPhone,
-  FiInfo,
-  FiCheckCircle,
-} from 'react-icons/fi';
+import { FiArrowRight, FiShare2, FiMapPin, FiPhone, FiInfo, FiCheckCircle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import { Card, ActionButtons, CollabBadge } from '@/components/common';
@@ -27,7 +20,8 @@ const MOCK_AD = {
   percentSalon: 40,
   percentPartner: 60,
   priceDisplay: '۴۰-۶۰٪',
-  description: 'لاین ناخن کامل با میز حرفه‌ای، دستگاه UV/LED، و مجموعه کامل لاک ژل. مناسب ناخن‌کار حرفه‌ای با سابقه کار حداقل ۲ سال. فضای اختصاصی با نور طبیعی و تهویه مناسب. امکان استفاده از انبار و محصولات مشترک.',
+  description:
+    'لاین ناخن کامل با میز حرفه‌ای، دستگاه UV/LED، و مجموعه کامل لاک ژل. مناسب ناخن‌کار حرفه‌ای با سابقه کار حداقل ۲ سال. فضای اختصاصی با نور طبیعی و تهویه مناسب. امکان استفاده از انبار و محصولات مشترک.',
   lineImage: 'https://picsum.photos/800/600?random=70',
   businessName: 'سالن زیبایی نیلارام',
   city: 'تهران، سعادت‌آباد',
@@ -111,9 +105,7 @@ export default function LineRentalDetailPage() {
             style={{ backgroundColor: 'rgba(33,150,243,0.85)' }}
           >
             <span className="text-xs">📅</span>
-            <span className="text-[11px] font-[Vazir-Bold] text-white">
-              ثبت: {ad.createdAt}
-            </span>
+            <span className="text-[11px] font-[Vazir-Bold] text-white">ثبت: {ad.createdAt}</span>
           </div>
 
           {/* تگ نوع خدمت */}
@@ -122,9 +114,7 @@ export default function LineRentalDetailPage() {
             style={{ backgroundColor: '#7B1FA2' }}
           >
             <span className="text-xs">💅</span>
-            <span className="text-[11px] font-[Vazir-Bold] text-white">
-              {ad.serviceTypeName}
-            </span>
+            <span className="text-[11px] font-[Vazir-Bold] text-white">{ad.serviceTypeName}</span>
           </div>
         </div>
       </div>
@@ -142,21 +132,12 @@ export default function LineRentalDetailPage() {
         {/* شهر و نام کسب‌وکار */}
         <div className="flex items-center gap-2 -mt-1">
           <span className="text-sm">🏪</span>
-          <span
-            className="text-[13px] font-[Vazir-Bold]"
-            style={{ color: colors.primary }}
-          >
+          <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
             {ad.businessName}
           </span>
-          <div
-            className="w-1 h-1 rounded-full mx-0.5"
-            style={{ backgroundColor: colors.border }}
-          />
+          <div className="w-1 h-1 rounded-full mx-0.5" style={{ backgroundColor: colors.border }} />
           <FiMapPin size={14} color={colors.textSecondary} />
-          <span
-            className="text-xs"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-xs" style={{ color: colors.textSecondary }}>
             {ad.city}
           </span>
         </div>
@@ -180,18 +161,12 @@ export default function LineRentalDetailPage() {
                 </span>
                 <div className="flex items-center gap-1 mt-1">
                   <FiMapPin size={12} color={colors.textSecondary} />
-                  <span
-                    className="text-xs"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <span className="text-xs" style={{ color: colors.textSecondary }}>
                     {ad.city}
                   </span>
                 </div>
               </div>
-              <span
-                className="text-2xl"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-2xl" style={{ color: colors.textSecondary }}>
                 ←
               </span>
             </div>
@@ -199,27 +174,15 @@ export default function LineRentalDetailPage() {
         </Card>
 
         {/* ═══ کارت شرایط همکاری ═══ */}
-        <Card
-          variant="elevated"
-          padding={16}
-          radius={18}
-          className="border-[1.5px]"
-        >
+        <Card variant="elevated" padding={16} radius={18} className="border-[1.5px]">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">🤝</span>
-            <span
-              className="text-[15px] font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               شرایط همکاری
             </span>
           </div>
 
-          <CollabBadge
-            type={ad.collabType}
-            priceDisplay={ad.priceDisplay}
-            variant="solid"
-          />
+          <CollabBadge type={ad.collabType} priceDisplay={ad.priceDisplay} variant="solid" />
 
           <div
             className="flex items-start gap-2 p-3 rounded-xl border mt-3"
@@ -229,15 +192,12 @@ export default function LineRentalDetailPage() {
             }}
           >
             <FiInfo size={14} style={{ color: colors.primary, flexShrink: 0 }} />
-            <p
-              className="text-xs leading-5 flex-1"
-              style={{ color: colors.textSecondary }}
-            >
+            <p className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
               {ad.collabType === 'percent'
                 ? 'درصدی از درآمد بین سالن و همکار تقسیم می‌شود'
                 : ad.collabType === 'fixed'
-                ? 'مبلغ ثابت ماهانه + رهن (اختیاری)'
-                : 'به ازای هر ساعت استفاده از لاین'}
+                  ? 'مبلغ ثابت ماهانه + رهن (اختیاری)'
+                  : 'به ازای هر ساعت استفاده از لاین'}
             </p>
           </div>
         </Card>
@@ -246,17 +206,11 @@ export default function LineRentalDetailPage() {
         <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">📝</span>
-            <span
-              className="text-[15px] font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               توضیحات آگهی
             </span>
           </div>
-          <p
-            className="text-sm leading-7 text-justify"
-            style={{ color: colors.textMain }}
-          >
+          <p className="text-sm leading-7 text-justify" style={{ color: colors.textMain }}>
             {ad.description}
           </p>
         </Card>
@@ -265,10 +219,7 @@ export default function LineRentalDetailPage() {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-lg">🤝</span>
-            <span
-              className="text-[15px] font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               ارتباط و همکاری
             </span>
           </div>
@@ -287,10 +238,7 @@ ${ad.description || ''}
         <Card variant="default" padding={16} radius={18} className="border">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">💡</span>
-            <span
-              className="text-[15px] font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               نکات مهم
             </span>
           </div>
@@ -307,10 +255,7 @@ ${ad.description || ''}
                 >
                   <FiCheckCircle size={12} color="#4CAF50" />
                 </div>
-                <p
-                  className="text-xs leading-5 flex-1"
-                  style={{ color: colors.textSecondary }}
-                >
+                <p className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
                   {text}
                 </p>
               </div>

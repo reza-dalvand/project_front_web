@@ -11,10 +11,7 @@ export default function AllModelRequestsHeader({
   const router = useRouter();
 
   return (
-    <div
-      className="rounded-b-3xl pb-6 pt-4 px-5"
-      style={{ backgroundColor: '#E91E63' }}
-    >
+    <div className="rounded-b-3xl pb-6 pt-4 px-5" style={{ backgroundColor: '#E91E63' }}>
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
@@ -33,12 +30,8 @@ export default function AllModelRequestsHeader({
             <span className="text-2xl">👤</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-white/80 font-[Vazir]">
-              فرصت‌های مدلینگ
-            </span>
-            <h1 className="text-lg font-[Vazir-Bold] text-white">
-              لیست درخواست مدل
-            </h1>
+            <span className="text-xs text-white/80 font-[Vazir]">فرصت‌های مدلینگ</span>
+            <h1 className="text-lg font-[Vazir-Bold] text-white">لیست درخواست مدل</h1>
           </div>
         </div>
 

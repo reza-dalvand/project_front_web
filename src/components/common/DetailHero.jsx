@@ -15,7 +15,7 @@ export default function DetailHero({
 }) {
   const { colors } = useTheme();
   const [currentImage, setCurrentImage] = useState(0);
-  
+
   const displayImages = images.length > 0 ? images : [imageUrl];
 
   return (
@@ -74,13 +74,9 @@ export default function DetailHero({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
               style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
             >
-              {badge.icon && (
-                <span className="text-sm">{badge.icon}</span>
-              )}
+              {badge.icon && <span className="text-sm">{badge.icon}</span>}
               {badge.text && (
-                <span className="text-xs font-[Vazir-Bold] text-white">
-                  {badge.text}
-                </span>
+                <span className="text-xs font-[Vazir-Bold] text-white">{badge.text}</span>
               )}
             </div>
           ))}
@@ -89,9 +85,11 @@ export default function DetailHero({
 
       {/* Indicator تصاویر */}
       {displayImages.length > 1 && (
-        <div className="absolute bottom-4 right-4 flex items-center gap-1.5
+        <div
+          className="absolute bottom-4 right-4 flex items-center gap-1.5
                         px-2.5 py-1.5 rounded-lg"
-             style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+        >
           <span className="text-xs font-[Vazir-Bold] text-white">
             {currentImage + 1} / {displayImages.length}
           </span>

@@ -6,20 +6,20 @@ import { Card, CollabBadge } from '@/components/common';
 
 // متادیتای انواع خدمات برای Badge
 const SERVICE_TYPE_META = {
-  facial:     { color: '#C2185B', icon: '💆‍♀️' },
-  nail:       { color: '#7B1FA2', icon: '💅' },
+  facial: { color: '#C2185B', icon: '💆‍♀️' },
+  nail: { color: '#7B1FA2', icon: '💅' },
   hair_color: { color: '#0277BD', icon: '🎨' },
-  keratin:    { color: '#E65100', icon: '✨' },
-  laser:      { color: '#00838F', icon: '⚡' },
-  makeup:     { color: '#AD1457', icon: '💄' },
-  eyelash:    { color: '#4527A0', icon: '👁️' },
-  waxing:     { color: '#2E7D32', icon: '🧴' },
-  massage:    { color: '#558B2F', icon: '💆‍♀️' },
-  tattoo:     { color: '#D84315', icon: '✒️' },
-  skincare:   { color: '#00695C', icon: '🧖‍♀️' },
-  hair_cut:   { color: '#5D4037', icon: '✂️' },
-  bridal:     { color: '#880E4F', icon: '👰' },
-  other:      { color: '#455A64', icon: '💼' },
+  keratin: { color: '#E65100', icon: '✨' },
+  laser: { color: '#00838F', icon: '⚡' },
+  makeup: { color: '#AD1457', icon: '💄' },
+  eyelash: { color: '#4527A0', icon: '👁️' },
+  waxing: { color: '#2E7D32', icon: '🧴' },
+  massage: { color: '#558B2F', icon: '💆‍♀️' },
+  tattoo: { color: '#D84315', icon: '✒️' },
+  skincare: { color: '#00695C', icon: '🧖‍♀️' },
+  hair_cut: { color: '#5D4037', icon: '✂️' },
+  bridal: { color: '#880E4F', icon: '👰' },
+  other: { color: '#455A64', icon: '💼' },
 };
 
 export default function AllLineRentalsCard({ ad, onPress }) {
@@ -48,9 +48,7 @@ export default function AllLineRentalsCard({ ad, onPress }) {
             style={{ backgroundColor: serviceMeta.color }}
           >
             <span className="text-[10px]">{serviceMeta.icon}</span>
-            <span className="text-[10px] font-[Vazir-Bold] text-white">
-              {ad.serviceTypeName}
-            </span>
+            <span className="text-[10px] font-[Vazir-Bold] text-white">{ad.serviceTypeName}</span>
           </div>
         </div>
 
@@ -67,28 +65,18 @@ export default function AllLineRentalsCard({ ad, onPress }) {
           {/* نام کسب‌وکار */}
           <div className="flex items-center gap-1">
             <span className="text-xs">🏪</span>
-            <span
-              className="text-xs font-[Vazir-Medium]"
-              style={{ color: colors.primary }}
-            >
+            <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
               {ad.businessName}
             </span>
           </div>
 
           {/* نوع همکاری */}
-          <CollabBadge
-            type={ad.collabType}
-            priceDisplay={ad.priceDisplay}
-            variant="solid"
-          />
+          <CollabBadge type={ad.collabType} priceDisplay={ad.priceDisplay} variant="solid" />
 
           {/* شهر */}
           <div className="flex items-center gap-1">
             <FiMapPin size={12} color={colors.textSecondary} />
-            <span
-              className="text-[11px]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-[11px]" style={{ color: colors.textSecondary }}>
               {ad.city}
             </span>
           </div>

@@ -42,8 +42,7 @@ export default function CreateBusinessPage() {
     isNationalIdVerified: false,
     verifiedName: '',
     categoryId: null,
-    services: [], 
-
+    services: [],
   });
 
   const registeredPhone = user?.phone || '09123456789';
@@ -71,12 +70,7 @@ export default function CreateBusinessPage() {
           />
         );
       case 3:
-        return (
-          <SocialMediaStep
-            formData={formData}
-            onUpdate={updateForm}
-          />
-        );
+        return <SocialMediaStep formData={formData} onUpdate={updateForm} />;
       default:
         return null;
     }
@@ -112,9 +106,7 @@ export default function CreateBusinessPage() {
 
   const handleFinalSubmit = () => {
     if (!canFinalSubmit) {
-      alert(
-        'برای ثبت نهایی کسب‌وکار، ابتدا باید کد ملی خود را با شماره ثبت‌نام شده تطبیق دهید'
-      );
+      alert('برای ثبت نهایی کسب‌وکار، ابتدا باید کد ملی خود را با شماره ثبت‌نام شده تطبیق دهید');
       return;
     }
 
@@ -132,7 +124,7 @@ export default function CreateBusinessPage() {
       verified_name: formData.verifiedName,
       owner_phone: registeredPhone,
       category_id: formData.categoryId,
-      services: formData.services, 
+      services: formData.services,
     };
 
     console.log('✅ Final Data Ready for API:', submitData);
@@ -167,10 +159,7 @@ export default function CreateBusinessPage() {
     return (
       <ScreenWrapper padding={0}>
         <div className="flex flex-col h-screen" style={{ backgroundColor: colors.background }}>
-          <Header
-            title="ثبت کسب‌وکار جدید"
-            onBackPress={() => router.back()}
-          />
+          <Header title="ثبت کسب‌وکار جدید" onBackPress={() => router.back()} />
           <div className="flex-1 overflow-hidden flex flex-col">
             <TermsAndConditionsStep
               onAccept={() => {
@@ -204,9 +193,7 @@ export default function CreateBusinessPage() {
             >
               <FiChevronRight size={22} color="#fff" />
             </button>
-            <h1 className="text-base font-[Vazir-Bold] text-white">
-              ثبت کسب‌وکار جدید
-            </h1>
+            <h1 className="text-base font-[Vazir-Bold] text-white">ثبت کسب‌وکار جدید</h1>
             <div className="w-9" />
           </div>
         </div>

@@ -48,9 +48,7 @@ export default function HomeHeader({
               className="!border-white/60"
             />
             <div className="flex flex-col gap-0.5 flex-1">
-              <span className="text-[12px] font-[Vazir] text-white/85">
-                سلام، وقت بخیر 👋
-              </span>
+              <span className="text-[12px] font-[Vazir] text-white/85">سلام، وقت بخیر 👋</span>
               <span className="text-[17px] font-[Vazir-Bold] text-white line-clamp-1">
                 {userName || 'کاربر زیبانو'}
               </span>
@@ -69,11 +67,7 @@ export default function HomeHeader({
               }}
               aria-label={isDark ? 'تغییر به تم روشن' : 'تغییر به تم تاریک'}
             >
-              {isDark ? (
-                <FiSun size={20} color="#fff" />
-              ) : (
-                <FiMoon size={20} color="#fff" />
-              )}
+              {isDark ? <FiSun size={20} color="#fff" /> : <FiMoon size={20} color="#fff" />}
             </button>
 
             {/* دکمه فیلتر */}

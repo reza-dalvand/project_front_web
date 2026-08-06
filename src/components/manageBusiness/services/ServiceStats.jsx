@@ -8,9 +8,12 @@ export default function ServiceStats({ services }) {
   const { colors } = useTheme();
   const total = services.length;
   const active = services.filter((s) => s.isActive !== false).length;
-  const avgPrice = total > 0
-    ? Math.round(services.reduce((sum, s) => sum + (s.finalPrice || s.originalPrice || 0), 0) / total)
-    : 0;
+  const avgPrice =
+    total > 0
+      ? Math.round(
+          services.reduce((sum, s) => sum + (s.finalPrice || s.originalPrice || 0), 0) / total
+        )
+      : 0;
 
   return (
     <Card variant="elevated" padding={16} radius={20} className="mx-5 mb-4">

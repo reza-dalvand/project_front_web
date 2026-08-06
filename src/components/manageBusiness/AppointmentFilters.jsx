@@ -38,10 +38,7 @@ export default function AppointmentFilters({ activeFilter, counts, onChange }) {
                 borderColor: isActive ? f.color : colors.border,
               }}
             >
-              <Icon
-                size={15}
-                style={{ color: isActive ? f.color : colors.textSecondary }}
-              />
+              <Icon size={15} style={{ color: isActive ? f.color : colors.textSecondary }} />
               <span
                 className="text-[13px] font-[Vazir-Bold]"
                 style={{ color: isActive ? f.color : colors.textMain }}

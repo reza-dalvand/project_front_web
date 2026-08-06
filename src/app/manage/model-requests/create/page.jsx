@@ -29,9 +29,7 @@ export default function CreateModelRequestPage() {
   const handleSave = (formData) => {
     console.log('Saving model request:', formData);
     showToast(
-      isEditMode
-        ? 'درخواست مدل با موفقیت ویرایش شد'
-        : 'درخواست مدل با موفقیت ایجاد شد',
+      isEditMode ? 'درخواست مدل با موفقیت ویرایش شد' : 'درخواست مدل با موفقیت ایجاد شد',
       'success'
     );
     setTimeout(() => {

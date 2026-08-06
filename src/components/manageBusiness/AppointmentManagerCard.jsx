@@ -4,10 +4,10 @@ import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
 
 const STATUS_META = {
-  pending:   { label: 'در انتظار',  color: '#FFA000' },
-  confirmed: { label: 'تأیید شده',  color: '#43A047' },
-  cancelled: { label: 'لغو شده',    color: '#E53935' },
-  done:      { label: 'انجام شده',  color: '#1E88E5' },
+  pending: { label: 'در انتظار', color: '#FFA000' },
+  confirmed: { label: 'تأیید شده', color: '#43A047' },
+  cancelled: { label: 'لغو شده', color: '#E53935' },
+  done: { label: 'انجام شده', color: '#1E88E5' },
 };
 
 export default function AppointmentManagerCard({ appointment, onStatusChange }) {

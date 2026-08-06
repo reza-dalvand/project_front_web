@@ -23,10 +23,7 @@ export default function ModelRequestStats({ requests }) {
           color="#667eea"
           variant="compact"
         />
-        <div
-          className="w-px h-10 mx-2"
-          style={{ backgroundColor: colors.border }}
-        />
+        <div className="w-px h-10 mx-2" style={{ backgroundColor: colors.border }} />
         <StatsCard
           icon="✅"
           label="فعال"
@@ -34,10 +31,7 @@ export default function ModelRequestStats({ requests }) {
           color="#4CAF50"
           variant="compact"
         />
-        <div
-          className="w-px h-10 mx-2"
-          style={{ backgroundColor: colors.border }}
-        />
+        <div className="w-px h-10 mx-2" style={{ backgroundColor: colors.border }} />
         <StatsCard
           icon="🚫"
           label="غیرفعال"

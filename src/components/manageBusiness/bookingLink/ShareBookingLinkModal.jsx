@@ -34,7 +34,9 @@ export default function ShareBookingLinkModal({ visible, onClose, bookingLink })
 
   useEffect(() => {
     if (!visible) return;
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose?.(); };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
@@ -64,7 +66,10 @@ export default function ShareBookingLinkModal({ visible, onClose, bookingLink })
 
   const handleShareTelegram = () => {
     const msg = encodeURIComponent(`🌸 نوبت‌دهی آنلاین\n${bookingLink}`);
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(bookingLink)}&text=${msg}`, '_blank');
+    window.open(
+      `https://t.me/share/url?url=${encodeURIComponent(bookingLink)}&text=${msg}`,
+      '_blank'
+    );
   };
 
   const handleShareInstagram = () => {
@@ -81,7 +86,9 @@ export default function ShareBookingLinkModal({ visible, onClose, bookingLink })
           text: `🌸 نوبت‌دهی آنلاین\n${bookingLink}`,
           url: bookingLink,
         });
-      } catch { /* cancelled */ }
+      } catch {
+        /* cancelled */
+      }
     } else {
       handleCopy();
     }
@@ -270,21 +277,19 @@ export default function ShareBookingLinkModal({ visible, onClose, bookingLink })
             }}
           >
             <span className="text-base flex-shrink-0">💡</span>
-            <p className="text-[11px] font-[Vazir] leading-5 flex-1" style={{ color: colors.textSecondary }}>
-              این لینک را در بیو اینستاگرام، واتساپ بیزینس، یا هر شبکه اجتماعی دیگری قرار دهید تا مشتریان بتوانند مستقیماً از شما نوبت بگیرند
+            <p
+              className="text-[11px] font-[Vazir] leading-5 flex-1"
+              style={{ color: colors.textSecondary }}
+            >
+              این لینک را در بیو اینستاگرام، واتساپ بیزینس، یا هر شبکه اجتماعی دیگری قرار دهید تا
+              مشتریان بتوانند مستقیماً از شما نوبت بگیرند
             </p>
           </div>
         </div>
 
         {/* فوتر */}
         <div className="px-5 py-4 border-t" style={{ borderColor: colors.border }}>
-          <Button
-            title="بستن"
-            onPress={onClose}
-            variant="outline"
-            size="lg"
-            fullWidth
-          />
+          <Button title="بستن" onPress={onClose} variant="outline" size="lg" fullWidth />
         </div>
       </div>
     </div>,

@@ -1,7 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { FiShield, FiSmartphone, FiLock, FiCheckCircle, FiXCircle, FiInfo, FiRefreshCw } from 'react-icons/fi';
+import {
+  FiShield,
+  FiSmartphone,
+  FiLock,
+  FiCheckCircle,
+  FiXCircle,
+  FiInfo,
+  FiRefreshCw,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';

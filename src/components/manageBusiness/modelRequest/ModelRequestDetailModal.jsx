@@ -3,8 +3,14 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import {
-  FiX, FiEdit2, FiTrash2, FiPhone, FiCalendar,
-  FiClock, FiInfo, FiChevronLeft,
+  FiX,
+  FiEdit2,
+  FiTrash2,
+  FiPhone,
+  FiCalendar,
+  FiClock,
+  FiInfo,
+  FiChevronLeft,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
@@ -15,13 +21,7 @@ import InfoRow from '@/components/common/InfoRow';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-export default function ModelRequestDetailModal({
-  visible,
-  request,
-  onClose,
-  onEdit,
-  onDelete,
-}) {
+export default function ModelRequestDetailModal({ visible, request, onClose, onEdit, onDelete }) {
   const { colors } = useTheme();
   const instanceId = useRef('mr-detail-modal');
 
@@ -46,7 +46,7 @@ export default function ModelRequestDetailModal({
   if (!visible || !request) return null;
 
   const statusConfig = {
-    active:   { label: 'فعال',    variant: 'success' },
+    active: { label: 'فعال', variant: 'success' },
     inactive: { label: 'غیرفعال', variant: 'error' },
   };
   const currentStatus = statusConfig[request.status] || statusConfig.inactive;
@@ -67,7 +67,9 @@ export default function ModelRequestDetailModal({
     <div
       className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center"
       style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
     >
       <div
         className="w-full max-w-lg max-h-[90vh] rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden shadow-2xl"
@@ -113,11 +115,7 @@ export default function ModelRequestDetailModal({
               />
               {/* Badge وضعیت */}
               <div className="absolute top-3 right-3">
-                <Badge
-                  label={currentStatus.label}
-                  variant={currentStatus.variant}
-                  size="md"
-                />
+                <Badge label={currentStatus.label} variant={currentStatus.variant} size="md" />
               </div>
             </div>
           )}
@@ -135,10 +133,7 @@ export default function ModelRequestDetailModal({
                   style={{ backgroundColor: colors.primary + '15' }}
                 >
                   <span className="text-xs">💆‍♀️</span>
-                  <span
-                    className="text-[11px] font-[Vazir-Bold]"
-                    style={{ color: colors.primary }}
-                  >
+                  <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
                     {request.serviceName}
                   </span>
                 </div>
@@ -198,23 +193,18 @@ export default function ModelRequestDetailModal({
                 زمان‌بندی
               </span>
             </div>
-            <InfoRow
-              icon="📅"
-              label="تاریخ ایجاد"
-              value={request.createdAt || '—'}
-            />
-            <InfoRow
-              icon="⏰"
-              label="تاریخ انقضا"
-              value={request.expiresAt || '—'}
-            />
+            <InfoRow icon="📅" label="تاریخ ایجاد" value={request.createdAt || '—'} />
+            <InfoRow icon="⏰" label="تاریخ انقضا" value={request.expiresAt || '—'} />
           </Card>
 
           {/* دکمه‌های اکشن */}
           <div className="flex gap-3 pt-2">
             <Button
               title="ویرایش"
-              onPress={() => { onClose(); setTimeout(() => onEdit?.(request), 300); }}
+              onPress={() => {
+                onClose();
+                setTimeout(() => onEdit?.(request), 300);
+              }}
               variant="outline"
               size="lg"
               className="flex-1"

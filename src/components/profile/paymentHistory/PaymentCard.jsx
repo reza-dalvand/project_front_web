@@ -2,9 +2,16 @@
 'use client';
 import Image from 'next/image';
 import {
-  FiCheckCircle, FiXCircle, FiClock, FiRotateCcw,
-  FiUser, FiCalendar, FiCreditCard, FiTag,
-  FiDollarSign, FiFileText,
+  FiCheckCircle,
+  FiXCircle,
+  FiClock,
+  FiRotateCcw,
+  FiUser,
+  FiCalendar,
+  FiCreditCard,
+  FiTag,
+  FiDollarSign,
+  FiFileText,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Avatar from '@/components/common/Avatar';
@@ -69,7 +76,10 @@ export default function PaymentCard({ payment, onOpenInvoice }) {
       </div>
 
       {/* متا */}
-      <div className="flex items-center gap-4 px-4 py-2.5 flex-wrap" style={{ borderBottom: `1px solid ${colors.border}40` }}>
+      <div
+        className="flex items-center gap-4 px-4 py-2.5 flex-wrap"
+        style={{ borderBottom: `1px solid ${colors.border}40` }}
+      >
         <div className="flex items-center gap-1.5">
           <FiCalendar size={13} color={colors.textSecondary} />
           <span className="text-[11px]" style={{ color: colors.textMain }}>
@@ -100,7 +110,9 @@ export default function PaymentCard({ payment, onOpenInvoice }) {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1.5">
             <FiDollarSign size={14} color={colors.textSecondary} />
-            <span className="text-xs" style={{ color: colors.textSecondary }}>مبلغ کل خدمت</span>
+            <span className="text-xs" style={{ color: colors.textSecondary }}>
+              مبلغ کل خدمت
+            </span>
           </div>
           <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {formatPrice(payment.totalPrice)}
@@ -110,7 +122,9 @@ export default function PaymentCard({ payment, onOpenInvoice }) {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-1.5">
               <FiTag size={14} color="#43A047" />
-              <span className="text-xs" style={{ color: colors.textSecondary }}>تخفیف اعمال‌شده</span>
+              <span className="text-xs" style={{ color: colors.textSecondary }}>
+                تخفیف اعمال‌شده
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
@@ -128,7 +142,9 @@ export default function PaymentCard({ payment, onOpenInvoice }) {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1.5">
             <FiCreditCard size={14} color={colors.primary} />
-            <span className="text-xs" style={{ color: colors.textSecondary }}>مبلغ پرداختی شما</span>
+            <span className="text-xs" style={{ color: colors.textSecondary }}>
+              مبلغ پرداختی شما
+            </span>
           </div>
           <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
             {formatPrice(payment.paidAmount)}
@@ -137,7 +153,10 @@ export default function PaymentCard({ payment, onOpenInvoice }) {
       </div>
 
       {/* فوتر */}
-      <div className="flex items-center justify-between px-4 py-3 border-t" style={{ borderTopColor: colors.border }}>
+      <div
+        className="flex items-center justify-between px-4 py-3 border-t"
+        style={{ borderTopColor: colors.border }}
+      >
         <button
           onClick={onOpenInvoice}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all hover:opacity-80"

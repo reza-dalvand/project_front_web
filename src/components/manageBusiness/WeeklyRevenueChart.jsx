@@ -1,15 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FiTrendingUp } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { Card } from '@/components/common';
@@ -37,16 +29,10 @@ const CustomTooltip = ({ active, payload }) => {
           borderColor: colors.border,
         }}
       >
-        <p
-          className="text-xs font-[Vazir-Bold]"
-          style={{ color: colors.textMain }}
-        >
+        <p className="text-xs font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           {payload[0].payload.day}
         </p>
-        <p
-          className="text-sm font-[Vazir-Bold] mt-1"
-          style={{ color: colors.primary }}
-        >
+        <p className="text-sm font-[Vazir-Bold] mt-1" style={{ color: colors.primary }}>
           {formatPrice(payload[0].value)}
         </p>
       </div>
@@ -58,27 +44,18 @@ const CustomTooltip = ({ active, payload }) => {
 export default function WeeklyRevenueChart() {
   const { colors } = useTheme();
 
-  const total = useMemo(
-    () => MOCK_WEEKLY_DATA.reduce((sum, d) => sum + d.amount, 0),
-    []
-  );
+  const total = useMemo(() => MOCK_WEEKLY_DATA.reduce((sum, d) => sum + d.amount, 0), []);
 
   return (
     <div className="px-5 mt-7">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <FiTrendingUp size={18} style={{ color: colors.primary }} />
-          <h2
-            className="text-base font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <h2 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             درآمد هفتگی
           </h2>
         </div>
-        <button
-          className="text-xs font-[Vazir-Medium]"
-          style={{ color: colors.primary }}
-        >
+        <button className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
           گزارش کامل
         </button>
       </div>
@@ -101,11 +78,7 @@ export default function WeeklyRevenueChart() {
                 tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar
-                dataKey="amount"
-                fill={colors.primary}
-                radius={[8, 8, 0, 0]}
-              />
+              <Bar dataKey="amount" fill={colors.primary} radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -115,16 +88,10 @@ export default function WeeklyRevenueChart() {
           className="flex items-center justify-between pt-3 mt-3 border-t"
           style={{ borderColor: colors.border }}
         >
-          <span
-            className="text-xs font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
             مجموع هفتگی
           </span>
-          <span
-            className="text-sm font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {formatPrice(total)}
           </span>
         </div>

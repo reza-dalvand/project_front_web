@@ -11,13 +11,7 @@ import { useTheme } from '@/stores/useThemeStore';
  * @param {string} subtitle - زیرعنوان
  * @param {React.ReactNode} rightElement - المان سمت چپ (در RTL)
  */
-export default function SectionHeader({
-  icon,
-  iconColor,
-  title,
-  subtitle,
-  rightElement,
-}) {
+export default function SectionHeader({ icon, iconColor, title, subtitle, rightElement }) {
   const { colors } = useTheme();
   const bgColor = iconColor || colors.primary;
 
@@ -36,17 +30,11 @@ export default function SectionHeader({
 
         {/* متن‌ها */}
         <div className="flex flex-col gap-0.5 flex-1">
-          <h3
-            className="text-base font-[Vazir-Bold] text-right"
-            style={{ color: colors.textMain }}
-          >
+          <h3 className="text-base font-[Vazir-Bold] text-right" style={{ color: colors.textMain }}>
             {title}
           </h3>
           {subtitle && (
-            <p
-              className="text-xs font-[Vazir] text-right"
-              style={{ color: colors.textSecondary }}
-            >
+            <p className="text-xs font-[Vazir] text-right" style={{ color: colors.textSecondary }}>
               {subtitle}
             </p>
           )}

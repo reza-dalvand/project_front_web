@@ -48,10 +48,7 @@ export default function CostTypeBadge({ type, variant = 'default' }) {
         }}
       >
         <Icon size={10} style={{ color: meta.color }} />
-        <span
-          className="text-[10px] font-[Vazir-Bold]"
-          style={{ color: meta.color }}
-        >
+        <span className="text-[10px] font-[Vazir-Bold]" style={{ color: meta.color }}>
           {meta.label}
         </span>
       </div>
@@ -66,9 +63,7 @@ export default function CostTypeBadge({ type, variant = 'default' }) {
         style={{ backgroundColor: meta.color }}
       >
         <Icon size={11} color="#fff" />
-        <span className="text-[11px] font-[Vazir-Bold] text-white">
-          {meta.label}
-        </span>
+        <span className="text-[11px] font-[Vazir-Bold] text-white">{meta.label}</span>
       </div>
     );
   }
@@ -82,10 +77,7 @@ export default function CostTypeBadge({ type, variant = 'default' }) {
         borderColor: meta.border,
       }}
     >
-      <span
-        className="text-xs font-[Vazir-Bold]"
-        style={{ color: meta.color }}
-      >
+      <span className="text-xs font-[Vazir-Bold]" style={{ color: meta.color }}>
         {meta.label}
       </span>
     </div>

@@ -37,9 +37,7 @@ export default function FinancialTabs({ active, counts, onChange }) {
                 boxShadow: isActive ? `0 3px 8px ${color}40` : 'none',
               }}
             >
-              <span style={{ color: isActive ? '#fff' : color }}>
-                {TAB_ICONS[tab.id]}
-              </span>
+              <span style={{ color: isActive ? '#fff' : color }}>{TAB_ICONS[tab.id]}</span>
               <span
                 className="text-xs font-[Vazir-Bold]"
                 style={{ color: isActive ? '#fff' : colors.textMain }}

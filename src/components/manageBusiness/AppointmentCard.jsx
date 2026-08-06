@@ -1,6 +1,14 @@
 'use client';
 
-import { FiPhone, FiCalendar, FiClock, FiUser, FiInfo, FiXCircle, FiCheckCircle } from 'react-icons/fi';
+import {
+  FiPhone,
+  FiCalendar,
+  FiClock,
+  FiUser,
+  FiInfo,
+  FiXCircle,
+  FiCheckCircle,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Avatar from '@/components/common/Avatar';
 import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
@@ -11,12 +19,7 @@ const STATUS_META = {
   cancelled_by_salon: { label: 'لغو توسط سالن', color: '#E53935', icon: FiXCircle },
 };
 
-export default function AppointmentCard({
-  appointment,
-  onDetails,
-  onVerify,
-  onCancel,
-}) {
+export default function AppointmentCard({ appointment, onDetails, onVerify, onCancel }) {
   const { colors } = useTheme();
   const meta = STATUS_META[appointment.status] || STATUS_META.reserved;
   const isReserved = appointment.status === 'reserved';
@@ -40,13 +43,13 @@ export default function AppointmentCard({
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <Avatar name={appointment.customerName} size="md" />
           <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <span
-              className="text-sm font-[Vazir-Bold] truncate"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               {appointment.customerName}
             </span>
-            <span className="flex items-center gap-1 text-xs" style={{ color: colors.textSecondary }}>
+            <span
+              className="flex items-center gap-1 text-xs"
+              style={{ color: colors.textSecondary }}
+            >
               <FiPhone size={12} />
               {toPersianDigit(appointment.customerPhone || '—')}
             </span>
@@ -69,14 +72,18 @@ export default function AppointmentCard({
         className="w-full flex flex-col gap-1.5 px-3.5 py-2.5 text-right"
       >
         <div className="flex items-center gap-1.5">
-          <span className="text-xs" style={{ color: colors.textSecondary }}>خدمت:</span>
+          <span className="text-xs" style={{ color: colors.textSecondary }}>
+            خدمت:
+          </span>
           <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.textMain }}>
             {appointment.serviceName}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <FiUser size={12} style={{ color: colors.textSecondary }} />
-          <span className="text-xs" style={{ color: colors.textSecondary }}>کارمند:</span>
+          <span className="text-xs" style={{ color: colors.textSecondary }}>
+            کارمند:
+          </span>
           <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.textMain }}>
             {appointment.employeeName}
           </span>
@@ -102,7 +109,9 @@ export default function AppointmentCard({
         <div className="flex flex-col items-end gap-0.5">
           {isReserved && appointment.depositPaid > 0 && (
             <div className="flex items-center gap-1">
-              <span className="text-[10px]" style={{ color: colors.textSecondary }}>بیعانه:</span>
+              <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                بیعانه:
+              </span>
               <span className="text-[11px] font-[Vazir-Bold]" style={{ color: '#43A047' }}>
                 {formatPrice(appointment.depositPaid)}
               </span>
@@ -121,7 +130,10 @@ export default function AppointmentCard({
           style={{ backgroundColor: '#E5393510', borderColor: colors.border }}
         >
           <FiInfo size={14} color="#E53935" className="flex-shrink-0 mt-0.5" />
-          <span className="text-[11px] font-[Vazir] leading-[17px] flex-1" style={{ color: '#E53935' }}>
+          <span
+            className="text-[11px] font-[Vazir] leading-[17px] flex-1"
+            style={{ color: '#E53935' }}
+          >
             {appointment.cancellationReason}
           </span>
         </div>

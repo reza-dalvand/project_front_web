@@ -78,16 +78,10 @@ export default function TermsAndConditionsStep({ onAccept, onDecline }) {
           />
         </div>
         <div className="text-center">
-          <h2
-            className="text-xl font-[Vazir-Bold] mb-2"
-            style={{ color: colors.textMain }}
-          >
+          <h2 className="text-xl font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
             قوانین و مقررات
           </h2>
-          <p
-            className="text-xs font-[Vazir] px-8"
-            style={{ color: colors.textSecondary }}
-          >
+          <p className="text-xs font-[Vazir] px-8" style={{ color: colors.textSecondary }}>
             لطفاً قبل از شروع، قوانین زیبانو را مطالعه بفرمایید
           </p>
         </div>
@@ -108,10 +102,7 @@ export default function TermsAndConditionsStep({ onAccept, onDecline }) {
       </div>
 
       {/* محتوای اسکرولی */}
-      <div
-        className="flex-1 overflow-y-auto px-5 space-y-3 pb-4"
-        onScroll={handleScroll}
-      >
+      <div className="flex-1 overflow-y-auto px-5 space-y-3 pb-4" onScroll={handleScroll}>
         {TERMS_SECTIONS.map((section, index) => {
           const Icon = section.icon;
           return (
@@ -124,10 +115,7 @@ export default function TermsAndConditionsStep({ onAccept, onDecline }) {
                   <Icon size={18} color={section.iconColor} />
                 </div>
                 <div className="flex-1">
-                  <h3
-                    className="text-sm font-[Vazir-Bold] mb-2"
-                    style={{ color: colors.textMain }}
-                  >
+                  <h3 className="text-sm font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
                     {section.title}
                   </h3>
                   <p
@@ -152,10 +140,7 @@ export default function TermsAndConditionsStep({ onAccept, onDecline }) {
             }}
           >
             <FiCheck size={18} color="#4CAF50" />
-            <span
-              className="text-sm font-[Vazir-Bold]"
-              style={{ color: '#4CAF50' }}
-            >
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
               تمام قوانین را مطالعه کردید
             </span>
           </div>
@@ -165,10 +150,7 @@ export default function TermsAndConditionsStep({ onAccept, onDecline }) {
             style={{ backgroundColor: colors.primary + '10' }}
           >
             <FiChevronDown size={16} style={{ color: colors.primary }} />
-            <span
-              className="text-xs font-[Vazir-Medium]"
-              style={{ color: colors.primary }}
-            >
+            <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
               برای مشاهده همه قوانین، صفحه را به پایین بکشید
             </span>
           </div>
@@ -229,10 +211,7 @@ export default function TermsAndConditionsStep({ onAccept, onDecline }) {
 
         {/* پیام راهنما */}
         {!canProceed && (
-          <p
-            className="text-xs font-[Vazir] text-center"
-            style={{ color: colors.textSecondary }}
-          >
+          <p className="text-xs font-[Vazir] text-center" style={{ color: colors.textSecondary }}>
             {!scrolledToBottom
               ? `📖 ${Math.round(scrollProgress * 100)}٪ مطالعه شده - ادامه دهید`
               : '☑️ برای ادامه، قوانین را بپذیرید'}

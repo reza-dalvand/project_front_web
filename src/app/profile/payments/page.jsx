@@ -7,7 +7,12 @@ import EmptyState from '@/components/common/EmptyState';
 import PaymentCard from '@/components/profile/paymentHistory/PaymentCard';
 import PaymentStatsCard from '@/components/profile/paymentHistory/PaymentStatsCard';
 import InvoiceModal from '@/components/profile/paymentHistory/InvoiceModal';
-import { MOCK_PAYMENTS, MONTHS, YEARS, formatPrice } from '@/components/profile/paymentHistory/constants';
+import {
+  MOCK_PAYMENTS,
+  MONTHS,
+  YEARS,
+  formatPrice,
+} from '@/components/profile/paymentHistory/constants';
 
 export default function PaymentsPage() {
   const { colors } = useTheme();
@@ -27,7 +32,9 @@ export default function PaymentsPage() {
   }, [selectedMonth, selectedYear]);
 
   const stats = useMemo(() => {
-    const successful = filteredPayments.filter((p) => p.status === 'success' || p.status === 'refunded');
+    const successful = filteredPayments.filter(
+      (p) => p.status === 'success' || p.status === 'refunded'
+    );
     return {
       totalPaid: successful.reduce((s, p) => s + p.paidAmount, 0),
       totalDiscount: filteredPayments.reduce((s, p) => s + (p.discountAmount || 0), 0),
@@ -53,7 +60,9 @@ export default function PaymentsPage() {
     ].join('\n');
 
     if (navigator.share) {
-      try { await navigator.share({ message: msg }); } catch {}
+      try {
+        await navigator.share({ message: msg });
+      } catch {}
     } else {
       try {
         await navigator.clipboard.writeText(msg);
@@ -72,13 +81,15 @@ export default function PaymentsPage() {
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: colors.background }}>
       {/* فیلتر ماه و سال */}
-      <div
-        className="px-4 pt-3 pb-2 border-b"
-        style={{ borderBottomColor: colors.border }}
-      >
+      <div className="px-4 pt-3 pb-2 border-b" style={{ borderBottomColor: colors.border }}>
         <div className="flex gap-3">
           <div className="flex-1">
-            <Dropdown label="ماه" value={selectedMonth} options={MONTHS} onSelect={setSelectedMonth} />
+            <Dropdown
+              label="ماه"
+              value={selectedMonth}
+              options={MONTHS}
+              onSelect={setSelectedMonth}
+            />
           </div>
           <div className="flex-1">
             <Dropdown label="سال" value={selectedYear} options={YEARS} onSelect={setSelectedYear} />

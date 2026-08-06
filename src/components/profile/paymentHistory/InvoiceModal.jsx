@@ -3,8 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  FiX, FiUser, FiCalendar, FiCreditCard,
-  FiDollarSign, FiTag, FiCheckCircle, FiShare2,
+  FiX,
+  FiUser,
+  FiCalendar,
+  FiCreditCard,
+  FiDollarSign,
+  FiTag,
+  FiCheckCircle,
+  FiShare2,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Avatar from '@/components/common/Avatar';
@@ -27,7 +33,9 @@ export default function InvoiceModal({ visible, payment, onClose, onShare }) {
 
   useEffect(() => {
     if (!visible) return;
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose?.(); };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
@@ -48,7 +56,10 @@ export default function InvoiceModal({ visible, payment, onClose, onShare }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* هدر */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderBottomColor: colors.border }}>
+        <div
+          className="flex items-center gap-3 px-5 py-4 border-b"
+          style={{ borderBottomColor: colors.border }}
+        >
           <div
             className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: colors.primary + '15' }}

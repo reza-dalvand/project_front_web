@@ -97,15 +97,10 @@ export default function UpdateModal() {
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center"
             style={{
-              backgroundColor: updateInfo.isForceUpdate
-                ? '#E5393520'
-                : colors.primary + '20',
+              backgroundColor: updateInfo.isForceUpdate ? '#E5393520' : colors.primary + '20',
             }}
           >
-            <FiDownload
-              size={40}
-              color={updateInfo.isForceUpdate ? '#E53935' : colors.primary}
-            />
+            <FiDownload size={40} color={updateInfo.isForceUpdate ? '#E53935' : colors.primary} />
           </div>
         </div>
 
@@ -132,17 +127,11 @@ export default function UpdateModal() {
             >
               فعلی
             </p>
-            <p
-              className="text-base"
-              style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}
-            >
+            <p className="text-base" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
               {toPersianDigit(updateInfo.currentVersion)}
             </p>
           </div>
-          <div
-            className="text-2xl"
-            style={{ color: colors.textSecondary }}
-          >
+          <div className="text-2xl" style={{ color: colors.textSecondary }}>
             ←
           </div>
           <div className="text-center flex-1">

@@ -36,7 +36,10 @@ export default function PortfolioFormSheet({
         setTitle(editingPortfolio.title || '');
         setDescription(editingPortfolio.description || '');
         setServiceId(editingPortfolio.serviceId || null);
-        setImages(editingPortfolio.images || (editingPortfolio.coverImage ? [editingPortfolio.coverImage] : []));
+        setImages(
+          editingPortfolio.images ||
+            (editingPortfolio.coverImage ? [editingPortfolio.coverImage] : [])
+        );
       } else {
         setTitle('');
         setDescription('');
@@ -109,13 +112,7 @@ export default function PortfolioFormSheet({
       snapPoint={0.92}
       footer={
         <div className="flex gap-3">
-          <Button
-            title="انصراف"
-            onPress={onClose}
-            variant="outline"
-            size="lg"
-            className="flex-1"
-          />
+          <Button title="انصراف" onPress={onClose} variant="outline" size="lg" className="flex-1" />
           <Button
             title={isSaving ? 'در حال ذخیره...' : isEditMode ? 'ذخیره تغییرات' : 'افزودن نمونه‌کار'}
             onPress={handleSave}
@@ -160,11 +157,7 @@ export default function PortfolioFormSheet({
           <div className="grid grid-cols-3 gap-2.5">
             {images.map((img, index) => (
               <div key={index} className="relative aspect-square rounded-xl overflow-hidden group">
-                <img
-                  src={img}
-                  alt={`تصویر ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
+                <img src={img} alt={`تصویر ${index + 1}`} className="w-full h-full object-cover" />
                 {/* Badge کاور */}
                 {index === 0 && (
                   <div
@@ -190,7 +183,10 @@ export default function PortfolioFormSheet({
               <button
                 onClick={handleAddImage}
                 className="aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                style={{ borderColor: colors.primary + '50', backgroundColor: colors.primary + '05' }}
+                style={{
+                  borderColor: colors.primary + '50',
+                  backgroundColor: colors.primary + '05',
+                }}
               >
                 <FiPlus size={22} style={{ color: colors.primary }} />
                 <span className="text-[10px] font-[Vazir-Medium]" style={{ color: colors.primary }}>

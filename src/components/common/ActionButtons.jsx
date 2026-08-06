@@ -63,12 +63,8 @@ export default function ActionButtons({ phone, shareMessage, shareUrl }) {
             <FiPhone size={22} color="#fff" />
           </div>
           <div className="flex-1 text-right">
-            <p className="text-base font-[Vazir-Bold] text-white">
-              تلفن تماس
-            </p>
-            <p className="text-sm text-white/90">
-              {toPersianDigit(phone)}
-            </p>
+            <p className="text-base font-[Vazir-Bold] text-white">تلفن تماس</p>
+            <p className="text-sm text-white/90">{toPersianDigit(phone)}</p>
           </div>
           <span className="text-2xl text-white">←</span>
         </button>

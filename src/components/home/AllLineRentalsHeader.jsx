@@ -40,19 +40,13 @@ export default function AllLineRentalsHeader({
             <FiHome size={24} color="#667eea" />
           </div>
           <div>
-            <span className="text-[11px] text-white/80 block">
-              فرصت‌های همکاری
-            </span>
-            <h1 className="text-[17px] font-[Vazir-Bold] text-white">
-              اجاره لاین کسب و کار
-            </h1>
+            <span className="text-[11px] text-white/80 block">فرصت‌های همکاری</span>
+            <h1 className="text-[17px] font-[Vazir-Bold] text-white">اجاره لاین کسب و کار</h1>
           </div>
         </div>
 
         {/* Badge تعداد */}
-        <div
-          className="flex items-center gap-2"
-        >
+        <div className="flex items-center gap-2">
           {/* Badge تعداد آگهی‌ها */}
           <div
             className="min-w-[40px] h-10 rounded-xl flex items-center justify-center px-2 border"

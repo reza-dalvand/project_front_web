@@ -131,11 +131,7 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
               style={{
                 backgroundColor: colors.background,
                 borderColor:
-                  error && digit === ''
-                    ? '#E53935'
-                    : digit
-                      ? colors.primary
-                      : colors.border,
+                  error && digit === '' ? '#E53935' : digit ? colors.primary : colors.border,
                 borderWidth: digit ? 2 : 1.5,
                 color: colors.textMain,
               }}
@@ -169,13 +165,7 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
 
         {/* دکمه‌ها */}
         <div className="flex gap-3 mt-2">
-          <Button
-            title="انصراف"
-            onPress={onClose}
-            variant="outline"
-            size="lg"
-            className="flex-1"
-          />
+          <Button title="انصراف" onPress={onClose} variant="outline" size="lg" className="flex-1" />
           <Button
             title={loading ? 'در حال تایید...' : 'تایید انجام خدمت'}
             onPress={handleConfirm}

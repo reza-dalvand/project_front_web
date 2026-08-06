@@ -51,16 +51,10 @@ export default function OfflineBanner() {
 
       {/* متن */}
       <div className="flex-1">
-        <p
-          className="text-sm"
-          style={{ color: '#fff', fontFamily: 'Vazir-Bold' }}
-        >
+        <p className="text-sm" style={{ color: '#fff', fontFamily: 'Vazir-Bold' }}>
           اتصال اینترنت قطع شد
         </p>
-        <p
-          className="text-xs"
-          style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'Vazir' }}
-        >
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'Vazir' }}>
           لطفاً اتصال اینترنت خود را بررسی کنید
         </p>
       </div>

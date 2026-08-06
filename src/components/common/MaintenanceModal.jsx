@@ -74,10 +74,7 @@ export default function MaintenanceModal() {
         </div>
 
         {/* عنوان */}
-        <h1
-          className="text-2xl mb-3"
-          style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}
-        >
+        <h1 className="text-2xl mb-3" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
           {maintenanceInfo.title}
         </h1>
 
@@ -111,10 +108,7 @@ export default function MaintenanceModal() {
               >
                 زمان تقریبی پایان
               </p>
-              <p
-                className="text-sm"
-                style={{ color: '#43A047', fontFamily: 'Vazir-Bold' }}
-              >
+              <p className="text-sm" style={{ color: '#43A047', fontFamily: 'Vazir-Bold' }}>
                 {maintenanceInfo.estimatedEnd}
               </p>
             </div>

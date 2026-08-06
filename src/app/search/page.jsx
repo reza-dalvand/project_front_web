@@ -198,19 +198,13 @@ export default function SearchPage() {
     [router]
   );
 
-  const handleModelPress = useCallback(
-    (request) => {
-      console.log('Model request:', request);
-    },
-    []
-  );
+  const handleModelPress = useCallback((request) => {
+    console.log('Model request:', request);
+  }, []);
 
-  const handleLinePress = useCallback(
-    (ad) => {
-      console.log('Line rental:', ad);
-    },
-    []
-  );
+  const handleLinePress = useCallback((ad) => {
+    console.log('Line rental:', ad);
+  }, []);
 
   const handleCategoryPress = useCallback(
     (category) => {
@@ -275,11 +269,7 @@ export default function SearchPage() {
               />
               <div className="grid grid-cols-2 gap-3">
                 {searchResults.modelRequests.slice(0, 4).map((request) => (
-                  <SearchModelCard
-                    key={request.id}
-                    request={request}
-                    onPress={handleModelPress}
-                  />
+                  <SearchModelCard key={request.id} request={request} onPress={handleModelPress} />
                 ))}
               </div>
             </div>
@@ -296,11 +286,7 @@ export default function SearchPage() {
               />
               <div className="grid grid-cols-2 gap-3">
                 {searchResults.lineRentals.slice(0, 4).map((ad) => (
-                  <SearchLineCard
-                    key={ad.id}
-                    ad={ad}
-                    onPress={handleLinePress}
-                  />
+                  <SearchLineCard key={ad.id} ad={ad} onPress={handleLinePress} />
                 ))}
               </div>
             </div>
@@ -327,11 +313,7 @@ export default function SearchPage() {
         return (
           <div className="grid grid-cols-2 gap-3">
             {filteredResults.map((request) => (
-              <SearchModelCard
-                key={request.id}
-                request={request}
-                onPress={handleModelPress}
-              />
+              <SearchModelCard key={request.id} request={request} onPress={handleModelPress} />
             ))}
           </div>
         );
@@ -359,10 +341,7 @@ export default function SearchPage() {
           title="دسته‌بندی‌های محبوب"
           subtitle="یک دسته‌بندی انتخاب کنید"
         />
-        <CategoryGrid
-          categories={POPULAR_CATEGORIES}
-          onSelect={handleCategoryPress}
-        />
+        <CategoryGrid categories={POPULAR_CATEGORIES} onSelect={handleCategoryPress} />
       </div>
 
       {/* راهنمای جستجو */}
@@ -386,20 +365,14 @@ export default function SearchPage() {
               { icon: '👤', text: 'فرصت‌های مدلینگ', color: '#E91E63' },
               { icon: '🏢', text: 'آگهی‌های اجاره لاین', color: '#667eea' },
             ].map((item, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 py-2"
-              >
+              <div key={i} className="flex items-center gap-3 py-2">
                 <div
                   className="w-7 h-7 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: item.color + '18' }}
                 >
                   <span className="text-sm">{item.icon}</span>
                 </div>
-                <span
-                  className="text-sm font-[Vazir]"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
                   {item.text}
                 </span>
               </div>
@@ -449,19 +422,11 @@ export default function SearchPage() {
 
       {/* تب‌ها */}
       {activeQuery.trim() && resultCounts.all > 0 && (
-        <SearchTabs
-          activeTab={activeTab}
-          counts={resultCounts}
-          onChange={setActiveTab}
-        />
+        <SearchTabs activeTab={activeTab} counts={resultCounts} onChange={setActiveTab} />
       )}
 
       {/* محتوا */}
-      {activeQuery.trim() ? (
-        <div className="px-4 py-4">{renderResults()}</div>
-      ) : (
-        renderEmptyState()
-      )}
+      {activeQuery.trim() ? <div className="px-4 py-4">{renderResults()}</div> : renderEmptyState()}
     </ScreenWrapper>
   );
 }

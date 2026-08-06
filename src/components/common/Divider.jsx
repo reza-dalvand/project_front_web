@@ -33,10 +33,7 @@ export default function Divider({
 
   if (label) {
     return (
-      <div
-        className="flex items-center"
-        style={{ margin: `${spacing}px 0` }}
-      >
+      <div className="flex items-center" style={{ margin: `${spacing}px 0` }}>
         <div
           className="flex-1"
           style={{
@@ -44,10 +41,7 @@ export default function Divider({
             backgroundColor: colors.border,
           }}
         />
-        <span
-          className="px-3 text-xs font-[Vazir]"
-          style={{ color: colors.textSecondary }}
-        >
+        <span className="px-3 text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
           {label}
         </span>
         <div

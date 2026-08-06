@@ -88,10 +88,7 @@ export default function InviteFriendsPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header
-        title="دعوت از دوستان"
-        onBackPress={() => router.back()}
-      />
+      <Header title="دعوت از دوستان" onBackPress={() => router.back()} />
       <div className="flex-1 overflow-y-auto px-5 pt-8 pb-10 space-y-6">
         {/* Hero */}
         <div className="flex flex-col items-center gap-4">
@@ -102,16 +99,10 @@ export default function InviteFriendsPage() {
             <FiGift size={48} style={{ color: colors.primary }} />
           </div>
           <div className="text-center">
-            <h3
-              className="text-xl font-[Vazir-Bold] mb-2"
-              style={{ color: colors.textMain }}
-            >
+            <h3 className="text-xl font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
               دوستان خود را دعوت کنید
             </h3>
-            <p
-              className="text-sm leading-6 px-4"
-              style={{ color: colors.textSecondary }}
-            >
+            <p className="text-sm leading-6 px-4" style={{ color: colors.textSecondary }}>
               زیبانو را به دوستانتان معرفی کنید و همراه با آن‌ها از خدمات زیبایی لذت ببرید
             </p>
           </div>
@@ -120,10 +111,7 @@ export default function InviteFriendsPage() {
         {/* کد معرف */}
         <Card variant="elevated" padding={20} radius={20}>
           <div className="flex flex-col items-center gap-4">
-            <span
-              className="text-sm font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
               کد معرف شما
             </span>
             <div
@@ -144,20 +132,14 @@ export default function InviteFriendsPage() {
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
                 style={{ backgroundColor: copied ? '#43A047' : colors.primary }}
               >
-                {copied ? (
-                  <FiCheck size={16} color="#fff" />
-                ) : (
-                  <FiCopy size={16} color="#fff" />
-                )}
+                {copied ? <FiCheck size={16} color="#fff" /> : <FiCopy size={16} color="#fff" />}
               </button>
             </div>
             <span
               className="text-xs font-[Vazir] text-center"
               style={{ color: colors.textSecondary }}
             >
-              {copied
-                ? '✓ کد معرف کپی شد'
-                : 'این کد را با دوستانتان به اشتراک بگذارید'}
+              {copied ? '✓ کد معرف کپی شد' : 'این کد را با دوستانتان به اشتراک بگذارید'}
             </span>
           </div>
         </Card>
@@ -172,10 +154,7 @@ export default function InviteFriendsPage() {
               <FiLink size={18} style={{ color: colors.primary }} />
             </div>
             <div className="flex-1 min-w-0">
-              <span
-                className="text-xs font-[Vazir] block"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-xs font-[Vazir] block" style={{ color: colors.textSecondary }}>
                 لینک دعوت
               </span>
               <span
@@ -190,10 +169,7 @@ export default function InviteFriendsPage() {
 
         {/* مراحل دعوت */}
         <div>
-          <h3
-            className="text-base font-[Vazir-Bold] mb-4"
-            style={{ color: colors.textMain }}
-          >
+          <h3 className="text-base font-[Vazir-Bold] mb-4" style={{ color: colors.textMain }}>
             چگونه دعوت کنم؟
           </h3>
           <div className="space-y-4">

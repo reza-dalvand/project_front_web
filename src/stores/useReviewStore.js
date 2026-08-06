@@ -12,11 +12,7 @@ export const useReviewStore = create(
       addPendingReview: (appointment) =>
         set((state) => {
           // جلوگیری از تکرار
-          if (
-            state.pendingReviews.some(
-              (p) => p.appointmentId === appointment.id
-            )
-          ) {
+          if (state.pendingReviews.some((p) => p.appointmentId === appointment.id)) {
             return state;
           }
           const updated = [
@@ -45,9 +41,7 @@ export const useReviewStore = create(
         };
         set((state) => ({
           reviews: [...state.reviews, newReview],
-          pendingReviews: state.pendingReviews.filter(
-            (p) => p.appointmentId !== appointmentId
-          ),
+          pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
         }));
         return newReview;
       },
@@ -55,14 +49,11 @@ export const useReviewStore = create(
       // رد کردن نوبت در انتظار نظردهی
       dismissPendingReview: (appointmentId) =>
         set((state) => ({
-          pendingReviews: state.pendingReviews.filter(
-            (p) => p.appointmentId !== appointmentId
-          ),
+          pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
         })),
 
       // بررسی آیا برای این نوبت نظر ثبت شده
-      hasReviewFor: (appointmentId) =>
-        get().reviews.some((r) => r.appointmentId === appointmentId),
+      hasReviewFor: (appointmentId) => get().reviews.some((r) => r.appointmentId === appointmentId),
     }),
     {
       name: 'zibano-review-storage',

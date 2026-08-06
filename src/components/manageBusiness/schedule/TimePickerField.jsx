@@ -51,7 +51,9 @@ export default function TimePickerField({
           className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: color + '18' }}
         >
-          <span className="text-sm" style={{ color }}>{icon}</span>
+          <span className="text-sm" style={{ color }}>
+            {icon}
+          </span>
         </div>
         {/* select دقیقه */}
         <select
@@ -67,7 +69,6 @@ export default function TimePickerField({
             </option>
           ))}
         </select>
-
 
         <span
           className="text-lg font-[Vazir-Bold] flex-shrink-0"
@@ -89,7 +90,6 @@ export default function TimePickerField({
             </option>
           ))}
         </select>
-
       </div>
     </div>
   );

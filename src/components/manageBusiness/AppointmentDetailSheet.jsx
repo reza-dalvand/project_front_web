@@ -2,8 +2,15 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  FiX, FiUser, FiPhone, FiCalendar, FiClock,
-  FiDollarSign, FiInfo, FiCheckCircle, FiXCircle,
+  FiX,
+  FiUser,
+  FiPhone,
+  FiCalendar,
+  FiClock,
+  FiDollarSign,
+  FiInfo,
+  FiCheckCircle,
+  FiXCircle,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import BottomSheet from '@/components/common/BottomSheet';
@@ -62,11 +69,7 @@ export default function AppointmentDetailSheet({ visible, appointment, onClose }
           <p className="text-sm font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
             جزئیات مالی
           </p>
-          <InfoRow
-            icon="dollar-sign"
-            label="مبلغ کل خدمت"
-            value={formatPrice(appointment.price)}
-          />
+          <InfoRow icon="dollar-sign" label="مبلغ کل خدمت" value={formatPrice(appointment.price)} />
           {appointment.depositPaid > 0 && (
             <InfoRow
               icon="check-circle"

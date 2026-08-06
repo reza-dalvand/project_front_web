@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -29,23 +29,23 @@
 
 /* متغیرهای تم */
 :root {
-  --color-background: #F5F0EC;
-  --color-card: #EBE3DE;
-  --color-primary: #A88B7D;
-  --color-secondary: #8D7468;
-  --color-text-main: #2C2521;
-  --color-text-secondary: #5A504B;
-  --color-border: #DCD1CB;
+  --color-background: #f5f0ec;
+  --color-card: #ebe3de;
+  --color-primary: #a88b7d;
+  --color-secondary: #8d7468;
+  --color-text-main: #2c2521;
+  --color-text-secondary: #5a504b;
+  --color-border: #dcd1cb;
 }
 
 .dark {
   --color-background: #171412;
-  --color-card: #26211E;
-  --color-primary: #A88B7D;
-  --color-secondary: #6B5A52;
-  --color-text-main: #F5F0EC;
-  --color-text-secondary: #BDB4AF;
-  --color-border: #3D3734;
+  --color-card: #26211e;
+  --color-primary: #a88b7d;
+  --color-secondary: #6b5a52;
+  --color-text-main: #f5f0ec;
+  --color-text-secondary: #bdb4af;
+  --color-border: #3d3734;
 }
 
 @layer base {
@@ -58,7 +58,9 @@
     color: var(--color-text-main);
     font-family: 'Vazir', sans-serif;
     min-height: 100vh;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
   }
 
   html:not([data-theme-loaded]) body {
@@ -86,8 +88,12 @@ textarea::placeholder {
 
 /* ═══ انیمیشن slide-up برای Dropdown و BottomSheet ═══ */
 @keyframes slide-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;

@@ -81,10 +81,7 @@ export default function ActiveFiltersBar({ filters, onChange, onClearAll }) {
           >
             {chip.icon}
             {chip.label}
-            <button
-              onClick={chip.onRemove}
-              className="ml-0.5 hover:opacity-70"
-            >
+            <button onClick={chip.onRemove} className="ml-0.5 hover:opacity-70">
               <FiX size={14} />
             </button>
           </span>

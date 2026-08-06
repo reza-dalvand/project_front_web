@@ -77,7 +77,8 @@ export default function SocialMediaStep({ formData, onUpdate }) {
       >
         <span className="text-base flex-shrink-0">💡</span>
         <p className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
-          این بخش اختیاری است و می‌توانید بعداً در تنظیمات سالن، پیام‌رسان‌ها را اضافه یا ویرایش کنید.
+          این بخش اختیاری است و می‌توانید بعداً در تنظیمات سالن، پیام‌رسان‌ها را اضافه یا ویرایش
+          کنید.
         </p>
       </div>
 
@@ -109,7 +110,10 @@ export default function SocialMediaStep({ formData, onUpdate }) {
                   value={formData[platform.key] || ''}
                   onChangeText={(t) => onUpdate(platform.key, t)}
                   rightIcon={
-                    <span className="text-xs font-[Vazir-Bold] px-1.5 py-0.5 rounded-md" style={{ backgroundColor: platform.color + '15', color: platform.color }}>
+                    <span
+                      className="text-xs font-[Vazir-Bold] px-1.5 py-0.5 rounded-md"
+                      style={{ backgroundColor: platform.color + '15', color: platform.color }}
+                    >
                       {platform.prefix}
                     </span>
                   }

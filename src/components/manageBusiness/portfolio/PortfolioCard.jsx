@@ -40,9 +40,7 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete }) 
         {/* عنوان روی تصویر */}
         {portfolio.title && (
           <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2 bg-black/40">
-            <p className="text-xs font-[Vazir-Bold] text-white line-clamp-1">
-              {portfolio.title}
-            </p>
+            <p className="text-xs font-[Vazir-Bold] text-white line-clamp-1">{portfolio.title}</p>
           </div>
         )}
       </div>
@@ -57,14 +55,20 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete }) 
         </span>
         <div className="flex gap-1">
           <button
-            onClick={(e) => { e.stopPropagation(); onEdit?.(portfolio); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.(portfolio);
+            }}
             className="w-7 h-7 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: colors.primary + '15' }}
           >
             <FiEdit2 size={13} style={{ color: colors.primary }} />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onDelete?.(portfolio); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.(portfolio);
+            }}
             className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#E5393515]"
           >
             <FiTrash2 size={13} color="#E53935" />

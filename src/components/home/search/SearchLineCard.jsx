@@ -20,12 +20,7 @@ export default function SearchLineCard({ ad, onPress }) {
       <button onClick={() => onPress?.(ad)} className="w-full text-right">
         {/* تصویر */}
         <div className="relative w-full h-28">
-          <Image
-            src={ad.lineImage}
-            alt={ad.title}
-            fill
-            className="object-cover rounded-t-2xl"
-          />
+          <Image src={ad.lineImage} alt={ad.title} fill className="object-cover rounded-t-2xl" />
           <div
             className="absolute bottom-0 left-0 right-0 h-10"
             style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
@@ -64,10 +59,7 @@ export default function SearchLineCard({ ad, onPress }) {
               {ad.city}
             </span>
           </div>
-          <div
-            className="text-xs font-[Vazir-Bold] mt-1"
-            style={{ color: collabMeta.color }}
-          >
+          <div className="text-xs font-[Vazir-Bold] mt-1" style={{ color: collabMeta.color }}>
             {ad.priceDisplay}
           </div>
         </div>

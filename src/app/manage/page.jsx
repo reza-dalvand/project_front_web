@@ -2,12 +2,7 @@
 
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  FiSettings,
-  FiCreditCard,
-  FiMapPin,
-  FiStar,
-} from 'react-icons/fi';
+import { FiSettings, FiCreditCard, FiMapPin, FiStar } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -19,7 +14,6 @@ import WeeklyRevenueChart from '@/components/manageBusiness/WeeklyRevenueChart';
 import TodayAppointments from '@/components/manageBusiness/TodayAppointments';
 import { toPersianDigit } from '@/utils/numberUtils';
 import ManageHeader from '@/components/manageBusiness/ManageHeader';
-
 
 export default function ManageBusinessPage() {
   const { colors } = useTheme();

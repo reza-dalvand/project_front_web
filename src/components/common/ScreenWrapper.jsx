@@ -13,14 +13,8 @@ export default function ScreenWrapper({
 
   if (scrollable) {
     return (
-      <div
-        className={`min-h-screen ${className}`}
-        style={{ backgroundColor: colors.background }}
-      >
-        <div
-          className={`flex flex-col ${contentClassName}`}
-          style={{ padding: `${padding}px` }}
-        >
+      <div className={`min-h-screen ${className}`} style={{ backgroundColor: colors.background }}>
+        <div className={`flex flex-col ${contentClassName}`} style={{ padding: `${padding}px` }}>
           {children}
         </div>
       </div>

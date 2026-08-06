@@ -7,14 +7,8 @@ export default function ProfileHeader({ user }) {
   const { colors } = useTheme();
 
   return (
-    <div
-      className="rounded-b-3xl pb-8 px-5 pt-8"
-      style={{ backgroundColor: colors.primary }}
-    >
-      <h2
-        className="text-xl text-right mb-5 font-[Vazir-Bold]"
-        style={{ color: '#ffffff' }}
-      >
+    <div className="rounded-b-3xl pb-8 px-5 pt-8" style={{ backgroundColor: colors.primary }}>
+      <h2 className="text-xl text-right mb-5 font-[Vazir-Bold]" style={{ color: '#ffffff' }}>
         پروفایل من
       </h2>
 
@@ -33,16 +27,10 @@ export default function ProfileHeader({ user }) {
         </div>
 
         <div className="flex flex-col gap-1 flex-1">
-          <span
-            className="text-xl font-[Vazir-Bold]"
-            style={{ color: '#ffffff' }}
-          >
+          <span className="text-xl font-[Vazir-Bold]" style={{ color: '#ffffff' }}>
             {user?.name || 'کاربر زیبانو'}
           </span>
-          <span
-            className="text-sm"
-            style={{ color: 'rgba(255,255,255,0.6)' }}
-          >
+          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
             {user?.phone || '۰۹۱۲***۶۷۸۹'}
           </span>
           <div
@@ -50,10 +38,7 @@ export default function ProfileHeader({ user }) {
             style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
           >
             <span className="text-yellow-300">✓</span>
-            <span
-              className="text-[11px] font-[Vazir-Medium]"
-              style={{ color: '#ffffff' }}
-            >
+            <span className="text-[11px] font-[Vazir-Medium]" style={{ color: '#ffffff' }}>
               {user?.memberSince || 'عضو جدید'}
             </span>
           </div>

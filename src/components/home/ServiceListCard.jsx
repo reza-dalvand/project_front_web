@@ -8,9 +8,7 @@ import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
 export default function ServiceListCard({ service, onPress, onBook }) {
   const { colors } = useTheme();
   const hasDiscount = service.discount > 0;
-  const finalPrice = hasDiscount
-    ? service.price * (1 - service.discount / 100)
-    : service.price;
+  const finalPrice = hasDiscount ? service.price * (1 - service.discount / 100) : service.price;
 
   return (
     <button
@@ -49,16 +47,10 @@ export default function ServiceListCard({ service, onPress, onBook }) {
         <div className="flex items-center gap-3">
           <ServiceTypeIcon typeId={service.typeId} size={48} />
           <div className="flex-1 min-w-0">
-            <p
-              className="text-sm font-[Vazir-Bold] truncate"
-              style={{ color: colors.textMain }}
-            >
+            <p className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               {service.name}
             </p>
-            <p
-              className="text-[11px] font-[Vazir] mt-0.5"
-              style={{ color: colors.textSecondary }}
-            >
+            <p className="text-[11px] font-[Vazir] mt-0.5" style={{ color: colors.textSecondary }}>
               {service.businessName}
             </p>
           </div>
@@ -75,10 +67,7 @@ export default function ServiceListCard({ service, onPress, onBook }) {
                 {formatPrice(service.price)}
               </span>
             )}
-            <span
-              className="text-sm font-[Vazir-Bold]"
-              style={{ color: colors.primary }}
-            >
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
               {formatPrice(finalPrice)}
             </span>
           </div>

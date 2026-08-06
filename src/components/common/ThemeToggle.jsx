@@ -13,8 +13,7 @@ export default function ThemeToggle() {
   };
 
   const getLabel = () => {
-    if (theme === 'system')
-      return `سیستم (${resolvedTheme === 'dark' ? 'تاریک' : 'روشن'})`;
+    if (theme === 'system') return `سیستم (${resolvedTheme === 'dark' ? 'تاریک' : 'روشن'})`;
     return theme === 'dark' ? 'تاریک' : 'روشن';
   };
 

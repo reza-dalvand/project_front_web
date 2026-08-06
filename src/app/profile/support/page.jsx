@@ -10,10 +10,7 @@ export default function SupportPage() {
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: colors.background }}>
       {/* هدر */}
-      <div
-        className="rounded-b-3xl pb-7 px-5 pt-6"
-        style={{ backgroundColor: colors.primary }}
-      >
+      <div className="rounded-b-3xl pb-7 px-5 pt-6" style={{ backgroundColor: colors.primary }}>
         <div className="flex flex-col items-center gap-3">
           <div className="relative w-[90px] h-[90px] flex items-center justify-center">
             <div

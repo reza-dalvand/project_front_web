@@ -3,14 +3,7 @@
 import { FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 
-export default function Chip({
-  label,
-  selected = false,
-  onPress,
-  icon,
-  onRemove,
-  className = '',
-}) {
+export default function Chip({ label, selected = false, onPress, icon, onRemove, className = '' }) {
   const { colors } = useTheme();
 
   const bgColor = selected ? colors.primary + '22' : colors.cardBackground;
@@ -29,10 +22,7 @@ export default function Chip({
       }}
     >
       {icon && <span className="ml-0.5">{icon}</span>}
-      <span
-        className="font-[Vazir-Medium] text-[13px]"
-        style={{ color: textColor }}
-      >
+      <span className="font-[Vazir-Medium] text-[13px]" style={{ color: textColor }}>
         {label}
       </span>
       {onRemove && (

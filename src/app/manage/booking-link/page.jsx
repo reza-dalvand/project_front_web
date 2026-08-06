@@ -49,10 +49,7 @@ export default function BookingLinkPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header
-        title="لینک اختصاصی رزرو"
-        onBackPress={() => router.push('/manage')}
-      />
+      <Header title="لینک اختصاصی رزرو" onBackPress={() => router.push('/manage')} />
       <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-5">
         {/* هدر توضیحی */}
         <div className="flex flex-col items-center gap-3 py-4 text-center">
@@ -71,11 +68,7 @@ export default function BookingLinkPage() {
         </div>
 
         {/* کارت اصلی لینک */}
-        <BookingLinkCard
-          bookingLink={linkStats}
-          onShare={handleShare}
-          onCopy={handleCopy}
-        />
+        <BookingLinkCard bookingLink={linkStats} onShare={handleShare} onCopy={handleCopy} />
 
         {/* راهنمای استفاده */}
         <Card variant="elevated" padding={16} radius={16}>
@@ -99,7 +92,10 @@ export default function BookingLinkPage() {
                   {index + 1}
                 </div>
                 <span className="text-base flex-shrink-0">{item.icon}</span>
-                <span className="text-xs font-[Vazir] flex-1" style={{ color: colors.textSecondary }}>
+                <span
+                  className="text-xs font-[Vazir] flex-1"
+                  style={{ color: colors.textSecondary }}
+                >
                   {item.text}
                 </span>
               </div>
@@ -122,7 +118,9 @@ export default function BookingLinkPage() {
               'امکان اشتراک‌گذاری آسان در همه پلتفرم‌ها',
             ].map((benefit, index) => (
               <div key={index} className="flex items-center gap-2.5">
-                <span className="text-xs" style={{ color: '#4CAF50' }}>✓</span>
+                <span className="text-xs" style={{ color: '#4CAF50' }}>
+                  ✓
+                </span>
                 <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
                   {benefit}
                 </span>

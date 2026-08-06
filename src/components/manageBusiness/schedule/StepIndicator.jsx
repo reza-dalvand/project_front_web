@@ -26,8 +26,8 @@ export default function StepIndicator({ currentStep }) {
                   backgroundColor: isCompleted
                     ? colors.primary
                     : isActive
-                    ? colors.primary + '20'
-                    : colors.cardBackground,
+                      ? colors.primary + '20'
+                      : colors.cardBackground,
                   borderColor: isCompleted || isActive ? colors.primary : colors.border,
                 }}
               >

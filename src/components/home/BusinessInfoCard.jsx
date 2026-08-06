@@ -49,10 +49,7 @@ export default function BusinessInfoCard({ business }) {
           <span className="text-xs" style={{ color: colors.textSecondary }}>
             مدیریت:
           </span>
-          <span
-            className="text-sm font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {business.ownerName}
           </span>
           {business.ownerVerified && (
@@ -61,10 +58,7 @@ export default function BusinessInfoCard({ business }) {
               style={{ backgroundColor: '#4CAF5020' }}
             >
               <span className="text-[10px]">✓</span>
-              <span
-                className="text-[9px] font-[Vazir-Bold]"
-                style={{ color: '#4CAF50' }}
-              >
+              <span className="text-[9px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
                 تایید شده
               </span>
             </div>
@@ -75,16 +69,10 @@ export default function BusinessInfoCard({ business }) {
       {/* دسته‌بندی و شهر */}
       <div className="flex items-center gap-2 mb-4">
         <span className="text-base">💆‍♀️</span>
-        <span
-          className="text-sm font-[Vazir-Medium]"
-          style={{ color: colors.primary }}
-        >
+        <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.primary }}>
           {business.category}
         </span>
-        <div
-          className="w-1 h-1 rounded-full mx-0.5"
-          style={{ backgroundColor: colors.border }}
-        />
+        <div className="w-1 h-1 rounded-full mx-0.5" style={{ backgroundColor: colors.border }} />
         <FiMapPin size={16} style={{ color: colors.textSecondary }} />
         <span className="text-sm" style={{ color: colors.textSecondary }}>
           {business.city}
@@ -102,10 +90,7 @@ export default function BusinessInfoCard({ business }) {
             color="#FFC107"
             variant="compact"
           />
-          <div
-            className="w-px h-[50px] mx-2"
-            style={{ backgroundColor: colors.border }}
-          />
+          <div className="w-px h-[50px] mx-2" style={{ backgroundColor: colors.border }} />
           <StatsCard
             icon="💆‍♀️"
             label="خدمات"
@@ -114,10 +99,7 @@ export default function BusinessInfoCard({ business }) {
             color="#4CAF50"
             variant="compact"
           />
-          <div
-            className="w-px h-[50px] mx-2"
-            style={{ backgroundColor: colors.border }}
-          />
+          <div className="w-px h-[50px] mx-2" style={{ backgroundColor: colors.border }} />
           <StatsCard
             icon="🏆"
             label="عضویت"

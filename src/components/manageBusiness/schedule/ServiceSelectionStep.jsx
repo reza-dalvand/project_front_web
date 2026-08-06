@@ -32,10 +32,16 @@ export default function ServiceSelectionStep({ services, selectedId, onSelect })
             >
               <ServiceTypeIcon typeId={service.typeId} size={52} />
               <div className="flex-1 gap-1 min-w-0">
-                <span className="text-sm font-[Vazir-Bold] block truncate" style={{ color: colors.textMain }}>
+                <span
+                  className="text-sm font-[Vazir-Bold] block truncate"
+                  style={{ color: colors.textMain }}
+                >
                   {service.name}
                 </span>
-                <span className="text-xs font-[Vazir-Medium] block" style={{ color: colors.textSecondary }}>
+                <span
+                  className="text-xs font-[Vazir-Medium] block"
+                  style={{ color: colors.textSecondary }}
+                >
                   {service.typeName}
                 </span>
                 <div className="flex items-center gap-1 mt-1">

@@ -154,12 +154,8 @@ export default function ManagePortfolioPage() {
                 <FiPlus size={22} color="#fff" />
               </div>
               <div className="flex-1 text-right">
-                <p className="text-[15px] font-[Vazir-Bold] text-white">
-                  افزودن نمونه‌کار جدید
-                </p>
-                <p className="text-[11px] text-white/80">
-                  کارهای جدید خود را به گالری اضافه کنید
-                </p>
+                <p className="text-[15px] font-[Vazir-Bold] text-white">افزودن نمونه‌کار جدید</p>
+                <p className="text-[11px] text-white/80">کارهای جدید خود را به گالری اضافه کنید</p>
               </div>
               <span className="text-white text-xl">←</span>
             </button>

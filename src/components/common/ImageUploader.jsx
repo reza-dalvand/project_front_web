@@ -37,7 +37,7 @@ export default function ImageUploader({
       // ایجاد URL موقت برای پیش‌نمایش آنی
       const previewUrl = URL.createObjectURL(file);
       setLocalPreview(previewUrl);
-      
+
       // ارسال به والد
       onChange?.(previewUrl);
     },
@@ -107,11 +107,7 @@ export default function ImageUploader({
         {localPreview ? (
           <>
             {/* ✅ FIX: استفاده از تگ img استاندارد برای نمایش Blob URL */}
-            <img
-              src={localPreview}
-              alt="preview"
-              className="object-cover w-full h-full"
-            />
+            <img src={localPreview} alt="preview" className="object-cover w-full h-full" />
 
             {/* Overlay با دکمه تغییر */}
             <div
@@ -123,9 +119,7 @@ export default function ImageUploader({
                 style={{ backgroundColor: colors.primary }}
               >
                 <FiEdit size={14} color="#fff" />
-                <span className="text-xs font-[Vazir-Bold] text-white">
-                  تغییر تصویر
-                </span>
+                <span className="text-xs font-[Vazir-Bold] text-white">تغییر تصویر</span>
               </div>
             </div>
 
@@ -152,17 +146,11 @@ export default function ImageUploader({
               )}
             </div>
             <div className="text-center">
-              <p
-                className="text-sm font-[Vazir-Bold] mb-1"
-                style={{ color: colors.textMain }}
-              >
+              <p className="text-sm font-[Vazir-Bold] mb-1" style={{ color: colors.textMain }}>
                 {isDragActive ? 'تصویر را رها کنید' : 'آپلود تصویر'}
               </p>
               {hint && (
-                <p
-                  className="text-xs font-[Vazir]"
-                  style={{ color: colors.textSecondary }}
-                >
+                <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
                   {hint}
                 </p>
               )}
@@ -173,10 +161,7 @@ export default function ImageUploader({
 
       {/* پیام خطا */}
       {error && (
-        <p
-          className="text-xs mt-2 text-right font-[Vazir]"
-          style={{ color: '#E53935' }}
-        >
+        <p className="text-xs mt-2 text-right font-[Vazir]" style={{ color: '#E53935' }}>
           {error}
         </p>
       )}

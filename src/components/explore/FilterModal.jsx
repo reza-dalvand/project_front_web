@@ -1,13 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { 
-  FiFilter, 
-  FiMapPin, 
-  FiGrid,
-  FiCheck,
-  FiTrash2,
-} from 'react-icons/fi';
+import { FiFilter, FiMapPin, FiGrid, FiCheck, FiTrash2 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import BottomSheet from '@/components/common/BottomSheet';
 import Dropdown from '@/components/common/Dropdown';
@@ -23,12 +17,7 @@ import {
   SOURCE_FILTERS,
 } from '@/constants/exploreFilters';
 
-export default function FilterModal({
-  visible,
-  onClose,
-  onApply,
-  currentFilters,
-}) {
+export default function FilterModal({ visible, onClose, onApply, currentFilters }) {
   const { colors } = useTheme();
   const [province, setProvince] = useState(null);
   const [city, setCity] = useState(null);
@@ -125,10 +114,7 @@ export default function FilterModal({
             >
               <FiFilter size={16} color="#9C27B0" />
             </div>
-            <span
-              className="text-sm font-bold"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-bold" style={{ color: colors.textMain }}>
               نوع محتوا
             </span>
           </div>
@@ -159,10 +145,7 @@ export default function FilterModal({
             >
               <FiGrid size={16} color="#FF9800" />
             </div>
-            <span
-              className="text-sm font-bold"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-bold" style={{ color: colors.textMain }}>
               دسته‌بندی خدمات
             </span>
           </div>
@@ -200,10 +183,7 @@ export default function FilterModal({
             >
               <FiMapPin size={16} color="#2196F3" />
             </div>
-            <span
-              className="text-sm font-bold"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-bold" style={{ color: colors.textMain }}>
               موقعیت مکانی
             </span>
           </div>
@@ -221,9 +201,7 @@ export default function FilterModal({
 
           <Dropdown
             label="شهر"
-            placeholder={
-              province ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'
-            }
+            placeholder={province ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
             value={city}
             options={CITIES[province] || []}
             onSelect={setCity}

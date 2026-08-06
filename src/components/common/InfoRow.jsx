@@ -37,34 +37,23 @@ export default function InfoRow({
   const finalIconColor = warn
     ? '#E53935'
     : highlight
-    ? '#2196F3'
-    : iconColor || colors.textSecondary;
+      ? '#2196F3'
+      : iconColor || colors.textSecondary;
 
-  const finalValueColor = warn
-    ? '#E53935'
-    : highlight
-    ? '#2196F3'
-    : valueColor || colors.textMain;
+  const finalValueColor = warn ? '#E53935' : highlight ? '#2196F3' : valueColor || colors.textMain;
 
   const content = (
     <div
       className="flex items-start gap-3 py-2.5"
       style={{
-        borderBottom: showDivider
-          ? `1px solid ${colors.border}80`
-          : 'none',
+        borderBottom: showDivider ? `1px solid ${colors.border}80` : 'none',
       }}
     >
-      {icon && (
-        <span className="flex-shrink-0 mt-0.5">{icon}</span>
-      )}
+      {icon && <span className="flex-shrink-0 mt-0.5">{icon}</span>}
 
       <div className="flex-1 gap-1">
         {label && (
-          <p
-            className="text-xs font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
             {label}
           </p>
         )}
@@ -72,10 +61,7 @@ export default function InfoRow({
           className="text-sm break-words"
           style={{
             color: finalValueColor,
-            fontFamily:
-              valueBold || monospace || highlight || warn
-                ? 'Vazir-Bold'
-                : 'Vazir-Medium',
+            fontFamily: valueBold || monospace || highlight || warn ? 'Vazir-Bold' : 'Vazir-Medium',
             letterSpacing: monospace ? '1px' : 'normal',
             userSelect: 'text',
           }}
@@ -90,10 +76,7 @@ export default function InfoRow({
 
   if (onPress) {
     return (
-      <button
-        onClick={onPress}
-        className="w-full text-right transition-opacity hover:opacity-80"
-      >
+      <button onClick={onPress} className="w-full text-right transition-opacity hover:opacity-80">
         {content}
       </button>
     );

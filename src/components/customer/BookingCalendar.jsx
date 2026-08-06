@@ -39,25 +39,20 @@ export default function BookingCalendar({
 
   const goToPrevMonth = () => {
     setViewMonth((prev) =>
-      prev.jm === 1
-        ? { jy: prev.jy - 1, jm: 12 }
-        : { ...prev, jm: prev.jm - 1 }
+      prev.jm === 1 ? { jy: prev.jy - 1, jm: 12 } : { ...prev, jm: prev.jm - 1 }
     );
   };
 
   const goToNextMonth = () => {
     setViewMonth((prev) =>
-      prev.jm === 12
-        ? { jy: prev.jy + 1, jm: 1 }
-        : { ...prev, jm: prev.jm + 1 }
+      prev.jm === 12 ? { jy: prev.jy + 1, jm: 1 } : { ...prev, jm: prev.jm + 1 }
     );
   };
 
   const monthLength = jalaaliMonthLength(viewMonth.jy, viewMonth.jm);
   const firstDayOfWeek = getFirstDayOfWeekJalaali(viewMonth.jy, viewMonth.jm);
 
-  const isSameDate = (d1, d2) =>
-    d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
+  const isSameDate = (d1, d2) => d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
 
   const isDateDisabled = (jy, jm, jd) => {
     const val = jy * 10000 + jm * 100 + jd;
@@ -78,17 +73,10 @@ export default function BookingCalendar({
     days.push({ jd: d, jy: viewMonth.jy, jm: viewMonth.jm, key: `d-${d}` });
   }
 
-  const canGoPrev = !(
-    minDate &&
-    viewMonth.jy === minDate.jy &&
-    viewMonth.jm === minDate.jm
-  );
+  const canGoPrev = !(minDate && viewMonth.jy === minDate.jy && viewMonth.jm === minDate.jm);
 
   return (
-    <div
-      className="rounded-2xl p-4"
-      style={{ backgroundColor: colors.cardBackground }}
-    >
+    <div className="rounded-2xl p-4" style={{ backgroundColor: colors.cardBackground }}>
       {/* هدر ماه */}
       <div className="flex items-center justify-between mb-4">
         <button
@@ -100,10 +88,7 @@ export default function BookingCalendar({
         >
           <FiChevronRight size={20} style={{ color: colors.textMain }} />
         </button>
-        <span
-          className="text-base font-[Vazir-Bold]"
-          style={{ color: colors.textMain }}
-        >
+        <span className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           {PERSIAN_MONTHS[viewMonth.jm - 1]} {toPersianDigit(viewMonth.jy)}
         </span>
         <button
@@ -154,9 +139,7 @@ export default function BookingCalendar({
                   : isToday
                     ? colors.primary + '15'
                     : 'transparent',
-                border: isToday && !isSelected
-                  ? `1.5px solid ${colors.primary}`
-                  : 'none',
+                border: isToday && !isSelected ? `1.5px solid ${colors.primary}` : 'none',
               }}
             >
               <span
