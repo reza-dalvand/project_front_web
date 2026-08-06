@@ -1,3 +1,4 @@
+// src/components/manageBusiness/schedule/ScheduleModal.jsx
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -73,11 +74,13 @@ export default function ScheduleModal({
     const startMin = timeToMinutes(workStart);
     const endMin = timeToMinutes(workEnd);
     if (!startMin || !endMin || endMin <= startMin || !slotDuration || slotDuration <= 0) return 0;
+
     const occupiedRanges = breaks.map((b) => {
       const bStart = Math.max(timeToMinutes(b.start), startMin);
       const bEnd = Math.min(timeToMinutes(b.end), endMin);
       return { start: bStart, end: Math.max(bStart, bEnd) };
     });
+
     let count = 0;
     let currentMin = startMin;
     while (currentMin + slotDuration <= endMin) {
@@ -153,7 +156,7 @@ export default function ScheduleModal({
             size="lg"
             disabled={!canGoNext}
             className="flex-1"
-            icon={<FiCheck size={18} color="#fff" />}
+            // icon={<FiCheck size={18} color="#fff" />}
             iconPosition="right"
           />
         </div>
@@ -176,8 +179,8 @@ export default function ScheduleModal({
           variant="primary"
           size="lg"
           disabled={!canGoNext}
-          className={currentStep === 1 ? 'flex-1' : 'flex-1'}
-          icon={<FiArrowRight size={18} color="#fff" />}
+          className="flex-1"
+          // icon={<FiArrowRight size={18} color="#fff" />}
           iconPosition="right"
         />
       </div>
@@ -202,15 +205,15 @@ export default function ScheduleModal({
       >
         {/* هدر */}
         <div
-          className="flex items-center justify-between px-5 py-4 border-b"
+          className="flex items-center justify-between px-4 sm:px-5 py-4 border-b flex-shrink-0"
           style={{ borderColor: colors.border }}
         >
-          <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+          <h3 className="text-sm sm:text-base font-[Vazir-Bold] truncate pr-2" style={{ color: colors.textMain }}>
             {isEditMode ? 'ویرایش زمان‌بندی خدمت' : 'تنظیم زمان‌بندی خدمت'}
           </h3>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center"
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: colors.background }}
           >
             <FiX size={20} style={{ color: colors.textMain }} />
@@ -218,10 +221,12 @@ export default function ScheduleModal({
         </div>
 
         {/* Step Indicator */}
-        <StepIndicator currentStep={currentStep} />
+        <div className="flex-shrink-0">
+          <StepIndicator currentStep={currentStep} />
+        </div>
 
-        {/* محتوا */}
-        <div className="flex-1 overflow-y-auto pb-4">
+        {/* ✅ محتوای اسکرولی با overflow کنترل شده */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden pb-4 w-full">
           {currentStep === 1 && (
             <ServiceSelectionStep
               services={services.filter((s) => s.isActive !== false)}
@@ -252,7 +257,7 @@ export default function ScheduleModal({
 
         {/* فوتر */}
         <div
-          className="px-5 py-4 border-t"
+          className="px-4 sm:px-5 py-4 border-t flex-shrink-0"
           style={{ borderColor: colors.border }}
         >
           {renderFooter()}

@@ -85,13 +85,21 @@ export const todayJalaali = () => {
 };
 
 // ═══════════════════════════════════════════════════════
-//    تعداد روزهای یک ماه جلالی
+//    تعداد روزهای یک ماه جلالی (اصلاح شده - بدون jDaysInMonth)
 //    @param {number} jy - سال جلالی
 //    @param {number} jm - ماه جلالی (1-12)
 //    @returns {number} - تعداد روزها (29/30/31)
 // ═══════════════════════════════════════════════════════
 export const jalaaliMonthLength = (jy, jm) => {
-  return moment().jYear(jy).jMonth(jm - 1).jDaysInMonth();
+  // ماه‌های ۱ تا ۶: ۳۱ روز
+  if (jm <= 6) return 31;
+  // ماه‌های ۷ تا ۱۱: ۳۰ روز
+  if (jm <= 11) return 30;
+  // اسفند (ماه ۱۲): سال کبیسه = ۳۰، عادی = ۲۹
+  // الگوریتم تشخیص سال کبیسه جلالی
+  const isLeap = ((jy % 33) % 4) === 1 ||
+                 [1, 5, 9, 13, 17, 22, 26, 30].includes((jy % 33));
+  return isLeap ? 30 : 29;
 };
 
 // ═══════════════════════════════════════════════════════
@@ -104,4 +112,32 @@ export const getFirstDayOfWeekJalaali = (jy, jm) => {
   const dayOfWeek = d.getDay(); // 0=Sunday ... 6=Saturday
   // تبدیل به هفته فارسی: شنبه=0
   return (dayOfWeek + 1) % 7;
+};
+
+
+// ═══════════════════════════════════════════════════════
+//    تبدیل ساعت (HH:MM) به دقیقه
+//    @param {string} timeStr - رشته ساعت مثل "14:30"
+//    @returns {number} - تعداد دقیقه‌ها
+// ═══════════════════════════════════════════════════════
+export const timeToMinutes = (timeStr) => {
+  if (!timeStr || typeof timeStr !== 'string') return 0;
+  const parts = timeStr.split(':');
+  if (parts.length !== 2) return 0;
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  if (isNaN(hours) || isNaN(minutes)) return 0;
+  return hours * 60 + minutes;
+};
+
+// ═══════════════════════════════════════════════════════
+//    تبدیل دقیقه به ساعت (HH:MM)
+//    @param {number} totalMinutes - تعداد کل دقیقه‌ها
+//    @returns {string} - رشته ساعت مثل "14:30"
+// ═══════════════════════════════════════════════════════
+export const minutesToTime = (totalMinutes) => {
+  if (typeof totalMinutes !== 'number' || isNaN(totalMinutes) || totalMinutes < 0) return '00:00';
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };

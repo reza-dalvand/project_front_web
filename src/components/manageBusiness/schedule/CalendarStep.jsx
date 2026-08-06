@@ -1,5 +1,6 @@
+// src/components/manageBusiness/schedule/CalendarStep.jsx
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FiChevronRight, FiChevronLeft, FiCheck, FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
@@ -19,9 +20,20 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
     return toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
   }, []);
 
+  // ✅ FIX: هنگام mount یا تغییر existingDates، اگر selectedDates خالی است، پر شود
+  useEffect(() => {
+    if (existingDates && existingDates.length > 0 && (!selectedDates || selectedDates.length === 0)) {
+      onDatesChange([...existingDates]);
+    }
+  }, [existingDates]);
+
   const [viewMonth, setViewMonth] = useState(() => {
     if (existingDates && existingDates.length > 0) {
       const first = existingDates[0];
+      return { jy: first.jy, jm: first.jm };
+    }
+    if (selectedDates && selectedDates.length > 0) {
+      const first = selectedDates[0];
       return { jy: first.jy, jm: first.jm };
     }
     return { jy: today.jy, jm: today.jm };
@@ -149,7 +161,7 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
           <div key={d} className="text-center">
             <span
               className="text-[12px] font-[Vazir-Medium]"
-              style={{ color: i === 6 ? '#E57373' : colors.textSecondary }}
+              style={{ color: colors.textSecondary }}
             >
               {d}
             </span>
@@ -161,11 +173,13 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
       <div className="grid grid-cols-7 gap-1">
         {days.map((day) => {
           if (day.empty) return <div key={day.key} />;
+
           const disabled = isPast(day.jy, day.jm, day.jd);
           const isToday = isSameDate(day, today);
           const selected = isSelected(day.jd);
           const existing = isExisting(day.jd);
-          const isFriday = (day.jd + firstDayOfWeek) % 7 === 6;
+          // ✅ FIX: جمعه دیگر قرمز نیست و غیرفعال نیست
+          // فقط روزهای گذشته غیرفعال هستند
 
           return (
             <button
@@ -177,40 +191,38 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
                 backgroundColor: selected
                   ? colors.primary
                   : !selected && existing
-                  ? '#43A04715'
-                  : isToday
-                  ? colors.primary + '15'
-                  : 'transparent',
+                    ? '#43A04715'
+                    : isToday
+                      ? colors.primary + '15'
+                      : 'transparent',
                 color: selected
                   ? '#fff'
                   : !selected && existing
-                  ? '#43A047'
-                  : isFriday && !disabled
-                  ? '#E57373'
-                  : colors.textMain,
+                    ? '#43A047'
+                    : colors.textMain,
                 border: !selected && existing
                   ? '2px solid #43A047'
                   : isToday && !selected
-                  ? `2px solid ${colors.primary}`
-                  : 'none',
+                    ? `2px solid ${colors.primary}`
+                    : 'none',
                 opacity: disabled ? 0.3 : 1,
                 cursor: disabled ? 'not-allowed' : 'pointer',
               }}
             >
               {toPersianDigit(day.jd)}
-              {/* آیکون چک برای انتخاب شده */}
+
               {selected && (
                 <div className="absolute top-1 right-1">
                   <FiCheck size={10} color="#fff" />
                 </div>
               )}
-              {/* نشانگر existing */}
+
               {!selected && existing && (
                 <div className="absolute bottom-1 left-1">
                   <span className="text-[8px]" style={{ color: '#43A047' }}>📅</span>
                 </div>
               )}
-              {/* نقطه امروز */}
+
               {isToday && !selected && !existing && (
                 <div
                   className="absolute bottom-1 w-1 h-1 rounded-full"
@@ -240,4 +252,3 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
     </div>
   );
 }
-
