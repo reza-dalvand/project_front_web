@@ -82,7 +82,7 @@ export default function GallerySlider({ gallery = [] }) {
 
       {/* Indicator Dots */}
       {gallery.length > 1 && (
-        <div className="flex items-center justify-center gap-1.5 py-3">
+        <div className="flex items-center justify-center gap-1.5 py-3" dir="ltr">
           {gallery.map((_, i) => (
             <button
               key={i}

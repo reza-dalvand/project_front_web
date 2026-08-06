@@ -1,5 +1,5 @@
+// src/components/explore/PostThumbnail.jsx
 "use client";
-
 import Image from "next/image";
 import { FiBookmark, FiImage, FiStar } from "react-icons/fi";
 import { MdAutoAwesome } from "react-icons/md";
@@ -20,18 +20,23 @@ export default function PostThumbnail({ post, onPress }) {
   const handleSaveClick = (e) => {
     e.stopPropagation();
     requireAuth(() => {
-      // TODO: Toggle save state
       console.log("Toggle save for post:", post.id);
     });
   };
 
   return (
-    <button
+    <div
       onClick={() => onPress?.(post)}
-      className="relative block w-full aspect-square rounded-lg overflow-hidden group"
-      style={{
-        backgroundColor: colors.cardBackground,
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onPress?.(post);
+        }
       }}
+      role="button"
+      tabIndex={0}
+      className="relative block w-full aspect-square rounded-lg overflow-hidden group cursor-pointer"
+      style={{ backgroundColor: colors.cardBackground }}
     >
       <Image
         src={firstImage}
@@ -44,8 +49,8 @@ export default function PostThumbnail({ post, onPress }) {
       {/* تگ مجله */}
       {isMagazine && (
         <div
-          className="absolute top-2 left-2 flex items-center gap-1 
-                     px-2 py-1 rounded-md shadow-lg"
+          className="absolute top-2 left-2 flex items-center gap-1
+            px-2 py-1 rounded-md shadow-lg"
           style={{ backgroundColor: "rgba(156, 39, 176, 0.85)" }}
         >
           <MdAutoAwesome size={10} color="#fff" />
@@ -78,10 +83,11 @@ export default function PostThumbnail({ post, onPress }) {
       {/* دکمه ذخیره */}
       <button
         onClick={handleSaveClick}
-        className="absolute bottom-2 left-2 w-8 h-8 rounded-full 
-                   flex items-center justify-center shadow-lg
-                   transition-all duration-200 hover:scale-110"
+        className="absolute bottom-2 left-2 w-8 h-8 rounded-full
+          flex items-center justify-center shadow-lg
+          transition-all duration-200 hover:scale-110"
         style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+        aria-label={post.saved ? "حذف از علاقه‌مندی" : "افزودن به علاقه‌مندی"}
       >
         <FiBookmark
           size={16}
@@ -90,11 +96,11 @@ export default function PostThumbnail({ post, onPress }) {
         />
       </button>
 
-      {/* امتیاز - برای پست‌های کسب‌وکار */}
+      {/* امتیاز */}
       {!isMagazine && post.rating > 0 && (
         <div
-          className="absolute bottom-2 right-2 flex items-center gap-1 
-                     px-2 py-1 rounded-md shadow-lg"
+          className="absolute bottom-2 right-2 flex items-center gap-1
+            px-2 py-1 rounded-md shadow-lg"
           style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
         >
           <FiStar size={10} color="#FFD700" fill="#FFD700" />
@@ -103,6 +109,6 @@ export default function PostThumbnail({ post, onPress }) {
           </span>
         </div>
       )}
-    </button>
+    </div>
   );
 }
