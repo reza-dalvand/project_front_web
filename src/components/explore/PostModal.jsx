@@ -15,6 +15,7 @@ import { MdAutoAwesome, MdVerified } from "react-icons/md";
 import { createPortal } from "react-dom";
 import { useTheme } from "@/stores/useThemeStore";
 import { useAuth } from "@/stores/useAuth";
+import { useToast } from "@/hooks/useToast";
 import GallerySlider from "./GallerySlider";
 import StarRating from "@/components/common/StarRating";
 import Avatar from "@/components/common/Avatar";
@@ -29,10 +30,12 @@ export default function PostModal({
   onNavigateToProfile,
 }) {
   const { colors } = useTheme();
-  const { requireAuth } = useAuth();
+  const { isAuthenticated, requireAuth } = useAuth();
   const [isSaved, setIsSaved] = useState(post?.saved || false);
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef("post-modal");
+  const { showToast } = useToast();  
+
 
   useEffect(() => {
     setMounted(true);
@@ -75,19 +78,82 @@ export default function PostModal({
   const isMagazine = post.source === "magazine";
   const media = post.gallery || post.images || [];
 
+  // ✅ بعد (جدید — با toast و fallback)
+
+  // تابع کپی در کلیپ‌بورد با fallback برای HTTP
+  const copyTextToClipboard = async (text) => {
+    // روش ۱: Clipboard API مدرن (فقط در HTTPS یا localhost)
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.log("Clipboard API failed:", err);
+      }
+    }
+
+    // روش ۲: execCommand fallback (برای محیط‌های قدیمی و HTTP)
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      textArea.style.top = "-9999px";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const success = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return success;
+    } catch (err) {
+      console.log("execCommand copy failed:", err);
+      return false;
+    }
+  };
+
   const handleShare = async () => {
+    // ساخت لینک اختصاصی پست
+    const postUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/post/${post.id}`
+        : `https://zibano.app/post/${post.id}`;
+
+    // ساخت پیام کامل اشتراک‌گذاری
+    const shareMessage = [
+      `🌟 ${post.businessName || "زیبانو"}`,
+      post.caption ? post.caption : "",
+      "",
+      `🔗 ${postUrl}`,
+      "📱 مشاهده در اپلیکیشن زیبانو",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    // روش ۱: Web Share API (موبایل و مرورگرهای مدرن)
     if (navigator.share) {
       try {
         await navigator.share({
-          title: post.businessName,
-          text: post.caption,
-          url: window.location.href,
+          title: post.businessName || "زیبانو",
+          text: post.caption || "",
+          url: postUrl,
         });
+        return;
       } catch (err) {
-        console.log("Share cancelled");
+        // اگر کاربر خودش لغو کرد، خروج
+        if (err.name === "AbortError") return;
+        // در غیر این صورت به fallback ادامه می‌دهیم
+        console.log("Web Share failed, trying clipboard...");
       }
+    }
+
+    // روش ۲: کپی در کلیپ‌بورد
+    const copied = await copyTextToClipboard(shareMessage);
+
+    if (copied) {
+      showToast("✓ لینک و توضیحات پست کپی شد", "success");
     } else {
-      navigator.clipboard.writeText(post.caption);
+      showToast("امکان اشتراک‌گذاری وجود ندارد", "error");
     }
   };
 
@@ -161,23 +227,23 @@ export default function PostModal({
           >
             <FiShare2 size={18} style={{ color: colors.textMain }} />
           </button>
-          <button
-            onClick={handleSave}
-            className="w-10 h-10 rounded-full flex items-center justify-center
-            border transition-colors hover:opacity-80"
-            style={{
-              backgroundColor: isSaved
-                ? colors.primary + "20"
-                : colors.background,
-              borderColor: isSaved ? colors.primary : colors.border,
-            }}
-          >
-            <FiBookmark
-              size={18}
-              style={{ color: isSaved ? colors.primary : colors.textMain }}
-              fill={isSaved ? colors.primary : "transparent"}
-            />
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={handleSave}
+              className="w-10 h-10 rounded-full flex items-center justify-center
+                border transition-colors hover:opacity-80"
+              style={{
+                backgroundColor: isSaved ? colors.primary + "20" : colors.background,
+                borderColor: isSaved ? colors.primary : colors.border,
+              }}
+            >
+              <FiBookmark
+                size={18}
+                style={{ color: isSaved ? colors.primary : colors.textMain }}
+                fill={isSaved ? colors.primary : "transparent"}
+              />
+            </button>
+          )}
         </div>
 
         {/* گالری تصاویر */}

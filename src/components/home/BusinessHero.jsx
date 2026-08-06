@@ -153,20 +153,22 @@ ${bookingLink}
         </button>
 
         {/* دکمه علاقه‌مندی */}
-        <button
-          onClick={handleFavorite}
-          className="w-11 h-11 rounded-full flex items-center justify-center
-                     border border-white/15 backdrop-blur-sm
-                     transition-all hover:scale-110 active:scale-95"
-          style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
-          aria-label={isFavorite ? "حذف از علاقه‌مندی" : "افزودن به علاقه‌مندی"}
-        >
-          <FiHeart
-            size={22}
-            color={isFavorite ? "#FFD700" : "#fff"}
-            fill={isFavorite ? "#FFD700" : "transparent"}
-          />
-        </button>
+        {isAuthenticated && (
+          <button
+            onClick={handleFavorite}
+            className="w-11 h-11 rounded-full flex items-center justify-center
+              border border-white/15 backdrop-blur-sm
+              transition-all hover:scale-110 active:scale-95"
+            style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+            aria-label={isFavorite ? "حذف از علاقه‌مندی" : "افزودن به علاقه‌مندی"}
+          >
+            <FiHeart
+              size={22}
+              color={isFavorite ? "#FFD700" : "#fff"}
+              fill={isFavorite ? "#FFD700" : "transparent"}
+            />
+          </button>
+        )}
       </div>
 
       {/* ═══════ فلش‌های ناوبری گالری ═══════ */}

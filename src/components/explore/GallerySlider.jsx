@@ -106,7 +106,7 @@ export default function GallerySlider({ gallery = [] }) {
           style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
         >
           <span className="text-[11px] font-bold text-white">
-            {currentIndex + 1} / {gallery.length}
+            {gallery.length} / {currentIndex + 1}
           </span>
         </div>
       )}

@@ -1,15 +1,10 @@
 // src/components/common/FavoriteButton.jsx
 "use client";
-
 import { useState } from "react";
 import { FiBookmark } from "react-icons/fi";
 import { useAuth } from "@/stores/useAuth";
 import { useTheme } from "@/stores/useThemeStore";
 
-/**
- * دکمه علاقه‌مندی که فقط برای کاربران لاگین‌شده فعال است
- * اگر کاربر لاگین نباشد، با کلیک مدال Auth باز می‌شود
- */
 export default function FavoriteButton({
   isFavorite = false,
   onPress,
@@ -18,17 +13,16 @@ export default function FavoriteButton({
   activeColor = "#E91E63",
   className = "",
 }) {
-  const { requireAuth } = useAuth();
-  const { colors } = useTheme();
+  const { isAuthenticated } = useAuth();
   const [localFavorite, setLocalFavorite] = useState(isFavorite);
 
+  // ✅ اگر لاگین نیست، اصلاً نمایش داده نشود
+  if (!isAuthenticated) return null;
+
   const handleClick = () => {
-    requireAuth(() => {
-      // این اکشن فقط اگر کاربر لاگین باشد اجرا می‌شود
-      const newState = !localFavorite;
-      setLocalFavorite(newState);
-      onPress?.(newState);
-    });
+    const newState = !localFavorite;
+    setLocalFavorite(newState);
+    onPress?.(newState);
   };
 
   return (

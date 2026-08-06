@@ -37,14 +37,14 @@ export default function SectionHeader({
         {/* متن‌ها */}
         <div className="flex flex-col gap-0.5 flex-1">
           <h3
-            className="text-base font-[Vazir-Bold] text-right"
+            className="text-base font-[Vazir-Bold] text-center"
             style={{ color: colors.textMain }}
           >
             {title}
           </h3>
           {subtitle && (
             <p
-              className="text-xs font-[Vazir] text-right"
+              className="text-xs font-[Vazir] text-center"
               style={{ color: colors.textSecondary }}
             >
               {subtitle}

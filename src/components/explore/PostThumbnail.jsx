@@ -1,4 +1,3 @@
-// src/components/explore/PostThumbnail.jsx
 "use client";
 import Image from "next/image";
 import { FiBookmark, FiImage, FiStar } from "react-icons/fi";
@@ -8,7 +7,7 @@ import { useAuth } from "@/stores/useAuth";
 
 export default function PostThumbnail({ post, onPress }) {
   const { colors } = useTheme();
-  const { requireAuth } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   if (!post) return null;
 
@@ -19,9 +18,7 @@ export default function PostThumbnail({ post, onPress }) {
 
   const handleSaveClick = (e) => {
     e.stopPropagation();
-    requireAuth(() => {
-      console.log("Toggle save for post:", post.id);
-    });
+    console.log("Toggle save for post:", post.id);
   };
 
   return (
@@ -36,7 +33,9 @@ export default function PostThumbnail({ post, onPress }) {
       role="button"
       tabIndex={0}
       className="relative block w-full aspect-square rounded-lg overflow-hidden group cursor-pointer"
-      style={{ backgroundColor: colors.cardBackground }}
+      style={{
+        backgroundColor: colors.cardBackground,
+      }}
     >
       <Image
         src={firstImage}
@@ -80,23 +79,25 @@ export default function PostThumbnail({ post, onPress }) {
         </div>
       )}
 
-      {/* دکمه ذخیره */}
-      <button
-        onClick={handleSaveClick}
-        className="absolute bottom-2 left-2 w-8 h-8 rounded-full
-          flex items-center justify-center shadow-lg
-          transition-all duration-200 hover:scale-110"
-        style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-        aria-label={post.saved ? "حذف از علاقه‌مندی" : "افزودن به علاقه‌مندی"}
-      >
-        <FiBookmark
-          size={16}
-          color={post.saved ? "#FFD700" : "#fff"}
-          fill={post.saved ? "#FFD700" : "transparent"}
-        />
-      </button>
+      {/* ✅ دکمه ذخیره - فقط برای کاربران لاگین‌شده */}
+      {isAuthenticated && (
+        <button
+          onClick={handleSaveClick}
+          className="absolute bottom-2 left-2 w-8 h-8 rounded-full
+            flex items-center justify-center shadow-lg
+            transition-all duration-200 hover:scale-110"
+          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+          aria-label={post.saved ? "حذف از علاقه‌مندی" : "افزودن به علاقه‌مندی"}
+        >
+          <FiBookmark
+            size={16}
+            color={post.saved ? "#FFD700" : "#fff"}
+            fill={post.saved ? "#FFD700" : "transparent"}
+          />
+        </button>
+      )}
 
-      {/* امتیاز */}
+      {/* امتیاز - برای پست‌های کسب‌وکار */}
       {!isMagazine && post.rating > 0 && (
         <div
           className="absolute bottom-2 right-2 flex items-center gap-1

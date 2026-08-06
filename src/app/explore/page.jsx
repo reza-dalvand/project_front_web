@@ -155,7 +155,7 @@ export default function ExplorePage() {
           icon={<FiGrid size={18} />}
           iconColor={colors.primary}
           title="ویترین"
-          subtitle="نمونه‌کار کسب‌وکارها در زیبانو"
+          subtitle="نمونه کار‌های تمام خدمات در زیبانو"
           rightElement={
             <button
               onClick={() => setFilterVisible(true)}
