@@ -1,6 +1,5 @@
 // src/app/manage/settings/page.jsx
 'use client';
-
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -17,19 +16,17 @@ import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-import { useToast } from '@/hooks/useToast'; // ✅ اضافه شد
+import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
-import dynamic from 'next/dynamic';
 import ImageUploader from '@/components/common/ImageUploader';
 import SectionHeader from '@/components/common/SectionHeader';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
-
-const MapPicker = dynamic(() => import('@/components/common/MapPicker'), { ssr: false });
+import MapPicker from '@/components/common/MapPicker'; // ✅ مستقیم
 
 const BUSINESS_CATEGORIES = [
   { id: 'salon', label: 'سالن زیبایی (چند منظوره)' },
@@ -51,7 +48,7 @@ export default function BusinessSettingsPage() {
   const businessData = useBusinessStore((s) => s.businessData);
   const updateBusinessInfo = useBusinessStore((s) => s.updateBusinessInfo);
   const deleteBusiness = useBusinessStore((s) => s.deleteBusiness);
-  const { showToast } = useToast(); // ✅ مقداردهی Toast
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     name: businessData.name || '',
@@ -86,20 +83,16 @@ export default function BusinessSettingsPage() {
     if (!formData.name.trim()) newErrors.name = 'نام کسب‌وکار الزامی است';
     if (!formData.categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
     if (!formData.address.trim()) newErrors.address = 'آدرس الزامی است';
-    // ✅ سخت‌گیری کمتر برای عکس در حالت ویرایش اگر قبلاً عکس داشته
     if (!formData.ownerPhoto && !businessData.ownerPhoto)
       newErrors.ownerPhoto = 'تصویر صاحب کسب‌وکار الزامی است';
 
     setErrors(newErrors);
-
     if (Object.keys(newErrors).length > 0) {
       showToast('لطفاً خطاهای فرم را برطرف کنید', 'error');
       return;
     }
 
     setSaving(true);
-
-    // شبیه‌سازی تاخیر شبکه
     setTimeout(() => {
       updateBusinessInfo({
         name: formData.name.trim(),
@@ -113,11 +106,8 @@ export default function BusinessSettingsPage() {
         ownerPhoto: formData.ownerPhoto,
         location: formData.location,
       });
-
       setSaving(false);
       showToast('✓ تغییرات با موفقیت ذخیره شد', 'success');
-
-      // ✅ بازگشت قطعی به صفحه قبل
       setTimeout(() => {
         router.back();
       }, 800);
@@ -144,22 +134,12 @@ export default function BusinessSettingsPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.back()} />
-
       <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
-        {/* ═══════ تصاویر ═══════ */}
+        {/* تصاویر */}
         <div className="space-y-3">
-          <SectionHeader
-            icon={<FiBriefcase size={18} />}
-            iconColor={colors.primary}
-            title="تصاویر کسب‌وکار"
-          />
-
-          {/* تصویر کاور */}
+          <SectionHeader icon={<FiBriefcase size={18} />} iconColor={colors.primary} title="تصاویر کسب‌وکار" />
           <Card variant="elevated" padding={16} radius={18}>
-            <label
-              className="block text-sm mb-2 text-right font-[Vazir-Medium]"
-              style={{ color: colors.textSecondary }}
-            >
+            <label className="block text-sm mb-2 text-right font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
               تصویر کاور سالن
             </label>
             <ImageUploader
@@ -169,13 +149,8 @@ export default function BusinessSettingsPage() {
               hint="تصویر با کیفیت از محیط سالن (۱۲۰۰×۴۰۰)"
             />
           </Card>
-
-          {/* تصویر صاحب کسب‌وکار */}
           <Card variant="elevated" padding={16} radius={18}>
-            <label
-              className="block text-sm mb-2 text-right font-[Vazir-Medium]"
-              style={{ color: colors.textSecondary }}
-            >
+            <label className="block text-sm mb-2 text-right font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
               تصویر صاحب کسب‌وکار <span style={{ color: '#E53935' }}>*</span>
             </label>
             <div className="flex flex-col items-center gap-3">
@@ -185,23 +160,16 @@ export default function BusinessSettingsPage() {
                 variant="avatar"
                 error={errors.ownerPhoto}
               />
-              <p
-                className="text-xs font-[Vazir] text-center"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-xs font-[Vazir] text-center" style={{ color: colors.textSecondary }}>
                 عکس واقعی مدیر کسب‌وکار (جهت احراز هویت و اعتماد مشتریان)
               </p>
             </div>
           </Card>
         </div>
 
-        {/* ═══════ اطلاعات پایه ═══════ */}
+        {/* اطلاعات پایه */}
         <div className="space-y-3">
-          <SectionHeader
-            icon={<FiBriefcase size={18} />}
-            iconColor={colors.primary}
-            title="اطلاعات پایه"
-          />
+          <SectionHeader icon={<FiBriefcase size={18} />} iconColor={colors.primary} title="اطلاعات پایه" />
           <Card variant="elevated" padding={16} radius={18}>
             <Input
               label="نام کسب‌وکار *"
@@ -242,7 +210,7 @@ export default function BusinessSettingsPage() {
           </Card>
         </div>
 
-        {/* ═══════ موقعیت مکانی ═══════ */}
+        {/* موقعیت مکانی */}
         <div className="space-y-3">
           <SectionHeader icon={<FiMapPin size={18} />} iconColor="#E53935" title="موقعیت مکانی" />
           <Card variant="elevated" padding={16} radius={18}>
@@ -276,7 +244,6 @@ export default function BusinessSettingsPage() {
           </Card>
         </div>
 
-        {/* ═══════ دکمه ذخیره ═══════ */}
         <Button
           title="ذخیره تغییرات"
           onPress={handleSave}
@@ -287,7 +254,7 @@ export default function BusinessSettingsPage() {
           iconPosition="right"
         />
 
-        {/* ═══════ ناحیه خطرناک ═══════ */}
+        {/* ناحیه خطرناک */}
         <div className="pt-6">
           <Card
             variant="default"
@@ -325,7 +292,7 @@ export default function BusinessSettingsPage() {
         </div>
       </div>
 
-      {/* ═══════ مدال تایید حذف ═══════ */}
+      {/* مدال تایید حذف */}
       {deleteModalVisible && (
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center p-6"
@@ -336,16 +303,10 @@ export default function BusinessSettingsPage() {
             className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-4"
             style={{ backgroundColor: colors.cardBackground }}
           >
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: '#E5393515' }}
-            >
+            <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5393515' }}>
               <FiTrash2 size={40} color="#E53935" />
             </div>
-            <h3
-              className="text-xl font-[Vazir-Bold] text-center"
-              style={{ color: colors.textMain }}
-            >
+            <h3 className="text-xl font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
               حذف کسب و کار
             </h3>
             <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
@@ -361,26 +322,15 @@ export default function BusinessSettingsPage() {
                 'این عمل غیرقابل بازگشت است',
               ].map((text, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <span className="text-xs mt-0.5" style={{ color: '#E53935' }}>
-                    •
-                  </span>
-                  <span
-                    className="text-xs font-[Vazir] leading-5 flex-1"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <span className="text-xs mt-0.5" style={{ color: '#E53935' }}>•</span>
+                  <span className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: colors.textSecondary }}>
                     {text}
                   </span>
                 </div>
               ))}
             </div>
             <div className="flex gap-3 w-full mt-2">
-              <Button
-                title="انصراف"
-                onPress={() => setDeleteModalVisible(false)}
-                variant="outline"
-                size="lg"
-                className="flex-1"
-              />
+              <Button title="انصراف" onPress={() => setDeleteModalVisible(false)} variant="outline" size="lg" className="flex-1" />
               <Button
                 title="تایید و حذف"
                 onPress={handleDelete}

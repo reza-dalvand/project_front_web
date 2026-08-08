@@ -204,7 +204,6 @@ export default function TermsAndConditionsStep({ onAccept, onDecline }) {
             size="lg"
             disabled={!canProceed}
             className="flex-1"
-            icon={<FiCheck size={18} color="#fff" />}
             iconPosition="right"
           />
         </div>

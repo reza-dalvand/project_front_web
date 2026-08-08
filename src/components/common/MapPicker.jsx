@@ -1,10 +1,11 @@
+// src/components/common/MapPicker.jsx
 'use client';
 import { useState, useEffect } from 'react';
 import { FiMapPin, FiNavigation, FiCheck, FiX, FiEdit } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
 import Card from './Card';
-import 'maplibre-gl/dist/maplibre-gl.css';
+// ❌ حذف شد: import 'maplibre-gl/dist/maplibre-gl.css';
 
 const DEFAULT_LOCATION = {
   latitude: 35.6997,
@@ -39,8 +40,6 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
   const [tempLocation, setTempLocation] = useState(null);
   const [tempAddress, setTempAddress] = useState('در حال دریافت آدرس...');
   const [loading, setLoading] = useState(false);
-
-  // Dynamic Import برای maplibre
   const [MapLib, setMapLib] = useState(null);
   const [mapLoading, setMapLoading] = useState(true);
 
@@ -149,10 +148,7 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
               <p className="text-xs font-[Vazir] mb-1" style={{ color: colors.textSecondary }}>
                 موقعیت انتخاب شده
               </p>
-              <p
-                className="text-sm font-[Vazir-Bold] line-clamp-1"
-                style={{ color: colors.textMain }}
-              >
+              <p className="text-sm font-[Vazir-Bold] line-clamp-1" style={{ color: colors.textMain }}>
                 {confirmedAddress ||
                   `${confirmedLocation.latitude.toFixed(4)}, ${confirmedLocation.longitude.toFixed(4)}`}
               </p>
@@ -193,25 +189,16 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
 
       {/* مدال نقشه */}
       {modalVisible && (
-        <div
-          className="fixed inset-0 z-[9999] flex flex-col"
-          style={{ backgroundColor: colors.background }}
-        >
+        <div className="fixed inset-0 z-[9999] flex flex-col" style={{ backgroundColor: colors.background }}>
           {/* هدر */}
           <div
             className="flex items-center justify-between px-5 py-4 border-b"
-            style={{
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            }}
+            style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
           >
             <button
               onClick={handleClose}
               className="w-10 h-10 rounded-xl flex items-center justify-center border"
-              style={{
-                backgroundColor: colors.background,
-                borderColor: colors.border,
-              }}
+              style={{ backgroundColor: colors.background, borderColor: colors.border }}
             >
               <FiX size={20} style={{ color: colors.textMain }} />
             </button>
@@ -246,7 +233,6 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
                     latitude={tempLocation.latitude}
                     anchor="bottom"
                   >
-                    {/* ✅ مارکر قرمز بدون دایره دور - فقط خود پین */}
                     <svg
                       width="36"
                       height="48"
@@ -273,21 +259,15 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
             )}
           </div>
 
-          {/* فوتر - آدرس و دکمه‌ها */}
+          {/* فوتر */}
           <div
             className="border-t p-5 space-y-4"
-            style={{
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            }}
+            style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
           >
             {/* باکس آدرس */}
             <div
               className="flex items-start gap-3 p-4 rounded-2xl border"
-              style={{
-                backgroundColor: colors.background,
-                borderColor: colors.border,
-              }}
+              style={{ backgroundColor: colors.background, borderColor: colors.border }}
             >
               <FiMapPin size={18} style={{ color: colors.primary, flexShrink: 0 }} />
               <div className="flex-1">
@@ -303,16 +283,10 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
                   </div>
                 ) : (
                   <>
-                    <p
-                      className="text-xs font-[Vazir-Bold] mb-1"
-                      style={{ color: colors.textMain }}
-                    >
+                    <p className="text-xs font-[Vazir-Bold] mb-1" style={{ color: colors.textMain }}>
                       آدرس انتخابی
                     </p>
-                    <p
-                      className="text-xs font-[Vazir] leading-5"
-                      style={{ color: colors.textSecondary }}
-                    >
+                    <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
                       {tempAddress}
                     </p>
                   </>
@@ -322,13 +296,7 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
 
             {/* دکمه‌ها */}
             <div className="flex gap-3">
-              <Button
-                title="انصراف"
-                onPress={handleClose}
-                variant="outline"
-                size="lg"
-                className="flex-1"
-              />
+              <Button title="انصراف" onPress={handleClose} variant="outline" size="lg" className="flex-1" />
               <Button
                 title="تایید موقعیت"
                 onPress={handleConfirm}

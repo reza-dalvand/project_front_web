@@ -1,5 +1,5 @@
+// src/components/createbusiness/BasicInfoStep.jsx
 'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import {
   FiBriefcase,
@@ -13,14 +13,20 @@ import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Card from '@/components/common/Card';
 import Dropdown from '@/components/common/Dropdown';
-import dynamic from 'next/dynamic';
 import ImageUploader from '@/components/common/ImageUploader';
 import SectionHeader from '@/components/common/SectionHeader';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
-const MapPicker = dynamic(
-  () => import('@/components/common/MapPicker'),
-  { ssr: false } // ← کلید اصلی: نه SSR، نه Turbopack problem
-);
+import dynamic from 'next/dynamic';
+
+// لود کردن نقشه فقط در سمت کلاینت (مرورگر)
+const MapPicker = dynamic(() => import('@/components/common/MapPicker'), { 
+  ssr: false,
+  loading: () => (
+    <div className="h-48 rounded-2xl border-2 border-dashed flex items-center justify-center">
+      <p className="text-sm text-gray-500">در حال بارگذاری نقشه...</p>
+    </div>
+  )
+});
 const BUSINESS_CATEGORIES = [
   { id: 'salon', label: 'سالن زیبایی (چند منظوره)' },
   { id: 'clinic', label: 'کلینیک پوست و مو' },
@@ -40,7 +46,6 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
   const [touched, setTouched] = useState({});
   const [isValid, setIsValid] = useState(false);
 
-  // اعتبارسنجی فیلد
   const validateField = useCallback((field, value) => {
     switch (field) {
       case 'name':
@@ -75,7 +80,6 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
     }
   }, []);
 
-  // اعتبارسنجی همه فیلدها
   const validateAll = useCallback(() => {
     const fields = [
       'name',
@@ -162,11 +166,9 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
 
   return (
     <div className="px-5 pt-4 pb-6 space-y-6">
-      {/* ═══════ بخش ۱: تصاویر ═══════ */}
+      {/* تصاویر */}
       <div className="space-y-3">
         <SectionHeader icon={<FiCamera size={18} />} iconColor="#E91E63" title="تصاویر" />
-
-        {/* کاور کسب‌وکار */}
         <Card variant="default" padding={16} radius={20}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
@@ -185,23 +187,18 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
           />
         </Card>
 
-        {/* تصویر صاحب کسب‌وکار */}
         <Card variant="default" padding={16} radius={20}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               تصویر صاحب کسب‌وکار<span style={{ color: '#E53935' }}> *</span>
             </span>
-            <div
-              className="flex items-center gap-1 px-2 py-1 rounded-lg"
-              style={{ backgroundColor: '#4CAF5015' }}
-            >
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ backgroundColor: '#4CAF5015' }}>
               <FiCheckCircle size={10} color="#4CAF50" />
               <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
                 احراز هویت
               </span>
             </div>
           </div>
-
           <div className="flex flex-col items-center gap-3">
             <ImageUploader
               value={formData.ownerPhoto}
@@ -209,13 +206,11 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
               variant="avatar"
               error={showError('ownerPhoto') ? errors.ownerPhoto : ''}
             />
-
             <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
               {formData.ownerPhoto
                 ? 'برای تغییر عکس، روی آن ضربه بزنید'
                 : 'عکس واقعی خود را آپلود کنید'}
             </p>
-
             <div
               className="flex items-start gap-2 p-3 rounded-xl border w-full"
               style={{
@@ -224,10 +219,7 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
               }}
             >
               <FiInfo size={16} style={{ color: colors.primary, flexShrink: 0 }} />
-              <p
-                className="text-xs font-[Vazir] leading-5 flex-1"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: colors.textSecondary }}>
                 قرار دادن عکس واقعی مدیر،{' '}
                 <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
                   اعتماد مشتریان را افزایش می‌دهد
@@ -238,14 +230,9 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
         </Card>
       </div>
 
-      {/* ═══════ بخش ۲: مشخصات کسب‌وکار ═══════ */}
+      {/* مشخصات */}
       <div className="space-y-3">
-        <SectionHeader
-          icon={<FiInfo size={18} />}
-          iconColor={colors.primary}
-          title="مشخصات کسب‌وکار"
-        />
-
+        <SectionHeader icon={<FiInfo size={18} />} iconColor={colors.primary} title="مشخصات کسب‌وکار" />
         <Input
           label="نام کسب‌وکار *"
           placeholder="مثال: سالن زیبایی نیلارام"
@@ -255,7 +242,6 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
           error={showError('name') ? errors.name : ''}
           rightIcon={<FiBriefcase size={18} style={{ color: colors.textSecondary }} />}
         />
-
         <Dropdown
           label="نوع کسب‌وکار *"
           placeholder="نوع کسب‌وکار خود را انتخاب کنید"
@@ -266,7 +252,6 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             markTouched('categoryId');
           }}
         />
-
         {showError('categoryId') && (
           <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
             <FiAlertCircle size={14} color="#E53935" />
@@ -277,10 +262,9 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
         )}
       </div>
 
-      {/* ═══════ بخش ۳: موقعیت مکانی ═══════ */}
+      {/* موقعیت مکانی */}
       <div className="space-y-3">
         <SectionHeader icon={<FiMapPin size={18} />} iconColor="#E53935" title="موقعیت مکانی" />
-
         <Dropdown
           label="استان *"
           placeholder="انتخاب استان"
@@ -288,7 +272,6 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
           options={PROVINCES}
           onSelect={handleProvinceChange}
         />
-
         {showError('provinceId') && (
           <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
             <FiAlertCircle size={14} color="#E53935" />
@@ -297,7 +280,6 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             </span>
           </div>
         )}
-
         <Dropdown
           label="شهر *"
           placeholder={formData.provinceId ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
@@ -308,7 +290,6 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             markTouched('cityId');
           }}
         />
-
         {showError('cityId') && (
           <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
             <FiAlertCircle size={14} color="#E53935" />
@@ -317,7 +298,6 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             </span>
           </div>
         )}
-
         <Input
           label="آدرس دقیق سالن *"
           placeholder="خیابان، کوچه، پلاک، واحد..."
@@ -329,12 +309,8 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
           rightIcon={<FiMapPin size={18} style={{ color: '#E53935' }} />}
         />
 
-        {/* نقشه */}
         <Card variant="default" padding={0} radius={16}>
-          <div
-            className="flex items-center gap-3 p-4 border-b"
-            style={{ borderColor: colors.border }}
-          >
+          <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: colors.border }}>
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: colors.primary + '20' }}
@@ -351,10 +327,7 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             </div>
           </div>
           <div className="p-4">
-            <MapPicker
-              initialLocation={formData.location}
-              onLocationSelect={handleLocationSelect}
-            />
+            <MapPicker initialLocation={formData.location} onLocationSelect={handleLocationSelect} />
           </div>
         </Card>
 
@@ -366,7 +339,6 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             </span>
           </div>
         )}
-
         {formData.location && !showError('location') && (
           <div
             className="flex items-center gap-2 py-2.5 px-4 rounded-xl border"
@@ -385,7 +357,7 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
         )}
       </div>
 
-      {/* راهنمای تکمیل */}
+      {/* راهنما */}
       <Card variant="default" padding={14} radius={14}>
         <div className="flex items-center gap-2 mb-2">
           <FiInfo size={18} style={{ color: colors.primary }} />

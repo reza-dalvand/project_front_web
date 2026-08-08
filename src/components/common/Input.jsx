@@ -1,6 +1,5 @@
 // src/components/common/Input.jsx
 'use client';
-
 import { useState } from 'react';
 import { useTheme } from '@/stores/useThemeStore';
 
@@ -28,9 +27,7 @@ export default function Input({
   const [showPassword, setShowPassword] = useState(false);
 
   const borderColor = error ? '#E57373' : focused ? colors.primary : colors.border;
-
   const bgColor = variant === 'filled' ? colors.cardBackground : 'transparent';
-
   const InputComponent = multiline ? 'textarea' : 'input';
 
   return (
@@ -52,10 +49,7 @@ export default function Input({
           ${!editable ? 'opacity-50' : ''}
           ${multiline ? 'py-3' : ''}
         `}
-        style={{
-          borderColor,
-          backgroundColor: bgColor,
-        }}
+        style={{ borderColor, backgroundColor: bgColor }}
       >
         {rightIcon && (
           <button
@@ -81,11 +75,8 @@ export default function Input({
             onBlur?.(e);
           }}
           rows={multiline ? 3 : undefined}
-          suppressHydrationWarning // ✅ این خط را اضافه کنید
-          className={`
-            flex-1 bg-transparent outline-none
-            text-right
-          `}
+          suppressHydrationWarning
+          className="flex-1 bg-transparent outline-none text-right"
           style={{
             color: colors.textMain,
             fontFamily: 'Vazir',
@@ -94,7 +85,9 @@ export default function Input({
           }}
         />
 
-        {leftIcon && !secureTextEntry && <span className="mr-3 flex items-center">{leftIcon}</span>}
+        {leftIcon && !secureTextEntry && (
+          <span className="mr-3 flex items-center">{leftIcon}</span>
+        )}
 
         {secureTextEntry && (
           <button
@@ -109,19 +102,19 @@ export default function Input({
         )}
       </div>
 
+      {/* ✅ تغییر اصلی: <p> → <div> */}
       {error && (
-        <p className="text-right text-xs mt-1" style={{ color: '#E57373', fontFamily: 'Vazir' }}>
+        <div className="text-right text-xs mt-1" style={{ color: '#E57373', fontFamily: 'Vazir' }}>
           {error}
-        </p>
+        </div>
       )}
-
       {!error && hint && (
-        <p
+        <div
           className="text-right text-xs mt-1"
           style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
         >
           {hint}
-        </p>
+        </div>
       )}
     </div>
   );

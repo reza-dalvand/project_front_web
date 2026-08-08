@@ -1,6 +1,6 @@
 'use client';
 
-import { FiBriefcase, FiShield } from 'react-icons/fi';
+import { FiBriefcase, FiShield, FiShoppingBag } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
@@ -36,7 +36,7 @@ export default function StepProgress({ currentStep, totalSteps }) {
           style={{ backgroundColor: colors.primary + '20' }}
         >
           {(() => {
-            const CurrentIcon = STEPS[currentStep - 1]?.icon || FiStore;
+            const CurrentIcon = STEPS[currentStep - 1]?.icon || FiShoppingBag;
             return <CurrentIcon size={14} style={{ color: colors.primary }} />;
           })()}
           <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>

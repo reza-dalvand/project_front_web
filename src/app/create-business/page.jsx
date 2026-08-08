@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiChevronRight, FiChevronLeft, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
@@ -14,7 +13,6 @@ import TermsAndConditionsStep from '@/components/createbusiness/TermsAndConditio
 import BasicInfoStep from '@/components/createbusiness/BasicInfoStep';
 import NationalIdVerificationStep from '@/components/createbusiness/NationalIdVerificationStep';
 import SuccessModal from '@/components/common/SuccessModal';
-import SocialMediaStep from '@/components/createbusiness/SocialMediaStep';
 
 export default function CreateBusinessPage() {
   const router = useRouter();
@@ -24,7 +22,7 @@ export default function CreateBusinessPage() {
 
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 3;
+  const totalSteps = 2; // ← از ۳ به ۲ تغییر کرد (حذف مرحله شبکه‌های اجتماعی)
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [isStepValid, setIsStepValid] = useState(false);
 
@@ -68,8 +66,6 @@ export default function CreateBusinessPage() {
             registeredPhone={registeredPhone}
           />
         );
-      case 3:
-        return <SocialMediaStep formData={formData} onUpdate={updateForm} />;
       default:
         return null;
     }
@@ -77,7 +73,6 @@ export default function CreateBusinessPage() {
 
   const isLastStep = currentStep === totalSteps;
   const isFirstStep = currentStep === 1;
-
   const canFinalSubmit = formData.isNationalIdVerified === true;
 
   const canGoNext = () => {
@@ -95,7 +90,6 @@ export default function CreateBusinessPage() {
       );
       return;
     }
-
     if (isLastStep) {
       handleFinalSubmit();
     } else {
@@ -204,7 +198,7 @@ export default function CreateBusinessPage() {
           <div className="h-32" />
         </div>
 
-        {/* فوتر دکمه‌ها */}
+        {/* فوتر دکمه‌ها — ✅ اصلاح شده */}
         <div
           className="px-5 pt-4 pb-6 space-y-3 border-t shadow-lg"
           style={{
@@ -212,7 +206,22 @@ export default function CreateBusinessPage() {
             borderColor: colors.border,
           }}
         >
+          {/* ✅ جای دکمه‌ها برعکس شد + whitespace-nowrap اضافه شد */}
           <div className="flex gap-3">
+            {/* دکمه قبلی — سمت راست (اول در RTL) */}
+            {!isFirstStep && (
+              <Button
+                title="مرحله قبل"
+                onPress={handleBackFromWizard}
+                variant="outline"
+                size="lg"
+                className="flex-1 whitespace-nowrap"
+                icon={<FiChevronRight size={18} style={{ color: colors.primary }} />}
+                iconPosition="left"
+              />
+            )}
+
+            {/* دکمه بعدی / ثبت نهایی — سمت چپ (دوم در RTL) */}
             <Button
               title={isLastStep ? 'ثبت نهایی' : 'مرحله بعد'}
               onPress={handleNextStep}
@@ -227,19 +236,8 @@ export default function CreateBusinessPage() {
                 )
               }
               iconPosition="right"
-              className={isFirstStep ? 'flex-1' : 'flex-[1.6]'}
+              className={isFirstStep ? 'flex-1 whitespace-nowrap' : 'flex-[1.6] whitespace-nowrap'}
             />
-            {!isFirstStep && (
-              <Button
-                title="مرحله قبل"
-                onPress={handleBackFromWizard}
-                variant="outline"
-                size="lg"
-                className="flex-1"
-                icon={<FiChevronRight size={18} style={{ color: colors.primary }} />}
-                iconPosition="left"
-              />
-            )}
           </div>
 
           {!canGoNext() && (
