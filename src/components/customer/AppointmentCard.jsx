@@ -1,104 +1,172 @@
+// src/components/manageBusiness/AppointmentCard.jsx
 'use client';
-import Image from 'next/image';
-import { FiCalendar, FiClock, FiUser, FiMapPin } from 'react-icons/fi';
+import {
+  FiPhone,
+  FiCalendar,
+  FiClock,
+  FiInfo,
+  FiXCircle,
+  FiCheckCircle,
+  FiChevronLeft,
+  FiKey,
+  FiShield,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import Card from '@/components/common/Card';
-import { toPersianDigit } from '@/utils/numberUtils';
+import Avatar from '@/components/common/Avatar';
+import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
 
-const STATUS_CONFIG = {
-  pending: { label: 'در انتظار', color: '#FFA000', bg: '#FFA00020' },
-  confirmed: { label: 'تأیید شده', color: '#43A047', bg: '#43A04720' },
-  cancelled: { label: 'لغو شده', color: '#F44336', bg: '#F4433620' },
-  completed: { label: 'انجام شده', color: '#757575', bg: '#75757520' },
+const STATUS_META = {
+  reserved: { label: 'رزرو شده', color: '#2196F3', icon: FiCalendar },
+  done: { label: 'انجام شده', color: '#43A047', icon: FiCheckCircle },
+  cancelled_by_salon: { label: 'لغو شده', color: '#E53935', icon: FiXCircle },
 };
 
-/**
- * کارت نوبت مشتری
- *
- * @param {object} appointment - داده نوبت
- * @param {function} onPress - تابع کلیک
- * @param {function} onCancel - تابع لغو
- */
-export default function AppointmentCard({ appointment, onPress, onCancel }) {
+export default function AppointmentCard({ appointment, onPress, onVerify }) {
   const { colors } = useTheme();
-  const statusConfig = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.pending;
+  const meta = STATUS_META[appointment.status] || STATUS_META.reserved;
+  const isReserved = appointment.status === 'reserved';
+  const isTrustBased = appointment.trustBased === true;
+  const isDone = appointment.status === 'done';
+  const isCancelled = appointment.status === 'cancelled_by_salon';
+  const StatusIcon = meta.icon;
+
+  const dateStr = appointment.date
+    ? `${toPersianDigit(appointment.date.jm)}/${toPersianDigit(appointment.date.jd)}`
+    : '—';
 
   return (
-    <Card
-      variant="elevated"
-      padding={14}
-      radius={12}
-      onPress={onPress}
-      className="cursor-pointer hover:scale-[1.01] transition-transform"
+    <button
+      onClick={() => onPress?.(appointment)}
+      className="w-full rounded-2xl border overflow-hidden text-right transition-all
+        hover:shadow-md active:scale-[0.99]"
+      style={{
+        backgroundColor: colors.cardBackground,
+        borderColor: isCancelled ? '#E5393530' : colors.border,
+        opacity: isCancelled ? 0.75 : 1,
+      }}
     >
-      {/* هدر: کسب‌وکار + وضعیت */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-3 flex-1">
-          {appointment.businessLogo && (
-            <Image
-              src={appointment.businessLogo}
-              alt={appointment.businessName}
-              width={48}
-              height={48}
-              className="rounded-xl"
-            />
-          )}
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              {appointment.businessName}
+      {/* ═══ ردیف اصلی: مشتری + وضعیت ═══ */}
+      <div className="flex items-center gap-3 px-4 py-3.5">
+        <Avatar name={appointment.customerName} size="md" />
+
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
+          {/* نام + Badge */}
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className="text-sm font-[Vazir-Bold] truncate"
+              style={{ color: colors.textMain }}
+            >
+              {appointment.customerName}
             </span>
-            <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-              {appointment.serviceName}
+            <span
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px]
+                font-[Vazir-Bold] flex-shrink-0"
+              style={{ backgroundColor: meta.color + '18', color: meta.color }}
+            >
+              <StatusIcon size={10} />
+              {meta.label}
             </span>
           </div>
-        </div>
-        {/* Badge وضعیت */}
-        <div className="px-2.5 py-1 rounded-lg" style={{ backgroundColor: statusConfig.bg }}>
-          <span className="text-xs font-[Vazir]" style={{ color: statusConfig.color }}>
-            {statusConfig.label}
-          </span>
-        </div>
-      </div>
 
-      {/* جزئیات */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <FiCalendar size={14} style={{ color: colors.textSecondary }} />
-          <span className="text-[13px] font-[Vazir]" style={{ color: colors.textMain }}>
-            {appointment.date}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FiClock size={14} style={{ color: colors.textSecondary }} />
-          <span className="text-[13px] font-[Vazir]" style={{ color: colors.textMain }}>
-            {appointment.time}
-          </span>
-        </div>
-        {appointment.teamMember && (
-          <div className="flex items-center gap-2">
-            <FiUser size={14} style={{ color: colors.textSecondary }} />
-            <span className="text-[13px] font-[Vazir]" style={{ color: colors.textMain }}>
-              {appointment.teamMember}
+          {/* تاریخ • ساعت • بیعانه */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+              📅 {dateStr}
             </span>
+            <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+              🕐 {appointment.time}
+            </span>
+            {appointment.depositPaid > 0 && (
+              <span
+                className="text-[11px] font-[Vazir-Bold]"
+                style={{ color: colors.primary }}
+              >
+                💰 {formatPrice(appointment.depositPaid)}
+              </span>
+            )}
           </div>
-        )}
+
+          {/* شماره تماس */}
+          <span
+            className="text-[10px] font-[Vazir]"
+            style={{ color: colors.textSecondary, direction: 'ltr', textAlign: 'right' }}
+          >
+            {toPersianDigit(appointment.customerPhone || '—')}
+          </span>
+        </div>
+
+        <FiChevronLeft size={18} style={{ color: colors.textSecondary, flexShrink: 0 }} />
       </div>
 
-      {/* دکمه لغو - فقط برای نوبت‌های تأیید شده */}
-      {appointment.status === 'confirmed' && onCancel && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onCancel();
-          }}
-          className="w-full mt-3 py-2 rounded-lg border text-center transition-colors"
-          style={{ borderColor: colors.border }}
+      {/* ═══ بخش اکشن ═══ */}
+
+      {/* ── اعتمادی: پیام خودکار تایید ── */}
+      {isReserved && isTrustBased && (
+        <div
+          className="flex items-start gap-2.5 px-4 py-3 border-t"
+          style={{ borderColor: colors.border, backgroundColor: '#43A04708' }}
         >
-          <span className="text-[13px] font-[Vazir]" style={{ color: '#F44336' }}>
-            لغو نوبت
+          <FiShield size={16} color="#43A047" className="flex-shrink-0 mt-0.5" />
+          <span
+            className="text-[11px] font-[Vazir] leading-[19px] flex-1"
+            style={{ color: '#43A047' }}
+          >
+            این نوبت بصورت خودکار بدون نیاز به کد تایید شده چون مشتری تیک اعتماد به سالن
+            رو زده
           </span>
-        </button>
+        </div>
       )}
-    </Card>
+
+      {/* ── نیاز به کد: دکمه باریک تمام عرض ── */}
+      {isReserved && !isTrustBased && (
+        <div className="px-4 py-3 border-t" style={{ borderColor: colors.border }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onVerify?.(appointment);
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
+              border-[1.5px] transition-all hover:scale-[1.01] active:scale-[0.99]"
+            style={{
+              borderColor: '#FF980050',
+              backgroundColor: '#FF980008',
+            }}
+          >
+            <FiKey size={14} color="#FF9800" />
+            <span className="text-[12px] font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
+              وارد کردن کد تایید
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* ── لغو شده: دلیل ── */}
+      {isCancelled && appointment.cancellationReason && (
+        <div
+          className="flex items-start gap-2 px-4 py-2.5 border-t"
+          style={{ borderColor: '#E5393520', backgroundColor: '#E5393508' }}
+        >
+          <FiInfo size={13} color="#E53935" className="flex-shrink-0 mt-0.5" />
+          <span className="text-[10px] font-[Vazir] leading-4" style={{ color: '#E53935' }}>
+            {appointment.cancellationReason}
+          </span>
+        </div>
+      )}
+
+      {/* ── انجام شده ── */}
+      {isDone && (
+        <div
+          className="flex items-center gap-1.5 px-4 py-2.5 border-t"
+          style={{ borderColor: '#43A04720', backgroundColor: '#43A04708' }}
+        >
+          <FiCheckCircle size={13} color="#43A047" />
+          <span className="text-[10px] font-[Vazir]" style={{ color: '#43A047' }}>
+            {appointment.trustConfirmed
+              ? 'خدمت انجام شد • بدون نیاز به کد • بیعانه آزاد شد'
+              : 'خدمت انجام شد • کد تایید شد • بیعانه آزاد شد'}
+          </span>
+        </div>
+      )}
+    </button>
   );
 }

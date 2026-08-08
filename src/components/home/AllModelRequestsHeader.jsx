@@ -1,5 +1,5 @@
 'use client';
-import { FiArrowRight, FiSliders } from 'react-icons/fi';
+import { FiArrowRight, FiFilter } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { toPersianDigit } from '@/utils/numberUtils';
 
@@ -55,7 +55,7 @@ export default function AllModelRequestsHeader({
                   : 'rgba(255,255,255,0.2)',
               }}
             >
-              <FiSliders size={20} color="#fff" />
+              <FiFilter size={20} color="#fff" />
               {hasActiveFilter && (
                 <div
                   className="absolute top-2 right-2 w-2 h-2 rounded-full"

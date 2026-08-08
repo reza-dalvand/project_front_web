@@ -1,5 +1,5 @@
 'use client';
-import { FiX, FiMapPin, FiStar, FiSliders } from 'react-icons/fi';
+import { FiX, FiMapPin, FiStar, FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
 
@@ -58,7 +58,7 @@ export default function ActiveFiltersBar({ filters, onChange, onClearAll }) {
     chips.push({
       id: 'sortBy',
       label: SORT_LABELS[filters.sortBy] || filters.sortBy,
-      icon: <FiSliders size={14} />,
+      icon: <FiFilter size={14} />,
       onRemove: () => onChange({ ...filters, sortBy: 'top_rated' }),
     });
   }

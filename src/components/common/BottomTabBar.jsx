@@ -15,7 +15,7 @@ export default function BottomTabBar() {
 
   // ─── تشخیص داشتن کسب‌وکار فعال ───
   const hasBusiness = Boolean(
-    businessData?.id && businessData?.name && businessData?.isActive !== true
+    businessData?.id && businessData?.name && businessData?.isActive !== false
   );
   // ─── ساخت تب‌ها بر اساس وضعیت احراز هویت ───
   const tabs = isAuthenticated

@@ -1,3 +1,4 @@
+// src/hooks/useAppointmentsManager.js
 'use client';
 import { useState, useMemo, useCallback } from 'react';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -10,34 +11,26 @@ import {
   isSameJalaaliDay,
 } from '@/utils/dateUtils';
 
-/**
- * هوک مدیریت نوبت‌ها
- * تمام منطق فیلتر، جستجو، آمار و اکشن‌ها را یکجا مدیریت می‌کند
- */
 export const useAppointmentsManager = () => {
   const { showToast } = useToast();
 
-  // اتصال مستقیم به Store سراسری
   const appointments = useBusinessStore((s) => s.businessData?.appointments) || [];
   const verifyAppointment = useBusinessStore((s) => s.verifyAppointment);
+  const confirmTrustAppointment = useBusinessStore((s) => s.confirmTrustAppointment);
   const cancelAppointment = useBusinessStore((s) => s.cancelAppointment);
 
-  // State‌های فیلتر
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState(null);
 
-  // تاریخ‌های مرجع
   const today = useMemo(() => todayJalaali(), []);
   const todayNumber = jalaaliToNumber(today);
-
   const todayDate = useMemo(() => {
     const d = jalaaliToDate(today);
     d.setHours(0, 0, 0, 0);
     return d;
   }, [today]);
 
-  // محدودیت: فقط امروز و ۳ ماه گذشته (و آینده) قابل نمایش است
   const threeMonthsAgoNumber = useMemo(
     () => jalaaliToNumber(subtractJalaaliMonths(today, 3)),
     [today]
@@ -45,38 +38,39 @@ export const useAppointmentsManager = () => {
 
   // ═══════ فیلتر + جستجو ═══════
   const filteredAppointments = useMemo(() => {
-    // گام ۱: حذف نوبت‌های قدیمی‌تر از ۳ ماه
     let result = appointments.filter((apt) => {
       if (!apt.date) return false;
       return jalaaliToNumber(apt.date) >= threeMonthsAgoNumber;
     });
 
-    // گام ۲: فیلتر وضعیت
+    // فیلتر وضعیت
     if (activeFilter !== 'all') {
       if (activeFilter === 'cancelled') {
         result = result.filter((a) => a.status === 'cancelled_by_salon');
+      } else if (activeFilter === 'needs_code') {
+        result = result.filter((a) => a.status === 'reserved' && !a.trustBased);
+      } else if (activeFilter === 'trust_based') {
+        result = result.filter((a) => a.status === 'reserved' && a.trustBased);
       } else {
         result = result.filter((a) => a.status === activeFilter);
       }
     }
 
-    // گام ۳: جستجو
+    // جستجو
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       result = result.filter(
         (a) =>
           (a.customerName || '').toLowerCase().includes(q) ||
           (a.serviceName || '').toLowerCase().includes(q) ||
-          (a.employeeName || '').toLowerCase().includes(q) ||
           (a.customerPhone || '').includes(q)
       );
     }
 
-    // گام ۴: فیلتر تاریخ
+    // فیلتر تاریخ
     if (dateFilter === 'today') {
       result = result.filter((a) => isSameJalaaliDay(a.date, today));
     } else if (dateFilter === 'week') {
-      // از امروز تا ۷ روز بعد
       const weekEnd = new Date(todayDate);
       weekEnd.setDate(weekEnd.getDate() + 7);
       result = result.filter((a) => {
@@ -90,7 +84,7 @@ export const useAppointmentsManager = () => {
     return result;
   }, [appointments, activeFilter, searchQuery, dateFilter, today, todayDate, threeMonthsAgoNumber]);
 
-  // ═══════ آمار (برای Badge فیلترها) ═══════
+  // ═══════ آمار ═══════
   const counts = useMemo(() => {
     const base = appointments.filter((apt) => {
       if (!apt.date) return false;
@@ -99,20 +93,34 @@ export const useAppointmentsManager = () => {
     return {
       all: base.length,
       reserved: base.filter((a) => a.status === 'reserved').length,
-      cancelled: base.filter((a) => a.status === 'cancelled_by_salon').length,
+      needs_code: base.filter((a) => a.status === 'reserved' && !a.trustBased).length,
+      trust_based: base.filter((a) => a.status === 'reserved' && a.trustBased).length,
       done: base.filter((a) => a.status === 'done').length,
+      cancelled: base.filter((a) => a.status === 'cancelled_by_salon').length,
     };
   }, [appointments, threeMonthsAgoNumber]);
 
-  // ═══════ اکشن‌ها (مستقیم روی Store) ═══════
+  // ═══════ اکشن‌ها ═══════
+
+  // تایید با کد (نوبت معمولی)
   const handleVerify = useCallback(
     (appointmentId) => {
       verifyAppointment(appointmentId);
-      showToast('✓ خدمت تایید شد • بیعانه به حساب شما واریز می‌شود', 'success');
+      showToast('✓ کد تایید شد • بیعانه به حساب شما واریز می‌شود', 'success');
     },
     [verifyAppointment, showToast]
   );
 
+  // تایید بدون کد (نوبت اعتمادی)
+  const handleTrustConfirm = useCallback(
+    (appointmentId) => {
+      confirmTrustAppointment(appointmentId);
+      showToast('✓ خدمت تایید شد (بدون نیاز به کد) • بیعانه آزاد شد', 'success');
+    },
+    [confirmTrustAppointment, showToast]
+  );
+
+  // لغو نوبت
   const handleCancel = useCallback(
     (appointmentId, reason) => {
       cancelAppointment(appointmentId, reason);
@@ -131,6 +139,7 @@ export const useAppointmentsManager = () => {
     dateFilter,
     setDateFilter,
     handleVerify,
+    handleTrustConfirm,
     handleCancel,
   };
 };

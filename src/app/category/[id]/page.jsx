@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FiSliders } from 'react-icons/fi';
+import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import CategoryHeader from '@/components/home/CategoryHeader';

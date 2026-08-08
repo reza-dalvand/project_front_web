@@ -1,3 +1,4 @@
+// src/components/manageBusiness/VerifyCodeModal.jsx
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { FiCheckCircle, FiInfo } from 'react-icons/fi';
@@ -19,6 +20,7 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
     if (visible && appointment) {
       setCode(['', '', '', '']);
       setError('');
+      setLoading(false);
       setTimeout(() => inputRefs.current[0]?.focus(), 300);
     }
   }, [visible, appointment]);
@@ -28,7 +30,6 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
   const handleChange = (text, index) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     const newCode = [...code];
-
     if (cleaned.length > 1) {
       const digits = cleaned.slice(0, CODE_LENGTH).split('');
       digits.forEach((digit, i) => {
@@ -40,12 +41,10 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
       setError('');
       return;
     }
-
     const digit = cleaned[0] || '';
     newCode[index] = digit;
     setCode(newCode);
     setError('');
-
     if (digit && index < CODE_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -63,12 +62,10 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
       setError(`کد تایید ${toPersianDigit(CODE_LENGTH)} رقمی را کامل وارد کنید`);
       return;
     }
-
     if (enteredCode !== appointment.verificationCode) {
       setError('کد وارد شده صحیح نیست. لطفاً از مشتری کد درست را بپرسید.');
       return;
     }
-
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1200));
     onConfirm(appointment.id);
@@ -87,13 +84,13 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
         className="w-full max-w-sm rounded-2xl p-4 flex flex-col gap-3"
         style={{ backgroundColor: colors.cardBackground }}
       >
-        {/* هدر فشرده */}
+        {/* هدر */}
         <div className="flex items-center gap-2.5">
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: '#43A04715' }}
+            style={{ backgroundColor: '#FF980015' }}
           >
-            <FiCheckCircle size={20} color="#43A047" />
+            <FiCheckCircle size={20} color="#FF9800" />
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
@@ -105,7 +102,7 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
           </div>
         </div>
 
-        {/* اطلاعات مشتری فشرده */}
+        {/* اطلاعات مشتری */}
         <div className="flex items-center gap-2.5">
           <Avatar name={appointment.customerName} size="sm" />
           <div className="flex flex-col gap-0.5 flex-1 min-w-0">
@@ -133,8 +130,7 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
               className="w-12 h-14 rounded-xl text-center text-xl font-[Vazir-Bold] outline-none transition-all"
               style={{
                 backgroundColor: colors.background,
-                borderColor:
-                  error && digit === '' ? '#E53935' : digit ? colors.primary : colors.border,
+                borderColor: error && digit === '' ? '#E53935' : digit ? '#FF9800' : colors.border,
                 borderWidth: digit ? 2 : 1.5,
                 color: colors.textMain,
               }}
@@ -166,7 +162,7 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
           </span>
         </div>
 
-        {/* دکمه‌ها فشرده */}
+        {/* دکمه‌ها */}
         <div className="flex gap-2">
           <Button
             title="انصراف"
@@ -183,7 +179,7 @@ export default function VerifyCodeModal({ visible, appointment, onClose, onConfi
             variant="primary"
             size="md"
             className="flex-1 whitespace-nowrap"
-            style={{ backgroundColor: '#43A047' }}
+            style={{ backgroundColor: '#FF9800' }}
           />
         </div>
       </div>

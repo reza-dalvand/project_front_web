@@ -1,3 +1,4 @@
+// src/app/manage/appointments/page.jsx
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,9 +10,9 @@ import EmptyState from '@/components/common/EmptyState';
 import AppointmentFilters from '@/components/manageBusiness/AppointmentFilters';
 import AppointmentSearchBar from '@/components/manageBusiness/AppointmentSearchBar';
 import AppointmentCard from '@/components/manageBusiness/AppointmentCard';
+import AppointmentDetailSheet from '@/components/manageBusiness/AppointmentDetailSheet';
 import VerifyCodeModal from '@/components/manageBusiness/VerifyCodeModal';
 import CancelReasonModal from '@/components/manageBusiness/CancelReasonModal';
-import AppointmentDetailSheet from '@/components/manageBusiness/AppointmentDetailSheet';
 import { useAppointmentsManager } from '@/hooks/useAppointmentsManager';
 
 export default function AllAppointmentsPage() {
@@ -19,7 +20,6 @@ export default function AllAppointmentsPage() {
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
 
-  // تمام منطق از Hook
   const {
     appointments,
     counts,
@@ -30,77 +30,71 @@ export default function AllAppointmentsPage() {
     dateFilter,
     setDateFilter,
     handleVerify,
+    handleTrustConfirm,
     handleCancel,
   } = useAppointmentsManager();
 
-  // فقط State مدال‌ها در صفحه
+  const [selectedApt, setSelectedApt] = useState(null);
+  const [detailVisible, setDetailVisible] = useState(false);
   const [verifyTarget, setVerifyTarget] = useState(null);
   const [verifyVisible, setVerifyVisible] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelVisible, setCancelVisible] = useState(false);
-  const [selectedApt, setSelectedApt] = useState(null);
-  const [detailVisible, setDetailVisible] = useState(false);
 
-  // ═══ هندلرهای مدال ═══
+  // ═══ باز کردن جزئیات (کلیک روی کارت) ═══
   const openDetail = (apt) => {
     setSelectedApt(apt);
     setDetailVisible(true);
   };
+
   const closeDetail = () => {
     setDetailVisible(false);
     setTimeout(() => setSelectedApt(null), 300);
   };
 
+  // ═══ تایید کد (از دکمه باریک روی کارت) ═══
   const openVerify = (apt) => {
     setVerifyTarget(apt);
     setVerifyVisible(true);
   };
+
   const confirmVerify = (aptId) => {
     handleVerify(aptId);
     setVerifyVisible(false);
     setVerifyTarget(null);
   };
 
+  // ═══ تایید اعتمادی (از مدال جزئیات) ═══
+  const handleTrust = (apt) => {
+    handleTrustConfirm(apt.id);
+    setDetailVisible(false);
+  };
+
+  // ═══ لغو نوبت (از مدال جزئیات) ═══
   const openCancel = (apt) => {
+    setDetailVisible(false);
     setCancelTarget(apt);
     setCancelVisible(true);
   };
+
   const confirmCancel = (aptId, reason) => {
     handleCancel(aptId, reason);
     setCancelVisible(false);
     setCancelTarget(null);
   };
 
-  // ═══ تنظیمات حالت خالی ═══
+  // ═══ حالت خالی ═══
   const getEmptyConfig = () => {
     if (searchQuery || dateFilter) {
-      return {
-        icon: '🔍',
-        title: 'نتیجه‌ای یافت نشد',
-        description: 'فیلترهای جستجو را تغییر دهید',
-      };
+      return { icon: '🔍', title: 'نتیجه‌ای یافت نشد', description: 'فیلترها را تغییر دهید' };
     }
     const configs = {
-      all: {
-        icon: '📅',
-        title: 'هنوز نوبتی ثبت نشده',
-        description: 'پس از رزرو اولین نوبت، اینجا نمایش داده می‌شود',
-      },
-      reserved: {
-        icon: '📋',
-        title: 'نوبت رزرو شده‌ای وجود ندارد',
-        description: 'در حال حاضر نوبت فعالی نیست',
-      },
-      cancelled: {
-        icon: '❌',
-        title: 'نوبت لغو شده‌ای وجود ندارد',
-        description: 'هیچ نوبتی لغو نشده',
-      },
-      done: {
-        icon: '✅',
-        title: 'نوبت انجام شده‌ای وجود ندارد',
-        description: 'هنوز خدمتی تکمیل نشده',
-      },
+      all: { icon: '📅', title: 'هنوز نوبتی ثبت نشده', description: 'پس از رزرو اولین نوبت، اینجا نمایش داده می‌شود' },
+      reserved: { icon: '📋', title: 'نوبت رزرو شده‌ای نیست', description: 'در حال حاضر نوبت فعالی وجود ندارد' },
+      needs_code: { icon: '🔑', title: 'نوبتی بدون کد تایید نیست', description: 'همه نوبت‌ها اعتمادی هستند' },
+      trust_based: { icon: '🛡️', title: 'نوبت اعتمادی نیست', description: 'هنوز مشتری‌ای گزینه اعتماد را فعال نکرده' },
+      done: { icon: '✅', title: 'نوبت انجام شده‌ای نیست', description: 'هنوز خدمتی تکمیل نشده' },
+      cancelled: { icon: '❌', title: 'نوبت لغو شده‌ای نیست', description: 'هیچ نوبتی لغو نشده' },
     };
     return configs[activeFilter] || configs.all;
   };
@@ -117,7 +111,7 @@ export default function AllAppointmentsPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="همه نوبت‌ها" onBackPress={() => router.push('/manage')} />
+      <Header title="مدیریت نوبت‌ها" onBackPress={() => router.push('/manage')} />
 
       <AppointmentSearchBar
         searchQuery={searchQuery}
@@ -136,9 +130,8 @@ export default function AllAppointmentsPage() {
               <AppointmentCard
                 key={apt.id}
                 appointment={apt}
-                onDetails={openDetail}
+                onPress={openDetail}
                 onVerify={openVerify}
-                onCancel={openCancel}
               />
             ))}
           </div>
@@ -146,6 +139,16 @@ export default function AllAppointmentsPage() {
           <EmptyState {...getEmptyConfig()} />
         )}
       </div>
+
+      {/* مدال جزئیات */}
+      <AppointmentDetailSheet
+        visible={detailVisible}
+        appointment={selectedApt}
+        onClose={closeDetail}
+        onVerify={openVerify}
+        onTrustConfirm={handleTrust}
+        onCancel={openCancel}
+      />
 
       {/* مدال تایید کد */}
       <VerifyCodeModal
@@ -167,13 +170,6 @@ export default function AllAppointmentsPage() {
           setCancelTarget(null);
         }}
         onConfirm={confirmCancel}
-      />
-
-      {/* شیت جزئیات */}
-      <AppointmentDetailSheet
-        visible={detailVisible}
-        appointment={selectedApt}
-        onClose={closeDetail}
       />
     </ScreenWrapper>
   );

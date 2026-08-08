@@ -211,6 +211,7 @@ export default function BookingModal({
               disabled={!canProceed}
               icon={<FiArrowLeft size={18} color="#fff" />}
               fullWidth
+              iconPosition="right"
             />
           </div>
         </div>

@@ -289,36 +289,61 @@ export const useBusinessStore = create(
           },
         })),
 
-      // 🆕 تایید انجام خدمت (با ثبت زمان تایید)
-      verifyAppointment: (appointmentId) =>
-        set((state) => ({
-          businessData: {
-            ...state.businessData,
-            appointments: state.businessData.appointments.map((apt) =>
-              apt.id === appointmentId
-                ? { ...apt, status: 'done', verifiedAt: new Date().toISOString() }
-                : apt
-            ),
-          },
-        })),
+// ═══════ فقط بخش اکشن‌های نوبت تغییر می‌کند ═══════
 
-      // 🆕 لغو نوبت توسط سالن (با دلیل و مبلغ استرداد)
-      cancelAppointment: (appointmentId, reason) =>
-        set((state) => ({
-          businessData: {
-            ...state.businessData,
-            appointments: state.businessData.appointments.map((apt) =>
-              apt.id === appointmentId
-                ? {
-                    ...apt,
-                    status: 'cancelled_by_salon',
-                    cancellationReason: reason || 'دلیلی ذکر نشده است',
-                    refundAmount: apt.depositPaid || 0,
-                  }
-                : apt
-            ),
-          },
-        })),
+// ✅ تایید با کد (نوبت معمولی)
+verifyAppointment: (appointmentId) =>
+  set((state) => ({
+    businessData: {
+      ...state.businessData,
+      appointments: state.businessData.appointments.map((apt) =>
+        apt.id === appointmentId
+          ? {
+              ...apt,
+              status: 'done',
+              verifiedAt: new Date().toISOString(),
+              verifiedByCode: true,
+            }
+          : apt
+      ),
+    },
+  })),
+
+// 🆕 تایید بدون کد (نوبت اعتمادی)
+confirmTrustAppointment: (appointmentId) =>
+  set((state) => ({
+    businessData: {
+      ...state.businessData,
+      appointments: state.businessData.appointments.map((apt) =>
+        apt.id === appointmentId
+          ? {
+              ...apt,
+              status: 'done',
+              verifiedAt: new Date().toISOString(),
+              trustConfirmed: true,
+            }
+          : apt
+      ),
+    },
+  })),
+
+// 🆕 لغو نوبت توسط سالن
+cancelAppointment: (appointmentId, reason) =>
+  set((state) => ({
+    businessData: {
+      ...state.businessData,
+      appointments: state.businessData.appointments.map((apt) =>
+        apt.id === appointmentId
+          ? {
+              ...apt,
+              status: 'cancelled_by_salon',
+              cancellationReason: reason || 'دلیلی ذکر نشده است',
+              refundAmount: apt.depositPaid || 0,
+            }
+          : apt
+      ),
+    },
+  })),
 
       // ═══════ Portfolios ═══════
       addPortfolio: (portfolio) =>

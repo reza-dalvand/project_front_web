@@ -1,6 +1,6 @@
 // src/components/home/HomeHeader.jsx
 'use client';
-import { FiSliders, FiMoon, FiSun } from 'react-icons/fi';
+import { FiFilter, FiMoon, FiSun } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import SearchBar from '@/components/common/SearchBar';
 import Avatar from '@/components/common/Avatar';
@@ -81,7 +81,7 @@ export default function HomeHeader({
                 borderColor: 'rgba(255,255,255,0.1)',
               }}
             >
-              <FiSliders size={22} color="#fff" />
+              <FiFilter size={22} color="#fff" />
               {hasActiveFilter && (
                 <div
                   className="absolute top-2 right-2 w-2 h-2 rounded-full border-[1.5px]"

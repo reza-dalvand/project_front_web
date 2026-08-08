@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation'; // ✅ ۱. ایمپورت useRouter
-import { FiSliders, FiGrid } from 'react-icons/fi';
+import { FiFilter, FiGrid } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import SectionHeader from '@/components/common/SectionHeader';
@@ -145,7 +145,7 @@ export default function ExplorePage() {
                 borderColor: hasActiveFilter ? colors.primary : colors.border,
               }}
             >
-              <FiSliders
+              <FiFilter
                 size={18}
                 style={{
                   color: hasActiveFilter ? colors.primary : colors.textMain,

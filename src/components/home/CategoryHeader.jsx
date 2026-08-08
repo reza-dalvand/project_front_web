@@ -1,5 +1,5 @@
 'use client';
-import { FiArrowRight, FiSliders } from 'react-icons/fi';
+import { FiArrowRight, FiFilter } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
 import SearchBar from '@/components/common/SearchBar';
@@ -76,7 +76,7 @@ export default function CategoryHeader({
                 borderColor: 'rgba(255,255,255,0.15)',
               }}
             >
-              <FiSliders size={20} color="#fff" />
+              <FiFilter size={20} color="#fff" />
               {/* نقطه نشانگر فیلتر فعال */}
               {hasActiveFilter && (
                 <div

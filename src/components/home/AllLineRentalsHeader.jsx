@@ -1,5 +1,5 @@
 'use client';
-import { FiArrowRight, FiHome, FiSliders } from 'react-icons/fi';
+import { FiArrowRight, FiHome, FiFilter } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
@@ -73,7 +73,7 @@ export default function AllLineRentalsHeader({
                 borderColor: 'rgba(255,255,255,0.15)',
               }}
             >
-              <FiSliders size={20} color="#fff" />
+              <FiFilter size={20} color="#fff" />
               {hasActiveFilter && (
                 <div
                   className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full

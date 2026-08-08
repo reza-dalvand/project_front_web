@@ -30,11 +30,11 @@ export default function SectionHeader({ icon, iconColor, title, subtitle, rightE
 
         {/* متن‌ها */}
         <div className="flex flex-col gap-0.5 flex-1">
-          <h3 className="text-base font-[Vazir-Bold] text-right" style={{ color: colors.textMain }}>
+          <h3 className="text-base font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
             {title}
           </h3>
           {subtitle && (
-            <p className="text-xs font-[Vazir] text-right" style={{ color: colors.textSecondary }}>
+            <p className="text-xs font-[Vazir] text-center" style={{ color: colors.textSecondary }}>
               {subtitle}
             </p>
           )}
