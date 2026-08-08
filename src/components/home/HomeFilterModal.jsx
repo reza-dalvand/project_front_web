@@ -34,7 +34,7 @@ export default function HomeFilterModal({ visible, onClose, onApply, currentFilt
   const hasActiveFilter = province || city;
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="فیلتر موقعیت مکانی" snapPoint={0.7}>
+    <BottomSheet visible={visible} onClose={onClose} title="فیلتر موقعیت مکانی" snapPoint={0.8}>
       <div className="space-y-5 pb-5">
         {/* راهنما */}
         <div
