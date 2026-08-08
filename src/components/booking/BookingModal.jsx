@@ -1,3 +1,4 @@
+// src/components/booking/BookingModal.jsx
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -9,23 +10,25 @@ import {
   FiArrowLeft,
   FiLock,
   FiCheck,
-  FiUsers,
   FiInfo,
   FiShield,
+  FiDollarSign,
+  FiTag,
+  FiCreditCard,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 import Button from '@/components/common/Button';
 import BookingStepIndicator from './BookingStepIndicator';
 import BookingDateSelector from './BookingDateSelector';
 import BookingTimeSelector from './BookingTimeSelector';
-import EmployeeSelector from './EmployeeSelector';
-import PriceBreakdown from '@/components/common/PriceBreakdown';
 import RulesCard from './RulesCard';
-import { toPersianDigit, parseNumber } from '@/utils/numberUtils';
+import TrustToggle from './TrustToggle';
+import { toPersianDigit, parseNumber, formatPrice } from '@/utils/numberUtils';
 import { PERSIAN_MONTHS } from '@/utils/dateUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-// ═══════════ STEPS (۳ مرحله - بدون مرحله تایید) ═══════════
+// ═══════════ STEPS (۳ مرحله) ═══════════
 const STEPS = [
   { id: 1, label: 'بررسی', icon: FiInfo },
   { id: 2, label: 'تاریخ', icon: FiCalendar },
@@ -46,15 +49,6 @@ const MOCK_TIME_SLOTS = [
   { id: 't10', time: '۱۵:۰۰', isAvailable: false },
   { id: 't11', time: '۱۵:۳۰', isAvailable: true },
   { id: 't12', time: '۱۶:۰۰', isAvailable: true },
-];
-
-// ═══════════ 🆕 MOCK EMPLOYEES ═══════════
-const MOCK_EMPLOYEES = [
-  { id: 'emp_1', name: 'سارا احمدی', role: 'متخصص پوست', experience: '۵ سال سابقه' },
-  { id: 'emp_2', name: 'مریم رضایی', role: 'ناخن‌کار', experience: '۳ سال سابقه' },
-  { id: 'emp_3', name: 'دکتر رضایی', role: 'لیزر', experience: '۸ سال سابقه' },
-  { id: 'emp_4', name: 'الناز کریمی', role: 'آرایشگر', experience: '۴ سال سابقه' },
-  { id: 'emp_5', name: 'نیلوفر موسوی', role: 'میکاپ', experience: '۶ سال سابقه' },
 ];
 
 // ═══════════ MOCK SERVICE ═══════════
@@ -79,16 +73,20 @@ export default function BookingModal({
   onConfirm,
 }) {
   const { colors } = useTheme();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const currentService = service || MOCK_SERVICE;
 
   // ─── State ───
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null); // 🆕
   const [showSuccess, setShowSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [trustEnabled, setTrustEnabled] = useState(false);
   const instanceId = useRef('booking-modal');
+
+  // ✅ تشخیص اینکه مشتری قبلاً حداقل یک نوبت ثبت کرده
+  const hasPreviousBookings = isAuthenticated;
 
   // ─── محاسبات قیمت ───
   const originalPrice = parseNumber(currentService.originalPrice ?? currentService.price);
@@ -98,6 +96,7 @@ export default function BookingModal({
   const hasDeposit = currentService.hasDeposit || false;
   const depositPercent = parseNumber(currentService.depositPercent) || 30;
   const depositAmount = hasDeposit ? Math.round((finalPrice * depositPercent) / 100) : finalPrice;
+  const remainingAmount = finalPrice - depositAmount;
 
   // ─── Effects ───
   useEffect(() => {
@@ -113,8 +112,8 @@ export default function BookingModal({
       setCurrentStep(1);
       setSelectedDate(null);
       setSelectedTime(null);
-      setSelectedEmployeeId(null);
       setShowSuccess(false);
+      setTrustEnabled(false);
       acquireScrollLock(instanceId.current);
     } else {
       releaseScrollLock(instanceId.current);
@@ -135,6 +134,7 @@ export default function BookingModal({
   const handleNext = () => {
     if (currentStep < 3) setCurrentStep((p) => p + 1);
   };
+
   const handlePrev = () => {
     if (currentStep > 1) setCurrentStep((p) => p - 1);
   };
@@ -146,7 +146,8 @@ export default function BookingModal({
         service: currentService,
         date: selectedDate,
         time: selectedTime,
-        employeeId: selectedEmployeeId,
+        trustBased: trustEnabled,
+        verificationCode: trustEnabled ? null : undefined,
       });
     }, 3000);
   };
@@ -155,8 +156,8 @@ export default function BookingModal({
     setCurrentStep(1);
     setSelectedDate(null);
     setSelectedTime(null);
-    setSelectedEmployeeId(null);
     setShowSuccess(false);
+    setTrustEnabled(false);
     onClose?.();
   };
 
@@ -188,6 +189,7 @@ export default function BookingModal({
         />
       );
     }
+
     // مرحله ۲: بازگشت + ادامه
     if (currentStep === 2) {
       return (
@@ -214,28 +216,51 @@ export default function BookingModal({
         </div>
       );
     }
-    // مرحله ۳: بازگشت + پرداخت سبز
+
+    // مرحله ۳: بازگشت + مبلغ بیعانه + دکمه پرداخت
     return (
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handlePrev}
-          className="flex items-center gap-1 py-3.5 px-[18px] rounded-[14px] border-[1.5px]"
-          style={{ borderColor: colors.border }}
+      <div className="flex flex-col gap-2.5">
+        {/* ✅ مبلغ بیعانه بالای دکمه پرداخت */}
+        <div
+          className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border"
+          style={{
+            backgroundColor: colors.primary + '08',
+            borderColor: colors.primary + '25',
+          }}
         >
-          <FiArrowRight size={18} style={{ color: colors.textMain }} />
-          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-            بازگشت
+          <div className="flex items-center gap-2">
+            <FiCreditCard size={15} style={{ color: colors.primary }} />
+            <span className="text-[12px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+              مبلغ بیعانه قابل پرداخت
+            </span>
+          </div>
+          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
+            {formatPrice(depositAmount)}
           </span>
-        </button>
-        <div className="flex-1">
-          <Button
-            title={`پرداخت ${toPersianDigit(depositAmount.toLocaleString('en-US'))} تومان`}
-            onPress={handleConfirm}
-            disabled={!canProceed}
-            icon={<FiLock size={18} color="#fff" />}
-            fullWidth
-            style={{ backgroundColor: canProceed ? '#43A047' : colors.border }}
-          />
+        </div>
+
+        {/* دکمه‌ها */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handlePrev}
+            className="flex items-center gap-1 py-3.5 px-[18px] rounded-[14px] border-[1.5px]"
+            style={{ borderColor: colors.border }}
+          >
+            <FiArrowRight size={18} style={{ color: colors.textMain }} />
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+              بازگشت
+            </span>
+          </button>
+          <div className="flex-1">
+            <Button
+              title="پرداخت"
+              onPress={handleConfirm}
+              disabled={!canProceed}
+              icon={<FiLock size={18} color="#fff" />}
+              fullWidth
+              style={{ backgroundColor: canProceed ? '#43A047' : colors.border }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -286,52 +311,149 @@ export default function BookingModal({
 
         {/* ═══ محتوای اسکرولی ═══ */}
         <div className="flex-1 overflow-y-auto px-4 pt-2 pb-10">
-          {/* ═══════ مرحله ۱: بررسی + انتخاب کارمند + قوانین ═══════ */}
+          {/* ═══════ مرحله ۱: بررسی + خلاصه مالی + قوانین ═══════ */}
           {currentStep === 1 && !showSuccess && (
             <div className="flex flex-col gap-3.5">
-              {/* 🆕 انتخاب کارمند */}
-              <EmployeeSelector
-                employees={MOCK_EMPLOYEES}
-                selectedId={selectedEmployeeId}
-                onSelect={setSelectedEmployeeId}
-              />
-
-              {/* بخش جزئیات پرداخت */}
+              {/* ═══ بخش خلاصه مالی ═══ */}
               <div className="flex items-center gap-2.5 mb-1">
                 <div
                   className="w-9 h-9 rounded-[11px] flex items-center justify-center"
                   style={{ backgroundColor: '#43A04715' }}
                 >
-                  <FiCheck size={18} color="#43A047" />
+                  <FiCreditCard size={20} color="#43A047" />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <span
-                    className="text-[15px] font-[Vazir-Bold]"
-                    style={{ color: colors.textMain }}
-                  >
-                    جزئیات پرداخت
+                  <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                    خلاصه پرداخت
                   </span>
-                  <span
-                    className="text-[11px] font-[Vazir]"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    بیعانه آنلاین + مابقی در سالن
+                  <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+                    فقط بیعانه را الان پرداخت کنید
                   </span>
                 </div>
               </div>
 
-              <PriceBreakdown
-                originalPrice={originalPrice}
-                discountPercent={discountPercent}
-                finalPrice={finalPrice}
-                hasDeposit={hasDeposit}
-                depositPercent={depositPercent}
-                depositAmount={depositAmount}
-                showRemaining={true}
-                variant="detailed"
-              />
+              {/* کارت قیمت */}
+              <div
+                className="rounded-2xl border overflow-hidden"
+                style={{ borderColor: colors.border, backgroundColor: colors.cardBackground }}
+              >
+                {/* ردیف ۱: مبلغ کل */}
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <FiDollarSign size={16} style={{ color: colors.textSecondary }} />
+                    <span className="text-[13px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+                      مبلغ کل خدمت
+                    </span>
+                  </div>
+                  <span className="text-[14px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                    {formatPrice(originalPrice)}
+                  </span>
+                </div>
 
-              {/* بخش قوانین */}
+                {/* خط جدا */}
+                <div className="h-px mx-4" style={{ backgroundColor: colors.border }} />
+
+                {/* ردیف ۲: تخفیف */}
+                {discountPercent > 0 && (
+                  <>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <FiTag size={16} color="#4CAF50" />
+                        <span className="text-[13px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+                          تخفیف ({toPersianDigit(discountPercent)}٪)
+                        </span>
+                      </div>
+                      <span className="text-[14px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
+                        - {formatPrice(discountAmount)}
+                      </span>
+                    </div>
+                    <div className="h-px mx-4" style={{ backgroundColor: colors.border }} />
+                  </>
+                )}
+
+                {/* ردیف ۳: قیمت نهایی */}
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <FiInfo size={16} style={{ color: colors.textMain }} />
+                    <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                      قیمت نهایی خدمت
+                    </span>
+                  </div>
+                  <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                    {formatPrice(finalPrice)}
+                  </span>
+                </div>
+
+                {/* خط جدا */}
+                <div className="h-px mx-4" style={{ backgroundColor: colors.border }} />
+
+                {/* ═══ بخش بیعانه (هایلایت شده) ═══ */}
+                <div
+                  className="flex items-center justify-between px-4 py-4"
+                  style={{ backgroundColor: colors.primary + '08' }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: colors.primary }}
+                    >
+                      <FiCreditCard size={14} color="#fff" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                        مبلغ بیعانه (پرداخت آنلاین)
+                      </span>
+                      <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+                        {toPersianDigit(depositPercent)}٪ از قیمت نهایی
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[16px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                    {formatPrice(depositAmount)}
+                  </span>
+                </div>
+
+                {/* ردیف ۴: مابقی مبلغ */}
+                {remainingAmount > 0 && (
+                  <>
+                    <div className="h-px mx-4" style={{ backgroundColor: colors.border }} />
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px]">🏪</span>
+                        <span className="text-[12px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+                          مابقی (پرداخت در سالن)
+                        </span>
+                      </div>
+                      <span className="text-[13px] font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
+                        {formatPrice(remainingAmount)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* پیام مهم: فقط بیعانه پرداخت می‌شود */}
+              <div
+                className="flex items-start gap-2.5 p-3.5 rounded-xl border"
+                style={{
+                  backgroundColor: '#43A04708',
+                  borderColor: '#43A04730',
+                }}
+              >
+                <FiInfo size={16} color="#43A047" className="flex-shrink-0 mt-0.5" />
+                <p
+                  className="text-[12px] font-[Vazir] leading-[20px] flex-1"
+                  style={{ color: colors.textSecondary }}
+                >
+                  شما الان فقط{' '}
+                  <span className="font-[Vazir-Bold]" style={{ color: '#43A047' }}>
+                    بیعانه ({formatPrice(depositAmount)})
+                  </span>{' '}
+                  را پرداخت می‌کنید. مابقی مبلغ پس از انجام خدمت در سالن دریافت می‌شود.
+                </p>
+              </div>
+
+              {/* ═══ بخش قوانین ═══ */}
               <div className="flex items-center gap-2.5 mt-3 mb-1">
                 <div
                   className="w-9 h-9 rounded-[11px] flex items-center justify-center"
@@ -340,20 +462,15 @@ export default function BookingModal({
                   <FiShield size={18} color="#9C27B0" />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <span
-                    className="text-[15px] font-[Vazir-Bold]"
-                    style={{ color: colors.textMain }}
-                  >
+                  <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     قوانین رزرو نوبت
                   </span>
-                  <span
-                    className="text-[11px] font-[Vazir]"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                     لطفاً قبل از پرداخت مطالعه فرمایید
                   </span>
                 </div>
               </div>
+
               <RulesCard colors={colors} />
             </div>
           )}
@@ -365,7 +482,7 @@ export default function BookingModal({
             </div>
           )}
 
-          {/* ═══════ مرحله ۳: انتخاب ساعت ═══════ */}
+          {/* ═══════ مرحله ۳: انتخاب ساعت + سوئیچ اعتماد ═══════ */}
           {currentStep === 3 && !showSuccess && (
             <div className="flex flex-col gap-3.5">
               {/* Chip تاریخ انتخاب شده */}
@@ -385,7 +502,8 @@ export default function BookingModal({
                   </span>
                 </button>
               )}
-              {/* یادآوری پرداخت */}
+
+              {/* یادآوری پرداخت بیعانه */}
               <div
                 className="flex items-center gap-2 p-2.5 rounded-[12px] border"
                 style={{ backgroundColor: '#43A04710', borderColor: '#43A04735' }}
@@ -398,11 +516,17 @@ export default function BookingModal({
                   با انتخاب ساعت و تپ روی دکمه پرداخت، بیعانه پرداخت و نوبت شما ثبت می‌شود
                 </span>
               </div>
+
               <BookingTimeSelector
                 slots={MOCK_TIME_SLOTS}
                 selectedId={selectedTime?.id}
                 onSelect={(slot) => setSelectedTime(slot)}
               />
+
+              {/* ✅ سوئیچ اعتماد - فقط برای مشتریان با سابقه رزرو */}
+              {hasPreviousBookings && (
+                <TrustToggle enabled={trustEnabled} onToggle={setTrustEnabled} />
+              )}
             </div>
           )}
 
@@ -415,18 +539,19 @@ export default function BookingModal({
               >
                 <FiCheck size={48} color="#fff" />
               </div>
-              <span
-                className="text-xl font-[Vazir-Bold] text-center"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-xl font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
                 رزرو با موفقیت ثبت شد!
               </span>
               <span
                 className="text-[13px] font-[Vazir] text-center leading-[21px]"
                 style={{ color: colors.textSecondary }}
               >
-                کد تایید ۴ رقمی به شماره شما ارسال خواهد شد
+                {/* ✅ پیام بر اساس وضعیت اعتماد */}
+                {trustEnabled
+                  ? 'نوبت شما بدون نیاز به کد تایید ثبت شد. پیامک تایید نوبت ارسال می‌شود.'
+                  : 'کد تایید ۴ رقمی به شماره شما ارسال خواهد شد'}
               </span>
+
               {/* خلاصه رزرو */}
               <div
                 className="w-full p-4 rounded-2xl border flex flex-col gap-2.5 mt-2"
@@ -434,49 +559,20 @@ export default function BookingModal({
               >
                 <div className="flex items-center gap-2">
                   <FiInfo size={16} style={{ color: colors.textSecondary }} />
-                  <span
-                    className="text-xs font-[Vazir] min-w-[90px]"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <span className="text-xs font-[Vazir] min-w-[90px]" style={{ color: colors.textSecondary }}>
                     خدمت:
                   </span>
-                  <span
-                    className="text-[13px] font-[Vazir-Bold] flex-1"
-                    style={{ color: colors.textMain }}
-                  >
+                  <span className="text-[13px] font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
                     {currentService?.name || ''}
                   </span>
                 </div>
-                {selectedEmployeeId && (
-                  <div className="flex items-center gap-2">
-                    <FiUsers size={16} style={{ color: colors.textSecondary }} />
-                    <span
-                      className="text-xs font-[Vazir] min-w-[90px]"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      کارمند:
-                    </span>
-                    <span
-                      className="text-[13px] font-[Vazir-Bold] flex-1"
-                      style={{ color: colors.textMain }}
-                    >
-                      {MOCK_EMPLOYEES.find((e) => e.id === selectedEmployeeId)?.name || '—'}
-                    </span>
-                  </div>
-                )}
                 {selectedDate && (
                   <div className="flex items-center gap-2">
                     <FiCalendar size={16} style={{ color: colors.textSecondary }} />
-                    <span
-                      className="text-xs font-[Vazir] min-w-[90px]"
-                      style={{ color: colors.textSecondary }}
-                    >
+                    <span className="text-xs font-[Vazir] min-w-[90px]" style={{ color: colors.textSecondary }}>
                       تاریخ:
                     </span>
-                    <span
-                      className="text-[13px] font-[Vazir-Bold] flex-1"
-                      style={{ color: colors.textMain }}
-                    >
+                    <span className="text-[13px] font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
                       {toPersianDigit(selectedDate.jd)} {PERSIAN_MONTHS[selectedDate.jm - 1]}
                     </span>
                   </div>
@@ -484,36 +580,39 @@ export default function BookingModal({
                 {selectedTime && (
                   <div className="flex items-center gap-2">
                     <FiClock size={16} style={{ color: colors.textSecondary }} />
-                    <span
-                      className="text-xs font-[Vazir] min-w-[90px]"
-                      style={{ color: colors.textSecondary }}
-                    >
+                    <span className="text-xs font-[Vazir] min-w-[90px]" style={{ color: colors.textSecondary }}>
                       ساعت:
                     </span>
-                    <span
-                      className="text-[13px] font-[Vazir-Bold] flex-1"
-                      style={{ color: colors.textMain }}
-                    >
+                    <span className="text-[13px] font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
                       {selectedTime.time}
                     </span>
                   </div>
                 )}
+                {/* ✅ مبلغ پرداختی = بیعانه */}
                 <div className="flex items-center gap-2">
-                  <FiCheck size={16} color="#43A047" />
-                  <span
-                    className="text-xs font-[Vazir] min-w-[90px]"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    مبلغ پرداختی:
+                  <FiCreditCard size={16} color="#43A047" />
+                  <span className="text-xs font-[Vazir] min-w-[90px]" style={{ color: colors.textSecondary }}>
+                    بیعانه پرداختی:
                   </span>
-                  <span
-                    className="text-[13px] font-[Vazir-Bold] flex-1"
-                    style={{ color: '#43A047' }}
-                  >
-                    {toPersianDigit(depositAmount.toLocaleString('en-US'))} تومان
+                  <span className="text-[13px] font-[Vazir-Bold] flex-1" style={{ color: '#43A047' }}>
+                    {formatPrice(depositAmount)}
                   </span>
                 </div>
+
+                {/* ✅ نمایش وضعیت اعتماد در خلاصه */}
+                {trustEnabled && (
+                  <div className="flex items-center gap-2">
+                    <FiShield size={16} style={{ color: colors.primary }} />
+                    <span className="text-xs font-[Vazir] min-w-[90px]" style={{ color: colors.textSecondary }}>
+                      وضعیت کد:
+                    </span>
+                    <span className="text-[13px] font-[Vazir-Bold] flex-1" style={{ color: colors.primary }}>
+                      بدون نیاز به کد تایید
+                    </span>
+                  </div>
+                )}
               </div>
+
               <div className="w-full mt-3">
                 <Button
                   title="بازگشت به صفحه کسب‌وکار"
@@ -524,7 +623,6 @@ export default function BookingModal({
               </div>
             </div>
           )}
-
           <div className="h-16" />
         </div>
 

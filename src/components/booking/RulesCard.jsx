@@ -1,5 +1,5 @@
+// src/components/booking/RulesCard.jsx
 'use client';
-
 import { FiShield, FiRotateCcw, FiCheckCircle, FiLock } from 'react-icons/fi';
 import Card from '@/components/common/Card';
 
@@ -27,13 +27,12 @@ export default function RulesCard({ colors }) {
       iconBg: '#9C27B018',
       title: 'کد تایید خدمت',
       description:
-        'پس از رزرو، یک کد ۴ رقمی برای شما صادر می‌شود. این کد را حتماً پس از انجام خدمت به سالن‌دار ارائه دهید تا بیعانه آزاد شود.',
+        'پس از رزرو، یک کد ۴ رقمی برای شما صادر می‌شود. این کد را حتماً پس از انجام خدمت به سالن‌دار ارائه دهید تا بیعانه آزاد شود. در صورت فعال‌سازی گزینه «اعتماد به سالن»، نیازی به کد نخواهد بود.',
     },
   ];
 
   return (
     <Card variant="default" padding={16} radius={18}>
-      {/* هدر */}
       <div className="flex items-center gap-2 mb-1">
         <div
           className="w-9 h-9 rounded-[11px] flex items-center justify-center"
@@ -45,8 +44,6 @@ export default function RulesCard({ colors }) {
           قوانین و مقررات رزرو
         </span>
       </div>
-
-      {/* لیست قوانین */}
       <div className="flex flex-col">
         {rules.map((rule, index) => {
           const Icon = rule.icon;
@@ -79,8 +76,6 @@ export default function RulesCard({ colors }) {
           );
         })}
       </div>
-
-      {/* نکته امنیتی */}
       <div
         className="flex items-center gap-2 p-2.5 rounded-[10px] border mt-1"
         style={{
