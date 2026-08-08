@@ -1,13 +1,15 @@
 'use client';
-
 import { useState, useMemo } from 'react';
-import Image from 'next/image';
-import { FiCalendar, FiClock, FiUser, FiCheck, FiCopy } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { Card } from '@/components/common';
-import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
 import { useToast } from '@/hooks/useToast';
+import { toPersianDigit } from '@/utils/numberUtils';
+import {
+  AppointmentCompactCard,
+  AppointmentDetailModal,
+  CancelAppointmentModal,
+} from '@/components/profile/appointments';
 
+// ═══════ داده‌های موقت ═══════
 const MOCK_APPOINTMENTS = [
   {
     id: 'apt_1',
@@ -21,6 +23,7 @@ const MOCK_APPOINTMENTS = [
     totalPrice: 675000,
     depositPaid: 200000,
     isUpcoming: true,
+    hoursLeft: 28,
     verificationCode: '۵۸۹۲',
   },
   {
@@ -35,6 +38,7 @@ const MOCK_APPOINTMENTS = [
     totalPrice: 2125000,
     depositPaid: 500000,
     isUpcoming: true,
+    hoursLeft: 6,
     verificationCode: '۲۵۷۱',
   },
   {
@@ -52,44 +56,87 @@ const MOCK_APPOINTMENTS = [
   },
 ];
 
-const STATUS_MAP = {
-  reserved: { label: 'رزرو شده', color: '#2196F3', bg: '#2196F320' },
-  done: { label: 'انجام شده', color: '#4CAF50', bg: '#4CAF5020' },
-  cancelled: { label: 'لغو شده', color: '#E53935', bg: '#E5393520' },
-};
-
 export default function AppointmentsPage() {
   const { colors } = useTheme();
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState('upcoming');
 
+  const [activeTab, setActiveTab] = useState('upcoming');
+  const [appointments, setAppointments] = useState(MOCK_APPOINTMENTS);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelVisible, setCancelVisible] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(null);
+
+  // ═══ فیلتر بر اساس تب ═══
   const filteredAppointments = useMemo(() => {
     if (activeTab === 'upcoming') {
-      return MOCK_APPOINTMENTS.filter((a) => a.isUpcoming);
+      return appointments.filter((a) => a.isUpcoming);
     }
-    return MOCK_APPOINTMENTS.filter((a) => !a.isUpcoming);
-  }, [activeTab]);
+    return appointments.filter((a) => !a.isUpcoming);
+  }, [activeTab, appointments]);
 
   const stats = {
-    upcoming: MOCK_APPOINTMENTS.filter((a) => a.isUpcoming).length,
-    past: MOCK_APPOINTMENTS.filter((a) => !a.isUpcoming).length,
+    upcoming: appointments.filter((a) => a.isUpcoming).length,
+    past: appointments.filter((a) => !a.isUpcoming).length,
   };
 
-  const handleCopyCode = (code) => {
-    navigator.clipboard?.writeText(code);
-    showToast('کد تایید کپی شد', 'success');
+  // ═══ کپی کد تایید ═══
+  const handleCopyCode = async (code) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(code);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setCopiedCode(code);
+      showToast('کد تایید کپی شد', 'success');
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch {
+      showToast('امکان کپی وجود ندارد', 'error');
+    }
+  };
+
+  // ═══ باز کردن جزئیات ═══
+  const handleOpenDetail = (apt) => {
+    setSelectedAppointment(apt);
+    setDetailVisible(true);
+  };
+
+  // ═══ درخواست لغو (از مدال جزئیات) ═══
+  const handleCancelRequest = (apt) => {
+    setDetailVisible(false);
+    setCancelTarget(apt);
+    setTimeout(() => setCancelVisible(true), 200);
+  };
+
+  // ═══ تایید لغو ═══
+  const handleConfirmCancel = (aptId) => {
+    setAppointments((prev) =>
+      prev.map((a) =>
+        a.id === aptId ? { ...a, status: 'cancelled', isUpcoming: false } : a
+      )
+    );
+    setCancelVisible(false);
+    setCancelTarget(null);
+    setSelectedAppointment(null);
+    showToast('نوبت شما با موفقیت لغو شد. وجه ظرف ۴۸ ساعت واریز می‌شود.', 'success');
   };
 
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: colors.background }}>
-      {/* Tabs */}
+      {/* ═══ Tabs ═══ */}
       <div className="px-4 pt-3 pb-2">
         <div
           className="flex p-1 rounded-xl border gap-1"
-          style={{
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
-          }}
+          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
         >
           {[
             { id: 'upcoming', label: 'آینده', count: stats.upcoming },
@@ -98,23 +145,18 @@ export default function AppointmentsPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg
-                         transition-colors"
-              style={{
-                backgroundColor: activeTab === tab.id ? colors.primary : 'transparent',
-              }}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg transition-colors"
+              style={{ backgroundColor: activeTab === tab.id ? colors.primary : 'transparent' }}
             >
               <span
                 className="text-sm font-[Vazir-Bold]"
-                style={{
-                  color: activeTab === tab.id ? '#fff' : colors.textMain,
-                }}
+                style={{ color: activeTab === tab.id ? '#fff' : colors.textMain }}
               >
                 {tab.label}
               </span>
               <span
                 className="min-w-[22px] h-5 px-1.5 rounded-full flex items-center justify-center
-                           text-[11px] font-[Vazir-Bold]"
+                  text-[11px] font-[Vazir-Bold]"
                 style={{
                   backgroundColor:
                     activeTab === tab.id ? 'rgba(255,255,255,0.3)' : colors.primary + '20',
@@ -128,173 +170,18 @@ export default function AppointmentsPage() {
         </div>
       </div>
 
-      {/* لیست نوبت‌ها */}
-      <div className="p-4 flex flex-col gap-4">
+      {/* ═══ لیست نوبت‌ها ═══ */}
+      <div className="p-4 flex flex-col gap-3">
         {filteredAppointments.length > 0 ? (
-          filteredAppointments.map((apt) => {
-            const statusMeta = STATUS_MAP[apt.status];
-            return (
-              <div key={apt.id} className="flex flex-col gap-3">
-                <Card variant="elevated" padding={16} radius={18}>
-                  {/* هدر */}
-                  <div className="flex items-start gap-3 mb-3">
-                    <Image
-                      src={apt.businessLogo}
-                      alt={apt.businessName}
-                      width={48}
-                      height={48}
-                      className="rounded-xl"
-                    />
-                    <div className="flex-1 gap-1">
-                      <span
-                        className="text-sm font-[Vazir-Bold] block"
-                        style={{ color: colors.textMain }}
-                      >
-                        {apt.businessName}
-                      </span>
-                      <span className="text-xs" style={{ color: colors.textSecondary }}>
-                        {apt.serviceName}
-                      </span>
-                    </div>
-                    <div
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl"
-                      style={{ backgroundColor: statusMeta.bg }}
-                    >
-                      <span
-                        className="text-[11px] font-[Vazir-Bold]"
-                        style={{ color: statusMeta.color }}
-                      >
-                        {statusMeta.label}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* جزئیات */}
-                  <div className="flex flex-wrap gap-3 mb-3">
-                    <div className="flex items-center gap-1">
-                      <FiUser size={14} color={colors.textSecondary} />
-                      <span className="text-xs" style={{ color: colors.textMain }}>
-                        {apt.employeeName}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FiCalendar size={14} color={colors.textSecondary} />
-                      <span className="text-xs" style={{ color: colors.textMain }}>
-                        {apt.date}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FiClock size={14} color={colors.textSecondary} />
-                      <span className="text-xs" style={{ color: colors.textMain }}>
-                        {apt.time}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* مبلغ */}
-                  <div
-                    className="p-3 rounded-xl border flex flex-col gap-2"
-                    style={{
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    }}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs" style={{ color: colors.textSecondary }}>
-                        مبلغ کل خدمت
-                      </span>
-                      <span
-                        className="text-sm font-[Vazir-Bold]"
-                        style={{ color: colors.textMain }}
-                      >
-                        {formatPrice(apt.totalPrice)}
-                      </span>
-                    </div>
-                    {apt.depositPaid > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs" style={{ color: colors.textSecondary }}>
-                          بیعانه پرداختی
-                        </span>
-                        <span
-                          className="text-sm font-[Vazir-Bold]"
-                          style={{ color: colors.primary }}
-                        >
-                          {formatPrice(apt.depositPaid)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-
-                {/* کد تایید - فقط برای نوبت‌های آینده */}
-                {apt.isUpcoming && apt.verificationCode && (
-                  <div
-                    className="rounded-2xl border-[1.5px] overflow-hidden"
-                    style={{ borderColor: colors.primary + '40' }}
-                  >
-                    <div
-                      className="flex items-center gap-3 px-3.5 py-3"
-                      style={{ backgroundColor: colors.primary + '15' }}
-                    >
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: colors.primary }}
-                      >
-                        <FiCheck size={18} color="#fff" />
-                      </div>
-                      <div className="flex flex-col gap-0.5 flex-1">
-                        <span
-                          className="text-sm font-[Vazir-Bold]"
-                          style={{ color: colors.textMain }}
-                        >
-                          کد تایید نوبت
-                        </span>
-                        <span className="text-[11px]" style={{ color: colors.textSecondary }}>
-                          پس از انجام خدمت به سالن‌دار ارائه دهید
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 px-4 py-4">
-                      <div
-                        className="flex flex-row-reverse items-center justify-center gap-3 flex-1
-                                   py-3 rounded-xl border border-dashed"
-                        style={{
-                          borderColor: colors.primary,
-                          backgroundColor: colors.background,
-                        }}
-                      >
-                        {apt.verificationCode.split('').map((digit, idx) => (
-                          <div
-                            key={idx}
-                            className="w-11 h-[52px] rounded-xl border flex items-center justify-center"
-                            style={{
-                              borderColor: colors.primary + '50',
-                              backgroundColor: colors.cardBackground,
-                            }}
-                          >
-                            <span
-                              className="text-2xl font-[Vazir-Bold]"
-                              style={{ color: colors.primary }}
-                            >
-                              {digit}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => handleCopyCode(apt.verificationCode)}
-                        className="w-11 h-11 rounded-xl flex items-center justify-center shadow-md"
-                        style={{ backgroundColor: colors.primary }}
-                      >
-                        <FiCopy size={16} color="#fff" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })
+          filteredAppointments.map((apt) => (
+            <AppointmentCompactCard
+              key={apt.id}
+              appointment={apt}
+              onPress={handleOpenDetail}
+              onCopyCode={handleCopyCode}
+              copiedCode={copiedCode}
+            />
+          ))
         ) : (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <span className="text-5xl">{activeTab === 'upcoming' ? '📅' : '📜'}</span>
@@ -304,6 +191,28 @@ export default function AppointmentsPage() {
           </div>
         )}
       </div>
+
+      {/* ═══ مدال جزئیات ═══ */}
+      <AppointmentDetailModal
+        visible={detailVisible}
+        appointment={selectedAppointment}
+        onClose={() => {
+          setDetailVisible(false);
+          setSelectedAppointment(null);
+        }}
+        onCancelRequest={handleCancelRequest}
+      />
+
+      {/* ═══ مدال لغو ═══ */}
+      <CancelAppointmentModal
+        visible={cancelVisible}
+        appointment={cancelTarget}
+        onClose={() => {
+          setCancelVisible(false);
+          setCancelTarget(null);
+        }}
+        onConfirmCancel={handleConfirmCancel}
+      />
     </div>
   );
 }
