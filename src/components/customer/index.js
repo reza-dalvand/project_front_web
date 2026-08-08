@@ -2,7 +2,7 @@ export { default as ReviewCard } from './ReviewCard';
 export { default as ReviewModal } from './ReviewModal';
 export { default as BookingCalendar } from './BookingCalendar';
 export { default as BookingTimeSlot } from './BookingTimeSlot';
-export { default as AppointmentCard } from './AppointmentCard';
+export { default as AppointmentCard } from '@/components/manageBusiness/AppointmentCard';
 export { default as PaymentSummary } from './PaymentSummary';
 export { default as ServiceCard } from './ServiceCard';
 export { default as TeamMemberCard } from './TeamMemberCard';

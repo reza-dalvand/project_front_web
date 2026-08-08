@@ -18,7 +18,7 @@ import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Dropdown from '@/components/common/Dropdown';
 import Divider from '@/components/common/Divider';
-import EmptyStateVariants from '@/components/common/EmptyStateVariants';
+import EmptyState from '@/components/common/EmptyState';
 import SectionHeader from '@/components/common/SectionHeader';
 import CharCounter from '@/components/common/CharCounter';
 import PriceBreakdown from '@/components/common/PriceBreakdown';
@@ -330,7 +330,7 @@ export default function ServicesManagement({ services = [], onChange }) {
         </div>
       ) : (
         <Card variant="default" padding={6} radius={16}>
-          <EmptyStateVariants variant="service" onAction={openAddModal} />
+          <EmptyState variant="service" onAction={openAddModal} />
         </Card>
       )}
 

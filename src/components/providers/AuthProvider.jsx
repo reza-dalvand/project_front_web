@@ -1,14 +1,12 @@
-// src/components/providers/AuthProvider.jsx
 'use client';
-
-import AuthBottomSheet from '@/components/common/AuthBottomSheet';
+import AuthModal from '@/components/common/AuthModal';
 
 export default function AuthProvider({ children }) {
   return (
     <>
       {children}
-      {/* Auth Bottom Sheet سراسری - همیشه در دسترس */}
-      <AuthBottomSheet />
+      {/* Auth Modal سراسری - همیشه bottomsheet */}
+      <AuthModal variant="bottomsheet" />
     </>
   );
 }

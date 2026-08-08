@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
-import EmptyStateVariants from '@/components/common/EmptyStateVariants';
+import EmptyState from '@/components/common/EmptyState';
 import AllLineRentalsHeader from '@/components/home/AllLineRentalsHeader';
 import AllLineRentalsCard from '@/components/home/AllLineRentalsCard';
 import LineRentalFilterModal from '@/components/home/LineRentalFilterModal';
@@ -176,10 +176,9 @@ export default function AllLineRentalsPage() {
             <AllLineRentalsCard key={ad.id} ad={ad} onPress={handleAdPress} />
           ))
         ) : (
-          <EmptyStateVariants
-            variant="lineRental"
-            customTitle="آگهی لاینی یافت نشد"
-            customDescription="فیلترهای خود را تغییر دهید"
+          <EmptyState
+            title="آگهی لاینی یافت نشد"
+            description="فیلترهای خود را تغییر دهید"
           />
         )}
       </div>

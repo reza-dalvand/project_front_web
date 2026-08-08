@@ -1,6 +1,6 @@
 'use client';
-import EmptyStateVariants from '@/components/common/EmptyStateVariants';
+import EmptyState from '@/components/common/EmptyState';
 
 export default function ServiceEmptyState({ onAdd }) {
-  return <EmptyStateVariants variant="service" onAction={onAdd} />;
+  return <EmptyState variant="service" onAction={onAdd} />;
 }

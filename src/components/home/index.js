@@ -11,5 +11,5 @@ export { default as ServiceBookingCard } from './ServiceBookingCard';
 export { default as StickyBookingBar } from './StickyBookingBar';
 export { default as PortfolioGrid } from './PortfolioGrid';
 export { default as PortfolioModal } from './PortfolioModal';
-export { default as ActionButtons } from './ActionButtons';
+export { default as ActionButtons } from '@/components/common/ActionButtons';
 export * from './search';

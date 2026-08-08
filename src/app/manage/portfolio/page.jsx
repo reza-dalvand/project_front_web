@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
-import EmptyStateVariants from '@/components/common/EmptyStateVariants';
+import EmptyState from '@/components/common/EmptyState';
 import StatsCard from '@/components/common/StatsCard';
 import {
   PortfolioCard,
@@ -171,7 +171,7 @@ export default function ManagePortfolioPage() {
             </div>
           </>
         ) : (
-          <EmptyStateVariants variant="portfolio" onAction={openAddForm} />
+          <EmptyState variant="portfolio" onAction={openAddForm} />
         )}
       </div>
 

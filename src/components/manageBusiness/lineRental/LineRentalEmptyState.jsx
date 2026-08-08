@@ -1,9 +1,9 @@
 'use client';
-import EmptyStateVariants from '../../common/EmptyStateVariants';
+import EmptyState from '../../common/EmptyState';
 
 export default function LineRentalEmptyState({ onCreate, tabType }) {
   return (
-    <EmptyStateVariants
+    <EmptyState
       variant="lineRental"
       onAction={tabType === 'myAds' ? onCreate : null}
       actionLabel={tabType === 'myAds' ? 'ثبت اولین آگهی لاین' : null}
