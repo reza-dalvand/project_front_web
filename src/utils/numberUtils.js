@@ -39,44 +39,87 @@ export const formatPercentInput = (text) => {
   return toPersianDigit(String(Math.min(parseInt(cleaned, 10), 100)));
 };
 
-// ═══════════════════════════════════════════════════════
-//    محاسبه کارمزد اپلیکیشن
-// ═══════════════════════════════════════════════════════
+// ... existing code ...
 
+// ═══════════════════════════════════════════════════════
+//    محاسبه کارمزد اپلیکیشن (کمیسیون)
+// ═══════════════════════════════════════════════════════
 /**
- * محاسبه کارمزد اپلیکیشن بر اساس قیمت اصلی خدمت
+ * محاسبه کمیسیون اپلیکیشن بر اساس قیمت اصلی خدمت
+ * این مبلغ از قیمت کل کسر می‌شود (نه اضافه)
+ *
+ * قوانین:
+ * - زیر ۲۵۰ هزار تومان: ۷ هزار تومان ثابت
+ * - از ۲۵۰ هزار تا ۵۰۰ هزار تومان: ۴ درصد
+ * - از ۵۰۰ هزار تومان به بالا: ۵ درصد
+ * - سقف کمیسیون: ۵۰ هزار تومان
  *
  * @param {number} basePrice - قیمت پایه خدمت (تومان)
- * @returns {number} - مبلغ کارمزد (تومان)
+ * @returns {number} - مبلغ کمیسیون (تومان)
  */
 export const calculateAppFee = (basePrice) => {
-  if (!basePrice || basePrice <= 0) return 10000;
-  if (basePrice <= 500000) return 10000;
-  if (basePrice <= 1000000) return 20000;
-  if (basePrice <= 1500000) return 30000;
-  // هر ۵۰۰ هزار تومان ۱۰ هزار تومان اضافه می‌شود
-  const extra = Math.ceil((basePrice - 1500000) / 500000) * 10000;
-  return 30000 + extra;
+  if (!basePrice || basePrice <= 0) return 0;
+
+  let fee = 0;
+
+  if (basePrice < 250000) {
+    // زیر ۲۵۰ هزار تومان: ۷ هزار تومان ثابت
+    fee = 7000;
+  } else if (basePrice <= 500000) {
+    // از ۲۵۰ تا ۵۰۰ هزار: ۴ درصد
+    fee = Math.round(basePrice * 0.04);
+  } else {
+    // از ۵۰۰ هزار به بالا: ۵ درصد
+    fee = Math.round(basePrice * 0.05);
+  }
+
+  // سقف کمیسیون: ۵۰ هزار تومان
+  return Math.min(fee, 50000);
 };
 
 /**
- * 🆕 لیست بازه‌های کارمزد برای نمایش در مدال راهنما
+ * 🆕 لیست بازه‌های کمیسیون برای نمایش در مدال راهنما
  */
 export const APP_FEE_TIERS = [
-  { min: 100000, max: 500000, fee: 10000 },
-  { min: 500000, max: 1000000, fee: 20000 },
-  { min: 1000000, max: 1500000, fee: 30000 },
+  {
+    min: 0,
+    max: 250000,
+    fee: 7000,
+    type: 'fixed',
+    label: 'ثابت',
+    description: '۷ هزار تومان',
+  },
+  {
+    min: 250000,
+    max: 500000,
+    fee: 4,
+    type: 'percent',
+    label: 'درصدی',
+    description: '۴٪ از مبلغ خدمت',
+  },
+  {
+    min: 500000,
+    max: Infinity,
+    fee: 5,
+    type: 'percent',
+    label: 'درصدی',
+    description: '۵٪ از مبلغ خدمت',
+  },
 ];
 
 /**
- * پیدا کردن ردیف فعلی کارمزد برای هایلایت کردن
+ * سقف کمیسیون
+ */
+export const MAX_APP_FEE = 50000;
+
+/**
+ * پیدا کردن ردیف فعلی کمیسیون برای هایلایت کردن
  */
 export const getCurrentFeeTier = (basePrice) => {
   if (!basePrice || basePrice <= 0) return APP_FEE_TIERS[0];
-  // پیدا کردن ردیف مناسب
-  const tier = APP_FEE_TIERS.find((t) => basePrice >= t.min && basePrice <= t.max);
+  const tier = APP_FEE_TIERS.find((t) => basePrice > t.min && basePrice <= t.max);
   if (tier) return tier;
-  // اگر بالاتر از جدول باشد، آخرین ردیف
-  if (basePrice > 1500000) return APP_FEE_TIERS[APP_FEE_TIERS.length - 1];
-  return APP_FEE_TIERS[0];
+  if (basePrice <= APP_FEE_TIERS[0].max) return APP_FEE_TIERS[0];
+  return APP_FEE_TIERS[APP_FEE_TIERS.length - 1];
 };
+

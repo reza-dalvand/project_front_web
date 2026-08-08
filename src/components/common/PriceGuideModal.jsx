@@ -9,10 +9,17 @@ import {
   FiDollarSign,
   FiAlertCircle,
   FiCheckCircle,
+  FiMinusCircle,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
-import { formatPrice, APP_FEE_TIERS, getCurrentFeeTier, toPersianDigit } from '@/utils/numberUtils';
+import {
+  formatPrice,
+  APP_FEE_TIERS,
+  getCurrentFeeTier,
+  toPersianDigit,
+  MAX_APP_FEE,
+} from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 export default function PriceGuideModal({ visible, onClose, currentPrice }) {
@@ -20,6 +27,15 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef('price-guide-modal');
   const currentTier = currentPrice > 0 ? getCurrentFeeTier(currentPrice) : null;
+  const currentFee = currentPrice > 0 ? calculateCurrentFee(currentPrice) : 0;
+
+  function calculateCurrentFee(price) {
+    let fee = 0;
+    if (price < 250000) fee = 7000;
+    else if (price <= 500000) fee = Math.round(price * 0.04);
+    else fee = Math.round(price * 0.05);
+    return Math.min(fee, MAX_APP_FEE);
+  }
 
   useEffect(() => {
     setMounted(true);
@@ -29,7 +45,6 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
     };
   }, []);
 
-  // بستن با Escape
   useEffect(() => {
     if (!visible) return;
     const handleEsc = (e) => {
@@ -39,7 +54,6 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
 
-  // قفل اسکرول با سیستم مرکزی
   useEffect(() => {
     if (visible) {
       acquireScrollLock(instanceId.current);
@@ -58,10 +72,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
       className="fixed inset-0 z-[9999] flex items-center md:items-center md:justify-center justify-end"
       onClick={onClose}
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60" />
-
-      {/* Modal */}
       <div
         className="relative w-full max-w-lg md:rounded-3xl rounded-t-3xl max-h-[90vh] overflow-hidden flex flex-col"
         style={{
@@ -71,12 +82,10 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle Bar (موبایل) */}
         <div className="flex justify-center py-3 md:hidden">
           <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </div>
 
-        {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
@@ -84,19 +93,19 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
           <div className="flex items-center gap-3 flex-1">
             <div
               className="w-11 h-11 rounded-2xl flex items-center justify-center"
-              style={{ backgroundColor: '#4CAF5015' }}
+              style={{ backgroundColor: '#FF980015' }}
             >
-              <FiDollarSign size={22} color="#4CAF50" />
+              <FiDollarSign size={22} color="#FF9800" />
             </div>
             <div className="flex-1">
               <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                راهنمای قیمت‌گذاری
+                راهنمای کمیسیون
               </h3>
               <p
                 className="text-[11px] font-[Vazir] mt-0.5"
                 style={{ color: colors.textSecondary }}
               >
-                هزینه خدمات‌رسانی زیبانو به ازای هر رزرو
+                سهم زیبانو از هر رزرو
               </p>
             </div>
           </div>
@@ -109,32 +118,31 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
           </button>
         </div>
 
-        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* کارت توضیح */}
           <div
             className="flex items-start gap-3 p-4 rounded-2xl border"
             style={{
-              backgroundColor: '#2196F308',
-              borderColor: '#2196F325',
+              backgroundColor: '#FF980008',
+              borderColor: '#FF980025',
             }}
           >
-            <FiInfo size={18} color="#2196F3" className="flex-shrink-0 mt-0.5" />
+            <FiInfo size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
             <p
               className="text-xs font-[Vazir] leading-6 flex-1"
               style={{ color: colors.textSecondary }}
             >
               زیبانو برای ارائه خدماتی مانند پشتیبانی، پردازش پرداخت، مدیریت نوبت‌ها و اطلاع‌رسانی
-              خودکار، هزینه‌ای ثابت و شفاف از هر رزرو دریافت می‌کند.{' '}
-              <span className="font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
-                این هزینه به قیمت خدمت اضافه و توسط مشتری پرداخت می‌شود.
+              خودکار، کمیسیونی از مبلغ هر رزرو دریافت می‌کند.{' '}
+              <span className="font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
+                این مبلغ از قیمت کل خدمت کسر خواهد شد.
               </span>
             </p>
           </div>
 
           {/* عنوان جدول */}
           <h4 className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-            جدول هزینه خدمات‌رسانی
+            جدول کمیسیون
           </h4>
 
           {/* جدول */}
@@ -145,13 +153,12 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
               backgroundColor: colors.background,
             }}
           >
-            {/* Header */}
             <div
               className="flex items-center justify-between px-4 py-3 border-b"
               style={{ borderColor: colors.border }}
             >
               <span
-                className="text-[11px] font-[Vazir-Bold]"
+                className="text-[11px] font-[Vazir-Bold] flex-1"
                 style={{ color: colors.textSecondary }}
               >
                 بازه قیمت خدمت (تومان)
@@ -160,24 +167,39 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                 className="text-[11px] font-[Vazir-Bold]"
                 style={{ color: colors.textSecondary }}
               >
-                هزینه زیبانو
+                کمیسیون زیبانو
               </span>
             </div>
 
-            {/* Rows */}
             {APP_FEE_TIERS.map((tier, index) => {
               const isCurrent =
                 currentTier &&
-                currentTier.fee === tier.fee &&
-                currentPrice >= tier.min &&
+                currentTier.min === tier.min &&
+                currentTier.max === tier.max &&
+                currentPrice > tier.min &&
                 currentPrice <= tier.max;
               const isLast = index === APP_FEE_TIERS.length - 1;
 
+              const feeDisplay =
+                tier.type === 'fixed'
+                  ? `${toPersianDigit(tier.fee.toLocaleString('en-US'))} تومان`
+                  : `${toPersianDigit(tier.fee)}٪`;
+
+              const minDisplay =
+                tier.min === 0
+                  ? '۰'
+                  : formatPrice(tier.min).replace(' تومان', '');
+              const maxDisplay = isLast
+                ? 'به بالا'
+                : formatPrice(tier.max).replace(' تومان', '');
+
               return (
                 <div
-                  key={tier.min}
+                  key={`${tier.min}-${tier.max}`}
                   className={`flex items-center justify-between px-4 py-3 ${
-                    isCurrent ? 'border-2 border-[#4CAF5040] bg-[#4CAF5015] rounded-xl my-1' : ''
+                    isCurrent
+                      ? 'border-2 border-[#4CAF5040] bg-[#4CAF5015] rounded-xl my-1'
+                      : ''
                   } ${!isLast && !isCurrent ? 'border-b' : ''}`}
                   style={{
                     borderColor: !isCurrent && !isLast ? colors.border : undefined,
@@ -191,8 +213,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                       }`}
                       style={{ color: isCurrent ? '#4CAF50' : colors.textMain }}
                     >
-                      {formatPrice(tier.min).replace(' تومان', '')} تا{' '}
-                      {formatPrice(tier.max).replace(' تومان', '')}
+                      {minDisplay} تا {maxDisplay}
                     </span>
                   </div>
                   <div
@@ -205,14 +226,14 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                       className="text-xs font-[Vazir-Bold]"
                       style={{ color: isCurrent ? '#fff' : colors.primary }}
                     >
-                      {formatPrice(tier.fee).replace(' تومان', '')}
+                      {feeDisplay}
                     </span>
                   </div>
                 </div>
               );
             })}
 
-            {/* ردیف "و به همین صورت..." */}
+            {/* ردیف سقف کمیسیون */}
             <div
               className="flex items-center justify-between px-4 py-4 border-t"
               style={{
@@ -221,41 +242,49 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
               }}
             >
               <div className="flex items-center gap-2 flex-1">
-                <FiTrendingUp size={14} style={{ color: colors.primary }} />
+                <FiAlertCircle size={14} style={{ color: '#FF9800' }} />
                 <span
                   className="text-[11px] font-[Vazir-Medium] flex-1 leading-5"
                   style={{ color: colors.textMain }}
                 >
-                  و به همین صورت به ازای عبور از هر ۵۰۰ هزار تومان، ۱۰ هزار تومان اضافه خواهد شد.
+                  سقف کمیسیون در هر رزرو
                 </span>
               </div>
               <div
                 className="px-3 py-1.5 rounded-xl"
-                style={{ backgroundColor: colors.primary + '15' }}
               >
-                <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                  +۱۰K
+                <span
+                  className="text-xs font-[Vazir-Bold]"
+                  style={{ color: '#eaa718' }}
+                >
+                  {toPersianDigit(MAX_APP_FEE.toLocaleString('en-US'))} تومان
                 </span>
               </div>
             </div>
           </div>
 
-          {/* نمایش قیمت فعلی */}
+          {/* نمایش کمیسیون فعلی */}
           {currentPrice > 0 && currentTier && (
             <div
               className="flex items-center gap-3 p-4 rounded-2xl border-2"
               style={{
-                backgroundColor: '#4CAF5010',
-                borderColor: '#4CAF5040',
+                backgroundColor: '#FF980010',
+                borderColor: '#FF980040',
               }}
             >
-              <FiCheckCircle size={20} color="#4CAF50" className="flex-shrink-0" />
+              <FiMinusCircle size={20} color="#FF9800" className="flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-[Vazir-Medium]" style={{ color: colors.textMain }}>
-                  هزینه زیبانو برای خدمت شما
+                  کمیسیون زیبانو از خدمت شما
                 </p>
-                <p className="text-sm font-[Vazir-Bold] mt-1" style={{ color: '#4CAF50' }}>
-                  {formatPrice(currentTier.fee)}
+                <p className="text-sm font-[Vazir-Bold] mt-1" style={{ color: '#FF9800' }}>
+                  {formatPrice(currentFee)}
+                </p>
+                <p className="text-[10px] font-[Vazir] mt-1" style={{ color: colors.textSecondary }}>
+                  سهم دریافتی شما:{' '}
+                  <span className="font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
+                    {formatPrice(currentPrice - currentFee)}
+                  </span>
                 </p>
               </div>
             </div>
@@ -275,17 +304,16 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                 نکات مهم
               </h5>
             </div>
-
             <div className="space-y-2">
               {[
-                'این هزینه به صورت خودکار به قیمت خدمت اضافه می‌شود',
-                'شما مبلغی که تعیین کرده‌اید را به صورت کامل دریافت می‌کنید',
-                'در صورت لغو نوبت توسط شما، کل مبلغ پرداختی به مشتری مسترد می‌شود',
+                'کمیسیون از مبلغ کل خدمت کسر می‌شود',
+                'در صورت لغو نوبت توسط شما، کل مبلغ پرداختی بیعانه به مشتری مسترد می‌شود',
+                'حداکثر کمیسیون در هر رزرو ۵۰ هزار تومان است',
               ].map((tip, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <div
                     className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                    style={{ backgroundColor: '#4CAF50' }}
+                    style={{ backgroundColor: '#FF9800' }}
                   />
                   <p
                     className="text-xs font-[Vazir] leading-5 flex-1"
@@ -299,7 +327,6 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="px-5 py-4 border-t" style={{ borderColor: colors.border }}>
           <Button
             title="متوجه شدم"

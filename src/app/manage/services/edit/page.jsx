@@ -9,7 +9,8 @@ import {
   FiTag,
   FiShield,
   FiRefreshCw,
-  FiChevronLeft, // ← اضافه شد
+  FiChevronLeft,
+  FiX // ← اضافه شد
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -78,6 +79,14 @@ export default function EditServicePage() {
   const [isActive, setIsActive] = useState(existingService?.isActive !== false);
   const [description, setDescription] = useState(existingService?.description || '');
   const [renewalDays, setRenewalDays] = useState(existingService?.renewalDays || 0);
+  const handleRenewalChange = (text) => {
+  const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
+  const num = parseInt(cleaned, 10) || 0;
+    if (num <= 365) {
+      setRenewalDays(num);
+      if (errors.renewalDays) setErrors((p) => ({ ...p, renewalDays: '' }));
+    }
+  };
   const [errors, setErrors] = useState({});
   const [priceGuideVisible, setPriceGuideVisible] = useState(false);
 
@@ -112,6 +121,9 @@ export default function EditServicePage() {
       newErrors.depositAmount = `حداقل بیعانه ${formatPrice(MIN_DEPOSIT)} است`;
     if (depositNum > finalPrice)
       newErrors.depositAmount = 'بیعانه نمی‌تواند بیشتر از قیمت نهایی باشد';
+    if (renewalDays > 365) {
+      newErrors.renewalDays = 'حداکثر ۳۶۵ روز مجاز است';
+    }
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
@@ -180,7 +192,7 @@ export default function EditServicePage() {
           />
           {/* Dropdown سطح ۱: دسته‌بندی */}
           <Dropdown
-            label="دسته‌بندی خدمات *"
+            label="دسته‌بندی خدمت *"
             placeholder="دسته‌بندی را انتخاب کنید"
             value={categoryId}
             options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
@@ -232,7 +244,7 @@ export default function EditServicePage() {
           {/* متن‌ها */}
           <div className="flex-1 text-right">
             <p className="text-sm font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
-              راهنمای قیمت‌گذاری
+             قیمت‌گذاری و کمیسیون
             </p>
             <p className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }}>
               هزینه خدمات‌رسانی زیبانو چقدر است؟
@@ -305,6 +317,106 @@ export default function EditServicePage() {
             error={errors.depositAmount}
             hint={`حداقل: ${formatPrice(MIN_DEPOSIT)}`}
           />
+        </Card>
+
+        {/* ═══════ یادآوری تمدید مجدد ═══════ */}
+        <SectionHeader
+          icon={<FiRefreshCw size={18} />}
+          iconColor="#FF9800"
+          title="یادآوری تمدید مجدد"
+        />
+        <Card variant="elevated" padding={16} radius={18}>
+          {/* راهنما */}
+          <div
+            className="flex items-start gap-2.5 mb-4 p-3 rounded-xl border"
+            style={{
+              backgroundColor: '#FF980008',
+              borderColor: '#FF980025',
+            }}
+          >
+            <FiInfo size={16} color="#FF9800" className="flex-shrink-0 mt-0.5" />
+            <p
+              className="text-xs font-[Vazir] leading-5 flex-1"
+              style={{ color: colors.textSecondary }}
+            >
+              پس از انجام این خدمت، بعد از تعداد روزهای مشخص‌شده در بخش، يادآوری رزرو می‌توانید به مشتری پیام یادآوری
+              تمدید رزرو خدمت ارسال کنید. اگر نیازی به یادآوری نیست، صفر وارد کنید.
+            </p>
+          </div>
+
+          {/* فیلد ورودی دستی */}
+          <label
+            className="block text-sm mb-2 text-right font-[Vazir-Medium]"
+            style={{ color: colors.textMain }}
+          >
+            تعداد روز تا تمدید (اختیاری)
+          </label>
+          <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-2 flex-1 py-2.5 px-4 rounded-xl border-2"
+              style={{
+                borderColor: errors.renewalDays
+                  ? '#E53935'
+                  : renewalDays > 0
+                  ? colors.primary
+                  : colors.border,
+                backgroundColor: colors.background,
+              }}
+            >
+              <span className="text-base flex-shrink-0">📅</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="مثلاً ۳۰"
+                value={renewalDays > 0 ? toPersianDigit(String(renewalDays)) : ''}
+                onChange={(e) => handleRenewalChange(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-lg font-[Vazir-Bold] text-center"
+                style={{ color: colors.textMain, direction: 'ltr' }}
+              />
+              <span
+                className="text-xs font-[Vazir-Medium] flex-shrink-0"
+                style={{ color: colors.textSecondary }}
+              >
+                روز
+              </span>
+            </div>
+            {/* دکمه پاک کردن */}
+            {renewalDays > 0 && (
+              <button
+                onClick={() => {
+                  setRenewalDays(0);
+                  if (errors.renewalDays) setErrors((p) => ({ ...p, renewalDays: '' }));
+                }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all hover:scale-105 active:scale-95"
+                style={{ backgroundColor: '#E5393515' }}
+              >
+                <FiX size={18} color="#E53935" />
+              </button>
+            )}
+          </div>
+
+          {/* خطا */}
+          {errors.renewalDays && (
+            <p className="text-xs mt-2 font-[Vazir]" style={{ color: '#E53935' }}>
+              {errors.renewalDays}
+            </p>
+          )}
+
+          {/* پیش‌نمایش زنده */}
+          {renewalDays > 0 && (
+            <div
+              className="flex items-center gap-2 mt-4 py-2.5 px-3 rounded-lg border"
+              style={{ backgroundColor: '#43A04710', borderColor: '#43A04740' }}
+            >
+              <FiCheck size={14} color="#43A047" />
+              <span className="text-[11px] font-[Vazir-Bold] leading-5" style={{ color: '#43A047' }}>
+                {renewalDays >= 30
+                  ? `${toPersianDigit(Math.floor(renewalDays / 30))} ماه${renewalDays % 30 > 0 ? ` و ${toPersianDigit(renewalDays % 30)} روز` : ''} بعد از انجام خدمت`
+                  : `${toPersianDigit(renewalDays)} روز بعد از انجام خدمت`}
+                ، پیام یادآوری تمدید برای مشتری ارسال می‌شود
+              </span>
+            </div>
+          )}
         </Card>
 
         {/* تنظیمات */}

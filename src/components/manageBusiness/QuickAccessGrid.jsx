@@ -1,5 +1,5 @@
 'use client';
-import { FiCalendar, FiBox, FiClock, FiImage, FiLink, FiUser, FiHome } from 'react-icons/fi';
+import { FiCalendar, FiBox, FiClock, FiImage, FiLink, FiUser, FiHome, FiBell } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
@@ -24,6 +24,14 @@ const QUICK_ACTIONS = [
     icon: <FiClock size={22} />,
     route: '/manage/schedule',
     color: '#43e97b',
+  },
+  // ✅ آیتم جدید: یادآوری خدمت
+  {
+    id: 'reminders',
+    label: 'یادآوری رزرو',
+    icon: <FiBell size={22} />,
+    route: '/manage/reminders',
+    color: '#FF9800',
   },
   {
     id: 'portfolio',
@@ -64,10 +72,10 @@ export default function QuickAccessGrid({ onNavigate, badge = 0 }) {
         دسترسی سریع
       </h2>
 
-      {/* ✅ grid-cols-3 به جای grid-cols-2 */}
       <div className="grid grid-cols-3 gap-2.5">
         {QUICK_ACTIONS.map((item) => {
           const showBadge = item.id === 'appointments' && badge > 0;
+
           return (
             <button
               key={item.id}
@@ -84,7 +92,7 @@ export default function QuickAccessGrid({ onNavigate, badge = 0 }) {
               {showBadge && (
                 <div
                   className="absolute -top-1.5 -left-1.5 min-w-[20px] h-[20px] rounded-full
-                    flex items-center justify-center px-1 border-2
+                    flex items-center justify-center px-1.5 border-2
                     text-[9px] font-[Vazir-Bold] text-white"
                   style={{
                     backgroundColor: '#E53935',
