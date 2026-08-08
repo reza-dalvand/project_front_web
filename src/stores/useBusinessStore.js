@@ -3,6 +3,9 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { todayJalaali } from '@/utils/dateUtils';
 
+// ✅ نسخه استور - هر بار ساختار داده عوض شد، این عدد را ۱ واحد زیاد کنید
+const STORAGE_VERSION = 2;
+
 // ✅ تاریخ امروز به صورت داینامیک
 const today = todayJalaali();
 
@@ -65,17 +68,15 @@ const INITIAL_BUSINESS_DATA = {
   ],
   team: [],
   schedules: {},
-
-  // ═══════ ✅ ۱۰ نوبت با تاریخ امروز (داینامیک) ═══════
+  // ═══════ نوبت‌ها با تاریخ امروز ═══════
   appointments: [
-    // ── صبح: نوبت‌های انجام شده ──
     {
       id: 'apt_1',
       customerName: 'نازنین کریمی',
       customerPhone: '09121112233',
       serviceName: 'فیشیال تخصصی پوست',
       employeeName: 'سارا احمدی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۰۸:۳۰',
       status: 'done',
       price: 675000,
@@ -88,21 +89,20 @@ const INITIAL_BUSINESS_DATA = {
       customerPhone: '09124445566',
       serviceName: 'کاشت ناخن ژلیش',
       employeeName: 'مریم رضایی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۰۹:۳۰',
-      status: 'done',
+      status: 'pending_verification',
       price: 450000,
       depositPaid: 100000,
       verificationCode: '2571',
     },
-    // ── صبح: نوبت‌های رزرو شده ──
     {
       id: 'apt_3',
       customerName: 'زهرا حسینی',
       customerPhone: '09127778899',
       serviceName: 'لیزر فول بادی',
       employeeName: 'دکتر رضایی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۱۰:۳۰',
       status: 'reserved',
       price: 2125000,
@@ -115,21 +115,20 @@ const INITIAL_BUSINESS_DATA = {
       customerPhone: '09123334455',
       serviceName: 'فیشیال تخصصی پوست',
       employeeName: 'سارا احمدی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۱۱:۳۰',
       status: 'reserved',
       price: 675000,
       depositPaid: 200000,
       verificationCode: '3841',
     },
-    // ── ظهر: نوبت لغو شده ──
     {
       id: 'apt_5',
       customerName: 'سمیرا قاسمی',
       customerPhone: '09126665544',
       serviceName: 'کاشت ناخن ژلیش',
       employeeName: 'مریم رضایی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۱۲:۳۰',
       status: 'cancelled_by_salon',
       price: 450000,
@@ -137,16 +136,15 @@ const INITIAL_BUSINESS_DATA = {
       cancellationReason: 'سالن در این ساعت تعطیل است',
       refundAmount: 100000,
     },
-    // ── بعدازظهر: نوبت‌های رزرو شده ──
     {
       id: 'apt_6',
       customerName: 'پریسا نوری',
       customerPhone: '09128889900',
       serviceName: 'لیزر فول بادی',
       employeeName: 'دکتر رضایی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۱۴:۰۰',
-      status: 'reserved',
+      status: 'pending_verification',
       price: 2125000,
       depositPaid: 500000,
       verificationCode: '9213',
@@ -157,7 +155,7 @@ const INITIAL_BUSINESS_DATA = {
       customerPhone: '09121234567',
       serviceName: 'فیشیال تخصصی پوست',
       employeeName: 'سارا احمدی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۱۵:۳۰',
       status: 'reserved',
       price: 675000,
@@ -170,21 +168,20 @@ const INITIAL_BUSINESS_DATA = {
       customerPhone: '09129876543',
       serviceName: 'کاشت ناخن ژلیش',
       employeeName: 'مریم رضایی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۱۶:۳۰',
-      status: 'reserved',
+      status: 'pending_verification',
       price: 450000,
       depositPaid: 100000,
       verificationCode: '4528',
     },
-    // ── عصر: نوبت لغو شده ──
     {
       id: 'apt_9',
       customerName: 'نگار موسوی',
       customerPhone: '09125556677',
       serviceName: 'لیزر فول بادی',
       employeeName: 'دکتر رضایی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۱۷:۳۰',
       status: 'cancelled_by_salon',
       price: 2125000,
@@ -192,14 +189,13 @@ const INITIAL_BUSINESS_DATA = {
       cancellationReason: 'دستگاه لیزر در تعمیر است',
       refundAmount: 500000,
     },
-    // ── شب: نوبت رزرو شده ──
     {
       id: 'apt_10',
       customerName: 'آیدا شریفی',
       customerPhone: '09124443322',
       serviceName: 'فیشیال تخصصی پوست',
       employeeName: 'سارا احمدی',
-      date: today, // ✅ داینامیک
+      date: today,
       time: '۱۹:۰۰',
       status: 'reserved',
       price: 675000,
@@ -214,6 +210,8 @@ export const useBusinessStore = create(
   persist(
     (set, get) => ({
       businessData: INITIAL_BUSINESS_DATA,
+      // ═══════ نسخه برای ریست خودکار ═══════
+      _version: STORAGE_VERSION,
 
       // ═══════ Services ═══════
       addService: (service) =>
@@ -318,9 +316,15 @@ export const useBusinessStore = create(
 
       // ═══════ Selectors ═══════
       getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
+
+      // ═══════ ریست دستی ═══════
+      resetToDefaults: () => {
+        set({ businessData: INITIAL_BUSINESS_DATA, _version: STORAGE_VERSION });
+      },
     }),
     {
       name: 'zibano-business-storage',
+      version: STORAGE_VERSION,
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage
@@ -328,7 +332,36 @@ export const useBusinessStore = create(
       ),
       partialize: (state) => ({
         businessData: state.businessData,
+        _version: STORAGE_VERSION,
       }),
+      // ✅ مهاجرت خودکار: اگر نسخه قدیمی بود، داده‌ها ریست شوند
+      migrate: (persistedState, version) => {
+        if (version < STORAGE_VERSION) {
+          // نسخه قدیمی → ریست کامل با تاریخ‌های جدید
+          return {
+            businessData: INITIAL_BUSINESS_DATA,
+            _version: STORAGE_VERSION,
+          };
+        }
+        return persistedState;
+      },
+      // ✅ اگر داده‌ها خالی یا خراب بودند، از مقادیر پیش‌فرض استفاده کن
+      merge: (persistedState, currentState) => {
+        if (
+          !persistedState ||
+          !persistedState.businessData ||
+          !persistedState.businessData.appointments ||
+          persistedState.businessData.appointments.length === 0
+        ) {
+          return currentState;
+        }
+        // ✅ بررسی سلامت تاریخ‌ها
+        const firstApt = persistedState.businessData.appointments[0];
+        if (!firstApt.date || !firstApt.date.jy || !firstApt.date.jm || !firstApt.date.jd) {
+          return currentState;
+        }
+        return { ...currentState, ...persistedState };
+      },
     }
   )
 );

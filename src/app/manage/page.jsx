@@ -8,8 +8,8 @@ import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { ScreenWrapper } from '@/components/common';
 import QuickAccessGrid from '@/components/manageBusiness/QuickAccessGrid';
-import TodayScheduleTimeline from '@/components/manageBusiness/TodayScheduleTimeline';
 import ManageHeader from '@/components/manageBusiness/ManageHeader';
+import { AppointmentsList } from '@/components/manageBusiness/appointments';
 
 export default function ManageBusinessPage() {
   const { colors } = useTheme();
@@ -21,7 +21,7 @@ export default function ManageBusinessPage() {
   const stats = useMemo(() => {
     const appointments = businessData?.appointments || [];
     const activeAppointments = appointments.filter(
-      (apt) => apt.status === 'reserved' || apt.status === 'confirmed'
+      (apt) => apt.status === 'reserved' || apt.status === 'confirmed' || apt.status === 'pending_verification'
     ).length;
     return { activeAppointments };
   }, [businessData]);
@@ -38,13 +38,13 @@ export default function ManageBusinessPage() {
 
   return (
     <ScreenWrapper scrollable padding={0}>
-      {/* ═══════ هدر گرادیانی ═══════ */}
+      {/* هدر گرادیانی */}
       <ManageHeader />
 
-      {/* ═══════ تقویم ساعتی نوبت‌های امروز ═══════ */}
-      <TodayScheduleTimeline />
+      {/* لیست ترتیبی نوبت‌های امروز */}
+      <AppointmentsList />
 
-      {/* ═══════ دسترسی سریع ═══════ */}
+      {/* دسترسی سریع */}
       <QuickAccessGrid
         onNavigate={(route) => router.push(route)}
         badge={stats.activeAppointments}
