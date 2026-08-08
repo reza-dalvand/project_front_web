@@ -148,7 +148,10 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
               <p className="text-xs font-[Vazir] mb-1" style={{ color: colors.textSecondary }}>
                 موقعیت انتخاب شده
               </p>
-              <p className="text-sm font-[Vazir-Bold] line-clamp-1" style={{ color: colors.textMain }}>
+              <p
+                className="text-sm font-[Vazir-Bold] line-clamp-1"
+                style={{ color: colors.textMain }}
+              >
                 {confirmedAddress ||
                   `${confirmedLocation.latitude.toFixed(4)}, ${confirmedLocation.longitude.toFixed(4)}`}
               </p>
@@ -189,7 +192,10 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
 
       {/* مدال نقشه */}
       {modalVisible && (
-        <div className="fixed inset-0 z-[9999] flex flex-col" style={{ backgroundColor: colors.background }}>
+        <div
+          className="fixed inset-0 z-[9999] flex flex-col"
+          style={{ backgroundColor: colors.background }}
+        >
           {/* هدر */}
           <div
             className="flex items-center justify-between px-5 py-4 border-b"
@@ -283,10 +289,16 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
                   </div>
                 ) : (
                   <>
-                    <p className="text-xs font-[Vazir-Bold] mb-1" style={{ color: colors.textMain }}>
+                    <p
+                      className="text-xs font-[Vazir-Bold] mb-1"
+                      style={{ color: colors.textMain }}
+                    >
                       آدرس انتخابی
                     </p>
-                    <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
+                    <p
+                      className="text-xs font-[Vazir] leading-5"
+                      style={{ color: colors.textSecondary }}
+                    >
                       {tempAddress}
                     </p>
                   </>
@@ -296,7 +308,13 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
 
             {/* دکمه‌ها */}
             <div className="flex gap-3">
-              <Button title="انصراف" onPress={handleClose} variant="outline" size="lg" className="flex-1" />
+              <Button
+                title="انصراف"
+                onPress={handleClose}
+                variant="outline"
+                size="lg"
+                className="flex-1"
+              />
               <Button
                 title="تایید موقعیت"
                 onPress={handleConfirm}

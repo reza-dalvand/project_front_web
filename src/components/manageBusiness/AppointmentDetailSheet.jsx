@@ -11,6 +11,9 @@ import {
   FiInfo,
   FiCheckCircle,
   FiXCircle,
+  FiBriefcase,
+  FiCreditCard,
+  FiChevronLeft,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import BottomSheet from '@/components/common/BottomSheet';
@@ -52,12 +55,12 @@ export default function AppointmentDetailSheet({ visible, appointment, onClose }
           <p className="text-sm font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
             جزئیات نوبت
           </p>
-          <InfoRow icon="spa" label="خدمت" value={appointment.serviceName} />
-          <InfoRow icon="person" label="کارمند" value={appointment.employeeName} />
-          <InfoRow icon="calendar" label="تاریخ" value={dateStr} />
-          <InfoRow icon="clock" label="ساعت" value={appointment.time} />
+          <InfoRow icon={<FiBriefcase size={16} />} label="خدمت" value={appointment.serviceName} />
+          <InfoRow icon={<FiUser size={16} />} label="کارمند" value={appointment.employeeName} />
+          <InfoRow icon={<FiCalendar size={16} />} label="تاریخ" value={dateStr} />
+          <InfoRow icon={<FiClock size={16} />} label="ساعت" value={appointment.time} />
           <InfoRow
-            icon="phone"
+            icon={<FiPhone size={16} />}
             label="شماره تماس"
             value={toPersianDigit(appointment.customerPhone || '—')}
             monospace
@@ -69,10 +72,14 @@ export default function AppointmentDetailSheet({ visible, appointment, onClose }
           <p className="text-sm font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
             جزئیات مالی
           </p>
-          <InfoRow icon="dollar-sign" label="مبلغ کل خدمت" value={formatPrice(appointment.price)} />
+          <InfoRow
+            icon={<FiDollarSign size={16} />}
+            label="مبلغ کل خدمت"
+            value={formatPrice(appointment.price)}
+          />
           {appointment.depositPaid > 0 && (
             <InfoRow
-              icon="check-circle"
+              icon={<FiCheckCircle size={16} />}
               iconColor="#43A047"
               label="بیعانه پرداخت شده"
               value={formatPrice(appointment.depositPaid)}
@@ -82,7 +89,7 @@ export default function AppointmentDetailSheet({ visible, appointment, onClose }
             />
           )}
           <InfoRow
-            icon="store"
+            icon={<FiCreditCard size={16} />}
             iconColor="#2196F3"
             label="باقیمانده (پرداخت در سالن)"
             value={formatPrice(appointment.price - (appointment.depositPaid || 0))}
@@ -145,7 +152,7 @@ export default function AppointmentDetailSheet({ visible, appointment, onClose }
               ].map((text, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-[Vazir-Bold] text-white"
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-[Vazir-Bold] text-white flex-shrink-0"
                     style={{ backgroundColor: colors.primary }}
                   >
                     {toPersianDigit(i + 1)}

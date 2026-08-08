@@ -21,7 +21,10 @@ export default function ManageBusinessPage() {
   const stats = useMemo(() => {
     const appointments = businessData?.appointments || [];
     const activeAppointments = appointments.filter(
-      (apt) => apt.status === 'reserved' || apt.status === 'confirmed' || apt.status === 'pending_verification'
+      (apt) =>
+        apt.status === 'reserved' ||
+        apt.status === 'confirmed' ||
+        apt.status === 'pending_verification'
     ).length;
     return { activeAppointments };
   }, [businessData]);

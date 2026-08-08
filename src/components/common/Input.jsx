@@ -85,9 +85,7 @@ export default function Input({
           }}
         />
 
-        {leftIcon && !secureTextEntry && (
-          <span className="mr-3 flex items-center">{leftIcon}</span>
-        )}
+        {leftIcon && !secureTextEntry && <span className="mr-3 flex items-center">{leftIcon}</span>}
 
         {secureTextEntry && (
           <button

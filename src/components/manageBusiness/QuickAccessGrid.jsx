@@ -1,5 +1,14 @@
 'use client';
-import { FiCalendar, FiBox, FiClock, FiImage, FiLink, FiUser, FiHome, FiBell } from 'react-icons/fi';
+import {
+  FiCalendar,
+  FiBox,
+  FiClock,
+  FiImage,
+  FiLink,
+  FiUser,
+  FiHome,
+  FiBell,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 

@@ -178,9 +178,7 @@ export default function RemindersPage() {
 
   // ═══════ مشتریان فیلترشده بر اساس آستانه و تب و وضعیت ارسال ═══════
   const filteredCustomers = useMemo(() => {
-    const dueCustomers = customers.filter(
-      (c) => c.daysRemaining <= REMINDER_THRESHOLD_DAYS
-    );
+    const dueCustomers = customers.filter((c) => c.daysRemaining <= REMINDER_THRESHOLD_DAYS);
 
     // ✅ حذف کسانی که پیام دریافت کرده‌اند و خدمت جدید انجام نداده‌اند
     const visibleCustomers = dueCustomers.filter(shouldShowCustomer);
@@ -191,9 +189,7 @@ export default function RemindersPage() {
 
   // ═══════ ساخت تب‌ها از خدمات ═══════
   const tabs = useMemo(() => {
-    const dueCustomers = customers.filter(
-      (c) => c.daysRemaining <= REMINDER_THRESHOLD_DAYS
-    );
+    const dueCustomers = customers.filter((c) => c.daysRemaining <= REMINDER_THRESHOLD_DAYS);
     // ✅ فقط مشتریانی که باید نمایش داده شوند
     const visibleCustomers = dueCustomers.filter(shouldShowCustomer);
 
@@ -219,26 +215,20 @@ export default function RemindersPage() {
 
   // ═══════ آمار ═══════
   const stats = useMemo(() => {
-    const dueCustomers = customers.filter(
-      (c) => c.daysRemaining <= REMINDER_THRESHOLD_DAYS
-    );
+    const dueCustomers = customers.filter((c) => c.daysRemaining <= REMINDER_THRESHOLD_DAYS);
     // ✅ فقط مشتریانی که نمایش داده می‌شوند
     const visibleCustomers = dueCustomers.filter(shouldShowCustomer);
     return {
       totalDue: visibleCustomers.length,
       overdue: visibleCustomers.filter((c) => c.daysRemaining < 0).length,
-      sentToday: customers.filter(
-        (c) => c.reminderSent && c.sentDate === '۱۴۰۵/۰۴/۱۸'
-      ).length,
+      sentToday: customers.filter((c) => c.reminderSent && c.sentDate === '۱۴۰۵/۰۴/۱۸').length,
     };
   }, [customers]);
 
   // ═══════ هندلرها ═══════
   const handleToggleCustomer = (customerId) => {
     setSelectedIds((prev) =>
-      prev.includes(customerId)
-        ? prev.filter((id) => id !== customerId)
-        : [...prev, customerId]
+      prev.includes(customerId) ? prev.filter((id) => id !== customerId) : [...prev, customerId]
     );
   };
 
@@ -289,9 +279,7 @@ export default function RemindersPage() {
     );
   }
 
-  const selectedCustomers = filteredCustomers.filter((c) =>
-    selectedIds.includes(c.id)
-  );
+  const selectedCustomers = filteredCustomers.filter((c) => selectedIds.includes(c.id));
 
   return (
     <ScreenWrapper padding={0}>
@@ -311,9 +299,8 @@ export default function RemindersPage() {
             className="text-[12px] font-[Vazir] leading-5 flex-1"
             style={{ color: colors.textSecondary }}
           >
-            مشتریانی که حداکثر {toPersianDigit(REMINDER_THRESHOLD_DAYS)} روز دیگر موعد تمدید
-            خدمتشان فرا می‌رسد. پس از ارسال پیام، تا انجام خدمت جدید در لیست نمایش داده
-            نمی‌شوند.
+            مشتریانی که حداکثر {toPersianDigit(REMINDER_THRESHOLD_DAYS)} روز دیگر موعد تمدید خدمتشان
+            فرا می‌رسد. پس از ارسال پیام، تا انجام خدمت جدید در لیست نمایش داده نمی‌شوند.
           </p>
         </div>
       </div>

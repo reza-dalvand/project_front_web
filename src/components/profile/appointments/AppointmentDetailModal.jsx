@@ -27,12 +27,7 @@ const STATUS_CONFIG = {
  * مدال جزئیات نوبت
  * نمایش جزئیات کامل + دکمه لغو (در صورت > 12 ساعت)
  */
-export default function AppointmentDetailModal({
-  visible,
-  appointment,
-  onClose,
-  onCancelRequest,
-}) {
+export default function AppointmentDetailModal({ visible, appointment, onClose, onCancelRequest }) {
   const { colors } = useTheme();
   const instanceId = useRef('appointment-detail-modal');
 
@@ -98,10 +93,7 @@ export default function AppointmentDetailModal({
             className="rounded-xl"
           />
           <div className="flex-1 min-w-0">
-            <h3
-              className="text-base font-[Vazir-Bold] truncate"
-              style={{ color: colors.textMain }}
-            >
+            <h3 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               {appointment.businessName}
             </h3>
             <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
@@ -233,8 +225,8 @@ export default function AppointmentDetailModal({
                 className="text-xs font-[Vazir] leading-5 flex-1"
                 style={{ color: colors.textSecondary }}
               >
-                تا {toPersianDigit(appointment.hoursLeft)} ساعت دیگر به زمان نوبت باقی مانده و
-                امکان لغو آن وجود دارد.
+                تا {toPersianDigit(appointment.hoursLeft)} ساعت دیگر به زمان نوبت باقی مانده و امکان
+                لغو آن وجود دارد.
               </p>
             </div>
           )}

@@ -1,5 +1,4 @@
 'use client';
-
 import {
   FiPhone,
   FiCalendar,
@@ -8,6 +7,7 @@ import {
   FiInfo,
   FiXCircle,
   FiCheckCircle,
+  FiChevronLeft,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Avatar from '@/components/common/Avatar';
@@ -34,7 +34,7 @@ export default function AppointmentCard({ appointment, onDetails, onVerify, onCa
       className="rounded-[18px] overflow-hidden shadow-sm"
       style={{ backgroundColor: colors.cardBackground }}
     >
-      {/* هدر: مشتری + وضعیت */}
+      {/* هدر: مشتری + وضعیت + فلش */}
       <button
         onClick={() => onDetails?.(appointment)}
         className="w-full flex items-center justify-between gap-2.5 px-3.5 py-3 border-b text-right"
@@ -55,14 +55,21 @@ export default function AppointmentCard({ appointment, onDetails, onVerify, onCa
             </span>
           </div>
         </div>
-        <div
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl flex-shrink-0"
-          style={{ backgroundColor: meta.color + '20' }}
-        >
-          <StatusIcon size={12} style={{ color: meta.color }} />
-          <span className="text-[11px] font-[Vazir-Bold]" style={{ color: meta.color }}>
-            {meta.label}
-          </span>
+        {/* وضعیت + فلش */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl"
+            style={{ backgroundColor: meta.color + '20' }}
+          >
+            <StatusIcon size={12} style={{ color: meta.color }} />
+            <span
+              className="text-[11px] font-[Vazir-Bold] whitespace-nowrap"
+              style={{ color: meta.color }}
+            >
+              {meta.label}
+            </span>
+          </div>
+          <FiChevronLeft size={18} style={{ color: colors.textSecondary }} />
         </div>
       </button>
 
@@ -165,7 +172,10 @@ export default function AppointmentCard({ appointment, onDetails, onVerify, onCa
               style={{ borderColor: '#E5393540', backgroundColor: '#E5393508' }}
             >
               <FiXCircle size={16} color="#E53935" />
-              <span className="text-xs font-[Vazir-Bold]" style={{ color: '#E53935' }}>
+              <span
+                className="text-xs font-[Vazir-Bold] whitespace-nowrap"
+                style={{ color: '#E53935' }}
+              >
                 لغو نوبت
               </span>
             </button>
@@ -175,7 +185,10 @@ export default function AppointmentCard({ appointment, onDetails, onVerify, onCa
               style={{ borderColor: colors.primary + '40', backgroundColor: colors.primary + '08' }}
             >
               <FiInfo size={16} style={{ color: colors.primary }} />
-              <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
+              <span
+                className="text-xs font-[Vazir-Bold] whitespace-nowrap"
+                style={{ color: colors.primary }}
+              >
                 جزئیات نوبت
               </span>
             </button>
@@ -186,16 +199,20 @@ export default function AppointmentCard({ appointment, onDetails, onVerify, onCa
             style={{ backgroundColor: '#43A047' }}
           >
             <div
-              className="w-11 h-11 rounded-[14px] flex items-center justify-center"
+              className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
             >
               <FiCheckCircle size={18} color="#fff" />
             </div>
             <div className="flex-1 text-right">
-              <p className="text-[13px] font-[Vazir-Bold] text-white">تایید انجام خدمت</p>
-              <p className="text-[10px] text-white/80">وارد کردن کد ۴ رقمی مشتری</p>
+              <p className="text-[13px] font-[Vazir-Bold] text-white whitespace-nowrap">
+                تایید انجام خدمت
+              </p>
+              <p className="text-[10px] text-white/80 whitespace-nowrap">
+                وارد کردن کد ۴ رقمی مشتری
+              </p>
             </div>
-            <span className="text-white">←</span>
+            <span className="text-white flex-shrink-0">←</span>
           </button>
         </div>
       )}

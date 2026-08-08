@@ -83,14 +83,8 @@ export default function ReminderCustomerCard({ customer, selected, canSend, onTo
         text-right transition-all duration-200
         disabled:cursor-not-allowed disabled:opacity-60"
       style={{
-        backgroundColor: selected
-          ? colors.primary + '08'
-          : colors.cardBackground,
-        borderColor: selected
-          ? colors.primary
-          : canSend
-          ? colors.border
-          : colors.border + '60',
+        backgroundColor: selected ? colors.primary + '08' : colors.cardBackground,
+        borderColor: selected ? colors.primary : canSend ? colors.border : colors.border + '60',
       }}
     >
       {/* چک‌باکس */}
@@ -98,10 +92,7 @@ export default function ReminderCustomerCard({ customer, selected, canSend, onTo
         {selected ? (
           <FiCheckSquare size={22} style={{ color: colors.primary }} />
         ) : (
-          <FiSquare
-            size={22}
-            style={{ color: canSend ? colors.textSecondary : colors.border }}
-          />
+          <FiSquare size={22} style={{ color: canSend ? colors.textSecondary : colors.border }} />
         )}
       </div>
 
@@ -112,18 +103,12 @@ export default function ReminderCustomerCard({ customer, selected, canSend, onTo
       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
         {/* نام + تلفن */}
         <div className="flex items-center justify-between gap-2">
-          <span
-            className="text-sm font-[Vazir-Bold] truncate"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
             {customer.customerName}
           </span>
           <div className="flex items-center gap-1 flex-shrink-0">
             <FiPhone size={11} color={colors.textSecondary} />
-            <span
-              className="text-[11px] font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
               {toPersianDigit(customer.customerPhone)}
             </span>
           </div>
@@ -140,10 +125,7 @@ export default function ReminderCustomerCard({ customer, selected, canSend, onTo
           >
             {customer.serviceName}
           </span>
-          <span
-            className="text-[10px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             • انجام: {customer.lastServiceDate}
           </span>
         </div>
@@ -151,10 +133,7 @@ export default function ReminderCustomerCard({ customer, selected, canSend, onTo
         {/* موعد تمدید */}
         <div className="flex items-center gap-1.5">
           <FiCalendar size={11} color={colors.primary} />
-          <span
-            className="text-[11px] font-[Vazir-Medium]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[11px] font-[Vazir-Medium]" style={{ color: colors.textMain }}>
             موعد تمدید: {customer.dueDate}
           </span>
         </div>
@@ -166,10 +145,7 @@ export default function ReminderCustomerCard({ customer, selected, canSend, onTo
             style={{ backgroundColor: status.bg }}
           >
             <StatusIcon size={10} style={{ color: status.color }} />
-            <span
-              className="text-[10px] font-[Vazir-Bold]"
-              style={{ color: status.color }}
-            >
+            <span className="text-[10px] font-[Vazir-Bold]" style={{ color: status.color }}>
               {status.label}
             </span>
           </div>
@@ -178,10 +154,7 @@ export default function ReminderCustomerCard({ customer, selected, canSend, onTo
           {isSent && (
             <div className="flex items-center gap-1">
               <FiSend size={10} color="#9E9E9E" />
-              <span
-                className="text-[10px] font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                 ارسال: {customer.sentDate}
               </span>
             </div>

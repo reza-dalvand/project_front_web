@@ -13,18 +13,15 @@ export default function ReminderEmptyState() {
       >
         <FiBell size={48} color="#FF9800" />
       </div>
-      <h3
-        className="text-lg font-[Vazir-Bold] text-center"
-        style={{ color: colors.textMain }}
-      >
+      <h3 className="text-lg font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
         مشتری برای یادآوری وجود ندارد
       </h3>
       <p
         className="text-sm font-[Vazir] text-center leading-6 max-w-xs"
         style={{ color: colors.textSecondary }}
       >
-        در حال حاضر هیچ مشتری‌ای در این بازه زمانی نیاز به یادآوری تمدید ندارد. پس از نزدیک
-        شدن موعد تمدید خدمات، مشتریان اینجا نمایش داده می‌شوند.
+        در حال حاضر هیچ مشتری‌ای در این بازه زمانی نیاز به یادآوری تمدید ندارد. پس از نزدیک شدن موعد
+        تمدید خدمات، مشتریان اینجا نمایش داده می‌شوند.
       </p>
     </div>
   );

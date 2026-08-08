@@ -128,25 +128,18 @@ export default function SendReminderModal({
               borderColor: '#FF980030',
             }}
           >
-            <FiAlertTriangle
-              size={16}
-              color="#FF9800"
-              className="flex-shrink-0 mt-0.5"
-            />
+            <FiAlertTriangle size={16} color="#FF9800" className="flex-shrink-0 mt-0.5" />
             <p
               className="text-[11px] font-[Vazir] leading-5 flex-1"
               style={{ color: colors.textSecondary }}
             >
-              برای هر مشتری فقط یک بار پیام یادآوری ارسال می‌شود. پس از ارسال، تا زمانی که
-              مشتری نوبت جدیدی رزرو نکند، امکان ارسال مجدد وجود ندارد.
+              برای هر مشتری فقط یک بار پیام یادآوری ارسال می‌شود. پس از ارسال، تا زمانی که مشتری
+              نوبت جدیدی رزرو نکند، امکان ارسال مجدد وجود ندارد.
             </p>
           </div>
 
           {/* لیست خلاصه مشتریان */}
-          <div
-            className="rounded-xl border overflow-hidden"
-            style={{ borderColor: colors.border }}
-          >
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: colors.border }}>
             <div
               className="px-4 py-2.5 border-b flex items-center gap-2"
               style={{
@@ -155,10 +148,7 @@ export default function SendReminderModal({
               }}
             >
               <FiMessageSquare size={14} color={colors.textSecondary} />
-              <span
-                className="text-[11px] font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 لیست دریافت‌کنندگان
               </span>
             </div>
@@ -203,10 +193,7 @@ export default function SendReminderModal({
         </div>
 
         {/* فوتر */}
-        <div
-          className="px-5 py-4 border-t flex gap-3"
-          style={{ borderColor: colors.border }}
-        >
+        <div className="px-5 py-4 border-t flex gap-3" style={{ borderColor: colors.border }}>
           <Button
             title="انصراف"
             onPress={() => onClose?.()}
@@ -217,9 +204,7 @@ export default function SendReminderModal({
           />
           <Button
             title={
-              loading
-                ? 'در حال ارسال...'
-                : `ارسال به ${toPersianDigit(customers.length)} مشتری`
+              loading ? 'در حال ارسال...' : `ارسال به ${toPersianDigit(customers.length)} مشتری`
             }
             onPress={handleConfirm}
             loading={loading}

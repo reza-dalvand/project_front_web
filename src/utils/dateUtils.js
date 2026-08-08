@@ -142,3 +142,49 @@ export const minutesToTime = (totalMinutes) => {
   const minutes = totalMinutes % 60;
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
+
+// ═══════════════════════════════════════════════════════
+//    مقایسه و فیلتر تاریخ‌های جلالی
+// ═══════════════════════════════════════════════════════
+
+/**
+ * تبدیل تاریخ جلالی به عدد قابل مقایسه
+ * @param {{jy, jm, jd}} date
+ * @returns {number} - مثال: 14030420
+ */
+export const jalaaliToNumber = ({ jy, jm, jd }) => jy * 10000 + jm * 100 + jd;
+
+/**
+ * تبدیل تاریخ جلالی به آبجکت Date میلادی
+ * @param {{jy, jm, jd}} date
+ * @returns {Date}
+ */
+export const jalaaliToDate = (date) => {
+  if (!date) return new Date(0);
+  const g = toGregorian(date.jy, date.jm, date.jd);
+  return new Date(g.year, g.month - 1, g.day);
+};
+
+/**
+ * آیا دو تاریخ جلالی یک روز هستند؟
+ */
+export const isSameJalaaliDay = (d1, d2) =>
+  Boolean(d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd);
+
+/**
+ * کم کردن تعداد ماه از یک تاریخ جلالی
+ * @param {{jy, jm, jd}} date
+ * @param {number} months
+ * @returns {{jy, jm, jd}}
+ */
+export const subtractJalaaliMonths = (date, months) => {
+  let jy = date.jy;
+  let jm = date.jm - months;
+  let jd = date.jd;
+  while (jm < 1) {
+    jm += 12;
+    jy -= 1;
+  }
+  const maxDay = jalaaliMonthLength(jy, jm);
+  return { jy, jm, jd: Math.min(jd, maxDay) };
+};

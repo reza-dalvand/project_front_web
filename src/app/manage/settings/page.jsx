@@ -137,9 +137,16 @@ export default function BusinessSettingsPage() {
       <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
         {/* تصاویر */}
         <div className="space-y-3">
-          <SectionHeader icon={<FiBriefcase size={18} />} iconColor={colors.primary} title="تصاویر کسب‌وکار" />
+          <SectionHeader
+            icon={<FiBriefcase size={18} />}
+            iconColor={colors.primary}
+            title="تصاویر کسب‌وکار"
+          />
           <Card variant="elevated" padding={16} radius={18}>
-            <label className="block text-sm mb-2 text-right font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
+            <label
+              className="block text-sm mb-2 text-right font-[Vazir-Medium]"
+              style={{ color: colors.textSecondary }}
+            >
               تصویر کاور سالن
             </label>
             <ImageUploader
@@ -150,7 +157,10 @@ export default function BusinessSettingsPage() {
             />
           </Card>
           <Card variant="elevated" padding={16} radius={18}>
-            <label className="block text-sm mb-2 text-right font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
+            <label
+              className="block text-sm mb-2 text-right font-[Vazir-Medium]"
+              style={{ color: colors.textSecondary }}
+            >
               تصویر صاحب کسب‌وکار <span style={{ color: '#E53935' }}>*</span>
             </label>
             <div className="flex flex-col items-center gap-3">
@@ -160,7 +170,10 @@ export default function BusinessSettingsPage() {
                 variant="avatar"
                 error={errors.ownerPhoto}
               />
-              <p className="text-xs font-[Vazir] text-center" style={{ color: colors.textSecondary }}>
+              <p
+                className="text-xs font-[Vazir] text-center"
+                style={{ color: colors.textSecondary }}
+              >
                 عکس واقعی مدیر کسب‌وکار (جهت احراز هویت و اعتماد مشتریان)
               </p>
             </div>
@@ -169,7 +182,11 @@ export default function BusinessSettingsPage() {
 
         {/* اطلاعات پایه */}
         <div className="space-y-3">
-          <SectionHeader icon={<FiBriefcase size={18} />} iconColor={colors.primary} title="اطلاعات پایه" />
+          <SectionHeader
+            icon={<FiBriefcase size={18} />}
+            iconColor={colors.primary}
+            title="اطلاعات پایه"
+          />
           <Card variant="elevated" padding={16} radius={18}>
             <Input
               label="نام کسب‌وکار *"
@@ -303,10 +320,16 @@ export default function BusinessSettingsPage() {
             className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-4"
             style={{ backgroundColor: colors.cardBackground }}
           >
-            <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5393515' }}>
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: '#E5393515' }}
+            >
               <FiTrash2 size={40} color="#E53935" />
             </div>
-            <h3 className="text-xl font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
+            <h3
+              className="text-xl font-[Vazir-Bold] text-center"
+              style={{ color: colors.textMain }}
+            >
               حذف کسب و کار
             </h3>
             <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
@@ -322,15 +345,26 @@ export default function BusinessSettingsPage() {
                 'این عمل غیرقابل بازگشت است',
               ].map((text, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <span className="text-xs mt-0.5" style={{ color: '#E53935' }}>•</span>
-                  <span className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: colors.textSecondary }}>
+                  <span className="text-xs mt-0.5" style={{ color: '#E53935' }}>
+                    •
+                  </span>
+                  <span
+                    className="text-xs font-[Vazir] leading-5 flex-1"
+                    style={{ color: colors.textSecondary }}
+                  >
                     {text}
                   </span>
                 </div>
               ))}
             </div>
             <div className="flex gap-3 w-full mt-2">
-              <Button title="انصراف" onPress={() => setDeleteModalVisible(false)} variant="outline" size="lg" className="flex-1" />
+              <Button
+                title="انصراف"
+                onPress={() => setDeleteModalVisible(false)}
+                variant="outline"
+                size="lg"
+                className="flex-1"
+              />
               <Button
                 title="تایید و حذف"
                 onPress={handleDelete}

@@ -185,21 +185,14 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                   ? `${toPersianDigit(tier.fee.toLocaleString('en-US'))} تومان`
                   : `${toPersianDigit(tier.fee)}٪`;
 
-              const minDisplay =
-                tier.min === 0
-                  ? '۰'
-                  : formatPrice(tier.min).replace(' تومان', '');
-              const maxDisplay = isLast
-                ? 'به بالا'
-                : formatPrice(tier.max).replace(' تومان', '');
+              const minDisplay = tier.min === 0 ? '۰' : formatPrice(tier.min).replace(' تومان', '');
+              const maxDisplay = isLast ? 'به بالا' : formatPrice(tier.max).replace(' تومان', '');
 
               return (
                 <div
                   key={`${tier.min}-${tier.max}`}
                   className={`flex items-center justify-between px-4 py-3 ${
-                    isCurrent
-                      ? 'border-2 border-[#4CAF5040] bg-[#4CAF5015] rounded-xl my-1'
-                      : ''
+                    isCurrent ? 'border-2 border-[#4CAF5040] bg-[#4CAF5015] rounded-xl my-1' : ''
                   } ${!isLast && !isCurrent ? 'border-b' : ''}`}
                   style={{
                     borderColor: !isCurrent && !isLast ? colors.border : undefined,
@@ -250,13 +243,8 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                   سقف کمیسیون در هر رزرو
                 </span>
               </div>
-              <div
-                className="px-3 py-1.5 rounded-xl"
-              >
-                <span
-                  className="text-xs font-[Vazir-Bold]"
-                  style={{ color: '#eaa718' }}
-                >
+              <div className="px-3 py-1.5 rounded-xl">
+                <span className="text-xs font-[Vazir-Bold]" style={{ color: '#eaa718' }}>
                   {toPersianDigit(MAX_APP_FEE.toLocaleString('en-US'))} تومان
                 </span>
               </div>
@@ -280,7 +268,10 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                 <p className="text-sm font-[Vazir-Bold] mt-1" style={{ color: '#FF9800' }}>
                   {formatPrice(currentFee)}
                 </p>
-                <p className="text-[10px] font-[Vazir] mt-1" style={{ color: colors.textSecondary }}>
+                <p
+                  className="text-[10px] font-[Vazir] mt-1"
+                  style={{ color: colors.textSecondary }}
+                >
                   سهم دریافتی شما:{' '}
                   <span className="font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
                     {formatPrice(currentPrice - currentFee)}

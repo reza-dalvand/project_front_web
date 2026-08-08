@@ -19,13 +19,13 @@ import { PROVINCES, CITIES } from '@/constants/exploreFilters';
 import dynamic from 'next/dynamic';
 
 // لود کردن نقشه فقط در سمت کلاینت (مرورگر)
-const MapPicker = dynamic(() => import('@/components/common/MapPicker'), { 
+const MapPicker = dynamic(() => import('@/components/common/MapPicker'), {
   ssr: false,
   loading: () => (
     <div className="h-48 rounded-2xl border-2 border-dashed flex items-center justify-center">
       <p className="text-sm text-gray-500">در حال بارگذاری نقشه...</p>
     </div>
-  )
+  ),
 });
 const BUSINESS_CATEGORIES = [
   { id: 'salon', label: 'سالن زیبایی (چند منظوره)' },
@@ -192,7 +192,10 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               تصویر صاحب کسب‌وکار<span style={{ color: '#E53935' }}> *</span>
             </span>
-            <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ backgroundColor: '#4CAF5015' }}>
+            <div
+              className="flex items-center gap-1 px-2 py-1 rounded-lg"
+              style={{ backgroundColor: '#4CAF5015' }}
+            >
               <FiCheckCircle size={10} color="#4CAF50" />
               <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
                 احراز هویت
@@ -219,7 +222,10 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
               }}
             >
               <FiInfo size={16} style={{ color: colors.primary, flexShrink: 0 }} />
-              <p className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: colors.textSecondary }}>
+              <p
+                className="text-xs font-[Vazir] leading-5 flex-1"
+                style={{ color: colors.textSecondary }}
+              >
                 قرار دادن عکس واقعی مدیر،{' '}
                 <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
                   اعتماد مشتریان را افزایش می‌دهد
@@ -232,7 +238,11 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
 
       {/* مشخصات */}
       <div className="space-y-3">
-        <SectionHeader icon={<FiInfo size={18} />} iconColor={colors.primary} title="مشخصات کسب‌وکار" />
+        <SectionHeader
+          icon={<FiInfo size={18} />}
+          iconColor={colors.primary}
+          title="مشخصات کسب‌وکار"
+        />
         <Input
           label="نام کسب‌وکار *"
           placeholder="مثال: سالن زیبایی نیلارام"
@@ -310,7 +320,10 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
         />
 
         <Card variant="default" padding={0} radius={16}>
-          <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: colors.border }}>
+          <div
+            className="flex items-center gap-3 p-4 border-b"
+            style={{ borderColor: colors.border }}
+          >
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: colors.primary + '20' }}
@@ -327,7 +340,10 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             </div>
           </div>
           <div className="p-4">
-            <MapPicker initialLocation={formData.location} onLocationSelect={handleLocationSelect} />
+            <MapPicker
+              initialLocation={formData.location}
+              onLocationSelect={handleLocationSelect}
+            />
           </div>
         </Card>
 

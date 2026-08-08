@@ -14,12 +14,7 @@ const STATUS_CONFIG = {
  * کارت فشرده نوبت
  * فقط: لوگو + نام سالن + تاریخ + ساعت + وضعیت + کد تایید کوچک
  */
-export default function AppointmentCompactCard({
-  appointment,
-  onPress,
-  onCopyCode,
-  copiedCode,
-}) {
+export default function AppointmentCompactCard({ appointment, onPress, onCopyCode, copiedCode }) {
   const { colors } = useTheme();
   const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.reserved;
 
@@ -51,10 +46,7 @@ export default function AppointmentCompactCard({
 
         {/* اطلاعات */}
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-          <span
-            className="text-sm font-[Vazir-Bold] truncate"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
             {appointment.businessName}
           </span>
           <div className="flex items-center gap-3">
@@ -125,9 +117,7 @@ export default function AppointmentCompactCard({
                 hover:scale-110 active:scale-95"
               style={{
                 backgroundColor:
-                  copiedCode === appointment.verificationCode
-                    ? '#4CAF5020'
-                    : colors.primary + '15',
+                  copiedCode === appointment.verificationCode ? '#4CAF5020' : colors.primary + '15',
               }}
             >
               {copiedCode === appointment.verificationCode ? (

@@ -9,11 +9,7 @@ import { useTheme } from '@/stores/useThemeStore';
  * @param {string} bookingLink  - لینک رزرو
  * @param {number} selectedCount - تعداد مشتریان انتخاب شده
  */
-export default function ReminderMessagePreview({
-  businessName,
-  bookingLink,
-  selectedCount,
-}) {
+export default function ReminderMessagePreview({ businessName, bookingLink, selectedCount }) {
   const { colors } = useTheme();
 
   // متن پیام با placeholder ها
@@ -56,16 +52,10 @@ ${bookingLink}
           <FiMessageSquare size={16} style={{ color: colors.primary }} />
         </div>
         <div className="flex-1">
-          <span
-            className="text-[13px] font-[Vazir-Bold] block"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[13px] font-[Vazir-Bold] block" style={{ color: colors.textMain }}>
             متن پیام یادآوری
           </span>
-          <span
-            className="text-[10px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             {selectedCount > 0
               ? `برای ${selectedCount} مشتری ارسال می‌شود`
               : 'متن پیش‌فرض - اطلاعات هر مشتری به صورت خودکار جایگذاری می‌شود'}
@@ -93,12 +83,7 @@ ${bookingLink}
 
         {/* راهنمای متغیرها */}
         <div className="flex flex-wrap gap-1.5 mt-3">
-          {[
-            '{نام مشتری}',
-            '{نام خدمت}',
-            '{تاریخ انجام}',
-            '{تاریخ موعد}',
-          ].map((variable) => (
+          {['{نام مشتری}', '{نام خدمت}', '{تاریخ انجام}', '{تاریخ موعد}'].map((variable) => (
             <span
               key={variable}
               className="text-[10px] font-[Vazir-Bold] px-2 py-1 rounded-md"

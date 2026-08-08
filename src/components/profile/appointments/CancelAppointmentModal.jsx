@@ -33,7 +33,9 @@ const BANKS = [
 ];
 
 const formatSheba = (text) => {
-  let cleaned = toEnglishDigits(text).replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+  let cleaned = toEnglishDigits(text)
+    .replace(/[^0-9A-Za-z]/g, '')
+    .toUpperCase();
   if (!cleaned.startsWith('IR')) cleaned = 'IR' + cleaned.replace(/IR/g, '');
   return cleaned.slice(0, 26);
 };
@@ -48,12 +50,7 @@ const formatCard = (text) => {
  * - اگر اطلاعات بانکی کامل ثبت شده → پیام ساده واریز
  * - اگر ثبت نشده → فرم اطلاعات بانکی
  */
-export default function CancelAppointmentModal({
-  visible,
-  appointment,
-  onClose,
-  onConfirmCancel,
-}) {
+export default function CancelAppointmentModal({ visible, appointment, onClose, onConfirmCancel }) {
   const { colors } = useTheme();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
@@ -133,7 +130,8 @@ export default function CancelAppointmentModal({
     onConfirmCancel?.(appointment.id);
   };
 
-  const refundAmount = appointment.depositPaid > 0 ? appointment.depositPaid : appointment.totalPrice;
+  const refundAmount =
+    appointment.depositPaid > 0 ? appointment.depositPaid : appointment.totalPrice;
 
   const content = (
     <div
@@ -329,7 +327,10 @@ export default function CancelAppointmentModal({
               {/* راهنمای مالکیت حساب */}
               <div
                 className="flex items-start gap-2 p-3 rounded-xl border"
-                style={{ backgroundColor: colors.primary + '08', borderColor: colors.primary + '25' }}
+                style={{
+                  backgroundColor: colors.primary + '08',
+                  borderColor: colors.primary + '25',
+                }}
               >
                 <FiInfo size={14} style={{ color: colors.primary, flexShrink: 0, marginTop: 2 }} />
                 <p

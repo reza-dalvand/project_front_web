@@ -40,10 +40,7 @@ export default function AppointmentListItem({ appointment, onPress }) {
       </div>
 
       {/* نام مشتری */}
-      <span
-        className="text-xs font-[Vazir-Bold] line-clamp-1"
-        style={{ color: colors.textMain }}
-      >
+      <span className="text-xs font-[Vazir-Bold] line-clamp-1" style={{ color: colors.textMain }}>
         {appointment.customerName}
       </span>
 
@@ -109,7 +106,8 @@ export default function AppointmentListItem({ appointment, onPress }) {
       {cardContent}
 
       {/* نشان سبز تایید */}
-      <div className="flex items-center justify-center gap-1 mt-1 py-1.5 px-2 rounded-lg w-full"
+      <div
+        className="flex items-center justify-center gap-1 mt-1 py-1.5 px-2 rounded-lg w-full"
         style={{ backgroundColor: '#43A04718' }}
       >
         <FiCheckCircle size={11} color="#43A047" />

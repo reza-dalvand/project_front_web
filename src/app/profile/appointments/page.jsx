@@ -120,9 +120,7 @@ export default function AppointmentsPage() {
   // ═══ تایید لغو ═══
   const handleConfirmCancel = (aptId) => {
     setAppointments((prev) =>
-      prev.map((a) =>
-        a.id === aptId ? { ...a, status: 'cancelled', isUpcoming: false } : a
-      )
+      prev.map((a) => (a.id === aptId ? { ...a, status: 'cancelled', isUpcoming: false } : a))
     );
     setCancelVisible(false);
     setCancelTarget(null);

@@ -122,4 +122,3 @@ export const getCurrentFeeTier = (basePrice) => {
   if (basePrice <= APP_FEE_TIERS[0].max) return APP_FEE_TIERS[0];
   return APP_FEE_TIERS[APP_FEE_TIERS.length - 1];
 };
-

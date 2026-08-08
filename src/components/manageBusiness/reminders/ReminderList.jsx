@@ -30,8 +30,7 @@ export default function ReminderList({
   // مشتریان قابل ارسال (نه قفل شده)
   const sendableCustomers = customers.filter((c) => canSendCustomer(c));
   const allSelected =
-    sendableCustomers.length > 0 &&
-    sendableCustomers.every((c) => selectedIds.includes(c.id));
+    sendableCustomers.length > 0 && sendableCustomers.every((c) => selectedIds.includes(c.id));
   const someSelected = sendableCustomers.some((c) => selectedIds.includes(c.id));
 
   const handleSelectAll = () => {
@@ -64,18 +63,12 @@ export default function ReminderList({
             ) : (
               <FiSquare size={20} style={{ color: colors.textSecondary }} />
             )}
-            <span
-              className="text-[13px] font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               {allSelected ? 'لغو انتخاب همه' : 'انتخاب همه'}
             </span>
           </button>
 
-          <span
-            className="text-[11px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             {toPersianDigit(sendableCustomers.length)} مشتری قابل ارسال
             {someSelected && (
               <span style={{ color: colors.primary }}>

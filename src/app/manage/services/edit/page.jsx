@@ -10,7 +10,7 @@ import {
   FiShield,
   FiRefreshCw,
   FiChevronLeft,
-  FiX // ← اضافه شد
+  FiX, // ← اضافه شد
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -80,8 +80,8 @@ export default function EditServicePage() {
   const [description, setDescription] = useState(existingService?.description || '');
   const [renewalDays, setRenewalDays] = useState(existingService?.renewalDays || 0);
   const handleRenewalChange = (text) => {
-  const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
-  const num = parseInt(cleaned, 10) || 0;
+    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
+    const num = parseInt(cleaned, 10) || 0;
     if (num <= 365) {
       setRenewalDays(num);
       if (errors.renewalDays) setErrors((p) => ({ ...p, renewalDays: '' }));
@@ -244,7 +244,7 @@ export default function EditServicePage() {
           {/* متن‌ها */}
           <div className="flex-1 text-right">
             <p className="text-sm font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
-             قیمت‌گذاری و کمیسیون
+              قیمت‌گذاری و کمیسیون
             </p>
             <p className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }}>
               هزینه خدمات‌رسانی زیبانو چقدر است؟
@@ -339,8 +339,9 @@ export default function EditServicePage() {
               className="text-xs font-[Vazir] leading-5 flex-1"
               style={{ color: colors.textSecondary }}
             >
-              پس از انجام این خدمت، بعد از تعداد روزهای مشخص‌شده در بخش، يادآوری رزرو می‌توانید به مشتری پیام یادآوری
-              تمدید رزرو خدمت ارسال کنید. اگر نیازی به یادآوری نیست، صفر وارد کنید.
+              پس از انجام این خدمت، بعد از تعداد روزهای مشخص‌شده در بخش، يادآوری رزرو می‌توانید به
+              مشتری پیام یادآوری تمدید رزرو خدمت ارسال کنید. اگر نیازی به یادآوری نیست، صفر وارد
+              کنید.
             </p>
           </div>
 
@@ -358,8 +359,8 @@ export default function EditServicePage() {
                 borderColor: errors.renewalDays
                   ? '#E53935'
                   : renewalDays > 0
-                  ? colors.primary
-                  : colors.border,
+                    ? colors.primary
+                    : colors.border,
                 backgroundColor: colors.background,
               }}
             >
@@ -409,7 +410,10 @@ export default function EditServicePage() {
               style={{ backgroundColor: '#43A04710', borderColor: '#43A04740' }}
             >
               <FiCheck size={14} color="#43A047" />
-              <span className="text-[11px] font-[Vazir-Bold] leading-5" style={{ color: '#43A047' }}>
+              <span
+                className="text-[11px] font-[Vazir-Bold] leading-5"
+                style={{ color: '#43A047' }}
+              >
                 {renewalDays >= 30
                   ? `${toPersianDigit(Math.floor(renewalDays / 30))} ماه${renewalDays % 30 > 0 ? ` و ${toPersianDigit(renewalDays % 30)} روز` : ''} بعد از انجام خدمت`
                   : `${toPersianDigit(renewalDays)} روز بعد از انجام خدمت`}

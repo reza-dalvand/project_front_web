@@ -91,11 +91,12 @@ const INITIAL_BUSINESS_DATA = {
       employeeName: 'مریم رضایی',
       date: today,
       time: '۰۹:۳۰',
-      status: 'pending_verification',
+      status: 'done',
       price: 450000,
       depositPaid: 100000,
       verificationCode: '2571',
     },
+    // ── 🆕 نوبت اعتمادی (بدون نیاز به کد) ──
     {
       id: 'apt_3',
       customerName: 'زهرا حسینی',
@@ -107,8 +108,10 @@ const INITIAL_BUSINESS_DATA = {
       status: 'reserved',
       price: 2125000,
       depositPaid: 500000,
-      verificationCode: '7456',
+      verificationCode: null,
+      trustBased: true, // ✅ مشتری تیک اعتماد زده
     },
+    // ── نوبت معمولی ──
     {
       id: 'apt_4',
       customerName: 'مریم احمدی',
@@ -122,6 +125,7 @@ const INITIAL_BUSINESS_DATA = {
       depositPaid: 200000,
       verificationCode: '3841',
     },
+    // ── ظهر: نوبت لغو شده ──
     {
       id: 'apt_5',
       customerName: 'سمیرا قاسمی',
@@ -136,6 +140,7 @@ const INITIAL_BUSINESS_DATA = {
       cancellationReason: 'سالن در این ساعت تعطیل است',
       refundAmount: 100000,
     },
+    // ── 🆕 نوبت اعتمادی ──
     {
       id: 'apt_6',
       customerName: 'پریسا نوری',
@@ -144,11 +149,13 @@ const INITIAL_BUSINESS_DATA = {
       employeeName: 'دکتر رضایی',
       date: today,
       time: '۱۴:۰۰',
-      status: 'pending_verification',
+      status: 'reserved',
       price: 2125000,
       depositPaid: 500000,
-      verificationCode: '9213',
+      verificationCode: null,
+      trustBased: true, // ✅ مشتری تیک اعتماد زده
     },
+    // ── نوبت‌های معمولی ──
     {
       id: 'apt_7',
       customerName: 'فاطمه رضوی',
@@ -170,11 +177,12 @@ const INITIAL_BUSINESS_DATA = {
       employeeName: 'مریم رضایی',
       date: today,
       time: '۱۶:۳۰',
-      status: 'pending_verification',
+      status: 'reserved',
       price: 450000,
       depositPaid: 100000,
       verificationCode: '4528',
     },
+    // ── عصر: نوبت لغو شده ──
     {
       id: 'apt_9',
       customerName: 'نگار موسوی',
@@ -189,6 +197,7 @@ const INITIAL_BUSINESS_DATA = {
       cancellationReason: 'دستگاه لیزر در تعمیر است',
       refundAmount: 500000,
     },
+    // ── 🆕 نوبت اعتمادی ──
     {
       id: 'apt_10',
       customerName: 'آیدا شریفی',
@@ -200,9 +209,11 @@ const INITIAL_BUSINESS_DATA = {
       status: 'reserved',
       price: 675000,
       depositPaid: 200000,
-      verificationCode: '8367',
+      verificationCode: null,
+      trustBased: true, // ✅ مشتری تیک اعتماد زده
     },
   ],
+  // ... existing code ...
   portfolios: [],
 };
 
@@ -274,6 +285,37 @@ export const useBusinessStore = create(
             ...state.businessData,
             appointments: state.businessData.appointments.map((apt) =>
               apt.id === appointmentId ? { ...apt, status: newStatus } : apt
+            ),
+          },
+        })),
+
+      // 🆕 تایید انجام خدمت (با ثبت زمان تایید)
+      verifyAppointment: (appointmentId) =>
+        set((state) => ({
+          businessData: {
+            ...state.businessData,
+            appointments: state.businessData.appointments.map((apt) =>
+              apt.id === appointmentId
+                ? { ...apt, status: 'done', verifiedAt: new Date().toISOString() }
+                : apt
+            ),
+          },
+        })),
+
+      // 🆕 لغو نوبت توسط سالن (با دلیل و مبلغ استرداد)
+      cancelAppointment: (appointmentId, reason) =>
+        set((state) => ({
+          businessData: {
+            ...state.businessData,
+            appointments: state.businessData.appointments.map((apt) =>
+              apt.id === appointmentId
+                ? {
+                    ...apt,
+                    status: 'cancelled_by_salon',
+                    cancellationReason: reason || 'دلیلی ذکر نشده است',
+                    refundAmount: apt.depositPaid || 0,
+                  }
+                : apt
             ),
           },
         })),

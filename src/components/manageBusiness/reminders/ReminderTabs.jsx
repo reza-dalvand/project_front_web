@@ -37,15 +37,9 @@ export default function ReminderTabs({ tabs, activeTab, onChange }) {
             >
               {/* آیکون */}
               {isAll ? (
-                <FiGrid
-                  size={15}
-                  color={isActive ? '#fff' : colors.textSecondary}
-                />
+                <FiGrid size={15} color={isActive ? '#fff' : colors.textSecondary} />
               ) : (
-                <FiBell
-                  size={15}
-                  color={isActive ? '#fff' : '#FF9800'}
-                />
+                <FiBell size={15} color={isActive ? '#fff' : '#FF9800'} />
               )}
 
               {/* لیبل */}
@@ -64,8 +58,8 @@ export default function ReminderTabs({ tabs, activeTab, onChange }) {
                   backgroundColor: isActive
                     ? 'rgba(255,255,255,0.3)'
                     : tab.count > 0
-                    ? '#FF980020'
-                    : colors.border + '60',
+                      ? '#FF980020'
+                      : colors.border + '60',
                   color: isActive ? '#fff' : tab.count > 0 ? '#FF9800' : colors.textSecondary,
                 }}
               >
