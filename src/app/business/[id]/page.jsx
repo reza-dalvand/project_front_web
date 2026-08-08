@@ -13,7 +13,6 @@ import PortfolioModal from '@/components/home/PortfolioModal';
 import BusinessAbout from '@/components/home/BusinessAbout';
 import BookingModal from '@/components/booking/BookingModal';
 import BusinessMapButton from '@/components/home/BusinessMapButton';
-import StickyBookingBar from '@/components/home/StickyBookingBar';
 
 // ═══════════════════════════════════════════════════════
 //                    MOCK DATA
