@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* فونت‌های وزیر */
+/* ═══════ فونت‌های وزیر ═══════ */
 @font-face {
   font-family: 'Vazir';
   src: url('/fonts/Vazir.ttf') format('truetype');
@@ -35,11 +35,18 @@
   --color-text-main: #2c2521;
   --color-text-secondary: #5a504b;
   --color-border: #dcd1cb;
+  /* مشتقات رنگ primary با شفافیت */
+  --color-primary-5: #a88b7d0d;
   --color-primary-10: #a88b7d1a;
   --color-primary-15: #a88b7d26;
   --color-primary-20: #a88b7d33;
   --color-primary-30: #a88b7d4d;
   --color-primary-40: #a88b7d66;
+  /* رنگ‌های سراسری */
+  --color-success: #43a047;
+  --color-warning: #ff9800;
+  --color-error: #e53935;
+  --color-info: #2196f3;
 }
 
 .dark {
@@ -50,6 +57,7 @@
   --color-text-main: #f5f0ec;
   --color-text-secondary: #bdb4af;
   --color-border: #3d3734;
+  --color-primary-5: #a88b7d0d;
   --color-primary-10: #a88b7d1a;
   --color-primary-15: #a88b7d26;
   --color-primary-20: #a88b7d33;
@@ -57,6 +65,7 @@
   --color-primary-40: #a88b7d66;
 }
 
+/* ═══════ Base Layer ═══════ */
 @layer base {
   html {
     direction: rtl;
@@ -71,62 +80,85 @@
   html:not([data-theme-loaded]) body {
     visibility: hidden;
   }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.5;
+  }
 }
 
-/* Placeholder styling */
-input::placeholder,
-textarea::placeholder {
-  color: var(--color-text-secondary);
-  opacity: 0.5;
+/* ═══════ Utility Classes (جایگزین inline styles) ═══════ */
+@layer utilities {
+  /* ─── رنگ‌های پس‌زمینه ─── */
+  .bg-app { background-color: var(--color-background); }
+  .bg-card { background-color: var(--color-card); }
+  .bg-primary { background-color: var(--color-primary); }
+  .bg-primary-5 { background-color: var(--color-primary-5); }
+  .bg-primary-10 { background-color: var(--color-primary-10); }
+  .bg-primary-15 { background-color: var(--color-primary-15); }
+  .bg-primary-20 { background-color: var(--color-primary-20); }
+
+  /* ─── رنگ‌های متن ─── */
+  .text-app { color: var(--color-text-main); }
+  .text-muted { color: var(--color-text-secondary); }
+  .text-primary { color: var(--color-primary); }
+  .text-success { color: var(--color-success); }
+  .text-warning { color: var(--color-warning); }
+  .text-error { color: var(--color-error); }
+  .text-info { color: var(--color-info); }
+
+  /* ─── حاشیه ─── */
+  .border-app { border-color: var(--color-border); }
+  .border-primary { border-color: var(--color-primary); }
+
+  /* ─── فونت‌ها ─── */
+  .font-vazir { font-family: 'Vazir', sans-serif; }
+  .font-vazir-medium { font-family: 'Vazir-Medium', sans-serif; }
+  .font-vazir-bold { font-family: 'Vazir-Bold', sans-serif; }
+
+  /* ─── مخفی کردن scrollbar ─── */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* ─── انیمیشن‌ها ─── */
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+  }
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+
+  /* ─── Skeleton Loading ─── */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-card) 25%,
+      var(--color-border) 50%,
+      var(--color-card) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+  }
 }
 
-/* ═══ Utility: مخفی کردن scrollbar ═══ */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* ═══ انیمیشن‌ها ═══ */
+/* ═══════ Keyframes ═══════ */
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out;
-}
-
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out;
-}
-
 @keyframes scale-in {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
-.animate-scale-in {
-  animation: scale-in 0.2s ease-out;
-}
-
-/* ═══ Skeleton Loading ═══ */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
-}
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--color-card) 25%,
-    var(--color-border) 50%,
-    var(--color-card) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 8px;
 }

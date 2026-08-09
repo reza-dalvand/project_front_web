@@ -1,17 +1,9 @@
 'use client';
 
-import { useTheme } from '@/stores/useThemeStore';
-
 /**
- * کامپوننت LoadingSpinner
- *
- * @param {string} label - متن زیر اسپینر
- * @param {'sm'|'md'|'lg'} size - اندازه
- * @param {boolean} overlay - نمایش تمام صفحه
+ * LoadingSpinner - بدون useTheme
  */
 export default function LoadingSpinner({ label, size = 'md', overlay = false }) {
-  const { colors } = useTheme();
-
   const sizeClasses = {
     sm: 'w-5 h-5 border-2',
     md: 'w-8 h-8 border-[3px]',
@@ -23,30 +15,22 @@ export default function LoadingSpinner({ label, size = 'md', overlay = false }) 
       <div
         className={`
           ${sizeClasses[size]}
-          rounded-full
-          animate-spin
-          border-current border-t-transparent
+          rounded-full animate-spin
+          border-primary border-t-transparent
         `}
-        style={{ color: colors.primary }}
       />
       {label && (
-        <p className="text-sm text-center font-[Vazir]" style={{ color: colors.textSecondary }}>
-          {label}
-        </p>
+        <p className="text-sm text-center font-vazir text-muted">{label}</p>
       )}
     </div>
   );
 
   if (overlay) {
     return (
-      <div
-        className="fixed inset-0 z-[999] flex items-center justify-center"
-        style={{ backgroundColor: colors.background + 'CC' }}
-      >
+      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-app/80">
         {spinner}
       </div>
     );
   }
-
   return spinner;
 }

@@ -1,19 +1,5 @@
 'use client';
-import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
-
-/**
- * کامپوننت EmptyState - حالت خالی لیست (ادغام‌شده)
- *
- * @param {string|React.ReactNode} icon - آیکون یا ایموجی
- * @param {string} title - عنوان
- * @param {string} description - توضیحات
- * @param {string} actionLabel - متن دکمه اکشن
- * @param {function} onAction - هندلر دکمه
- * @param {'service'|'appointment'|'portfolio'|'favorite'|'payment'|'ads'|'lineRental'|'modelRequest'|'default'} variant - نوع پیش‌فرض
- * @param {string} customTitle - عنوان سفارشی (override)
- * @param {string} customDescription - توضیحات سفارشی (override)
- */
 
 const VARIANTS = {
   service:      { emoji: '💆‍♀️', title: 'هنوز خدمتی ثبت نشده',       description: 'اولین خدمت خود را اضافه کنید تا مشتریان بتوانند نوبت رزرو کنند', actionLabel: 'افزودن اولین خدمت' },
@@ -27,6 +13,9 @@ const VARIANTS = {
   default:      { emoji: '📭',   title: 'موردی یافت نشد',             description: 'هیچ نتیجه‌ای برای نمایش وجود ندارد',                       actionLabel: null },
 };
 
+/**
+ * EmptyState - بدون useTheme
+ */
 export default function EmptyState({
   icon,
   title,
@@ -37,9 +26,6 @@ export default function EmptyState({
   customTitle,
   customDescription,
 }) {
-  const { colors } = useTheme();
-
-  // اگر variant مشخص شده و icon/title دستی داده نشده، از preset استفاده کن
   const config = VARIANTS[variant] || VARIANTS.default;
   const displayIcon = icon ?? config.emoji;
   const displayTitle = title ?? customTitle ?? config.title;
@@ -48,12 +34,8 @@ export default function EmptyState({
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-      {/* آیکون */}
       {displayIcon && (
-        <div
-          className="w-20 h-20 rounded-3xl border flex items-center justify-center mb-5"
-          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
-        >
+        <div className="w-20 h-20 rounded-3xl border border-app bg-card flex items-center justify-center mb-5">
           {typeof displayIcon === 'string' ? (
             <span className="text-4xl">{displayIcon}</span>
           ) : (
@@ -61,22 +43,12 @@ export default function EmptyState({
           )}
         </div>
       )}
-
-      {/* عنوان */}
       {displayTitle && (
-        <h3 className="text-lg mb-2 font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-          {displayTitle}
-        </h3>
+        <h3 className="text-lg mb-2 font-vazir-bold text-app">{displayTitle}</h3>
       )}
-
-      {/* توضیحات */}
       {displayDesc && (
-        <p className="text-sm leading-6 mb-6 max-w-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-          {displayDesc}
-        </p>
+        <p className="text-sm leading-6 mb-6 max-w-xs font-vazir text-muted">{displayDesc}</p>
       )}
-
-      {/* دکمه اکشن */}
       {displayAction && onAction && (
         <Button title={displayAction} onPress={onAction} variant="outline" size="md" />
       )}

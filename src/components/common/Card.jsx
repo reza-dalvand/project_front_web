@@ -1,16 +1,7 @@
 'use client';
 
-import { useTheme } from '@/stores/useThemeStore';
-
 /**
- * کامپوننت کارت مشترک
- *
- * @param {React.ReactNode} children - محتوای کارت
- * @param {function} onPress - عملکرد هنگام کلیک (اختیاری)
- * @param {'default'|'flat'|'elevated'} variant - نوع کارت
- * @param {number} padding - فاصله داخلی
- * @param {number} radius - گردی گوشه‌ها
- * @param {string} className - کلاس‌های اضافی
+ * Card - بدون useTheme → بدون re-render هنگام تغییر تم
  */
 export default function Card({
   children,
@@ -19,54 +10,33 @@ export default function Card({
   padding = 16,
   radius = 16,
   className = '',
+  style = {},
 }) {
-  const { colors } = useTheme();
-
-  const getVariantStyles = () => {
+  const getVariantClasses = () => {
     switch (variant) {
-      case 'default':
-        return {
-          backgroundColor: colors.cardBackground,
-          borderWidth: 1,
-          borderColor: colors.border,
-          boxShadow: 'none',
-        };
       case 'flat':
-        return {
-          backgroundColor: colors.cardBackground,
-          borderWidth: 0,
-          boxShadow: 'none',
-        };
+        return 'bg-card';
       case 'elevated':
-        return {
-          backgroundColor: colors.cardBackground,
-          borderWidth: 0,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-        };
+        return 'bg-card shadow-[0_4px_12px_rgba(0,0,0,0.08)]';
       default:
-        return {
-          backgroundColor: colors.cardBackground,
-          borderWidth: 1,
-          borderColor: colors.border,
-        };
+        return 'bg-card border border-app';
     }
   };
 
-  const styles = getVariantStyles();
   const Component = onPress ? 'button' : 'div';
 
   return (
     <Component
       onClick={onPress}
       className={`
-        overflow-hidden
+        overflow-hidden ${getVariantClasses()}
         ${onPress ? 'cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]' : ''}
         ${className}
       `}
       style={{
-        ...styles,
         padding: `${padding}px`,
         borderRadius: `${radius}px`,
+        ...style,
       }}
     >
       {children}
