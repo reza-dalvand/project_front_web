@@ -18,7 +18,7 @@ export default function RulesCard({ colors }) {
       >
         <FiExternalLink size={18} style={{ color: colors.primary }} />
         <span className="text-sm font-[Vazir-Bold] flex-1" style={{ color: colors.primary }}>
-          برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
+          برای مطالعه قوانین این قسمت به لینک زیر مراجعه کنید
         </span>
       </a>
     </Card>
