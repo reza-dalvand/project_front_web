@@ -228,9 +228,6 @@ export default function BusinessDetailsPage() {
         <div className="px-5 pt-1">{renderTabContent()}</div>
       </div>
 
-      {/* ═══ Sticky Booking Bar ═══ */}
-      {/* <StickyBookingBar minPrice={minServicePrice} onBookPress={openBooking} /> */}
-
       {/* ═══ Booking Modal ═══ */}
       <BookingModal
         visible={bookingModalVisible}

@@ -19,7 +19,6 @@ export { default as ScreenWrapper } from './ScreenWrapper';
 // ═══════ کامپوننت‌های مشترک پیشرفته ═══════
 export { default as SectionHeader } from './SectionHeader';
 export { default as CharCounter } from './CharCounter';
-export { default as DetailHero } from './DetailHero';
 export { default as ActionButtons } from './ActionButtons';
 export { default as StatsCard } from './StatsCard';
 export { default as PriceBreakdown } from './PriceBreakdown';

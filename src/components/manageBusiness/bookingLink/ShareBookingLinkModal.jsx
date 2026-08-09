@@ -5,7 +5,6 @@ import { FiX, FiCopy, FiLink, FiCheck, FiShare2 } from 'react-icons/fi';
 import { FaWhatsapp, FaTelegramPlane, FaInstagram } from 'react-icons/fa';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
-import QRCodeSection from './QRCodeSection';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 export default function ShareBookingLinkModal({ visible, onClose, bookingLink }) {

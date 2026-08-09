@@ -1,0 +1,40 @@
+// src/data/posts.js
+
+/**
+ * 🖼️ پست‌های ویترین / اکسپلور
+ * جایگزین MOCK_POSTS در exploreFilters.js و searchData.js
+ */
+export const MOCK_POSTS = [
+  {
+    id: 'p1', businessName: 'کلینیک زیبایی صدف', businessLogo: 'https://picsum.photos/100/100?random=1',
+    businessId: 'b1', provinceId: 'tehran', cityId: 'tehran-city', businessTypeId: 'clinic',
+    rating: 4.8, discount: 15, source: 'business', mainCategory: 'skin', subCategory: 'facial',
+    caption: 'فیشیال تخصصی VIP با استفاده از بهترین متریال روز دنیا ✨',
+    saved: false,
+    gallery: ['https://picsum.photos/800/800?random=1', 'https://picsum.photos/800/800?random=2', 'https://picsum.photos/800/800?random=3'],
+  },
+  {
+    id: 'p2', businessName: 'سالن زیبایی ماهرو', businessLogo: 'https://picsum.photos/100/100?random=2',
+    businessId: 'b2', provinceId: 'tehran', cityId: 'shemiran', businessTypeId: 'makeup',
+    rating: 4.6, discount: 0, source: 'business', mainCategory: 'makeup', subCategory: 'bridal_makeup',
+    caption: 'میکاپ عروس اروپایی با سبک مینیمال و طبیعی 👰‍♀️',
+    saved: false,
+    gallery: ['https://picsum.photos/800/800?random=4', 'https://picsum.photos/800/800?random=5'],
+  },
+  {
+    id: 'p3', businessName: 'ناخن گالری پریا', businessLogo: 'https://picsum.photos/100/100?random=3',
+    businessId: 'b3', provinceId: 'alborz', cityId: 'fardis', businessTypeId: 'nail',
+    rating: 4.4, discount: 0, source: 'business', mainCategory: 'nail', subCategory: 'nail_design',
+    caption: 'طراحی ناخن با سبک ژورنالی و مینیمال 💖',
+    saved: false,
+    gallery: ['https://picsum.photos/800/800?random=6', 'https://picsum.photos/800/800?random=7', 'https://picsum.photos/800/800?random=8'],
+  },
+  {
+    id: 'p4', businessName: 'مجله زیبانو', businessLogo: 'https://picsum.photos/100/100?random=10',
+    businessId: 'magazine', rating: 0, discount: 0, source: 'magazine',
+    mainCategory: 'skin', subCategory: 'skin_cleansing',
+    caption: '۱۰ ترفند طلایی برای مراقبت از پوست در تابستان ☀️',
+    saved: false,
+    gallery: ['https://picsum.photos/800/800?random=20'],
+  },
+];
