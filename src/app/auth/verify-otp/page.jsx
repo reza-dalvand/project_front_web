@@ -193,7 +193,7 @@ export default function VerifyOtpPage() {
           variant="primary"
           size="lg"
           fullWidth
-          icon={<FiCheck size={18} />}
+          // icon={<FiCheck size={18} />}
           iconPosition="left"
         />
 
