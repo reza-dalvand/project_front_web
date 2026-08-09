@@ -118,7 +118,7 @@ export default function FinancialManagementPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="مدیریت مالی و تسویه" onBackPress={goBack} />
+      <Header title="مدیریت مالی" onBackPress={goBack} />
       <div className="flex-1 overflow-y-auto p-4 pb-32">
         <FinancialStatsCards stats={stats} />
         <BankInfoCard

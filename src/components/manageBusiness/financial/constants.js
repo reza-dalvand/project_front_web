@@ -55,10 +55,11 @@ export const TX_TABS = [
 // اطلاعات بانکی موقت
 export const MOCK_BANK_INFO = {
   ownerName: 'مریم حسینی',
-  nationalId: '۰۰۱۲۳۴۵۶۷۸۹',
-  sheba: '',
+  nationalId: '',      // ✅ خالی (قبلاً 11 رقم داشت!)
+  sheba: '',           // ✅ خالی
   cardNumber: '',
   bankName: '',
+  bankId: null,        // ✅ فیلد جدید برای Dropdown
   accountNumber: '',
   isRegistered: false,
   isVerified: false,

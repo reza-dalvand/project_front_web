@@ -1,15 +1,14 @@
 'use client';
 
-import { FiClock, FiRefreshCw, FiCheckCircle, FiTrendingUp } from 'react-icons/fi';
+import { FiClock, FiRefreshCw } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import StatsCard from '@/components/common/StatsCard';
 import { formatPrice } from './constants';
 
 const STAT_CARDS = [
   {
     id: 'blocked',
     key: 'blockedAmount',
-    icon: <FiClock size={18} />,
+    Icon: FiClock,
     label: 'بیعانه بلوکه',
     hint: 'در انتظار انجام خدمت',
     color: '#FF9800',
@@ -17,26 +16,10 @@ const STAT_CARDS = [
   {
     id: 'settling',
     key: 'settlingAmount',
-    icon: <FiRefreshCw size={18} />,
+    Icon: FiRefreshCw,
     label: 'در حال تسویه',
     hint: 'واریز تا ۴۸ ساعت',
     color: '#2196F3',
-  },
-  {
-    id: 'settled',
-    key: 'settledAmount',
-    icon: <FiCheckCircle size={18} />,
-    label: 'کل درآمد تسویه‌شده',
-    hint: 'به حساب شما واریز شده',
-    color: '#43A047',
-  },
-  {
-    id: 'total',
-    key: 'totalAmount',
-    icon: <FiTrendingUp size={18} />,
-    label: 'کل تراکنش‌ها',
-    hint: 'از ابتدا تا امروز',
-    color: '#9C27B0',
   },
 ];
 
@@ -44,18 +27,54 @@ export default function FinancialStatsCards({ stats }) {
   const { colors } = useTheme();
 
   return (
-    <div className="grid grid-cols-2 gap-2.5 mb-5">
-      {STAT_CARDS.map((card) => (
-        <StatsCard
-          key={card.id}
-          icon={card.icon}
-          label={card.label}
-          value={formatPrice(stats[card.key]).replace(' تومان', '')}
-          subtitle={card.hint}
-          color={card.color}
-          variant="horizontal"
-        />
-      ))}
+    <div className="grid grid-cols-2 gap-3 mb-5">
+      {STAT_CARDS.map((card) => {
+        const { Icon } = card;
+        return (
+          <div
+            key={card.id}
+            className="rounded-2xl border p-4 shadow-sm"
+            style={{
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            }}
+          >
+            {/* آیکون */}
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
+              style={{ backgroundColor: card.color + '18' }}
+            >
+              <Icon size={22} style={{ color: card.color }} />
+            </div>
+
+            {/* مبلغ */}
+            <span
+              className="block text-lg font-[Vazir-Bold] mb-1"
+              style={{ color: colors.textMain }}
+            >
+              {formatPrice(stats[card.key] || 0).replace(' تومان', '')}
+            </span>
+
+            {/* لیبل */}
+            <span
+              className="block text-[13px] font-[Vazir-Bold] mb-1.5"
+              style={{ color: colors.textMain }}
+            >
+              {card.label}
+            </span>
+
+            {/* زیرنویس */}
+            {card.hint && (
+              <span
+                className="block text-[11px] font-[Vazir]"
+                style={{ color: colors.textSecondary }}
+              >
+                {card.hint}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

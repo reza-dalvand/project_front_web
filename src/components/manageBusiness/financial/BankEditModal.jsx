@@ -5,20 +5,53 @@ import { createPortal } from 'react-dom';
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
-import { toEnglishDigits } from '@/utils/numberUtils';
+import Dropdown from '@/components/common/Dropdown';
+import { toEnglishDigits, toPersianDigit } from '@/utils/numberUtils';
+import { validateNationalId } from '@/utils/validators';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-export default function BankEditModal({ visible, onClose, onSave, bankInfo, businessOwnerName }) {
+// ═══════ لیست بانک‌های ایرانی ═══════
+const IRANIAN_BANKS = [
+  { id: 'meli', label: 'بانک ملی ایران' },
+  { id: 'mellat', label: 'بانک ملت' },
+  { id: 'saman', label: 'بانک سامان' },
+  { id: 'pasargad', label: 'بانک پاسارگاد' },
+  { id: 'saderat', label: 'بانک صادرات ایران' },
+  { id: 'tejarat', label: 'بانک تجارت' },
+  { id: 'sepah', label: 'بانک سپه' },
+  { id: 'keshavarzi', label: 'بانک کشاورزی' },
+  { id: 'maskan', label: 'بانک مسکن' },
+  { id: 'refah', label: 'بانک رفاه کارگران' },
+  { id: 'parsian', label: 'بانک پارسیان' },
+  { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
+  { id: 'ansar', label: 'بانک انصار' },
+  { id: 'gardeshgari', label: 'بانک گردشگری' },
+  { id: 'ayandeh', label: 'بانک آینده' },
+  { id: 'shahr', label: 'بانک شهر' },
+  { id: 'sina', label: 'بانک سینا' },
+  { id: 'day', label: 'بانک دی' },
+  { id: 'karafarin', label: 'بانک کارآفرین' },
+  { id: 'tosee', label: 'بانک توسعه صادرات' },
+];
+
+export default function BankEditModal({
+  visible,
+  onClose,
+  onSave,
+  bankInfo,
+  businessOwnerName,
+}) {
   const { colors } = useTheme();
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef('bank-edit-modal');
+
   const [form, setForm] = useState({
     ownerName: '',
     nationalId: '',
+    bankId: null,
     sheba: '',
     cardNumber: '',
     accountNumber: '',
-    bankName: '',
   });
   const [errors, setErrors] = useState({});
 
@@ -30,15 +63,16 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
     };
   }, []);
 
+  // ✅ مقداردهی اولیه فرم
   useEffect(() => {
     if (visible) {
       setForm({
         ownerName: bankInfo?.ownerName || businessOwnerName || '',
         nationalId: bankInfo?.nationalId || '',
+        bankId: bankInfo?.bankId || null,
         sheba: bankInfo?.sheba || '',
         cardNumber: bankInfo?.cardNumber || '',
         accountNumber: bankInfo?.accountNumber || '',
-        bankName: bankInfo?.bankName || '',
       });
       setErrors({});
       acquireScrollLock(instanceId.current);
@@ -50,7 +84,6 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
     };
   }, [visible, bankInfo, businessOwnerName]);
 
-  // بستن با Escape
   useEffect(() => {
     if (!visible) return;
     const handleEsc = (e) => {
@@ -65,34 +98,76 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: '' }));
   };
 
+  // ✅ هندلر کد ملی — فقط عدد، حداکثر 10 رقم
+  const handleNationalIdChange = (text) => {
+    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
+    if (cleaned.length <= 10) {
+      updateField('nationalId', cleaned);
+    }
+  };
+
+  // ✅ هندلر شبا — IR + حداکثر 24 رقم
+  const handleShebaChange = (text) => {
+    let val = text.trim().toUpperCase();
+    // اگر با IR شروع نمی‌شود، خودکار اضافه کن
+    if (!val.startsWith('IR') && val.length > 0 && !val.startsWith('I')) {
+      val = 'IR' + val;
+    }
+    // فقط IR + اعداد مجاز هستند
+    const cleaned = val.replace(/[^0-9IR]/g, '');
+    // حداکثر IR + 24 رقم = 26 کاراکتر
+    if (cleaned.length <= 26) {
+      updateField('sheba', cleaned);
+    }
+  };
+
+  // ✅ هندلر شماره کارت — فقط عدد، حداکثر 16 رقم
+  const handleCardChange = (text) => {
+    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
+    if (cleaned.length <= 16) {
+      updateField('cardNumber', cleaned);
+    }
+  };
+
+  // ✅ اعتبارسنجی — اصلاح شده
   const validate = () => {
     const e = {};
 
-    const enNational = toEnglishDigits(form.nationalId).replace(/[^0-9]/g, '');
-    if (enNational.length !== 10) {
-      e.nationalId = 'کد ملی باید ۱۰ رقم باشد';
-    }
-
-    const enSheba = toEnglishDigits(form.sheba);
-    const cleanedSheba = enSheba.replace(/IR|ir/gi, '').replace(/[^0-9]/g, '');
-    if (cleanedSheba.length !== 24) {
-      e.sheba = 'شماره شبا باید ۲۴ رقم بعد از IR باشد';
-    }
-    if (!enSheba.trim().toUpperCase().startsWith('IR')) {
-      e.sheba = 'شماره شبا باید با IR شروع شود';
-    }
-
-    const enCard = toEnglishDigits(form.cardNumber).replace(/[^0-9]/g, '');
-    if (enCard.length !== 16) {
-      e.cardNumber = 'شماره کارت باید ۱۶ رقم باشد';
-    }
-
+    // نام صاحب حساب
     if (!form.ownerName.trim() || form.ownerName.trim().length < 3) {
       e.ownerName = 'نام کامل صاحب حساب الزامی است';
     }
 
-    if (!form.bankName.trim()) {
-      e.bankName = 'نام بانک الزامی است';
+    // کد ملی
+    const enNational = toEnglishDigits(form.nationalId).replace(/[^0-9]/g, '');
+    if (enNational.length !== 10) {
+      e.nationalId = 'کد ملی باید دقیقاً ۱۰ رقم باشد';
+    } else if (!validateNationalId(enNational)) {
+      e.nationalId = 'کد ملی وارد شده معتبر نیست';
+    }
+
+    // بانک
+    if (!form.bankId) {
+      e.bankId = 'لطفاً بانک را انتخاب کنید';
+    }
+
+    // شبا
+    const enSheba = toEnglishDigits(form.sheba).trim().toUpperCase();
+    if (!enSheba) {
+      e.sheba = 'شماره شبا الزامی است';
+    } else if (!enSheba.startsWith('IR')) {
+      e.sheba = 'شماره شبا باید با IR شروع شود';
+    } else {
+      const digitsAfterIR = enSheba.slice(2).replace(/[^0-9]/g, '');
+      if (digitsAfterIR.length !== 24) {
+        e.sheba = `شماره شبا باید IR + ۲۴ رقم باشد (${toPersianDigit(digitsAfterIR.length)} از ۲۴ رقم وارد شده)`;
+      }
+    }
+
+    // شماره کارت
+    const enCard = toEnglishDigits(form.cardNumber).replace(/[^0-9]/g, '');
+    if (enCard.length !== 16) {
+      e.cardNumber = 'شماره کارت باید دقیقاً ۱۶ رقم باشد';
     }
 
     setErrors(e);
@@ -101,14 +176,28 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
 
   const handleSubmit = () => {
     if (!validate()) return;
+
+    const selectedBank = IRANIAN_BANKS.find((b) => b.id === form.bankId);
+
     if (
-      confirm('آیا از صحت اطلاعات وارد شده مطمئن هستید؟ پس از ثبت، حساب وارد مرحله تایید می‌شود.')
+      confirm(
+        'آیا از صحت اطلاعات وارد شده مطمئن هستید؟ پس از ثبت، حساب وارد مرحله تایید می‌شود.'
+      )
     ) {
-      onSave(form);
+      onSave({
+        ...form,
+        bankName: selectedBank?.label || '',
+      });
     }
   };
 
   if (!mounted || !visible) return null;
+
+  // شمارنده رقم شبا
+  const shebaDigits = toEnglishDigits(form.sheba)
+    .toUpperCase()
+    .replace('IR', '')
+    .replace(/[^0-9]/g, '');
 
   const content = (
     <div
@@ -129,7 +218,10 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
           className="flex items-center justify-between px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
         >
-          <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+          <h3
+            className="text-base font-[Vazir-Bold]"
+            style={{ color: colors.textMain }}
+          >
             ثبت حساب بانکی تسویه
           </h3>
           <button
@@ -152,66 +244,105 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
             }}
           >
             <span className="text-lg flex-shrink-0">⚠️</span>
-            <p className="text-xs font-[Vazir] leading-[18px] flex-1" style={{ color: '#E53935' }}>
-              صاحب حساب باید حتماً همان شخصی باشد که کد ملی‌اش در مرحله ثبت کسب‌وکار تایید شده است.
+            <p
+              className="text-xs font-[Vazir] leading-[18px] flex-1"
+              style={{ color: '#E53935' }}
+            >
+              صاحب حساب باید حتماً همان شخصی باشد که کد ملی‌اش در مرحله ثبت کسب‌وکار
+              تایید شده است.
             </p>
           </div>
 
+          {/* نام صاحب حساب */}
           <Input
-            label="نام و نام خانوادگی کامل"
-            placeholder="نام صاحب حساب"
+            label="نام و نام خانوادگی کامل *"
+            placeholder="مثال: مریم حسینی"
             value={form.ownerName}
             onChangeText={(v) => updateField('ownerName', v)}
             error={errors.ownerName}
-            hint={businessOwnerName ? `نام تایید شده احراز هویت: ${businessOwnerName}` : undefined}
+            hint={
+              businessOwnerName
+                ? `نام تایید شده احراز هویت: ${businessOwnerName}`
+                : undefined
+            }
           />
 
+          {/* کد ملی — ✅ اصلاح شده */}
           <Input
             label="کد ملی صاحب حساب *"
-            placeholder="مثال: ۰۰۱۲۳۴۵۶۷۸۹"
-            value={form.nationalId}
-            onChangeText={(v) => updateField('nationalId', v)}
+            placeholder="مثال: 0012345679"
+            value={toPersianDigit(form.nationalId)}
+            onChangeText={handleNationalIdChange}
             error={errors.nationalId}
+            type="tel"
             maxLength={10}
+            hint={`${toPersianDigit(form.nationalId.length)} از ۱۰ رقم`}
           />
 
-          <Input
-            label="نام بانک *"
-            placeholder="مثال: بانک ملی ایران"
-            value={form.bankName}
-            onChangeText={(v) => updateField('bankName', v)}
-            error={errors.bankName}
-          />
+          {/* ✅ نام بانک — Dropdown */}
+          <div>
+            <Dropdown
+              label="نام بانک *"
+              placeholder="بانک را انتخاب کنید"
+              value={form.bankId}
+              options={IRANIAN_BANKS}
+              onSelect={(val) => {
+                updateField('bankId', val);
+              }}
+            />
+            {errors.bankId && (
+              <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
+                <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
+                  {errors.bankId}
+                </span>
+              </div>
+            )}
+          </div>
 
+          {/* شماره شبا — ✅ اصلاح شده */}
           <Input
             label="شماره شبا *"
-            placeholder="IR010550000000101550500550555555555"
+            placeholder="IR + ۲۴ رقم (مثال: IR062960000000100324200001)"
             value={form.sheba}
-            onChangeText={(v) => updateField('sheba', v)}
+            onChangeText={handleShebaChange}
             error={errors.sheba}
-            hint="تسویه حساب‌های اصلی از طریق شماره شبا انجام می‌شود"
+            maxLength={26}
+            hint={
+              <span style={{ direction: 'ltr', display: 'inline-block' }}>
+                {toPersianDigit(shebaDigits.length)} از ۲۴ رقم بعد از IR
+              </span>
+            }
           />
 
+          {/* شماره کارت — ✅ اصلاح شده */}
           <Input
             label="شماره کارت *"
-            placeholder="مثال: ۶۰۳۷ ۹۹۱۸ ۱۲۳۴ ۵۶۷۸"
-            value={form.cardNumber}
-            onChangeText={(v) => updateField('cardNumber', v)}
+            placeholder="مثال: 6037991812345678"
+            value={toPersianDigit(form.cardNumber)}
+            onChangeText={handleCardChange}
             error={errors.cardNumber}
+            type="tel"
             maxLength={16}
-            hint="برای تشخیص حساب در گزارشات استفاده می‌شود"
+            hint={`${toPersianDigit(form.cardNumber.length)} از ۱۶ رقم`}
           />
 
-          <Input
+          {/* شماره حساب (اختیاری) */}
+          {/* <Input
             label="شماره حساب (اختیاری)"
             placeholder="در صورت داشتن وارد کنید"
             value={form.accountNumber}
             onChangeText={(v) => updateField('accountNumber', v)}
-          />
+          /> */}
 
           {/* نکات */}
-          <div className="p-4 rounded-xl" style={{ backgroundColor: colors.background }}>
-            <p className="text-xs font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
+          <div
+            className="p-4 rounded-xl"
+            style={{ backgroundColor: colors.background }}
+          >
+            <p
+              className="text-xs font-[Vazir-Bold] mb-2"
+              style={{ color: colors.textMain }}
+            >
               نکات مهم:
             </p>
             <ul className="space-y-1.5">
@@ -219,10 +350,12 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
                 'تایید اطلاعات توسط کارشناسان حدود ۲۴ تا ۴۸ ساعت زمان می‌برد',
                 'پس از تایید، تمامی بیعانه‌ها ظرف ۴۸ ساعت بعد از انجام خدمت واریز می‌شوند',
                 'تغییر حساب بعداً هم ممکن است اما مجدداً وارد چرخه تایید خواهد شد',
-                'تعداد دفعات تغییر اطلاعات بانکی محدود است',
               ].map((note, i) => (
                 <li key={i} className="flex items-start gap-2">
-                  <span className="text-xs mt-0.5" style={{ color: colors.primary }}>
+                  <span
+                    className="text-xs mt-0.5"
+                    style={{ color: colors.primary }}
+                  >
                     •
                   </span>
                   <span
@@ -238,10 +371,19 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
         </div>
 
         {/* فوتر */}
-        <div className="p-5 border-t flex gap-3" style={{ borderColor: colors.border }}>
-          <Button title="انصراف" onPress={onClose} variant="outline" size="lg" className="flex-1" />
+        <div
+          className="p-5 border-t flex gap-3"
+          style={{ borderColor: colors.border }}
+        >
           <Button
-            title="ثبت اطلاعات حساب"
+            title="انصراف"
+            onPress={onClose}
+            variant="outline"
+            size="lg"
+            className="flex-1"
+          />
+          <Button
+            title="ثبت اطلاعات"
             onPress={handleSubmit}
             variant="primary"
             size="lg"
