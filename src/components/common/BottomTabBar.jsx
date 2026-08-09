@@ -3,7 +3,7 @@
 import { FiHome, FiGrid, FiPlusCircle, FiCreditCard, FiUser, FiLogIn } from 'react-icons/fi';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
-import { useAuth } from '@/stores/useAuth';
+import { useAuth } from '@/stores/useAuthStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 
 export default function BottomTabBar() {
@@ -13,42 +13,25 @@ export default function BottomTabBar() {
   const { isAuthenticated, openAuthModal } = useAuth();
   const businessData = useBusinessStore((s) => s.businessData);
 
-  // ─── تشخیص داشتن کسب‌وکار فعال ───
   const hasBusiness = Boolean(
     businessData?.id && businessData?.name && businessData?.isActive !== false
   );
-  // ─── ساخت تب‌ها بر اساس وضعیت احراز هویت ───
+
   const tabs = isAuthenticated
     ? [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
         { id: 'explore', icon: FiGrid, label: 'ویترین', path: '/explore' },
         hasBusiness
-          ? {
-              id: 'manage',
-              icon: FiCreditCard,
-              label: 'مدیریت کسب‌وکار',
-              path: '/manage',
-            }
-          : {
-              id: 'create',
-              icon: FiPlusCircle,
-              label: 'ثبت آگهی جدید',
-              path: '/create-business',
-            },
+          ? { id: 'manage', icon: FiCreditCard, label: 'مدیریت کسب‌وکار', path: '/manage' }
+          : { id: 'create', icon: FiPlusCircle, label: 'ثبت آگهی جدید', path: '/create-business' },
         { id: 'profile', icon: FiUser, label: 'پروفایل', path: '/profile' },
       ]
     : [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
         { id: 'explore', icon: FiGrid, label: 'ویترین', path: '/explore' },
-        {
-          id: 'login',
-          icon: FiLogIn,
-          label: 'ورود و ثبت‌نام',
-          isAuthAction: true,
-        },
+        { id: 'login', icon: FiLogIn, label: 'ورود و ثبت‌نام', isAuthAction: true },
       ];
 
-  // ─── هندلر کلیک روی تب ───
   const handleTabPress = (tab) => {
     if (tab.isAuthAction) {
       openAuthModal();
@@ -57,7 +40,6 @@ export default function BottomTabBar() {
     router.push(tab.path);
   };
 
-  // ─── تشخیص تب فعال ───
   const isActive = (tab) => {
     if (tab.isAuthAction) return false;
     if (tab.path === '/') return pathname === '/';
@@ -66,13 +48,9 @@ export default function BottomTabBar() {
 
   return (
     <>
-      {/* فاصله برای محتوای صفحه */}
       <div className="h-24" />
-
-      {/* Tab Bar */}
       <div
-        className="fixed bottom-4 left-4 right-4 h-16 rounded-2xl
-          flex items-center justify-around px-2 z-40 shadow-xl"
+        className="fixed bottom-4 left-4 right-4 h-16 rounded-2xl flex items-center justify-around px-2 z-40 shadow-xl"
         style={{
           backgroundColor: colors.cardBackground,
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
@@ -82,25 +60,19 @@ export default function BottomTabBar() {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab);
-
           return (
             <button
               key={tab.id}
               onClick={() => handleTabPress(tab)}
-              className="flex flex-col items-center gap-0.5 py-1 px-3 relative
-                transition-all duration-200 hover:scale-105 active:scale-95"
+              className="flex flex-col items-center gap-0.5 py-1 px-3 relative transition-all duration-200 hover:scale-105 active:scale-95"
               type="button"
             >
               <div className="relative">
                 <Icon
                   size={24}
-                  style={{
-                    color: active ? colors.primary : colors.textSecondary,
-                    transition: 'color 0.2s',
-                  }}
+                  style={{ color: active ? colors.primary : colors.textSecondary, transition: 'color 0.2s' }}
                 />
               </div>
-
               <span
                 className="text-[10px] transition-colors duration-200 text-center leading-tight"
                 style={{
@@ -110,12 +82,9 @@ export default function BottomTabBar() {
               >
                 {tab.label}
               </span>
-
-              {/* نشانگر تب فعال */}
               {active && (
                 <div
-                  className="absolute -top-1 left-1/2 -translate-x-1/2
-                    w-8 h-1 rounded-full"
+                  className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full"
                   style={{ backgroundColor: colors.primary }}
                 />
               )}

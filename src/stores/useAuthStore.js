@@ -1,19 +1,28 @@
 // src/stores/useAuthStore.js
+// ═══════════════════════════════════════════════════════
+//    Auth Store واحد (ادغام useAuthStore + useAuthModalStore)
+//    تمام state‌های احراز هویت در یک فایل
+// ═══════════════════════════════════════════════════════
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+// ═══════════════════════════════════════════
+//    ۱. Store اصلی احراز هویت (با persist)
+// ═══════════════════════════════════════════
 export const useAuthStore = create(
   persist(
     (set, get) => ({
+      // ─── State ───
       isAuthenticated: false,
       user: null,
-      pendingAction: null,
       pendingPhone: null,
       pendingName: null,
-      _hydrated: false, // ← اضافه شد
+      _hydrated: false,
+
+      // ─── Hydration ───
       setHydrated: () => set({ _hydrated: true }),
 
-      // ذخیره شماره و نام برای مرحله بعد (OTP)
+      // ─── Actions ───
       setPendingAuth: (phone, firstName, lastName) => {
         set({
           pendingPhone: phone,
@@ -21,21 +30,18 @@ export const useAuthStore = create(
         });
       },
 
-      // لاگین نهایی پس از تایید OTP
       login: (phone, name = 'کاربر زیبانو', token = 'mock_token_' + Date.now()) => {
-        const userData = {
-          phone,
-          name,
-          avatar: null,
-          token,
-          memberSince: 'از مرداد ۱۴۰۵',
-        };
         set({
           isAuthenticated: true,
-          user: userData,
+          user: {
+            phone,
+            name,
+            avatar: null,
+            token,
+            memberSince: 'از مرداد ۱۴۰۵',
+          },
           pendingPhone: null,
           pendingName: null,
-          pendingAction: null,
         });
       },
 
@@ -43,7 +49,6 @@ export const useAuthStore = create(
         set({
           isAuthenticated: false,
           user: null,
-          pendingAction: null,
           pendingPhone: null,
           pendingName: null,
         });
@@ -53,20 +58,6 @@ export const useAuthStore = create(
         set((state) => ({
           user: { ...state.user, ...updates },
         })),
-
-      setPendingAction: (action) => set({ pendingAction: action }),
-
-      executePendingAction: () => {
-        const { pendingAction } = get();
-        if (pendingAction) {
-          setTimeout(() => {
-            pendingAction();
-            set({ pendingAction: null });
-          }, 100);
-        }
-      },
-
-      clearPendingAction: () => set({ pendingAction: null }),
     }),
     {
       name: 'zibano-auth-storage',
@@ -79,11 +70,68 @@ export const useAuthStore = create(
         isAuthenticated: state.isAuthenticated,
         user: state.user,
       }),
-      onRehydrateStorage: () => {
-        return (state) => {
-          if (state) state.setHydrated();
-        };
+      onRehydrateStorage: () => (state) => {
+        if (state) state.setHydrated();
       },
     }
   )
 );
+
+// ═══════════════════════════════════════════
+//    ۲. Store مدال احراز هویت (بدون persist)
+// ═══════════════════════════════════════════
+export const useAuthModalStore = create((set, get) => ({
+  showAuthModal: false,
+  pendingAction: null,
+
+  openAuthModal: (action = null) => {
+    set({ showAuthModal: true, pendingAction: action });
+  },
+
+  closeAuthModal: () => {
+    set({ showAuthModal: false });
+    const { pendingAction } = get();
+    if (pendingAction && useAuthStore.getState().isAuthenticated) {
+      setTimeout(() => {
+        pendingAction();
+        set({ pendingAction: null });
+      }, 300);
+    } else {
+      set({ pendingAction: null });
+    }
+  },
+
+  cancelAuthModal: () => {
+    set({ showAuthModal: false, pendingAction: null });
+  },
+}));
+
+// ═══════════════════════════════════════════
+//    ۳. Hook ترکیبی: useAuth
+// ═══════════════════════════════════════════
+export const useAuth = () => {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
+
+  const requireAuth = (action) => {
+    if (isAuthenticated) {
+      action?.();
+    } else {
+      openAuthModal(action);
+    }
+  };
+
+  return { isAuthenticated, user, requireAuth, openAuthModal };
+};
+
+// ═══════════════════════════════════════════
+//    ۴. Hook مدال: useAuthModal
+// ═══════════════════════════════════════════
+export const useAuthModal = () => {
+  const showAuthModal = useAuthModalStore((s) => s.showAuthModal);
+  const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
+  const closeAuthModal = useAuthModalStore((s) => s.closeAuthModal);
+  const cancelAuthModal = useAuthModalStore((s) => s.cancelAuthModal);
+  return { showAuthModal, openAuthModal, closeAuthModal, cancelAuthModal };
+};

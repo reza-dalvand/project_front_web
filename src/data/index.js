@@ -10,3 +10,4 @@ export * from './devices';
 export * from './notifications';
 export * from './reminders';
 export * from './transactions';
+export * from './appointments';

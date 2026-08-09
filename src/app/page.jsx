@@ -15,7 +15,7 @@ import {
   FiCreditCard,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { useAuth, useAuthModal } from '@/stores/useAuth';
+import { useAuth } from '@/stores/useAuthStore';
 import { useReviewStore } from '@/stores/useReviewStore';
 import { SectionHeader, BottomTabBar } from '@/components/common';
 import HomeHeader from '@/components/home/HomeHeader';
