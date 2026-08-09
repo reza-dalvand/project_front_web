@@ -14,28 +14,30 @@ export default function Toast({
   message,
   type = 'info',
   position = 'bottom',
-  duration = 3000,
   onHide,
 }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (visible) {
-      setShow(true);
-      const timer = setTimeout(() => {
-        setShow(false);
-        setTimeout(() => onHide?.(), 300);
-      }, duration);
-      return () => clearTimeout(timer);
+      // انیمیشن ورود
+      const raf = requestAnimationFrame(() => setShow(true));
+      return () => cancelAnimationFrame(raf);
+    } else {
+      // ✅ وقتی visible از استور false شد، show هم false بشه
+      setShow(false);
     }
-  }, [visible, duration, onHide]);
+  }, [visible]);
 
   if (!visible && !show) return null;
 
   const config = TYPE_CONFIG[type] || TYPE_CONFIG.info;
   const Icon = config.icon;
+
   const positionClasses =
-    position === 'top' ? 'top-6 left-1/2 -translate-x-1/2' : 'bottom-6 left-1/2 -translate-x-1/2';
+    position === 'top'
+      ? 'top-6 left-1/2 -translate-x-1/2'
+      : 'bottom-6 left-1/2 -translate-x-1/2';
 
   return (
     <div
@@ -43,7 +45,7 @@ export default function Toast({
         flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg
         transition-all duration-300 max-w-[90vw]
         ${config.bg}
-        ${show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+        ${show && visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}
       `}
     >
       <Icon size={20} color="#fff" className="flex-shrink-0" />

@@ -12,8 +12,6 @@ export default function ToastProvider() {
       message={toast.message}
       type={toast.type}
       position="top"
-      duration={3000}
-      onHide={hideToast}
     />
   );
 }

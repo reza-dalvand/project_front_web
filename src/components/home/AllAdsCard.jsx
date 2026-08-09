@@ -86,7 +86,7 @@ export default function AllAdsCard({ ad, onPress }) {
             style={{ backgroundColor: '#43A047' }}
           >
             <FiCalendar size={16} color="#fff" />
-            <span className="text-sm font-[Vazir-Bold] text-white flex-1 text-center">
+            <span className="text-sm font-[Vazir-Bold] text-white text-center">
               رزرو نوبت با تخفیف ویژه
             </span>
             <FiChevronLeft size={16} color="#fff" />

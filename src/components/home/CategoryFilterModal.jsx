@@ -169,7 +169,7 @@ export default function CategoryFilterModal({
             variant="primary"
             size="lg"
             className="flex-1"
-            icon={<FiCheck size={16} color="#fff" />}
+            // icon={<FiCheck size={16} color="#fff" />}
             iconPosition="right"
           />
         </div>

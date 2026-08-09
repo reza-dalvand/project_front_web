@@ -73,7 +73,7 @@ export default function LineRentalFilterModal({ visible, onClose, onApply, curre
             onPress={handleApply}
             variant="primary"
             size="lg"
-            icon={<FiCheck size={16} color="#fff" />}
+            // icon={<FiCheck size={16} color="#fff" />}
             className="flex-1"
           />
         </div>

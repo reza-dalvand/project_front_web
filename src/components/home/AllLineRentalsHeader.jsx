@@ -41,7 +41,7 @@ export default function AllLineRentalsHeader({
           </div>
           <div>
             <span className="text-[11px] text-white/80 block">فرصت‌های همکاری</span>
-            <h1 className="text-[17px] font-[Vazir-Bold] text-white">اجاره لاین کسب و کار</h1>
+            <h1 className="text-[17px] font-[Vazir-Bold] text-white">اجاره لاین</h1>
           </div>
         </div>
 

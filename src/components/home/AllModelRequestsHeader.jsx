@@ -30,8 +30,8 @@ export default function AllModelRequestsHeader({
             <span className="text-2xl">👤</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-white/80 font-[Vazir]">فرصت‌های مدلینگ</span>
-            <h1 className="text-lg font-[Vazir-Bold] text-white">لیست درخواست مدل</h1>
+            {/* <span className="text-xs text-white/80 font-[Vazir]">لیست درخواست مدل</span> */}
+            <h1 className="text-md font-[Vazir-Bold] text-white">فرصت‌های مدلینگ </h1>
           </div>
         </div>
 

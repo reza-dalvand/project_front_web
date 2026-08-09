@@ -98,7 +98,7 @@ export default function FilterModal({ visible, onClose, onApply, currentFilters 
             onPress={handleApply}
             variant="primary"
             size="lg"
-            icon={<FiCheck size={16} color="#fff" />}
+            // icon={<FiCheck size={16} color="#fff" />}
             className="flex-1"
           />
         </div>

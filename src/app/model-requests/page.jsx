@@ -44,9 +44,7 @@ export default function AllModelRequestsPage() {
     <ScreenWrapper scrollable padding={0}>
       <AllModelRequestsHeader
         requestsCount={filteredRequests.length}
-        onFilterPress={() => {
-          // TODO: باز کردن مدال فیلتر
-        }}
+        onFilterPress={() => setFilterVisible(true)} // ✅ مدال را باز می‌کند
         hasActiveFilter={hasActiveFilter}
       />
 

@@ -6,18 +6,15 @@ import Script from 'next/script';
 export const metadata = {
   title: 'زیبانو | رزرو آنلاین خدمات زیبایی و سلامت',
   description: 'رزرو آنلاین خدمات زیبایی، سلامت، سالن‌ها، کلینیک‌ها و متخصصان زیبایی',
-  keywords: [
-    'زیبانو',
-    'رزرو آنلاین',
-    'سالن زیبایی',
-    'کلینیک پوست',
-    'لیزر',
-    'فیشیال',
-    'ناخن',
-    'میکاپ',
-  ],
+  keywords: ['زیبانو', 'رزرو آنلاین', 'سالن زیبایی', 'کلینیک پوست'],
   authors: [{ name: 'Zibano Team' }],
   manifest: '/manifest.json',
+  // ✅ متاتگ‌های PWA
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'زیبانو',
+  },
 };
 
 export const viewport = {
@@ -25,7 +22,12 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#A88B7D',
+  // ✅ برای پوشش کامل صفحه (شامل notch آیفون)
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F5F0EC' },
+    { media: '(prefers-color-scheme: dark)', color: '#171412' },
+  ],
 };
 
 export default function RootLayout({ children }) {
@@ -37,14 +39,19 @@ export default function RootLayout({ children }) {
         <meta property="og:description" content="رزرو آنلاین خدمات زیبایی و سلامت" />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="fa_IR" />
+
+        {/* ✅ متاتگ‌های نصب PWA */}
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="زیبانو" />
+
         <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://picsum.photos" />
         <link rel="preconnect" href="https://i.pravatar.cc" />
+
         <Script
           id="theme-script"
           strategy="beforeInteractive"
@@ -69,6 +76,7 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
+
         <Script
           id="sw-register"
           strategy="afterInteractive"

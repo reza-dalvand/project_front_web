@@ -85,7 +85,7 @@ export default function AllModelRequestsCard({ request, onPress }) {
             style={{ backgroundColor: '#E91E63' }}
           >
             <span className="text-sm">📋</span>
-            <span className="text-sm font-[Vazir-Bold] text-white flex-1 text-center">
+            <span className="text-sm font-[Vazir-Bold] text-white text-center">
               مشاهده جزئیات و تماس
             </span>
             <FiChevronLeft size={16} color="#fff" />

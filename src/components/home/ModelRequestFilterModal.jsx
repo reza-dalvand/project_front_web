@@ -84,7 +84,7 @@ export default function ModelRequestFilterModal({ visible, onClose, onApply, cur
             onPress={handleApply}
             variant="primary"
             size="lg"
-            icon={<FiCheck size={16} color="#fff" />}
+            // icon={<FiCheck size={16} color="#fff" />}
             className="flex-1"
           />
         </div>
@@ -133,10 +133,10 @@ export default function ModelRequestFilterModal({ visible, onClose, onApply, cur
           </div>
         </div>
 
-        <Divider spacing={16} />
+        {/* <Divider spacing={16} /> */}
 
         {/* ═══════ بخش ۲: نوع خدمت ═══════ */}
-        <div className="space-y-3">
+        {/* <div className="space-y-3">
           <div className="flex items-center gap-2">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -157,7 +157,7 @@ export default function ModelRequestFilterModal({ visible, onClose, onApply, cur
             options={SERVICE_FILTER_OPTIONS}
             onSelect={(val) => setServiceType(val)}
           />
-        </div>
+        </div> */}
 
         {/* ═══════ شمارنده فیلترهای فعال ═══════ */}
         {activeCount > 0 && (

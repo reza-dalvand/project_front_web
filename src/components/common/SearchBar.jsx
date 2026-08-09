@@ -67,6 +67,7 @@ export default function SearchBar({
         onBlur={() => setFocused(false)}
         onKeyDown={handleKeyDown}
         className={`flex-1 bg-transparent outline-none text-right text-sm font-vazir rtl ${textColor} ${placeholderColor}`}
+        suppressHydrationWarning // ✅ این خط را اضافه کنید
       />
       {value?.length > 0 && (
         <button

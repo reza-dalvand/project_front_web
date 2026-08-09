@@ -92,7 +92,7 @@ export default function AllLineRentalsCard({ ad, onPress }) {
             style={{ backgroundColor: '#667eea' }}
           >
             <span className="text-sm">📋</span>
-            <span className="text-sm font-[Vazir-Bold] text-white flex-1 text-center">
+            <span className="text-sm font-[Vazir-Bold] text-white text-center">
               مشاهده جزئیات و تماس
             </span>
             <span className="text-sm text-white">←</span>
