@@ -10,8 +10,12 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
 import BookingLinkCard from '@/components/manageBusiness/bookingLink/BookingLinkCard';
-import ShareBookingLinkModal from '@/components/manageBusiness/bookingLink/ShareBookingLinkModal';
+import dynamic from 'next/dynamic';
 
+const ShareBookingLinkModal = dynamic(
+  () => import('@/components/manageBusiness/bookingLink/ShareBookingLinkModal'),
+  { ssr: false, loading: () => null }
+);
 export default function BookingLinkPage() {
   const { colors } = useTheme();
   const router = useRouter();

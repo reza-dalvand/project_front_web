@@ -5,10 +5,19 @@ import { useToast } from '@/hooks/useToast';
 import { toPersianDigit } from '@/utils/numberUtils';
 import {
   AppointmentCompactCard,
-  AppointmentDetailModal,
-  CancelAppointmentModal,
 } from '@/components/profile/appointments';
+import dynamic from 'next/dynamic';
 
+// ✅ Lazy Load
+const AppointmentDetailModal = dynamic(
+  () => import('@/components/profile/appointments/AppointmentDetailModal'),
+  { ssr: false, loading: () => null }
+);
+
+const CancelAppointmentModal = dynamic(
+  () => import('@/components/profile/appointments/CancelAppointmentModal'),
+  { ssr: false, loading: () => null }
+);
 // ═══════ داده‌های موقت ═══════
 const MOCK_APPOINTMENTS = [
   {

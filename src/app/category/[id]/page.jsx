@@ -6,8 +6,15 @@ import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import CategoryHeader from '@/components/home/CategoryHeader';
 import BusinessListCard from '@/components/home/BusinessListCard';
-import CategoryFilterModal from '@/components/home/CategoryFilterModal';
 import EmptyState from '@/components/common/EmptyState';
+import dynamic from 'next/dynamic';
+
+// ✅ Lazy Load
+const CategoryFilterModal = dynamic(
+  () => import('@/components/home/CategoryFilterModal'),
+  { ssr: false, loading: () => null }
+);
+
 
 // داده‌های MOCK
 const MOCK_BUSINESSES = [

@@ -5,7 +5,14 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import AllModelRequestsHeader from '@/components/home/AllModelRequestsHeader';
 import AllModelRequestsCard from '@/components/home/AllModelRequestsCard';
 import EmptyState from '@/components/common/EmptyState';
-import ModelRequestFilterModal from '@/components/home/ModelRequestFilterModal';
+import dynamic from 'next/dynamic';
+
+// ✅ Lazy Load
+const ModelRequestFilterModal = dynamic(
+  () => import('@/components/home/ModelRequestFilterModal'),
+  { ssr: false, loading: () => null }
+);
+
 
 const MOCK_MODEL_REQUESTS = [
   {

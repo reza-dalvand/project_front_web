@@ -25,7 +25,6 @@ import Divider from '@/components/common/Divider';
 import SectionHeader from '@/components/common/SectionHeader';
 import CharCounter from '@/components/common/CharCounter';
 import PriceBreakdown from '@/components/common/PriceBreakdown';
-import PriceGuideModal from '@/components/common/PriceGuideModal';
 import ServiceTypeIcon from '@/components/manageBusiness/services/ServiceTypeIcon';
 import {
   SERVICE_CATEGORIES,
@@ -41,6 +40,14 @@ import {
   formatPriceInput,
   calculateAppFee,
 } from '@/utils/numberUtils';
+
+import dynamic from 'next/dynamic';
+
+// ✅ Lazy Load
+const PriceGuideModal = dynamic(
+  () => import('@/components/common/PriceGuideModal'),
+  { ssr: false, loading: () => null }
+);
 
 const MIN_FINAL_PRICE = 100000;
 const MIN_DEPOSIT = 100000;

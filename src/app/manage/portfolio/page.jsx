@@ -1,7 +1,8 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiCamera, FiPlus, FiImage, FiTag } from 'react-icons/fi';
+import dynamic from 'next/dynamic';
+import { FiCamera, FiPlus } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -11,12 +12,19 @@ import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
 import EmptyState from '@/components/common/EmptyState';
 import StatsCard from '@/components/common/StatsCard';
-import {
-  PortfolioCard,
-  PortfolioFormSheet,
-  PortfolioDetailModal,
-} from '@/components/manageBusiness/portfolio';
+import { PortfolioCard } from '@/components/manageBusiness/portfolio';
 import { toPersianDigit } from '@/utils/numberUtils';
+
+// ✅ Lazy Load
+const PortfolioFormSheet = dynamic(
+  () => import('@/components/manageBusiness/portfolio/PortfolioFormSheet'),
+  { ssr: false, loading: () => null }
+);
+
+const PortfolioDetailModal = dynamic(
+  () => import('@/components/manageBusiness/portfolio/PortfolioDetailModal'),
+  { ssr: false, loading: () => null }
+);
 
 export default function ManagePortfolioPage() {
   const { colors } = useTheme();
@@ -24,6 +32,7 @@ export default function ManagePortfolioPage() {
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
   const businessData = useBusinessStore((s) => s.businessData);
+  const addPortfolio = useBusinessStore((s) => s.addPortfolio);
 
   const [formVisible, setFormVisible] = useState(false);
   const [editingPortfolio, setEditingPortfolio] = useState(null);
@@ -32,54 +41,65 @@ export default function ManagePortfolioPage() {
 
   const portfolios = businessData?.portfolios || [];
   const services = businessData?.services || [];
-  const addPortfolio = useBusinessStore((s) => s.addPortfolio);
-  // آمار
+
+  // ✅ useMemo برای آمار
   const stats = useMemo(() => {
     const totalImages = portfolios.reduce(
       (sum, p) => sum + (p.images?.length || (p.coverImage ? 1 : 0)),
       0
     );
-    const withService = portfolios.filter((p) => p.serviceId).length;
-    return {
-      total: portfolios.length,
-      totalImages,
-      withService,
-    };
+    return { total: portfolios.length, totalImages };
   }, [portfolios]);
 
-  const openAddForm = () => {
+  // ✅ useCallback برای handler‌ها
+  const openAddForm = useCallback(() => {
     setEditingPortfolio(null);
     setFormVisible(true);
-  };
+  }, []);
 
-  const openEditForm = (portfolio) => {
+  const openEditForm = useCallback((portfolio) => {
     setEditingPortfolio(portfolio);
     setFormVisible(true);
-  };
+  }, []);
 
-  const openDetail = (portfolio) => {
+  const openDetail = useCallback((portfolio) => {
     setActivePortfolio(portfolio);
     setDetailVisible(true);
-  };
+  }, []);
 
-  const handleSave = (portfolioData, editingId) => {
+  const closeDetail = useCallback(() => {
+    setDetailVisible(false);
+    setActivePortfolio(null);
+  }, []);
+
+  const closeForm = useCallback(() => {
+    setFormVisible(false);
+    setEditingPortfolio(null);
+  }, []);
+
+  const handleSave = useCallback((portfolioData, editingId) => {
     if (editingId) {
-      // ویرایش - در production باید updatePortfolio صدا زده شود
       showToast('✓ نمونه‌کار با موفقیت ویرایش شد', 'success');
     } else {
-      // افزودن جدید
       addPortfolio(portfolioData);
       showToast('✓ نمونه‌کار جدید اضافه شد', 'success');
     }
     setFormVisible(false);
     setEditingPortfolio(null);
-  };
+  }, [showToast, addPortfolio]);
 
-  const handleDelete = (portfolio) => {
+  const handleDelete = useCallback(() => {
     setDetailVisible(false);
     setActivePortfolio(null);
     showToast('✓ نمونه‌کار حذف شد', 'info');
-  };
+  }, [showToast]);
+
+  const handleEditFromDetail = useCallback((p) => {
+    setDetailVisible(false);
+    setTimeout(() => openEditForm(p), 300);
+  }, [openEditForm]);
+
+  const goBack = useCallback(() => router.push('/manage'), [router]);
 
   if (!isAuthenticated) {
     return (
@@ -93,9 +113,9 @@ export default function ManagePortfolioPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="نمونه‌کارها" onBackPress={() => router.push('/manage')} />
+      <Header title="نمونه‌کارها" onBackPress={goBack} />
       <div className="flex-1 overflow-y-auto p-4 pb-32">
-        {/* ═══════ Hero Section ═══════ */}
+        {/* Hero */}
         <div className="flex flex-col items-center gap-2 py-4 mb-4">
           <div
             className="w-[72px] h-[72px] rounded-3xl flex items-center justify-center"
@@ -113,37 +133,22 @@ export default function ManagePortfolioPage() {
 
         {portfolios.length > 0 ? (
           <>
-            {/* ═══════ Stats ═══════ */}
+            {/* Stats */}
             <Card variant="elevated" padding={14} radius={18} className="mb-4">
               <div className="flex items-center">
-                <StatsCard
-                  icon="📸"
-                  label="نمونه‌کار"
-                  value={toPersianDigit(stats.total)}
-                  color="#9C27B0"
-                  variant="compact"
-                />
+                <StatsCard icon="📸" label="نمونه‌کار" value={toPersianDigit(stats.total)} color="#9C27B0" variant="compact" />
                 <div className="w-px h-10 mx-2" style={{ backgroundColor: colors.border }} />
-                <StatsCard
-                  icon="🖼️"
-                  label="تصویر"
-                  value={toPersianDigit(stats.totalImages)}
-                  color="#2196F3"
-                  variant="compact"
-                />
+                <StatsCard icon="🖼️" label="تصویر" value={toPersianDigit(stats.totalImages)} color="#2196F3" variant="compact" />
               </div>
             </Card>
 
-            {/* ═══════ دکمه سبز افزودن ═══════ */}
+            {/* دکمه افزودن */}
             <button
               onClick={openAddForm}
               className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-4 transition-all hover:scale-[1.01] active:scale-[0.99]"
               style={{ backgroundColor: '#43A047' }}
             >
-              <div
-                className="w-11 h-11 rounded-[14px] flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-              >
+              <div className="w-11 h-11 rounded-[14px] flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                 <FiPlus size={22} color="#fff" />
               </div>
               <div className="flex-1 text-right">
@@ -153,7 +158,7 @@ export default function ManagePortfolioPage() {
               <span className="text-white text-xl">←</span>
             </button>
 
-            {/* ═══════ Grid نمونه‌کارها ═══════ */}
+            {/* Grid */}
             <div className="flex flex-wrap gap-3 justify-between">
               {portfolios.map((portfolio) => (
                 <PortfolioCard
@@ -175,28 +180,18 @@ export default function ManagePortfolioPage() {
         )}
       </div>
 
-      {/* ═══════ Modals ═══════ */}
+      {/* Modals (Lazy) */}
       <PortfolioDetailModal
         visible={detailVisible}
         portfolio={activePortfolio}
         services={services}
-        onClose={() => {
-          setDetailVisible(false);
-          setActivePortfolio(null);
-        }}
-        onEdit={(p) => {
-          setDetailVisible(false);
-          setTimeout(() => openEditForm(p), 300);
-        }}
+        onClose={closeDetail}
+        onEdit={handleEditFromDetail}
         onDelete={handleDelete}
       />
-
       <PortfolioFormSheet
         visible={formVisible}
-        onClose={() => {
-          setFormVisible(false);
-          setEditingPortfolio(null);
-        }}
+        onClose={closeForm}
         onSave={handleSave}
         editingPortfolio={editingPortfolio}
         services={services}

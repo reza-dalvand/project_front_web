@@ -1,7 +1,7 @@
 'use client';
-
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { FiCreditCard } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -14,15 +14,20 @@ import Card from '@/components/common/Card';
 import EmptyState from '@/components/common/EmptyState';
 import FinancialStatsCards from '@/components/manageBusiness/financial/FinancialStatsCards';
 import BankInfoCard from '@/components/manageBusiness/financial/BankInfoCard';
-import BankEditModal from '@/components/manageBusiness/financial/BankEditModal';
 import FinancialTabs from '@/components/manageBusiness/financial/FinancialTabs';
 import TransactionItem from '@/components/manageBusiness/financial/TransactionItem';
-import TransactionDetailModal from '@/components/manageBusiness/financial/TransactionDetailModal';
-import {
-  MOCK_TRANSACTIONS,
-  MOCK_BANK_INFO,
-  toPersianDigit,
-} from '@/components/manageBusiness/financial/constants';
+import { MOCK_TRANSACTIONS, MOCK_BANK_INFO, toPersianDigit } from '@/components/manageBusiness/financial/constants';
+
+// ✅ Lazy Load
+const BankEditModal = dynamic(
+  () => import('@/components/manageBusiness/financial/BankEditModal'),
+  { ssr: false, loading: () => null }
+);
+
+const TransactionDetailModal = dynamic(
+  () => import('@/components/manageBusiness/financial/TransactionDetailModal'),
+  { ssr: false, loading: () => null }
+);
 
 export default function FinancialManagementPage() {
   const { colors } = useTheme();
@@ -39,32 +44,24 @@ export default function FinancialManagementPage() {
   const [selectedTx, setSelectedTx] = useState(null);
   const [txDetailVisible, setTxDetailVisible] = useState(false);
 
-  // نام تایید شده صاحب کسب وکار
   const businessOwnerName = businessData?.verifiedName || user?.name || '';
 
-  // محاسبه آمار
+  // ✅ useMemo برای محاسبات
   const stats = useMemo(() => {
     const sumBy = (status) =>
       transactions.filter((t) => t.status === status).reduce((s, t) => s + (t.amount || 0), 0);
-    const totalAmount = transactions.reduce((s, t) => s + (t.amount || 0), 0);
     return {
       blockedAmount: sumBy('blocked'),
       settlingAmount: sumBy('settling'),
       settledAmount: sumBy('settled'),
       refundedAmount: sumBy('refunded'),
-      totalAmount,
+      totalAmount: transactions.reduce((s, t) => s + (t.amount || 0), 0),
     };
   }, [transactions]);
 
   const tabCounts = useMemo(() => {
     const c = (status) => transactions.filter((t) => t.status === status).length;
-    return {
-      all: transactions.length,
-      blocked: c('blocked'),
-      settling: c('settling'),
-      settled: c('settled'),
-      refunded: c('refunded'),
-    };
+    return { all: transactions.length, blocked: c('blocked'), settling: c('settling'), settled: c('settled'), refunded: c('refunded') };
   }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
@@ -74,24 +71,27 @@ export default function FinancialManagementPage() {
 
   const hasPendingMoney = stats.blockedAmount > 0 || stats.settlingAmount > 0;
 
-  // هندلرها
-  const handleOpenBankEdit = () => setBankEditVisible(true);
+  // ✅ useCallback
+  const handleOpenBankEdit = useCallback(() => setBankEditVisible(true), []);
+  const handleCloseBankEdit = useCallback(() => setBankEditVisible(false), []);
 
-  const handleSaveBankInfo = (data) => {
-    setBankInfo((prev) => ({
-      ...prev,
-      ...data,
-      isRegistered: true,
-      isVerified: false,
-    }));
+  const handleSaveBankInfo = useCallback((data) => {
+    setBankInfo((prev) => ({ ...prev, ...data, isRegistered: true, isVerified: false }));
     setBankEditVisible(false);
     showToast('✓ اطلاعات حساب بانکی ثبت شد و وارد چرخه تایید شد', 'success');
-  };
+  }, [showToast]);
 
-  const handleTxPress = (tx) => {
+  const handleTxPress = useCallback((tx) => {
     setSelectedTx(tx);
     setTxDetailVisible(true);
-  };
+  }, []);
+
+  const handleCloseTxDetail = useCallback(() => {
+    setTxDetailVisible(false);
+    setSelectedTx(null);
+  }, []);
+
+  const goBack = useCallback(() => router.push('/manage'), [router]);
 
   if (!isAuthenticated) {
     return (
@@ -105,13 +105,9 @@ export default function FinancialManagementPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="مدیریت مالی و تسویه" onBackPress={() => router.push('/manage')} />
-
+      <Header title="مدیریت مالی و تسویه" onBackPress={goBack} />
       <div className="flex-1 overflow-y-auto p-4 pb-32">
-        {/* آمار */}
         <FinancialStatsCards stats={stats} />
-
-        {/* اطلاعات حساب بانکی */}
         <BankInfoCard
           bankInfo={bankInfo}
           onEdit={handleOpenBankEdit}
@@ -119,7 +115,6 @@ export default function FinancialManagementPage() {
           hasActiveAppointments={hasPendingMoney}
         />
 
-        {/* عنوان تاریخچه */}
         <div className="flex items-center gap-2 mb-3 mt-2 px-0.5">
           <FiCreditCard size={20} style={{ color: colors.primary }} />
           <h3 className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
@@ -131,29 +126,23 @@ export default function FinancialManagementPage() {
           </span>
         </div>
 
-        {/* تب‌ها */}
         <FinancialTabs active={activeTab} counts={tabCounts} onChange={setActiveTab} />
 
-        {/* لیست تراکنش‌ها */}
         {filteredTransactions.length > 0 ? (
           filteredTransactions.map((tx) => (
             <TransactionItem key={tx.id} tx={tx} onPress={handleTxPress} />
           ))
         ) : (
           <Card variant="elevated" padding={0} radius={16}>
-            <EmptyState
-              icon="🧾"
-              title="تراکنشی یافت نشد"
-              description="در این دسته‌بندی هنوز تراکنشی ثبت نشده است"
-            />
+            <EmptyState icon="🧾" title="تراکنشی یافت نشد" description="در این دسته‌بندی هنوز تراکنشی ثبت نشده است" />
           </Card>
         )}
       </div>
 
-      {/* مدال‌ها */}
+      {/* مدال‌ها (Lazy) */}
       <BankEditModal
         visible={bankEditVisible}
-        onClose={() => setBankEditVisible(false)}
+        onClose={handleCloseBankEdit}
         onSave={handleSaveBankInfo}
         bankInfo={bankInfo}
         businessOwnerName={businessOwnerName}
@@ -161,10 +150,7 @@ export default function FinancialManagementPage() {
       <TransactionDetailModal
         visible={txDetailVisible}
         tx={selectedTx}
-        onClose={() => {
-          setTxDetailVisible(false);
-          setSelectedTx(null);
-        }}
+        onClose={handleCloseTxDetail}
       />
     </ScreenWrapper>
   );

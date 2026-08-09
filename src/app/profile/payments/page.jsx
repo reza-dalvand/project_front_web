@@ -6,13 +6,20 @@ import Dropdown from '@/components/common/Dropdown';
 import EmptyState from '@/components/common/EmptyState';
 import PaymentCard from '@/components/profile/paymentHistory/PaymentCard';
 import PaymentStatsCard from '@/components/profile/paymentHistory/PaymentStatsCard';
-import InvoiceModal from '@/components/profile/paymentHistory/InvoiceModal';
 import {
   MOCK_PAYMENTS,
   MONTHS,
   YEARS,
   formatPrice,
 } from '@/components/profile/paymentHistory/constants';
+import dynamic from 'next/dynamic';
+
+// ✅ Lazy Load
+const InvoiceModal = dynamic(
+  () => import('@/components/profile/paymentHistory/InvoiceModal'),
+  { ssr: false, loading: () => null }
+);
+
 
 export default function PaymentsPage() {
   const { colors } = useTheme();

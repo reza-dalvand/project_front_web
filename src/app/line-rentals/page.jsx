@@ -6,9 +6,13 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import EmptyState from '@/components/common/EmptyState';
 import AllLineRentalsHeader from '@/components/home/AllLineRentalsHeader';
 import AllLineRentalsCard from '@/components/home/AllLineRentalsCard';
-import LineRentalFilterModal from '@/components/home/LineRentalFilterModal';
-import { toJalaali } from '@/utils/dateUtils';
+import dynamic from 'next/dynamic';
 
+// ✅ Lazy Load
+const LineRentalFilterModal = dynamic(
+  () => import('@/components/home/LineRentalFilterModal'),
+  { ssr: false, loading: () => null }
+);
 // داده‌های MOCK
 const MOCK_LINE_RENTALS = [
   {

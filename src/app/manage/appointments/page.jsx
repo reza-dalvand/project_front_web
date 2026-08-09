@@ -1,7 +1,8 @@
 // src/app/manage/appointments/page.jsx
 'use client';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -10,16 +11,28 @@ import EmptyState from '@/components/common/EmptyState';
 import AppointmentFilters from '@/components/manageBusiness/AppointmentFilters';
 import AppointmentSearchBar from '@/components/manageBusiness/AppointmentSearchBar';
 import AppointmentCard from '@/components/manageBusiness/AppointmentCard';
-import AppointmentDetailSheet from '@/components/manageBusiness/AppointmentDetailSheet';
-import VerifyCodeModal from '@/components/manageBusiness/VerifyCodeModal';
-import CancelReasonModal from '@/components/manageBusiness/CancelReasonModal';
 import { useAppointmentsManager } from '@/hooks/useAppointmentsManager';
+
+// ✅ Lazy Load — مودال‌های سنگین
+const AppointmentDetailSheet = dynamic(
+  () => import('@/components/manageBusiness/AppointmentDetailSheet'),
+  { ssr: false, loading: () => null }
+);
+
+const VerifyCodeModal = dynamic(
+  () => import('@/components/manageBusiness/VerifyCodeModal'),
+  { ssr: false, loading: () => null }
+);
+
+const CancelReasonModal = dynamic(
+  () => import('@/components/manageBusiness/CancelReasonModal'),
+  { ssr: false, loading: () => null }
+);
 
 export default function AllAppointmentsPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
-
   const {
     appointments,
     counts,
@@ -41,47 +54,56 @@ export default function AllAppointmentsPage() {
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelVisible, setCancelVisible] = useState(false);
 
-  // ═══ باز کردن جزئیات (کلیک روی کارت) ═══
-  const openDetail = (apt) => {
+  // ═══ Handlers با useCallback ═══
+  const openDetail = useCallback((apt) => {
     setSelectedApt(apt);
     setDetailVisible(true);
-  };
+  }, []);
 
-  const closeDetail = () => {
+  const closeDetail = useCallback(() => {
     setDetailVisible(false);
     setTimeout(() => setSelectedApt(null), 300);
-  };
+  }, []);
 
-  // ═══ تایید کد (از دکمه باریک روی کارت) ═══
-  const openVerify = (apt) => {
+  const openVerify = useCallback((apt) => {
     setVerifyTarget(apt);
     setVerifyVisible(true);
-  };
+  }, []);
 
-  const confirmVerify = (aptId) => {
+  const confirmVerify = useCallback((aptId) => {
     handleVerify(aptId);
     setVerifyVisible(false);
     setVerifyTarget(null);
-  };
+  }, [handleVerify]);
 
-  // ═══ تایید اعتمادی (از مدال جزئیات) ═══
-  const handleTrust = (apt) => {
+  const handleTrust = useCallback((apt) => {
     handleTrustConfirm(apt.id);
     setDetailVisible(false);
-  };
+  }, [handleTrustConfirm]);
 
-  // ═══ لغو نوبت (از مدال جزئیات) ═══
-  const openCancel = (apt) => {
+  const openCancel = useCallback((apt) => {
     setDetailVisible(false);
     setCancelTarget(apt);
     setCancelVisible(true);
-  };
+  }, []);
 
-  const confirmCancel = (aptId, reason) => {
+  const confirmCancel = useCallback((aptId, reason) => {
     handleCancel(aptId, reason);
     setCancelVisible(false);
     setCancelTarget(null);
-  };
+  }, [handleCancel]);
+
+  const closeVerify = useCallback(() => {
+    setVerifyVisible(false);
+    setVerifyTarget(null);
+  }, []);
+
+  const closeCancel = useCallback(() => {
+    setCancelVisible(false);
+    setCancelTarget(null);
+  }, []);
+
+  const goBack = useCallback(() => router.push('/manage'), [router]);
 
   // ═══ حالت خالی ═══
   const getEmptyConfig = () => {
@@ -111,15 +133,13 @@ export default function AllAppointmentsPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="مدیریت نوبت‌ها" onBackPress={() => router.push('/manage')} />
-
+      <Header title="مدیریت نوبت‌ها" onBackPress={goBack} />
       <AppointmentSearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         dateFilter={dateFilter}
         onDateFilterChange={setDateFilter}
       />
-
       <AppointmentFilters activeFilter={activeFilter} counts={counts} onChange={setActiveFilter} />
 
       {/* لیست نوبت‌ها */}
@@ -140,7 +160,7 @@ export default function AllAppointmentsPage() {
         )}
       </div>
 
-      {/* مدال جزئیات */}
+      {/* مدال‌ها (Lazy) */}
       <AppointmentDetailSheet
         visible={detailVisible}
         appointment={selectedApt}
@@ -149,30 +169,16 @@ export default function AllAppointmentsPage() {
         onTrustConfirm={handleTrust}
         onCancel={openCancel}
       />
-
-      {/* مدال تایید کد */}
       <VerifyCodeModal
         visible={verifyVisible}
         appointment={verifyTarget}
-        onClose={() => {
-          setVerifyVisible(false);
-          setVerifyTarget(null);
-        }}
+        onClose={closeVerify}
         onConfirm={confirmVerify}
-        // props جدید اختیاری:
-        // showCall={false}   ← پیش‌فرض false
-        // usePortal={true}   ← پیش‌فرض true
-        // variant="orange"   ← پیش‌فرض orange
       />
-
-      {/* مدال دلیل لغو */}
       <CancelReasonModal
         visible={cancelVisible}
         appointment={cancelTarget}
-        onClose={() => {
-          setCancelVisible(false);
-          setCancelTarget(null);
-        }}
+        onClose={closeCancel}
         onConfirm={confirmCancel}
       />
     </ScreenWrapper>

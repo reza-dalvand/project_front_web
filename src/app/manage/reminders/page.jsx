@@ -12,9 +12,16 @@ import {
   ReminderStats,
   ReminderTabs,
   ReminderList,
-  SendReminderModal,
 } from '@/components/manageBusiness/reminders';
 import { toPersianDigit } from '@/utils/numberUtils';
+import dynamic from 'next/dynamic';
+
+
+const SendReminderModal = dynamic(
+  () => import('@/components/manageBusiness/reminders/SendReminderModal'),
+  { ssr: false, loading: () => null }
+);
+
 
 const REMINDER_THRESHOLD_DAYS = 2;
 
