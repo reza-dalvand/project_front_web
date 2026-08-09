@@ -25,6 +25,14 @@ import SeeAllButton from '@/components/home/SeeAllButton';
 import ActiveFiltersBar from '@/components/home/ActiveFiltersBar';
 import { useToast } from '@/hooks/useToast';
 
+
+import { MOCK_CATEGORIES } from '@/data/businesses';
+import { MOCK_ADS } from '@/data/ads';
+import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
+import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
+import { MOCK_DONE_APPOINTMENTS } from '@/data/appointments';
+
+
 // ✅ Lazy Load — مودال‌های سنگین
 const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), {
   ssr: false,
@@ -41,130 +49,6 @@ const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), {
   loading: () => null,
 });
 
-// ═══════════ داده‌های آگهی‌ها ═══════════
-const MOCK_ADS = [
-  {
-    id: 1,
-    businessId: '1',
-    imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
-    title: 'جشنواره تخفیف‌های بهار کلینیک رُز',
-    subtitle: 'تا ۳۰٪ تخفیف خدمات پوست',
-    badge: 'پیشنهاد ویژه',
-  },
-  {
-    id: 2,
-    businessId: '2',
-    imageUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800',
-    title: 'افتتاحیه سالن زیبایی لاویا',
-    subtitle: 'نوبت‌دهی آنلاین با بیعانه اقتصادی',
-    badge: 'جدید',
-  },
-  {
-    id: 3,
-    businessId: '3',
-    imageUrl: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800',
-    title: 'لیزر با جدیدترین دستگاه ۲۰۲۴',
-    subtitle: 'مرکز رویال - تخفیف ویژه',
-    badge: 'پرفروش',
-  },
-];
-
-// ═══════════ دسته‌بندی‌ها ═══════════
-const MOCK_CATEGORIES = [
-  { id: 1, name: 'میکاپ', icon: 'face', count: 6 },
-  { id: 2, name: 'کاشت ناخن', icon: 'brush', count: 6 },
-  { id: 3, name: 'لیزر مو', icon: 'flash-on', count: 5 },
-  { id: 4, name: 'پاکسازی', icon: 'spa', count: 6 },
-  { id: 5, name: 'رنگ مو', icon: 'palette', count: 6 },
-  { id: 6, name: 'کراتین', icon: 'auto-awesome', count: 5 },
-  { id: 7, name: 'مژه', icon: 'visibility', count: 6 },
-  { id: 8, name: 'ماساژ', icon: 'self-improvement', count: 4 },
-];
-
-// ═══════════ فرصت‌های مدلینگ ═══════════
-const MOCK_MODEL_REQUESTS = [
-  {
-    id: 'mr_1',
-    title: 'مدل فیشیال VIP عروس',
-    serviceName: 'فیشیال تخصصی پوست',
-    serviceImage: 'https://picsum.photos/400/300?random=50',
-    businessName: 'کلینیک زیبایی صدف',
-    city: 'تهران، سعادت‌آباد',
-    costType: 'paid',
-    discount: 50,
-    isUrgent: true,
-  },
-  {
-    id: 'mr_2',
-    title: 'مدل طراحی ناخن ژورنالی',
-    serviceName: 'کاشت ناخن',
-    serviceImage: 'https://picsum.photos/400/300?random=51',
-    businessName: 'ناخن گالری پریا',
-    city: 'کرج، فردیس',
-    costType: 'material_cost',
-    discount: 70,
-    isUrgent: false,
-  },
-  {
-    id: 'mr_3',
-    title: 'مدل تکنیک بالیاژ فرانسوی',
-    serviceName: 'رنگ و لایت مو',
-    serviceImage: 'https://picsum.photos/400/300?random=52',
-    businessName: 'سالن زیبایی افرا',
-    city: 'تهران، نیاوران',
-    costType: 'paid',
-    discount: 60,
-    isUrgent: false,
-  },
-];
-
-// ═══════════ اجاره لاین ═══════════
-const MOCK_LINE_RENTALS = [
-  {
-    id: 'lr_1',
-    title: 'لاین ناخن VIP با تجهیزات کامل',
-    serviceTypeName: 'کاشت ناخن',
-    collabType: 'percent',
-    priceDisplay: '۴۰-۶۰٪',
-    businessName: 'سالن زیبایی نیلارام',
-    city: 'تهران، سعادت‌آباد',
-    lineImage: 'https://picsum.photos/400/300?random=70',
-  },
-  {
-    id: 'lr_2',
-    title: 'لاین میکاپ با نور طبیعی',
-    serviceTypeName: 'میکاپ و گریم',
-    collabType: 'hourly',
-    priceDisplay: '۱۵۰K / ساعت',
-    businessName: 'استودیو لاویا',
-    city: 'تهران، نیاوران',
-    lineImage: 'https://picsum.photos/400/300?random=71',
-  },
-  {
-    id: 'lr_3',
-    title: 'لاین لیزر با دستگاه الکس',
-    serviceTypeName: 'لیزر موهای زائد',
-    collabType: 'fixed',
-    priceDisplay: '۸M ماهانه',
-    businessName: 'کلینیک رویال',
-    city: 'اصفهان',
-    lineImage: 'https://picsum.photos/400/300?random=72',
-  },
-];
-
-// ═══════════ نوبت‌های انجام‌شده برای نظردهی ═══════════
-const MOCK_DONE_APPOINTMENTS = [
-  {
-    id: 'apt_done_1',
-    businessName: 'سالن زیبایی نیلارام',
-    businessLogo: 'https://picsum.photos/100/100?random=21',
-    serviceName: 'فیشیال تخصصی پوست',
-    employeeName: 'سارا احمدی',
-    date: '۱۴۰۳/۰۴/۱۸',
-    time: '۱۰:۳۰',
-    status: 'done',
-  },
-];
 
 export default function HomePage() {
   const router = useRouter();

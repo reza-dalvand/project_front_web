@@ -11,6 +11,8 @@ import ServiceBookingCard from '@/components/home/ServiceBookingCard';
 import PortfolioGrid from '@/components/home/PortfolioGrid';
 import BusinessAbout from '@/components/home/BusinessAbout';
 import BusinessMapButton from '@/components/home/BusinessMapButton';
+import { MOCK_BUSINESS } from '@/data/businesses';
+
 
 // ✅ Lazy Load — مودال‌های سنگین فقط وقتی لازم شوند لود می‌شوند
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), {
@@ -23,118 +25,6 @@ const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'),
   loading: () => null,
 });
 
-// ═══════════════════════════════════════════════════════
-//                    MOCK DATA
-// ═══════════════════════════════════════════════════════
-const MOCK_BUSINESS = {
-  id: '1',
-  name: 'مجموعه زیبایی و سلامت نیلارام',
-  ownerName: 'مریم حسینی',
-  ownerVerified: true,
-  memberSince: '۲ سال',
-  category: 'کلینیک پوست و مو',
-  city: 'تهران، سعادت‌آباد',
-  address: 'سعادت‌آباد، خیابان سرو غربی، ساختمان پزشکان نگین، طبقه ۳',
-  phone: '۰۲۱-۲۲۳۳۴۴۵۵',
-  workingHours: 'شنبه تا پنج‌شنبه: ۱۰:۰۰ الی ۲۰:۰۰',
-  location: {
-    latitude: 35.7898,
-    longitude: 51.3768,
-  },
-  rating: 4.9,
-  reviewsCount: 142,
-  servicesCount: 24,
-  VIP: true,
-  logo: 'https://picsum.photos/150?random=21',
-  gallery: [
-    'https://picsum.photos/800/600?random=45',
-    'https://picsum.photos/800/600?random=46',
-    'https://picsum.photos/800/600?random=47',
-    'https://picsum.photos/800/600?random=48',
-  ],
-  about:
-    'مجموعه نیلارام با بیش از ۱۰ سال سابقه درخشان در زمینه خدمات تخصصی پوست، فیشیال، مژه و ناخن، با کادری مجرب و محیطی کاملاً بهداشتی و آرامش‌بخش میزبان شما بانوان عزیز است.',
-  services: [
-    {
-      id: 's1',
-      name: 'فیشیال تخصصی و پاکسازی پوست',
-      typeId: 'facial',
-      price: 750000,
-      originalPrice: 850000,
-      discount: 12,
-      duration: 60,
-    },
-    {
-      id: 's2',
-      name: 'کاشت مژه هالیوودی (تار به تار)',
-      typeId: 'eyelash',
-      price: 580000,
-      originalPrice: 580000,
-      discount: 0,
-      duration: 90,
-    },
-    {
-      id: 's3',
-      name: 'ژلیش و پدیکور VIP پا',
-      typeId: 'nail',
-      price: 320000,
-      originalPrice: 380000,
-      discount: 15,
-      duration: 45,
-    },
-    {
-      id: 's4',
-      name: 'کراتینه و احیای موهای آسیب‌دیده',
-      typeId: 'keratin',
-      price: 1800000,
-      originalPrice: 1900000,
-      discount: 5,
-      duration: 120,
-    },
-  ],
-  portfolios: [
-    {
-      id: 'pf1',
-      title: 'فیشیال VIP عروس',
-      coverImage: 'https://picsum.photos/400/400?random=60',
-      images: [
-        'https://picsum.photos/800/800?random=60',
-        'https://picsum.photos/800/800?random=160',
-        'https://picsum.photos/800/800?random=260',
-      ],
-      description: 'فیشیال تخصصی عروس با استفاده از بهترین محصولات روز دنیا.',
-    },
-    {
-      id: 'pf2',
-      title: 'کاشت ناخن ژلیش',
-      coverImage: 'https://picsum.photos/400/400?random=61',
-      images: [
-        'https://picsum.photos/800/800?random=61',
-        'https://picsum.photos/800/800?random=161',
-      ],
-      description: 'کاشت ناخن با طراحی مینیمال و ژلیش ماندگار تا ۳ هفته.',
-    },
-    {
-      id: 'pf3',
-      title: 'میکاپ و شینیون عروس',
-      coverImage: 'https://picsum.photos/400/400?random=62',
-      images: [
-        'https://picsum.photos/800/800?random=62',
-        'https://picsum.photos/800/800?random=162',
-        'https://picsum.photos/800/800?random=262',
-        'https://picsum.photos/800/800?random=362',
-      ],
-      description: 'میکاپ حرفه‌ای عروس با سبک اروپایی و شینیون مدرن.',
-    },
-    {
-      id: 'pf4',
-      title: 'لیزر موهای زائد',
-      coverImage: 'https://picsum.photos/400/400?random=63',
-      images: ['https://picsum.photos/800/800?random=63'],
-      description: 'لیزر با دستگاه الکساندرایت ۲۰۲۴ - بدون درد و ماندگار.',
-    },
-  ],
-};
 
 export default function BusinessDetailsPage() {
   const { colors } = useTheme();

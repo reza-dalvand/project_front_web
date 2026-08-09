@@ -15,6 +15,7 @@ import {
 } from '@/components/manageBusiness/reminders';
 import { toPersianDigit } from '@/utils/numberUtils';
 import dynamic from 'next/dynamic';
+import { MOCK_REMINDER_CUSTOMERS } from '@/data/reminders';
 
 
 const SendReminderModal = dynamic(
@@ -25,134 +26,6 @@ const SendReminderModal = dynamic(
 
 const REMINDER_THRESHOLD_DAYS = 2;
 
-const MOCK_REMINDER_CUSTOMERS = [
-  {
-    id: 'rem_1',
-    customerName: 'نازنین کریمی',
-    customerPhone: '09121112233',
-    serviceId: 'svc_1',
-    serviceName: 'فیشیال تخصصی پوست',
-    lastServiceDate: '۱۴۰۵/۰۳/۲۰',
-    renewalDays: 30,
-    dueDate: '۱۴۰۵/۰۴/۲۰',
-    daysRemaining: 2,
-    reminderSent: false,
-    sentDate: null,
-    hasNewBookingAfterSend: false,
-  },
-  {
-    id: 'rem_2',
-    customerName: 'الهام محمدی',
-    customerPhone: '09124445566',
-    serviceId: 'svc_1',
-    serviceName: 'فیشیال تخصصی پوست',
-    lastServiceDate: '۱۴۰۵/۰۳/۱۸',
-    renewalDays: 30,
-    dueDate: '۱۴۰۵/۰۴/۱۸',
-    daysRemaining: 0,
-    reminderSent: false,
-    sentDate: null,
-    hasNewBookingAfterSend: false,
-  },
-  {
-    id: 'rem_3',
-    customerName: 'زهرا حسینی',
-    customerPhone: '09127778899',
-    serviceId: 'svc_1',
-    serviceName: 'فیشیال تخصصی پوست',
-    lastServiceDate: '۱۴۰۵/۰۳/۱۵',
-    renewalDays: 30,
-    dueDate: '۱۴۰۵/۰۴/۱۵',
-    daysRemaining: -3,
-    reminderSent: true, // ← قبلاً ارسال شده
-    sentDate: '۱۴۰۵/۰۴/۱۳',
-    hasNewBookingAfterSend: false, // ← هنوز خدمت جدید انجام نداده
-  },
-  {
-    id: 'rem_4',
-    customerName: 'مریم احمدی',
-    customerPhone: '09123334455',
-    serviceId: 'svc_1',
-    serviceName: 'فیشیال تخصصی پوست',
-    lastServiceDate: '۱۴۰۵/۰۳/۲۲',
-    renewalDays: 30,
-    dueDate: '۱۴۰۵/۰۴/۲۲',
-    daysRemaining: 1,
-    reminderSent: true, // ← قبلاً ارسال شده
-    sentDate: '۱۴۰۵/۰۴/۱۰',
-    hasNewBookingAfterSend: true, // ← ولی خدمت جدید انجام داده → نمایش داده شود
-  },
-  {
-    id: 'rem_5',
-    customerName: 'سمیرا قاسمی',
-    customerPhone: '09126665544',
-    serviceId: 'svc_2',
-    serviceName: 'کاشت ناخن ژلیش',
-    lastServiceDate: '۱۴۰۵/۰۳/۲۸',
-    renewalDays: 21,
-    dueDate: '۱۴۰۵/۰۴/۱۹',
-    daysRemaining: 1,
-    reminderSent: false,
-    sentDate: null,
-    hasNewBookingAfterSend: false,
-  },
-  {
-    id: 'rem_6',
-    customerName: 'پریسا نوری',
-    customerPhone: '09128889900',
-    serviceId: 'svc_2',
-    serviceName: 'کاشت ناخن ژلیش',
-    lastServiceDate: '۱۴۰۵/۰۳/۲۷',
-    renewalDays: 21,
-    dueDate: '۱۴۰۵/۰۴/۱۸',
-    daysRemaining: 0,
-    reminderSent: true, // ← ارسال شده و خدمت جدید نداده
-    sentDate: '۱۴۰۵/۰۴/۱۲',
-    hasNewBookingAfterSend: false,
-  },
-  {
-    id: 'rem_7',
-    customerName: 'فاطمه رضوی',
-    customerPhone: '09121234567',
-    serviceId: 'svc_2',
-    serviceName: 'کاشت ناخن ژلیش',
-    lastServiceDate: '۱۴۰۵/۰۳/۲۵',
-    renewalDays: 21,
-    dueDate: '۱۴۰۵/۰۴/۱۶',
-    daysRemaining: -2,
-    reminderSent: false,
-    sentDate: null,
-    hasNewBookingAfterSend: false,
-  },
-  {
-    id: 'rem_8',
-    customerName: 'شیما کاظمی',
-    customerPhone: '09129876543',
-    serviceId: 'svc_3',
-    serviceName: 'لیزر فول بادی',
-    lastServiceDate: '۱۴۰۵/۰۳/۰۳',
-    renewalDays: 45,
-    dueDate: '۱۴۰۵/۰۴/۱۸',
-    daysRemaining: 0,
-    reminderSent: false,
-    sentDate: null,
-    hasNewBookingAfterSend: false,
-  },
-  {
-    id: 'rem_9',
-    customerName: 'نگار موسوی',
-    customerPhone: '09125556677',
-    serviceId: 'svc_3',
-    serviceName: 'لیزر فول بادی',
-    lastServiceDate: '۱۴۰۵/۰۳/۰۱',
-    renewalDays: 45,
-    dueDate: '۱۴۰۵/۰۴/۱۶',
-    daysRemaining: -2,
-    reminderSent: false,
-    sentDate: null,
-    hasNewBookingAfterSend: false,
-  },
-];
 
 export default function RemindersPage() {
   const router = useRouter();

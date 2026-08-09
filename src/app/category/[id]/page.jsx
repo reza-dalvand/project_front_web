@@ -8,6 +8,7 @@ import CategoryHeader from '@/components/home/CategoryHeader';
 import BusinessListCard from '@/components/home/BusinessListCard';
 import EmptyState from '@/components/common/EmptyState';
 import dynamic from 'next/dynamic';
+import { MOCK_BUSINESSES_LIST, CATEGORY_NAMES } from '@/data/businesses';
 
 // ✅ Lazy Load
 const CategoryFilterModal = dynamic(
@@ -16,90 +17,6 @@ const CategoryFilterModal = dynamic(
 );
 
 
-// داده‌های MOCK
-const MOCK_BUSINESSES = [
-  {
-    id: '1',
-    name: 'کلینیک زیبایی صدف',
-    serviceType: 'فیشیال VIP عروس',
-    subServiceId: 'facial_vip',
-    address: 'تهران، سعادت آباد، خیابان سرو غربی',
-    rating: 5.0,
-    reviewsCount: 142,
-    discount: 20,
-    category: 'کلینیک پوست و مو',
-    provinceId: 'tehran',
-    cityId: 'tehran-city',
-    VIP: true,
-  },
-  {
-    id: '2',
-    name: 'سالن زیبایی ماهرو',
-    serviceType: 'میکاپ عروس اروپایی',
-    subServiceId: 'makeup_bride',
-    address: 'تهران، نیاوران',
-    rating: 4.7,
-    reviewsCount: 89,
-    discount: 15,
-    category: 'سالن زیبایی',
-    provinceId: 'tehran',
-    cityId: 'shemiran',
-    VIP: false,
-  },
-  {
-    id: '3',
-    name: 'کلینیک رویال لیزر',
-    serviceType: 'لیزر الکساندرایت فول بادی',
-    subServiceId: 'laser_alex',
-    address: 'اصفهان، خیابان چهارباغ',
-    rating: 4.9,
-    reviewsCount: 215,
-    discount: 30,
-    category: 'مرکز لیزر',
-    provinceId: 'isfahan',
-    cityId: 'isfahan-city',
-    VIP: true,
-  },
-  {
-    id: '4',
-    name: 'ناخن گالری پریا',
-    serviceType: 'کاشت ناخن ژله‌ای طرح‌دار',
-    subServiceId: 'nail_gel',
-    address: 'کرج، میدان کرج',
-    rating: 4.6,
-    reviewsCount: 67,
-    discount: 0,
-    category: 'مرکز کاشت ناخن',
-    provinceId: 'alborz',
-    cityId: 'karaj',
-    VIP: false,
-  },
-  {
-    id: '5',
-    name: 'سالن افرا',
-    serviceType: 'رنگ و لایت مو',
-    subServiceId: 'hair_color',
-    address: 'تهران، ونک',
-    rating: 4.9,
-    reviewsCount: 124,
-    discount: 10,
-    category: 'سالن زیبایی',
-    provinceId: 'tehran',
-    cityId: 'tehran-city',
-    VIP: true,
-  },
-];
-
-const CATEGORY_NAMES = {
-  1: 'میکاپ',
-  2: 'کاشت ناخن',
-  3: 'لیزر مو',
-  4: 'پاکسازی',
-  5: 'رنگ مو',
-  6: 'کراتین',
-  7: 'مژه',
-  8: 'ماساژ',
-};
 
 export default function CategoryBusinessesPage() {
   const params = useParams();
@@ -121,7 +38,7 @@ export default function CategoryBusinessesPage() {
 
   // فیلتر و جستجو
   const filteredData = useMemo(() => {
-    let data = [...MOCK_BUSINESSES];
+    let data = [...MOCK_BUSINESSES_LIST];
 
     // جستجو
     if (search.trim()) {

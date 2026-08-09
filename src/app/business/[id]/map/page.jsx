@@ -21,48 +21,8 @@ import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
 import { useToast } from '@/hooks/useToast';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { MOCK_BUSINESSES_MAP } from '@/data/businesses';
 
-// ═══════════════════════════════════════════════════════
-//                    MOCK DATA
-// ═══════════════════════════════════════════════════════
-const MOCK_BUSINESSES = {
-  1: {
-    id: '1',
-    name: 'مجموعه زیبایی و سلامت نیلارام',
-    category: 'کلینیک پوست و مو',
-    address: 'سعادت‌آباد، خیابان سرو غربی، ساختمان پزشکان نگین، طبقه ۳',
-    phone: '۰۲۱-۲۲۳۳۴۴۵۵',
-    workingHours: 'شنبه تا پنج‌شنبه: ۱۰:۰۰ الی ۲۰:۰۰',
-    location: {
-      latitude: 35.7898,
-      longitude: 51.3768,
-    },
-  },
-  2: {
-    id: '2',
-    name: 'سالن زیبایی لاویا',
-    category: 'سالن زیبایی',
-    address: 'نیاوران، خیابان باهنر، پلاک ۱۲۴',
-    phone: '۰۲۱-۲۲۷۷۸۸۹۹',
-    workingHours: 'شنبه تا پنج‌شنبه: ۰۹:۰۰ الی ۲۱:۰۰',
-    location: {
-      latitude: 35.8069,
-      longitude: 51.4744,
-    },
-  },
-  3: {
-    id: '3',
-    name: 'مرکز لیزر رویال',
-    category: 'مرکز لیزر',
-    address: 'شهرک غرب، خیابان ایران زمین، مجتمع رویال',
-    phone: '۰۲۱-۸۸۶۶۵۵۴۴',
-    workingHours: 'شنبه تا پنج‌شنبه: ۱۰:۰۰ الی ۲۲:۰۰',
-    location: {
-      latitude: 35.7807,
-      longitude: 51.3735,
-    },
-  },
-};
 
 // ═══════════════════════════════════════════════════════
 //              MapLibre Style (OpenStreetMap)
@@ -138,7 +98,7 @@ export default function BusinessMapPage() {
   const navTimerRef = useRef(null);
 
   const businessId = params.id || '1';
-  const business = MOCK_BUSINESSES[businessId] || MOCK_BUSINESSES['1'];
+  const business = MOCK_BUSINESSES_MAP[businessId] || MOCK_BUSINESSES_MAP['1'];
 
   // ═══════ Dynamic Import react-map-gl/maplibre ═══════
   useEffect(() => {
