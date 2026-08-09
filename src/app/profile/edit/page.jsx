@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUser, FiBadge, FiSmartphone, FiShield, FiDelete } from 'react-icons/fi';
+import { FiUser, FiTag, FiSmartphone, FiShield, FiTrash2 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -136,7 +136,7 @@ export default function EditProfilePage() {
               if (lastNameError) setLastNameError('');
             }}
             error={lastNameError}
-            rightIcon={<FiBadge size={18} style={{ color: colors.textSecondary }} />}
+            rightIcon={<FiTag size={18} style={{ color: colors.textSecondary }} />}
           />
         </Card>
 
@@ -225,7 +225,7 @@ export default function EditProfilePage() {
               className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: '#E5393520' }}
             >
-              <FiDelete size={20} color="#E53935" />
+              <FiTrash2 size={20} color="#E53935" />
             </div>
             <div className="flex-1">
               <span className="text-sm font-[Vazir-Bold] block" style={{ color: '#E53935' }}>

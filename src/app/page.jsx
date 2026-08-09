@@ -280,7 +280,7 @@ export default function HomePage() {
                     className="w-full h-full object-cover"
                   />
                   <div
-                    className="absolute top-2 left-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
+                    className="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
                     style={{
                       backgroundColor:
                         request.costType === 'free'
@@ -298,7 +298,7 @@ export default function HomePage() {
                   </div>
                   {request.isUrgent && (
                     <div
-                      className="absolute bottom-2 left-2 px-2 py-0.5 rounded-lg text-[9px] font-[Vazir-Bold] text-white"
+                      className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-[Vazir-Bold] text-white"
                       style={{ backgroundColor: 'rgba(255,152,0,0.9)' }}
                     >
                       فوری
@@ -361,7 +361,7 @@ export default function HomePage() {
                 <div className="relative h-[130px] w-full">
                   <img src={ad.lineImage} alt={ad.title} className="w-full h-full object-cover" />
                   <div
-                    className="absolute top-2 left-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
+                    className="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
                     style={{ backgroundColor: '#667eea' }}
                   >
                     {ad.serviceTypeName}

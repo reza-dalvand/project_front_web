@@ -70,7 +70,7 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
               </div>
 
               {ad.badge && (
-                <div className="absolute top-3 left-3 bg-[#E53935] px-2.5 py-1 rounded-lg shadow-md">
+                <div className="absolute top-3 right-3 bg-[#E53935] px-2.5 py-1 rounded-lg shadow-md">
                   <span className="text-[11px] font-[Vazir-Bold] text-white">{ad.badge}</span>
                 </div>
               )}

@@ -29,7 +29,7 @@ export default function SearchLineCard({ ad, onPress }) {
             label={collabMeta.label}
             variant="primary"
             size="sm"
-            className="absolute top-2 left-2"
+            className="absolute top-2 right-2"
           />
         </div>
 

@@ -56,7 +56,7 @@ export default function PortfolioGrid({ portfolios, onPortfolioPress }) {
               {/* Badge تعداد تصاویر */}
               {imageCount > 1 && (
                 <div
-                  className="absolute top-2 left-2 flex items-center gap-1
+                  className="absolute top-2 right-2 flex items-center gap-1
                              px-2 py-1 rounded-lg"
                   style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
                 >

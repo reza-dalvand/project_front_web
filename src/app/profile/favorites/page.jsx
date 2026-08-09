@@ -199,7 +199,7 @@ export default function FavoritesPage() {
                     </div>
                   )}
                   <button
-                    className="absolute top-2 left-2 w-8 h-8 rounded-full flex items-center
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center
                                justify-center z-10"
                     style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
                   >

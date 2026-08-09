@@ -25,7 +25,7 @@ export default function SeeAllButton({ onPress, count }) {
       </span>
       {count !== undefined && count > 0 && (
         <span
-          className="absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 text-[9px] font-[Vazir-Bold] text-white border-2"
+          className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 text-[9px] font-[Vazir-Bold] text-white border-2"
           style={{
             backgroundColor: colors.primary,
             borderColor: colors.background,

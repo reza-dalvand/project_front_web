@@ -48,7 +48,7 @@ export default function PostThumbnail({ post, onPress }) {
       {/* تگ مجله */}
       {isMagazine && (
         <div
-          className="absolute top-2 left-2 flex items-center gap-1
+          className="absolute top-2 right-2 flex items-center gap-1
             px-2 py-1 rounded-md shadow-lg"
           style={{ backgroundColor: 'rgba(156, 39, 176, 0.85)' }}
         >
@@ -60,7 +60,7 @@ export default function PostThumbnail({ post, onPress }) {
       {/* تگ تخفیف */}
       {hasDiscount && !isMagazine && (
         <div
-          className="absolute top-2 left-2 px-2 py-1 rounded-md shadow-lg"
+          className="absolute top-2 right-2 px-2 py-1 rounded-md shadow-lg"
           style={{ backgroundColor: '#E53935' }}
         >
           <span className="text-[10px] font-bold text-white">{post.discount}٪</span>

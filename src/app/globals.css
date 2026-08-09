@@ -47,6 +47,17 @@
   --color-warning: #ff9800;
   --color-error: #e53935;
   --color-info: #2196f3;
+
+
+  /* ═══════ Alias برای سازگاری با Tailwind arbitrary values ═══════ */
+  --bg: var(--color-background);
+  --card: var(--color-card);
+  --primary: var(--color-primary);
+  --secondary: var(--color-secondary);
+  --text: var(--color-text-main);
+  --text-main: var(--color-text-main);
+  --text-secondary: var(--color-text-secondary);
+  --border: var(--color-border);
 }
 
 .dark {
@@ -63,6 +74,16 @@
   --color-primary-20: #a88b7d33;
   --color-primary-30: #a88b7d4d;
   --color-primary-40: #a88b7d66;
+
+  /* ═══════ Alias برای سازگاری با Tailwind arbitrary values ═══════ */
+  --bg: var(--color-background);
+  --card: var(--color-card);
+  --primary: var(--color-primary);
+  --secondary: var(--color-secondary);
+  --text: var(--color-text-main);
+  --text-main: var(--color-text-main);
+  --text-secondary: var(--color-text-secondary);
+  --border: var(--color-border);
 }
 
 /* ═══════ Base Layer ═══════ */

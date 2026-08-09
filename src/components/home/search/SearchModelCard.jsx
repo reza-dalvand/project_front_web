@@ -35,7 +35,7 @@ export default function SearchModelCard({ request, onPress }) {
             label={costMeta.label}
             variant={request.costType === 'free' ? 'success' : 'warning'}
             size="sm"
-            className="absolute top-2 left-2"
+            className="absolute top-2 right-2"
           />
         </div>
 
