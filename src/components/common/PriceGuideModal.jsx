@@ -296,7 +296,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
             variant="primary"
             size="lg"
             fullWidth
-            icon={<FiCheck size={18} color="#fff" />}
+            // icon={<FiCheck size={18} color="#fff" />}
             iconPosition="right"
           />
         </div>

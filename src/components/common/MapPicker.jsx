@@ -321,7 +321,7 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
                 variant="primary"
                 size="lg"
                 className="flex-[2]"
-                icon={<FiCheck size={18} color="#fff" />}
+                // icon={<FiCheck size={18} color="#fff" />}
                 iconPosition="right"
                 disabled={loading}
               />

@@ -85,15 +85,6 @@ export default function FinancialManagementPage() {
   const handleOpenBankEdit = useCallback(() => setBankEditVisible(true), []);
   const handleCloseBankEdit = useCallback(() => setBankEditVisible(false), []);
 
-  const handleSaveBankInfo = useCallback(
-    (data) => {
-      setBankInfo((prev) => ({ ...prev, ...data, isRegistered: true, isVerified: false }));
-      setBankEditVisible(false);
-      showToast('✓ اطلاعات حساب بانکی ثبت شد و وارد چرخه تایید شد', 'success');
-    },
-    [showToast]
-  );
-
   const handleTxPress = useCallback((tx) => {
     setSelectedTx(tx);
     setTxDetailVisible(true);
@@ -103,6 +94,19 @@ export default function FinancialManagementPage() {
     setTxDetailVisible(false);
     setSelectedTx(null);
   }, []);
+
+  const handleSaveBankInfo = useCallback((data) => {
+  setBankInfo((prev) => ({ ...prev, ...data, isRegistered: true, isVerified: false }));
+  setBankEditVisible(false);
+  showToast('✓ اطلاعات حساب بانکی ثبت شد و وارد چرخه تایید شد', 'success');
+
+  updateBusinessInfo({
+    bankInfo: {
+      isRegistered: true,
+      isVerified: false,
+    },
+  });
+}, [showToast, updateBusinessInfo]);
 
   const goBack = useCallback(() => router.push('/manage'), [router]);
 

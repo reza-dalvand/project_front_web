@@ -91,7 +91,7 @@ export default function Input({
       </div>
       {error && <p className="text-right text-xs mt-1 text-red-400 font-vazir">{error}</p>}
       {!error && hint && (
-        <p className="text-right text-xs mt-1 text-[var(--text-secondary)] font-vazir">{hint}</p>
+        <div className="text-right text-xs mt-1 text-[var(--text-secondary)] font-vazir">{hint}</div>
       )}
     </div>
   );

@@ -114,7 +114,7 @@ export default function ManageHeader() {
             }}
           >
             <FiCreditCard size={16} className="text-white" />
-            <span className="text-xs font-[Vazir-Bold] text-white">کیف پول</span>
+            <span className="text-xs font-[Vazir-Bold] text-white">مدیریت مالی</span>
           </button>
 
           <button

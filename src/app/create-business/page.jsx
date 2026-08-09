@@ -228,13 +228,13 @@ export default function CreateBusinessPage() {
               variant="primary"
               size="lg"
               disabled={!canGoNext()}
-              icon={
-                isLastStep ? (
-                  <FiCheckCircle size={18} color="#fff" />
-                ) : (
-                  <FiChevronLeft size={18} color="#fff" />
-                )
-              }
+              // icon={
+              //   isLastStep ? (
+              //     <FiCheckCircle size={18} color="#fff" />
+              //   ) : (
+              //     <FiChevronLeft size={18} color="#fff" />
+              //   )
+              // }
               iconPosition="right"
               className={isFirstStep ? 'flex-1 whitespace-nowrap' : 'flex-[1.6] whitespace-nowrap'}
             />

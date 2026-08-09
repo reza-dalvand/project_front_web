@@ -18,6 +18,9 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   // Network-first (مناسب dev و production)
+  if (event.request.mode === 'navigate') {
+    return;
+  }
   event.respondWith(
     fetch(event.request)
       .then((response) => {
