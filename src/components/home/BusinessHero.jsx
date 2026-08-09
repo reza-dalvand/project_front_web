@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FiShare2, FiBookmark, FiArrowRight } from 'react-icons/fi';
 import Image from 'next/image';
 import { useTheme } from '@/stores/useThemeStore';
-import { useAuth } from '@/stores/useAuth';
+import { useAuth } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
 
 /**

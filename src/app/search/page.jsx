@@ -11,7 +11,7 @@ import SearchModelCard from '@/components/home/search/SearchModelCard';
 import SearchLineCard from '@/components/home/search/SearchLineCard';
 import SearchEmptyState from '@/components/home/search/SearchEmptyState';
 import CategoryGrid from '@/components/home/CategoryGrid';
-import { MOCK_CATEGORIES } from '@/data/ads';
+import { MOCK_CATEGORIES } from '@/data/businesses';
 
 // ✅ import از searchData یکپارچه
 import { searchAll, getResultCounts } from '@/components/home/search/searchData';

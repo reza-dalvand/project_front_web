@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { FiBookmark } from 'react-icons/fi';
-import { useAuth } from '@/stores/useAuth';
+import { useAuth } from '@/stores/useAuthStore';
 
 export default function FavoriteButton({
   isFavorite = false,

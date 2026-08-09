@@ -16,12 +16,6 @@ export default function ImageUploader({
   const { colors } = useTheme();
   const [localPreview, setLocalPreview] = useState(value);
 
-  useEffect(() => {
-    if (value !== localPreview) {
-      setLocalPreview(value);
-    }
-  }, [value]);
-
   const onDrop = useCallback(
     (acceptedFiles) => {
       const file = acceptedFiles[0];

@@ -6,6 +6,7 @@ import AllModelRequestsHeader from '@/components/home/AllModelRequestsHeader';
 import AllModelRequestsCard from '@/components/home/AllModelRequestsCard';
 import EmptyState from '@/components/common/EmptyState';
 import dynamic from 'next/dynamic';
+import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 
 // ✅ Lazy Load
 const ModelRequestFilterModal = dynamic(
@@ -13,53 +14,6 @@ const ModelRequestFilterModal = dynamic(
   { ssr: false, loading: () => null }
 );
 
-
-const MOCK_MODEL_REQUESTS = [
-  {
-    id: 'mr_1',
-    title: 'مدل فیشیال VIP عروس',
-    serviceName: 'فیشیال تخصصی پوست',
-    serviceImage: 'https://picsum.photos/400/300?random=50',
-    businessName: 'کلینیک زیبایی صدف',
-    city: 'تهران، سعادت‌آباد',
-    serviceTypeId: 'facial',
-    discount: 50,
-    costType: 'paid',
-  },
-  {
-    id: 'mr_2',
-    title: 'مدل طراحی ناخن ژورنالی',
-    serviceName: 'کاشت ناخن',
-    serviceImage: 'https://picsum.photos/400/300?random=51',
-    businessName: 'ناخن گالری پریا',
-    city: 'کرج، فردیس',
-    serviceTypeId: 'nail',
-    discount: 70,
-    costType: 'material_cost',
-  },
-  {
-    id: 'mr_3',
-    title: 'مدل تکنیک بالیاژ فرانسوی',
-    serviceName: 'رنگ و لایت مو',
-    serviceImage: 'https://picsum.photos/400/300?random=52',
-    businessName: 'سالن زیبایی افرا',
-    city: 'تهران، نیاوران',
-    serviceTypeId: 'hair',
-    discount: 60,
-    costType: 'paid',
-  },
-  {
-    id: 'mr_4',
-    title: 'مدل لیزر الکس ۲۰۲۴',
-    serviceName: 'لیزر موهای زائد',
-    serviceImage: 'https://picsum.photos/400/300?random=53',
-    businessName: 'مرکز لیزر رویال',
-    city: 'تهران، شهرک غرب',
-    serviceTypeId: 'laser',
-    discount: 0,
-    costType: 'material_cost',
-  },
-];
 
 export default function AllModelRequestsPage() {
   const router = useRouter();

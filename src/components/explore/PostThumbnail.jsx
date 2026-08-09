@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { FiBookmark, FiImage, FiStar } from 'react-icons/fi';
 import { MdAutoAwesome } from 'react-icons/md';
 import { useTheme } from '@/stores/useThemeStore';
-import { useAuth } from '@/stores/useAuth';
+import { useAuth } from '@/stores/useAuthStore';
 
 export default function PostThumbnail({ post, onPress }) {
   const { colors } = useTheme();

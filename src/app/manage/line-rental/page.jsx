@@ -11,6 +11,7 @@ import Header from '@/components/common/Header';
 import EmptyState from '@/components/common/EmptyState';
 import LineRentalAdCard from '@/components/manageBusiness/lineRental/LineRentalAdCard';
 import LineRentalStats from '@/components/manageBusiness/lineRental/LineRentalStats';
+import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 
 // ✅ Lazy Load
 const CreateLineRentalAdSheet = dynamic(
@@ -23,11 +24,6 @@ const LineRentalDetailModal = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const MOCK_LINE_ADS = [
-  { id: 'lr_1', title: 'لاین ناخن VIP با تجهیزات کامل', serviceTypeId: 'nail', serviceTypeName: 'کاشت و طراحی ناخن', collabType: 'percent', collabLabel: 'درصدی', percentSalon: 40, percentPartner: 60, priceDisplay: '۴۰-۶۰', description: 'لاین ناخن کامل با میز حرفه‌ای.', lineImage: 'https://picsum.photos/400/400?random=70', status: 'active', createdAt: '۱۴۰۳/۰۴/۱۱', expiresAt: '۱۴۰۳/۰۵/۱۱', businessName: 'سالن زیبایی نیلارام', city: 'تهران، سعادت‌آباد', contactPhone: '09121234567' },
-  { id: 'lr_2', title: 'لاین میکاپ با نور طبیعی', serviceTypeId: 'makeup', serviceTypeName: 'میکاپ و گریم', collabType: 'hourly', collabLabel: 'ساعتی', hourlyRate: 150000, priceDisplay: '۱۵۰,۰۰۰ / ساعت', description: 'لاین میکاپ با نور طبیعی.', lineImage: 'https://picsum.photos/400/400?random=71', status: 'active', createdAt: '۱۴۰۳/۰۴/۰۴', expiresAt: '۱۴۰۳/۰۵/۰۴', businessName: 'سالن زیبایی نیلارام', city: 'تهران، سعادت‌آباد', contactPhone: '09129876543' },
-  { id: 'lr_3', title: 'لاین لیزر با دستگاه الکس', serviceTypeId: 'laser', serviceTypeName: 'لیزر موهای زائد', collabType: 'fixed', collabLabel: 'اجاره ثابت', fixedAmount: 8000000, fixedDeposit: 0, priceDisplay: '۸,۰۰۰,۰۰۰ تومان', description: 'لاین لیزر با دستگاه الکساندرایت.', lineImage: 'https://picsum.photos/400/400?random=73', status: 'inactive', createdAt: '۱۴۰۳/۰۳/۱۱', expiresAt: '۱۴۰۳/۰۴/۱۱', businessName: 'سالن زیبایی نیلارام', city: 'تهران، سعادت‌آباد', contactPhone: '09121112233' },
-];
 
 export default function LineRentalPage() {
   const { colors } = useTheme();
@@ -35,7 +31,7 @@ export default function LineRentalPage() {
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
 
-  const [ads, setAds] = useState(MOCK_LINE_ADS);
+  const [ads, setAds] = useState(MOCK_LINE_RENTALS);
   const [createVisible, setCreateVisible] = useState(false);
   const [editingAd, setEditingAd] = useState(null);
   const [selectedAd, setSelectedAd] = useState(null);

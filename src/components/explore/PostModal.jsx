@@ -14,7 +14,7 @@ import {
 import { MdAutoAwesome, MdVerified } from 'react-icons/md';
 import { createPortal } from 'react-dom';
 import { useTheme } from '@/stores/useThemeStore';
-import { useAuth } from '@/stores/useAuth';
+import { useAuth } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
 import GallerySlider from './GallerySlider';
 import StarRating from '@/components/common/StarRating';

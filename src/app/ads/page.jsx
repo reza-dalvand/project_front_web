@@ -5,44 +5,12 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import AllAdsHeader from '@/components/home/AllAdsHeader';
 import AllAdsCard from '@/components/home/AllAdsCard';
 import EmptyState from '@/components/common/EmptyState';
+import { MOCK_ALL_ADS } from '@/data/ads';
 
-const MOCK_ALL_ADS = [
-  {
-    id: 1,
-    businessId: '1',
-    imageUrl: 'https://picsum.photos/800/400?random=1',
-    title: 'جشنواره تخفیف‌های بهار کلینیک رُز',
-    subtitle: 'تا ۳۰٪ تخفیف خدمات پوست و فیشیال VIP',
-    badge: 'پیشنهاد ویژه',
-    businessName: 'کلینیک زیبایی رُز',
-    city: 'تهران، ونک',
-  },
-  {
-    id: 2,
-    businessId: '2',
-    imageUrl: 'https://picsum.photos/800/400?random=2',
-    title: 'افتتاحیه سالن زیبایی لاویا',
-    subtitle: 'نوبت‌دهی آنلاین با بیعانه اقتصادی',
-    badge: 'جدید',
-    businessName: 'سالن زیبایی لاویا',
-    city: 'تهران، نیاوران',
-  },
-  {
-    id: 3,
-    businessId: '3',
-    imageUrl: 'https://picsum.photos/800/400?random=3',
-    title: 'لیزر با جدیدترین دستگاه ۲۰۲۴',
-    subtitle: 'مرکز رویال - تخفیف ویژه',
-    badge: 'پرفروش',
-    businessName: 'مرکز لیزر رویال',
-    city: 'تهران، شهرک غرب',
-  },
-];
 
 export default function AllAdsPage() {
   const router = useRouter();
-  const [ads] = useState(MOCK_ALL_ADS);
-
+  const ads = MOCK_ALL_ADS;
   const handleAdPress = (ad) => {
     router.push(`/business/${ad.businessId || '1'}`);
   };

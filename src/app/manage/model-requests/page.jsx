@@ -11,6 +11,7 @@ import Header from '@/components/common/Header';
 import EmptyState from '@/components/common/EmptyState';
 import ModelRequestCard from '@/components/manageBusiness/modelRequest/ModelRequestCard';
 import ModelRequestStats from '@/components/manageBusiness/modelRequest/ModelRequestStats';
+import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 
 // ✅ Lazy Load
 const ModelRequestDetailModal = dynamic(
@@ -18,11 +19,6 @@ const ModelRequestDetailModal = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const MOCK_MODEL_REQUESTS = [
-  { id: 'mr_1', serviceId: 'svc_1', serviceName: 'فیشیال تخصصی پوست', serviceImage: 'https://picsum.photos/200/200?random=50', title: 'مدل برای فیشیال VIP عروس', description: 'نیاز به مدل برای تست محصولات جدید فیشیال.', costType: 'paid', status: 'active', contactPhone: '09121234567', createdAt: '۱۴۰۳/۰۴/۲۲', expiresAt: '۱۴۰۳/۰۵/۲۱' },
-  { id: 'mr_2', serviceId: 'svc_2', serviceName: 'کاشت ناخن ژله‌ای', serviceImage: 'https://picsum.photos/200/200?random=51', title: 'مدل برای طراحی ناخن جدید', description: 'طراحی‌های جدید و خاص برای نمونه‌کار.', costType: 'material_cost', status: 'active', contactPhone: '09129876543', createdAt: '۱۴۰۳/۰۴/۲۰', expiresAt: '۱۴۰۳/۰۵/۱۹' },
-  { id: 'mr_3', serviceId: 'svc_3', serviceName: 'رنگ و لایت مو', serviceImage: 'https://picsum.photos/200/200?random=52', title: 'مدل برای تکنیک جدید بالیاژ', description: 'تست تکنیک جدید بالیاژ فرانسوی.', costType: 'free', status: 'inactive', contactPhone: '09121112233', createdAt: '۱۴۰۳/۰۳/۱۵', expiresAt: '۱۴۰۳/۰۴/۱۴' },
-];
 
 export default function ModelRequestsPage() {
   const { colors } = useTheme();

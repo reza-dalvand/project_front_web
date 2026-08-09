@@ -79,7 +79,7 @@ export default function HomePage() {
     MOCK_DONE_APPOINTMENTS.forEach((apt) => {
       addPendingReview(apt);
     });
-  }, []);
+  }, [addPendingReview]);
 
   // ─── نمایش خودکار مدال نظردهی ───
   useEffect(() => {
