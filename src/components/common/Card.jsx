@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Card - بدون useTheme → بدون re-render هنگام تغییر تم
+ * کامپوننت کارت مشترک
  */
 export default function Card({
   children,
@@ -12,15 +12,10 @@ export default function Card({
   className = '',
   style = {},
 }) {
-  const getVariantClasses = () => {
-    switch (variant) {
-      case 'flat':
-        return 'bg-card';
-      case 'elevated':
-        return 'bg-card shadow-[0_4px_12px_rgba(0,0,0,0.08)]';
-      default:
-        return 'bg-card border border-app';
-    }
+  const variantClasses = {
+    default: 'bg-[var(--card)] border border-[var(--border)]',
+    flat: 'bg-[var(--card)]',
+    elevated: 'bg-[var(--card)] shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
   };
 
   const Component = onPress ? 'button' : 'div';
@@ -29,8 +24,12 @@ export default function Card({
     <Component
       onClick={onPress}
       className={`
-        overflow-hidden ${getVariantClasses()}
-        ${onPress ? 'cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]' : ''}
+        overflow-hidden
+        ${variantClasses[variant]}
+        ${onPress
+          ? 'cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]'
+          : ''
+        }
         ${className}
       `}
       style={{

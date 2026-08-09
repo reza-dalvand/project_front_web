@@ -1,8 +1,8 @@
 // src/components/common/ActionButtons.jsx
 'use client';
-
 import { FiPhone, FiShare2 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useToast } from '@/hooks/useToast';
 import { toPersianDigit } from '@/utils/numberUtils';
 
 /**
@@ -14,10 +14,11 @@ import { toPersianDigit } from '@/utils/numberUtils';
  */
 export default function ActionButtons({ phone, shareMessage, shareUrl }) {
   const { colors } = useTheme();
+  const { showToast } = useToast();
 
   const handleCall = () => {
     if (!phone) {
-      alert('شماره تماسی ثبت نشده است');
+      showToast('شماره تماسی ثبت نشده است', 'error');
       return;
     }
     window.location.href = `tel:${phone}`;
@@ -38,9 +39,9 @@ export default function ActionButtons({ phone, shareMessage, shareUrl }) {
       // Fallback: کپی در کلیپ‌بورد
       try {
         await navigator.clipboard.writeText(shareMessage);
-        alert('لینک کپی شد');
+        showToast('لینک کپی شد', 'success');
       } catch (err) {
-        alert('امکان اشتراک‌گذاری وجود ندارد');
+        showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
       }
     }
   };
@@ -52,8 +53,8 @@ export default function ActionButtons({ phone, shareMessage, shareUrl }) {
         <button
           onClick={handleCall}
           className="flex items-center gap-3 py-4 px-5 rounded-2xl
-                     transition-all hover:scale-[1.02] active:scale-[0.98]
-                     shadow-lg"
+            transition-all hover:scale-[1.02] active:scale-[0.98]
+            shadow-lg"
           style={{ backgroundColor: '#4CAF50' }}
         >
           <div
@@ -74,11 +75,11 @@ export default function ActionButtons({ phone, shareMessage, shareUrl }) {
       <button
         onClick={handleShare}
         className="flex items-center gap-3 py-4 px-5 rounded-2xl border
-                   transition-all hover:scale-[1.02] active:scale-[0.98]"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderColor: colors.border,
-        }}
+          transition-all hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          }}
       >
         <FiShare2 size={22} style={{ color: colors.primary }} />
         <span

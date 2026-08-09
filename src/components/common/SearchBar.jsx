@@ -1,10 +1,10 @@
-// src/components/common/SearchBar.jsx
 'use client';
-
 import { useState } from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
-import { useTheme } from '@/stores/useThemeStore';
 
+/**
+ * کامپوننت نوار جستجو مشترک
+ */
 export default function SearchBar({
   value,
   onChangeText,
@@ -14,7 +14,6 @@ export default function SearchBar({
   autoFocus = false,
   className = '',
 }) {
-  const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
 
   const handleClear = () => {
@@ -23,28 +22,22 @@ export default function SearchBar({
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      onSubmit?.();
-    }
+    if (e.key === 'Enter') onSubmit?.();
   };
 
   return (
     <div
       className={`
-        flex items-center gap-3 px-4 rounded-2xl border transition-all duration-200
+        flex items-center gap-3 px-4 rounded-2xl border transition-all duration-200 h-[52px]
+        bg-[var(--card)]
+        ${focused ? 'border-[var(--primary)]' : 'border-[var(--border)]'}
         ${className}
       `}
-      style={{
-        backgroundColor: colors.cardBackground,
-        borderColor: focused ? colors.primary : colors.border,
-        height: '52px',
-      }}
     >
       <FiSearch
         size={22}
-        style={{ color: focused ? colors.primary : colors.textSecondary, flexShrink: 0 }}
+        className={`flex-shrink-0 ${focused ? 'text-[var(--primary)]' : 'text-[var(--text-secondary)]'}`}
       />
-
       <input
         type="text"
         value={value}
@@ -54,24 +47,14 @@ export default function SearchBar({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onKeyDown={handleKeyDown}
-        className="flex-1 bg-transparent outline-none text-right"
-        suppressHydrationWarning
-        style={{
-          color: colors.textMain,
-          fontSize: '14px',
-          fontFamily: 'Vazir',
-          direction: 'rtl',
-        }}
-        // ❌ placeholderTextColor حذف شد - از CSS استفاده می‌کنیم
+        className="flex-1 bg-transparent outline-none text-right text-[var(--text-main)] text-sm font-vazir rtl"
       />
-
       {value?.length > 0 && (
         <button
           onClick={handleClear}
-          className="p-1 rounded-lg hover:bg-black/5 transition-colors"
-          style={{ backgroundColor: colors.background }}
+          className="p-1 rounded-lg hover:bg-black/5 transition-colors bg-[var(--bg)]"
         >
-          <FiX size={16} style={{ color: colors.textSecondary }} />
+          <FiX size={16} className="text-[var(--text-secondary)]" />
         </button>
       )}
     </div>

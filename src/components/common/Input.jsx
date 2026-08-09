@@ -1,8 +1,9 @@
-// src/components/common/Input.jsx
 'use client';
 import { useState } from 'react';
-import { useTheme } from '@/stores/useThemeStore';
 
+/**
+ * کامپوننت ورودی مشترک
+ */
 export default function Input({
   label,
   placeholder,
@@ -22,46 +23,46 @@ export default function Input({
   className = '',
   onBlur,
 }) {
-  const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const borderColor = error ? '#E57373' : focused ? colors.primary : colors.border;
-  const bgColor = variant === 'filled' ? colors.cardBackground : 'transparent';
+  const borderColor = error
+    ? 'border-red-400'
+    : focused
+      ? 'border-[var(--primary)]'
+      : 'border-[var(--border)]';
+
+  const bgColor = variant === 'filled' ? 'bg-[var(--card)]' : 'bg-transparent';
+
   const InputComponent = multiline ? 'textarea' : 'input';
 
   return (
     <div className={`mb-4 ${className}`}>
       {label && (
-        <label
-          className="block text-sm mb-2 text-right"
-          style={{ color: colors.textSecondary, fontFamily: 'Vazir-Medium' }}
-        >
+        <label className="block text-sm mb-2 text-right font-vazir-medium text-[var(--text-secondary)]">
           {label}
         </label>
       )}
-
       <div
         className={`
           flex items-center border-2 rounded-2xl px-4 min-h-[52px]
           transition-all duration-200
-          ${focused ? 'border-2' : ''}
+          ${borderColor}
+          ${bgColor}
           ${!editable ? 'opacity-50' : ''}
           ${multiline ? 'py-3' : ''}
         `}
-        style={{ borderColor, backgroundColor: bgColor }}
       >
         {rightIcon && (
           <button
             onClick={onRightIconPress}
-            className={`ml-3 flex items-center ${!onRightIconPress ? 'cursor-default' : 'cursor-pointer'}`}
+            className={`ml-3 flex items-center ${onRightIconPress ? 'cursor-pointer' : 'cursor-default'}`}
             disabled={!onRightIconPress}
             type="button"
           >
             {rightIcon}
           </button>
         )}
-
         <InputComponent
           value={value}
           onChange={(e) => onChangeText?.(e.target.value)}
@@ -75,44 +76,26 @@ export default function Input({
             onBlur?.(e);
           }}
           rows={multiline ? 3 : undefined}
-          suppressHydrationWarning
-          className="flex-1 bg-transparent outline-none text-right"
-          style={{
-            color: colors.textMain,
-            fontFamily: 'Vazir',
-            fontSize: '15px',
-            direction: 'rtl',
-          }}
+          className="flex-1 bg-transparent outline-none text-right text-[var(--text-main)] font-vazir text-[15px] rtl"
         />
-
-        {leftIcon && !secureTextEntry && <span className="mr-3 flex items-center">{leftIcon}</span>}
-
+        {leftIcon && !secureTextEntry && (
+          <span className="mr-3 flex items-center">{leftIcon}</span>
+        )}
         {secureTextEntry && (
           <button
             onClick={() => setShowPassword(!showPassword)}
-            className="mr-3 flex items-center"
+            className="mr-3 flex items-center text-xs text-[var(--text-secondary)] font-vazir"
             type="button"
           >
-            <span className="text-xs" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
-              {showPassword ? 'پنهان' : 'نمایش'}
-            </span>
+            {showPassword ? 'پنهان' : 'نمایش'}
           </button>
         )}
       </div>
-
-      {/* ✅ تغییر اصلی: <p> → <div> */}
       {error && (
-        <div className="text-right text-xs mt-1" style={{ color: '#E57373', fontFamily: 'Vazir' }}>
-          {error}
-        </div>
+        <p className="text-right text-xs mt-1 text-red-400 font-vazir">{error}</p>
       )}
       {!error && hint && (
-        <div
-          className="text-right text-xs mt-1"
-          style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
-        >
-          {hint}
-        </div>
+        <p className="text-right text-xs mt-1 text-[var(--text-secondary)] font-vazir">{hint}</p>
       )}
     </div>
   );

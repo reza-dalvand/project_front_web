@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Button - بدون useTheme
+ * کامپوننت دکمه مشترک
  */
 export default function Button({
   title,
@@ -25,19 +25,11 @@ export default function Button({
     lg: 'py-4 px-6 rounded-2xl text-lg',
   };
 
-  const getVariantClasses = () => {
-    switch (variant) {
-      case 'primary':
-        return 'bg-primary text-white';
-      case 'secondary':
-        return 'bg-[var(--color-secondary)] text-white';
-      case 'outline':
-        return 'border-2 border-primary bg-transparent text-primary';
-      case 'ghost':
-        return 'bg-transparent text-primary';
-      default:
-        return 'bg-primary text-white';
-    }
+  const variantClasses = {
+    primary: 'bg-[var(--primary)] text-white border-transparent',
+    secondary: 'bg-[var(--secondary)] text-white border-transparent',
+    outline: 'border-2 bg-transparent text-[var(--primary)] border-[var(--primary)]',
+    ghost: 'bg-transparent text-[var(--primary)] border-transparent',
   };
 
   return (
@@ -51,7 +43,7 @@ export default function Button({
         hover:scale-[1.02] active:scale-[0.98]
         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
         ${sizeClasses[size]}
-        ${getVariantClasses()}
+        ${variantClasses[variant]}
         ${fullWidth ? 'w-full' : ''}
         ${className}
       `}

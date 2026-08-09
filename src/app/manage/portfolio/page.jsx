@@ -33,7 +33,8 @@ export default function ManagePortfolioPage() {
   const { showToast } = useToast();
   const businessData = useBusinessStore((s) => s.businessData);
   const addPortfolio = useBusinessStore((s) => s.addPortfolio);
-
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [formVisible, setFormVisible] = useState(false);
   const [editingPortfolio, setEditingPortfolio] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
@@ -167,9 +168,8 @@ export default function ManagePortfolioPage() {
                   onPress={openDetail}
                   onEdit={openEditForm}
                   onDelete={(p) => {
-                    if (confirm(`آیا از حذف "${p.title}" مطمئن هستید؟`)) {
-                      showToast('✓ نمونه‌کار حذف شد', 'info');
-                    }
+                    setDeleteTarget(p);
+                    setDeleteDialogVisible(true);
                   }}
                 />
               ))}
@@ -195,6 +195,24 @@ export default function ManagePortfolioPage() {
         onSave={handleSave}
         editingPortfolio={editingPortfolio}
         services={services}
+      />
+
+      <ConfirmDialog
+        visible={deleteDialogVisible}
+        title="حذف نمونه‌کار"
+        message={`آیا از حذف "${deleteTarget?.title}" مطمئن هستید؟ این عمل قابل بازگشت نیست.`}
+        confirmText="حذف"
+        cancelText="انصراف"
+        variant="danger"
+        onConfirm={() => {
+          showToast('✓ نمونه‌کار حذف شد', 'info');
+          setDeleteDialogVisible(false);
+          setDeleteTarget(null);
+        }}
+        onCancel={() => {
+          setDeleteDialogVisible(false);
+          setDeleteTarget(null);
+        }}
       />
     </ScreenWrapper>
   );

@@ -1,31 +1,51 @@
 // src/stores/useThemeStore.js
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { lightColors, darkColors } from '../theme/colors';
 
-// تشخیص تم سیستم
+// ═══════ رنگ‌ها (جایگزین theme/colors.js) ═══════
+const LIGHT_COLORS = {
+  background: '#F5F0EC',
+  cardBackground: '#EBE3DE',
+  primary: '#A88B7D',
+  secondary: '#8D7468',
+  textMain: '#2C2521',
+  textSecondary: '#5A504B',
+  border: '#DCD1CB',
+};
+
+const DARK_COLORS = {
+  background: '#171412',
+  cardBackground: '#26211E',
+  primary: '#A88B7D',
+  secondary: '#6B5A52',
+  textMain: '#F5F0EC',
+  textSecondary: '#BDB4AF',
+  border: '#3D3734',
+};
+
+const getColors = (resolved) =>
+  resolved === 'dark' ? DARK_COLORS : LIGHT_COLORS;
+
+// ═══════ تشخیص تم سیستم ═══════
 const getSystemTheme = () => {
   if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 };
 
 const getResolvedTheme = (theme) => {
-  if (theme === 'system') {
-    return getSystemTheme();
-  }
+  if (theme === 'system') return getSystemTheme();
   return theme;
 };
 
-const getColors = (resolved) => {
-  return resolved === 'dark' ? darkColors : lightColors;
-};
-
+// ═══════ Store ═══════
 export const useThemeStore = create(
   persist(
     (set, get) => ({
       theme: 'system',
-      resolvedTheme: 'light', // ← همیشه light در ابتدا (SSR-safe)
-      colors: lightColors, // ← همیشه lightColors در ابتدا
+      resolvedTheme: 'light',
+      colors: LIGHT_COLORS,
       _hydrated: false,
 
       setHydrated: () => set({ _hydrated: true }),
@@ -57,9 +77,7 @@ export const useThemeStore = create(
           ? localStorage
           : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
-      partialize: (state) => ({
-        theme: state.theme,
-      }),
+      partialize: (state) => ({ theme: state.theme }),
       onRehydrateStorage: () => {
         return (state) => {
           if (state) {
@@ -74,7 +92,7 @@ export const useThemeStore = create(
   )
 );
 
-// Hook کمکی
+// ═══════ Hook اصلی ═══════
 export const useTheme = () => {
   const colors = useThemeStore((s) => s.colors);
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);

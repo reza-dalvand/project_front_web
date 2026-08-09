@@ -1,14 +1,11 @@
-// src/components/common/UpdateModal.jsx
 'use client';
-
 import { useState, useEffect } from 'react';
-import { FiDownload, FiX, FiCheck } from 'react-icons/fi';
+import { FiDownload, FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
 const APP_VERSION = '1.0.0';
 
-// شبیه‌سازی تنظیمات ریموت
 const MOCK_REMOTE_CONFIG = {
   latestVersion: '1.2.0',
   minRequiredVersion: '1.0.0',
@@ -26,7 +23,6 @@ export default function UpdateModal() {
   const [updateInfo, setUpdateInfo] = useState(null);
 
   useEffect(() => {
-    // بررسی نسخه
     const checkUpdate = () => {
       const compareVersions = (a, b) => {
         const numA = a.split('.').map(Number);
@@ -52,7 +48,6 @@ export default function UpdateModal() {
       }
     };
 
-    // بررسی با تاخیر کوتاه
     const timer = setTimeout(checkUpdate, 1500);
     return () => clearTimeout(timer);
   }, []);
@@ -62,9 +57,7 @@ export default function UpdateModal() {
   };
 
   const handleLater = () => {
-    if (!updateInfo?.isForceUpdate) {
-      setVisible(false);
-    }
+    if (!updateInfo?.isForceUpdate) setVisible(false);
   };
 
   if (!visible || !updateInfo) return null;
@@ -80,19 +73,17 @@ export default function UpdateModal() {
         style={{ backgroundColor: colors.cardBackground }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* دکمه بستن (فقط اختیاری) */}
         {!updateInfo.isForceUpdate && (
           <button
             onClick={handleLater}
-            className="absolute top-4 left-4 w-8 h-8 rounded-full 
-                       flex items-center justify-center"
+            className="absolute top-4 left-4 w-8 h-8 rounded-full
+              flex items-center justify-center"
             style={{ backgroundColor: colors.background }}
           >
             <FiX size={18} style={{ color: colors.textMain }} />
           </button>
         )}
 
-        {/* آیکون */}
         <div className="flex justify-center mb-4">
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center"
@@ -104,7 +95,6 @@ export default function UpdateModal() {
           </div>
         </div>
 
-        {/* عنوان */}
         <h2
           className="text-xl text-center mb-2"
           style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}
@@ -112,7 +102,6 @@ export default function UpdateModal() {
           {updateInfo.isForceUpdate ? 'به‌روزرسانی اجباری' : 'نسخه جدید در دسترس است'}
         </h2>
 
-        {/* نسخه‌ها */}
         <div
           className="flex items-center justify-between p-3 rounded-xl mb-4"
           style={{
@@ -121,24 +110,16 @@ export default function UpdateModal() {
           }}
         >
           <div className="text-center flex-1">
-            <p
-              className="text-xs mb-1"
-              style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
-            >
+            <p className="text-xs mb-1" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
               فعلی
             </p>
             <p className="text-base" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
               {toPersianDigit(updateInfo.currentVersion)}
             </p>
           </div>
-          <div className="text-2xl" style={{ color: colors.textSecondary }}>
-            ←
-          </div>
+          <div className="text-2xl" style={{ color: colors.textSecondary }}>←</div>
           <div className="text-center flex-1">
-            <p
-              className="text-xs mb-1"
-              style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
-            >
+            <p className="text-xs mb-1" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
               جدید
             </p>
             <p
@@ -153,7 +134,6 @@ export default function UpdateModal() {
           </div>
         </div>
 
-        {/* لیست تغییرات */}
         {updateInfo.changelog && updateInfo.changelog.length > 0 && (
           <div
             className="p-4 rounded-xl mb-4"
@@ -184,11 +164,10 @@ export default function UpdateModal() {
           </div>
         )}
 
-        {/* دکمه به‌روزرسانی */}
         <button
           onClick={handleUpdate}
           className="w-full py-4 rounded-2xl flex items-center justify-center gap-2
-                     transition-all hover:scale-[1.02] active:scale-[0.98] mb-2"
+            transition-all hover:scale-[1.02] active:scale-[0.98] mb-2"
           style={{
             backgroundColor: updateInfo.isForceUpdate ? '#E53935' : colors.primary,
             color: '#fff',
@@ -200,7 +179,6 @@ export default function UpdateModal() {
           <span>{updateInfo.isForceUpdate ? 'به‌روزرسانی اجباری' : 'به‌روزرسانی'}</span>
         </button>
 
-        {/* دکمه بعداً (فقط اختیاری) */}
         {!updateInfo.isForceUpdate && (
           <button
             onClick={handleLater}

@@ -17,7 +17,6 @@ export default function PriceBreakdown({
 }) {
   const { colors } = useTheme();
 
-  // محاسبات
   const discountAmount = Math.round((originalPrice * discountPercent) / 100);
   const calculatedFinal = Math.max(0, originalPrice - discountAmount);
   const actualFinal = finalPrice ?? calculatedFinal;
@@ -64,11 +63,10 @@ export default function PriceBreakdown({
     );
   }
 
-  // ═══════ حالت detailed (همراه قوانین) ═══════
+  // ═══════ حالت detailed ═══════
   if (variant === 'detailed') {
     return (
       <Card variant="default" padding={16} radius={18}>
-        {/* هدر */}
         <div className="flex items-center gap-2 mb-1">
           <div
             className="w-9 h-9 rounded-[11px] flex items-center justify-center"
@@ -81,7 +79,6 @@ export default function PriceBreakdown({
           </span>
         </div>
 
-        {/* قیمت اصلی */}
         <div className="flex justify-between items-center py-0.5">
           <div className="flex items-center gap-1.5">
             <FiDollarSign size={14} style={{ color: colors.textSecondary }} />
@@ -94,7 +91,6 @@ export default function PriceBreakdown({
           </span>
         </div>
 
-        {/* تخفیف */}
         {discountPercent > 0 && (
           <div className="flex justify-between items-center py-0.5">
             <div className="flex items-center gap-1.5">
@@ -111,7 +107,6 @@ export default function PriceBreakdown({
 
         <Divider spacing={8} />
 
-        {/* قیمت نهایی */}
         <div className="flex justify-between items-center py-0.5">
           <div className="flex items-center gap-1.5">
             <FiTrendingUp size={14} style={{ color: colors.textMain }} />
@@ -124,7 +119,6 @@ export default function PriceBreakdown({
           </span>
         </div>
 
-        {/* بیعانه */}
         {hasDeposit && (
           <div
             className="flex items-center justify-between p-3 rounded-[14px] border mt-1"
@@ -155,7 +149,6 @@ export default function PriceBreakdown({
           </div>
         )}
 
-        {/* مابقی مبلغ */}
         {hasDeposit && remaining > 0 && (
           <div
             className="flex items-center gap-2.5 p-3 rounded-[14px] border"

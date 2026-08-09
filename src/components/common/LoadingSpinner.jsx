@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * LoadingSpinner - بدون useTheme
+ * کامپوننت LoadingSpinner
  */
 export default function LoadingSpinner({ label, size = 'md', overlay = false }) {
   const sizeClasses = {
@@ -16,18 +16,19 @@ export default function LoadingSpinner({ label, size = 'md', overlay = false }) 
         className={`
           ${sizeClasses[size]}
           rounded-full animate-spin
-          border-primary border-t-transparent
+          border-current border-t-transparent
+          text-[var(--primary)]
         `}
       />
       {label && (
-        <p className="text-sm text-center font-vazir text-muted">{label}</p>
+        <p className="text-sm text-center font-vazir text-[var(--text-secondary)]">{label}</p>
       )}
     </div>
   );
 
   if (overlay) {
     return (
-      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-app/80">
+      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-[var(--bg)]/80">
         {spinner}
       </div>
     );

@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FiChevronDown, FiChevronUp, FiX, FiCheck } from 'react-icons/fi';
-import { useTheme } from '@/stores/useThemeStore';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 let dropdownCounter = 0;
@@ -15,7 +14,6 @@ export default function Dropdown({
   placeholder = 'انتخاب کنید...',
   disabled = false,
 }) {
-  const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef(`dropdown-${++dropdownCounter}`);
@@ -55,10 +53,10 @@ export default function Dropdown({
   };
 
   const inputBorderColor = disabled
-    ? colors.border + '60'
+    ? 'border-[var(--border)]/60'
     : visible
-      ? colors.primary
-      : colors.border;
+      ? 'border-[var(--primary)]'
+      : 'border-[var(--border)]';
 
   if (!mounted) return null;
 
@@ -69,39 +67,33 @@ export default function Dropdown({
       onClick={() => setVisible(false)}
     >
       <div
-        className="w-full max-h-[75vh] rounded-t-3xl flex flex-col animate-slide-up"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderTop: `1px solid ${colors.border}`,
-        }}
+        className="w-full max-h-[75vh] rounded-t-3xl flex flex-col animate-slide-up
+          bg-[var(--card)] border-t border-[var(--border)]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
+          <div className="w-10 h-1 rounded-full bg-[var(--border)]" />
         </div>
 
-        <div
-          className="flex items-center justify-between px-5 py-4 border-b"
-          style={{ borderColor: colors.border }}
-        >
-          <h3 className="text-base font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+          <h3 className="text-base font-vazir-bold flex-1 text-[var(--text)]">
             {label || placeholder}
           </h3>
           <button
             onClick={() => setVisible(false)}
-            className="w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: colors.background }}
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--bg)]"
           >
-            <FiX size={20} style={{ color: colors.textMain }} />
+            <FiX size={20} className="text-[var(--text)]" />
           </button>
         </div>
 
+        {/* Options */}
         <div className="flex-1 overflow-y-auto py-2">
           {options.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-sm" style={{ color: colors.textSecondary }}>
-                گزینه‌ای موجود نیست
-              </p>
+              <p className="text-sm text-[var(--text-secondary)]">گزینه‌ای موجود نیست</p>
             </div>
           ) : (
             options.map((item) => {
@@ -110,22 +102,20 @@ export default function Dropdown({
                 <button
                   key={item.id}
                   onClick={() => handleSelect(item)}
-                  className="w-full flex items-center justify-between px-5 py-4 border-b transition-colors hover:opacity-80"
-                  style={{
-                    backgroundColor: isSelected ? colors.primary + '12' : 'transparent',
-                    borderColor: colors.border + '40',
-                  }}
+                  className={`w-full flex items-center justify-between px-5 py-4 border-b
+                    transition-colors hover:opacity-80
+                    ${isSelected ? 'bg-[var(--primary)]/12' : 'bg-transparent'}
+                  `}
+                  style={{ borderColor: 'var(--border)' + '40' }}
                 >
                   <span
-                    className="text-sm flex-1 text-right"
-                    style={{
-                      color: isSelected ? colors.primary : colors.textMain,
-                      fontFamily: isSelected ? 'Vazir-Bold' : 'Vazir',
-                    }}
+                    className={`text-sm flex-1 text-right
+                      ${isSelected ? 'text-[var(--primary)] font-vazir-bold' : 'text-[var(--text)] font-vazir'}
+                    `}
                   >
                     {item.label}
                   </span>
-                  {isSelected && <FiCheck size={20} style={{ color: colors.primary }} />}
+                  {isSelected && <FiCheck size={20} className="text-[var(--primary)]" />}
                 </button>
               );
             })
@@ -139,45 +129,36 @@ export default function Dropdown({
   return (
     <div className="w-full mb-4">
       {label && (
-        <label
-          className="block text-sm mb-2 text-right font-[Vazir-Medium]"
-          style={{ color: colors.textMain }}
-        >
+        <label className="block text-sm mb-2 text-right font-vazir-medium text-[var(--text)]">
           {label}
         </label>
       )}
       <button
         onClick={() => !disabled && setVisible((v) => !v)}
         disabled={disabled}
-        className="w-full flex items-center justify-between px-4 h-12 rounded-xl border-2 transition-colors"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderColor: inputBorderColor,
-          opacity: disabled ? 0.6 : 1,
-        }}
+        className={`w-full flex items-center justify-between px-4 h-12 rounded-xl border-2
+          transition-colors bg-[var(--card)] ${inputBorderColor}
+          ${disabled ? 'opacity-60' : ''}
+        `}
       >
         <span
-          className="text-sm flex-1 text-right truncate"
-          style={{
-            color: selectedItem ? colors.textMain : colors.textSecondary,
-            fontFamily: 'Vazir',
-          }}
+          className={`text-sm flex-1 text-right truncate font-vazir
+            ${selectedItem ? 'text-[var(--text)]' : 'text-[var(--text-secondary)]'}
+          `}
         >
           {selectedItem ? selectedItem.label : placeholder}
         </span>
         {visible ? (
           <FiChevronUp
             size={20}
-            style={{
-              color: disabled ? colors.textSecondary + '60' : colors.primary,
-            }}
+            className={disabled ? 'text-[var(--text-secondary)]/60' : 'text-[var(--primary)]'}
           />
         ) : (
           <FiChevronDown
             size={20}
-            style={{
-              color: disabled ? colors.textSecondary + '60' : colors.textSecondary,
-            }}
+            className={
+              disabled ? 'text-[var(--text-secondary)]/60' : 'text-[var(--text-secondary)]'
+            }
           />
         )}
       </button>

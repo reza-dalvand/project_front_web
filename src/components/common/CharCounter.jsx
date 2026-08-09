@@ -1,70 +1,46 @@
 'use client';
-
 import { FiEdit } from 'react-icons/fi';
-import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-/**
- * کامپوننت شمارنده کاراکتر با progress bar
- *
- * @param {number} current - تعداد کاراکتر فعلی
- * @param {number} max - حداکثر کاراکتر مجاز
- */
 export default function CharCounter({ current, max }) {
-  const { colors } = useTheme();
-
   const remaining = max - current;
   const isNearLimit = remaining <= 50 && remaining > 0;
   const isAtLimit = remaining === 0;
   const percentage = (current / max) * 100;
 
-  const getStatusColor = () => {
-    if (isAtLimit) return '#E53935';
-    if (isNearLimit) return '#FF9800';
-    return colors.primary;
-  };
+  const statusColor = isAtLimit
+    ? 'text-[#E53935]'
+    : isNearLimit
+      ? 'text-[#FF9800]'
+      : 'text-[var(--primary)]';
 
-  const statusColor = getStatusColor();
+  const barColor = isAtLimit ? 'bg-[#E53935]' : isNearLimit ? 'bg-[#FF9800]' : 'bg-[var(--primary)]';
 
   return (
     <div>
       {/* نوار شمارنده */}
       <div className="flex items-center gap-3 -mt-2.5 mb-1.5 px-1">
-        <div className="flex items-center gap-1">
-          <FiEdit size={12} style={{ color: statusColor }} />
-          <span className="text-xs font-[Vazir-Medium]" style={{ color: statusColor }}>
+        <div className={`flex items-center gap-1 ${statusColor}`}>
+          <FiEdit size={12} />
+          <span className="text-xs font-vazir-medium">
             {toPersianDigit(current)} از {toPersianDigit(max)} کاراکتر
           </span>
         </div>
-
         {/* Progress Bar */}
-        <div
-          className="flex-1 h-1 rounded-full overflow-hidden"
-          style={{ backgroundColor: colors.border }}
-        >
+        <div className="flex-1 h-1 rounded-full overflow-hidden bg-[var(--border)]">
           <div
-            className="h-full rounded-full transition-all duration-300"
-            style={{
-              width: `${percentage}%`,
-              backgroundColor: statusColor,
-            }}
+            className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+            style={{ width: `${percentage}%` }}
           />
         </div>
       </div>
 
       {/* هشدار نزدیک به محدودیت */}
       {isNearLimit && !isAtLimit && (
-        <div
-          className="flex items-center gap-2 py-1.5 px-3 rounded-lg border -mt-0.5 mb-1"
-          style={{
-            backgroundColor: '#FF980010',
-            borderColor: '#FF980030',
-          }}
-        >
-          <span className="text-xs" style={{ color: '#FF9800' }}>
-            ⚠️
-          </span>
-          <span className="text-xs font-[Vazir-Medium]" style={{ color: '#FF9800' }}>
+        <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg border -mt-0.5 mb-1
+          bg-[#FF9800]/10 border-[#FF9800]/30">
+          <span className="text-xs text-[#FF9800]">⚠️</span>
+          <span className="text-xs font-vazir-medium text-[#FF9800]">
             فقط {toPersianDigit(remaining)} کاراکتر باقی مانده است
           </span>
         </div>
@@ -72,17 +48,10 @@ export default function CharCounter({ current, max }) {
 
       {/* هشدار رسیدن به محدودیت */}
       {isAtLimit && (
-        <div
-          className="flex items-center gap-2 py-1.5 px-3 rounded-lg border -mt-0.5 mb-1"
-          style={{
-            backgroundColor: '#E5393510',
-            borderColor: '#E5393530',
-          }}
-        >
-          <span className="text-xs" style={{ color: '#E53935' }}>
-            ❌
-          </span>
-          <span className="text-xs font-[Vazir-Medium]" style={{ color: '#E53935' }}>
+        <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg border -mt-0.5 mb-1
+          bg-[#E53935]/10 border-[#E53935]/30">
+          <span className="text-xs text-[#E53935]">❌</span>
+          <span className="text-xs font-vazir-medium text-[#E53935]">
             به حداکثر تعداد کاراکتر رسیدید
           </span>
         </div>

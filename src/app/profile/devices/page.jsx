@@ -28,6 +28,8 @@ export default function ActiveDevicesPage() {
   const { colors } = useTheme();
   const { showToast } = useToast();
   const [devices, setDevices] = useState(MOCK_DEVICES);
+  const [removeDeviceTarget, setRemoveDeviceTarget] = useState(null);
+  const [removeDeviceDialogVisible, setRemoveDeviceDialogVisible] = useState(false);
 
   const currentDevice = devices.find((d) => d.isCurrent);
   const otherDevices = devices.filter((d) => !d.isCurrent);
@@ -50,10 +52,8 @@ export default function ActiveDevicesPage() {
   };
 
   const handleRemoveDevice = (device) => {
-    if (confirm(`آیا مطمئن هستید که می‌خواهید از "${device.name}" خارج شوید؟`)) {
-      setDevices((prev) => prev.filter((d) => d.id !== device.id));
-      showToast(`نشست "${device.name}" بسته شد`, 'success');
-    }
+    setRemoveDeviceTarget(device);
+    setRemoveDeviceDialogVisible(true);
   };
 
   const handleLogoutAll = () => {
@@ -248,6 +248,24 @@ export default function ActiveDevicesPage() {
           />
         )}
       </div>
+      <ConfirmDialog
+        visible={removeDeviceDialogVisible}
+        title="بستن نشست"
+        message={`آیا مطمئن هستید که می‌خواهید از "${removeDeviceTarget?.name}" خارج شوید؟`}
+        confirmText="خروج"
+        cancelText="انصراف"
+        variant="warning"
+        onConfirm={() => {
+          setDevices((prev) => prev.filter((d) => d.id !== removeDeviceTarget.id));
+          showToast(`نشست "${removeDeviceTarget.name}" بسته شد`, 'success');
+          setRemoveDeviceDialogVisible(false);
+          setRemoveDeviceTarget(null);
+        }}
+        onCancel={() => {
+          setRemoveDeviceDialogVisible(false);
+          setRemoveDeviceTarget(null);
+        }}
+      />
     </ScreenWrapper>
   );
 }

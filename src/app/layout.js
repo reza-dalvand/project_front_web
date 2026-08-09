@@ -23,7 +23,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
-        {/* Meta Tags برای SEO */}
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="زیبانو | رزرو آنلاین خدمات زیبایی" />
         <meta property="og:description" content="رزرو آنلاین خدمات زیبایی و سلامت" />
@@ -32,22 +31,11 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
-
-        {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-        {/* ✅ Preconnect برای تصاویر */}
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://picsum.photos" />
         <link rel="preconnect" href="https://i.pravatar.cc" />
-        <link rel="preconnect" href="https://tile.openstreetmap.org" />
-
-        {/* ✅ Preload فونت‌ها */}
-        <link rel="preload" href="/fonts/Vazir.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/Vazir-Bold.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
-
-        {/* ✅ Script تم - جلوگیری از Flash (قبل از رندر) */}
         <Script
           id="theme-script"
           strategy="beforeInteractive"
@@ -55,24 +43,23 @@ export default function RootLayout({ children }) {
             __html: `
               (function() {
                 try {
-                  var s = localStorage.getItem('zibano-theme-storage');
-                  if (s) {
-                    var p = JSON.parse(s);
-                    var t = p.state && p.state.theme || 'system';
-                    var r = t;
-                    if (t === 'system') {
-                      r = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  const storage = localStorage.getItem('zibano-theme-storage');
+                  if (storage) {
+                    const parsed = JSON.parse(storage);
+                    const theme = parsed.state?.theme || 'system';
+                    let resolved = theme;
+                    if (theme === 'system') {
+                      resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                     }
-                    if (r === 'dark') document.documentElement.classList.add('dark');
+                    if (resolved === 'dark') {
+                      document.documentElement.classList.add('dark');
+                    }
                   }
                 } catch (e) {}
-                document.documentElement.setAttribute('data-theme-loaded', 'true');
               })();
             `,
           }}
         />
-
-        {/* ✅ Service Worker */}
         <Script
           id="sw-register"
           strategy="afterInteractive"
@@ -80,9 +67,7 @@ export default function RootLayout({ children }) {
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(r) { console.log('SW registered:', r.scope); })
-                    .catch(function(e) { console.log('SW failed:', e); });
+                  navigator.serviceWorker.register('/sw.js');
                 });
               }
             `,

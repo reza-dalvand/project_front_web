@@ -1,28 +1,35 @@
 'use client';
-
 import { FiX } from 'react-icons/fi';
-import { useTheme } from '@/stores/useThemeStore';
 
-export default function Chip({ label, selected = false, onPress, icon, onRemove, className = '' }) {
-  const { colors } = useTheme();
-
-  const bgColor = selected ? colors.primary + '22' : colors.cardBackground;
-  const borderColor = selected ? colors.primary : colors.border;
-  const textColor = selected ? colors.primary : colors.textSecondary;
-
+/**
+ * کامپوننت Chip مشترک
+ */
+export default function Chip({
+  label,
+  selected = false,
+  onPress,
+  icon,
+  onRemove,
+  className = '',
+}) {
   const content = (
     <div
       className={`
         flex items-center gap-1.5 border-[1.5px] rounded-[20px] py-1.5 px-3.5 self-start
+        ${selected
+          ? 'bg-[var(--primary)]/20 border-[var(--primary)]'
+          : 'bg-[var(--card)] border-[var(--border)]'
+        }
         ${className}
       `}
-      style={{
-        backgroundColor: bgColor,
-        borderColor,
-      }}
     >
       {icon && <span className="ml-0.5">{icon}</span>}
-      <span className="font-[Vazir-Medium] text-[13px]" style={{ color: textColor }}>
+      <span
+        className={`
+          font-vazir-medium text-[13px]
+          ${selected ? 'text-[var(--primary)]' : 'text-[var(--text-secondary)]'}
+        `}
+      >
         {label}
       </span>
       {onRemove && (
@@ -33,7 +40,10 @@ export default function Chip({ label, selected = false, onPress, icon, onRemove,
           }}
           className="mr-0.5"
         >
-          <FiX size={14} style={{ color: textColor }} />
+          <FiX
+            size={14}
+            className={selected ? 'text-[var(--primary)]' : 'text-[var(--text-secondary)]'}
+          />
         </button>
       )}
     </div>
@@ -46,6 +56,5 @@ export default function Chip({ label, selected = false, onPress, icon, onRemove,
       </button>
     );
   }
-
   return content;
 }

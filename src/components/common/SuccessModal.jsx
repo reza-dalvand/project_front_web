@@ -1,10 +1,8 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiCheck, FiClock, FiBell, FiSend, FiShield } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
-
-// ✅ تغییر: FiRocket → FiSend
 
 export default function SuccessModal({
   visible,
@@ -18,15 +16,35 @@ export default function SuccessModal({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (visible) {
-      setMounted(true);
-    } else {
+    if (visible) setMounted(true);
+    else {
       const timer = setTimeout(() => setMounted(false), 300);
       return () => clearTimeout(timer);
     }
   }, [visible]);
 
   if (!mounted) return null;
+
+  const steps = [
+    {
+      icon: FiClock,
+      iconColor: '#FF9800',
+      title: 'بررسی توسط کارشناسان',
+      description: 'فرآیند بررسی ۲۴ تا ۴۸ ساعت زمان می‌برد',
+    },
+    {
+      icon: FiBell,
+      iconColor: '#2196F3',
+      title: 'اطلاع‌رسانی نتیجه',
+      description: 'نتیجه از طریق پیامک و نوتیفیکیشن ارسال می‌شود',
+    },
+    {
+      icon: FiSend,
+      iconColor: '#4CAF50',
+      title: 'شروع فعالیت',
+      description: 'پس از تایید، کسب‌وکار شما فعال می‌شود',
+    },
+  ];
 
   return (
     <div
@@ -59,10 +77,7 @@ export default function SuccessModal({
           <div
             className="absolute -top-1 -right-1 w-9 h-9 rounded-full flex items-center justify-center
               border-[3px] shadow-md z-20"
-            style={{
-              backgroundColor: '#fff',
-              borderColor: '#4CAF50',
-            }}
+            style={{ backgroundColor: '#fff', borderColor: '#4CAF50' }}
           >
             <span className="text-lg">{emoji}</span>
           </div>
@@ -100,26 +115,7 @@ export default function SuccessModal({
               مراحل بعدی
             </span>
           </div>
-          {[
-            {
-              icon: FiClock,
-              iconColor: '#FF9800',
-              title: 'بررسی توسط کارشناسان',
-              description: 'فرآیند بررسی ۲۴ تا ۴۸ ساعت زمان می‌برد',
-            },
-            {
-              icon: FiBell,
-              iconColor: '#2196F3',
-              title: 'اطلاع‌رسانی نتیجه',
-              description: 'نتیجه از طریق پیامک و نوتیفیکیشن ارسال می‌شود',
-            },
-            {
-              icon: FiSend, // ✅ FiRocket به FiSend تغییر یافت
-              iconColor: '#4CAF50',
-              title: 'شروع فعالیت',
-              description: 'پس از تایید، کسب‌وکار شما فعال می‌شود',
-            },
-          ].map((item, i) => {
+          {steps.map((item, i) => {
             const Icon = item.icon;
             return (
               <div key={i} className="flex items-start gap-3">
@@ -147,10 +143,7 @@ export default function SuccessModal({
 
         <div
           className="w-full flex items-center gap-2 py-3 px-4 rounded-xl border"
-          style={{
-            backgroundColor: '#4CAF5008',
-            borderColor: '#4CAF5025',
-          }}
+          style={{ backgroundColor: '#4CAF5008', borderColor: '#4CAF5025' }}
         >
           <FiShield size={16} color="#4CAF50" />
           <span

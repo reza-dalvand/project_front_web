@@ -1,6 +1,9 @@
 'use client';
 import Button from './Button';
 
+/**
+ * کامپوننت EmptyState - حالت خالی لیست (ادغام‌شده)
+ */
 const VARIANTS = {
   service:      { emoji: '💆‍♀️', title: 'هنوز خدمتی ثبت نشده',       description: 'اولین خدمت خود را اضافه کنید تا مشتریان بتوانند نوبت رزرو کنند', actionLabel: 'افزودن اولین خدمت' },
   appointment:  { emoji: '📅',   title: 'نوبتی ثبت نشده است',         description: 'هنوز هیچ نوبتی برای شما ثبت نشده است',                     actionLabel: null },
@@ -13,9 +16,6 @@ const VARIANTS = {
   default:      { emoji: '📭',   title: 'موردی یافت نشد',             description: 'هیچ نتیجه‌ای برای نمایش وجود ندارد',                       actionLabel: null },
 };
 
-/**
- * EmptyState - بدون useTheme
- */
 export default function EmptyState({
   icon,
   title,
@@ -35,7 +35,7 @@ export default function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
       {displayIcon && (
-        <div className="w-20 h-20 rounded-3xl border border-app bg-card flex items-center justify-center mb-5">
+        <div className="w-20 h-20 rounded-3xl border flex items-center justify-center mb-5 bg-[var(--card)] border-[var(--border)]">
           {typeof displayIcon === 'string' ? (
             <span className="text-4xl">{displayIcon}</span>
           ) : (
@@ -44,10 +44,12 @@ export default function EmptyState({
         </div>
       )}
       {displayTitle && (
-        <h3 className="text-lg mb-2 font-vazir-bold text-app">{displayTitle}</h3>
+        <h3 className="text-lg mb-2 font-vazir-bold text-[var(--text-main)]">{displayTitle}</h3>
       )}
       {displayDesc && (
-        <p className="text-sm leading-6 mb-6 max-w-xs font-vazir text-muted">{displayDesc}</p>
+        <p className="text-sm leading-6 mb-6 max-w-xs font-vazir text-[var(--text-secondary)]">
+          {displayDesc}
+        </p>
       )}
       {displayAction && onAction && (
         <Button title={displayAction} onPress={onAction} variant="outline" size="md" />

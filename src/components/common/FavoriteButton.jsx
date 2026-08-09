@@ -1,8 +1,7 @@
-// src/components/common/FavoriteButton.jsx
 'use client';
 import { useState } from 'react';
 import { FiBookmark } from 'react-icons/fi';
-import { useAuth } from '@/stores/useAuthStore';
+import { useAuth } from '@/stores/useAuth';
 
 export default function FavoriteButton({
   isFavorite = false,
@@ -15,6 +14,7 @@ export default function FavoriteButton({
   const { isAuthenticated } = useAuth();
   const [localFavorite, setLocalFavorite] = useState(isFavorite);
 
+  // اگر لاگین نیست، اصلاً نمایش داده نشود
   if (!isAuthenticated) return null;
 
   const handleClick = () => {

@@ -8,7 +8,6 @@ import {
   FiTrendingUp,
   FiDollarSign,
   FiAlertCircle,
-  FiCheckCircle,
   FiMinusCircle,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -27,7 +26,6 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef('price-guide-modal');
   const currentTier = currentPrice > 0 ? getCurrentFeeTier(currentPrice) : null;
-  const currentFee = currentPrice > 0 ? calculateCurrentFee(currentPrice) : 0;
 
   function calculateCurrentFee(price) {
     let fee = 0;
@@ -36,6 +34,8 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
     else fee = Math.round(price * 0.05);
     return Math.min(fee, MAX_APP_FEE);
   }
+
+  const currentFee = currentPrice > 0 ? calculateCurrentFee(currentPrice) : 0;
 
   useEffect(() => {
     setMounted(true);
@@ -55,14 +55,9 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
   }, [visible, onClose]);
 
   useEffect(() => {
-    if (visible) {
-      acquireScrollLock(instanceId.current);
-    } else {
-      releaseScrollLock(instanceId.current);
-    }
-    return () => {
-      releaseScrollLock(instanceId.current);
-    };
+    if (visible) acquireScrollLock(instanceId.current);
+    else releaseScrollLock(instanceId.current);
+    return () => releaseScrollLock(instanceId.current);
   }, [visible]);
 
   if (!mounted || !visible) return null;
@@ -119,39 +114,30 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {/* کارت توضیح */}
           <div
             className="flex items-start gap-3 p-4 rounded-2xl border"
-            style={{
-              backgroundColor: '#FF980008',
-              borderColor: '#FF980025',
-            }}
+            style={{ backgroundColor: '#FF980008', borderColor: '#FF980025' }}
           >
             <FiInfo size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
             <p
               className="text-xs font-[Vazir] leading-6 flex-1"
               style={{ color: colors.textSecondary }}
             >
-              زیبانو برای ارائه خدماتی مانند پشتیبانی، پردازش پرداخت، مدیریت نوبت‌ها و اطلاع‌رسانی
-              خودکار، کمیسیونی از مبلغ هر رزرو دریافت می‌کند.{' '}
+              زیبانو برای ارائه خدماتی مانند پشتیبانی، پردازش پرداخت، مدیریت نوبت‌ها و
+              اطلاع‌رسانی خودکار، کمیسیونی از مبلغ هر رزرو دریافت می‌کند.{' '}
               <span className="font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
                 این مبلغ از قیمت کل خدمت کسر خواهد شد.
               </span>
             </p>
           </div>
 
-          {/* عنوان جدول */}
           <h4 className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             جدول کمیسیون
           </h4>
 
-          {/* جدول */}
           <div
             className="rounded-2xl border overflow-hidden"
-            style={{
-              borderColor: colors.border,
-              backgroundColor: colors.background,
-            }}
+            style={{ borderColor: colors.border, backgroundColor: colors.background }}
           >
             <div
               className="flex items-center justify-between px-4 py-3 border-b"
@@ -170,7 +156,6 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                 کمیسیون زیبانو
               </span>
             </div>
-
             {APP_FEE_TIERS.map((tier, index) => {
               const isCurrent =
                 currentTier &&
@@ -179,12 +164,10 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                 currentPrice > tier.min &&
                 currentPrice <= tier.max;
               const isLast = index === APP_FEE_TIERS.length - 1;
-
               const feeDisplay =
                 tier.type === 'fixed'
                   ? `${toPersianDigit(tier.fee.toLocaleString('en-US'))} تومان`
                   : `${toPersianDigit(tier.fee)}٪`;
-
               const minDisplay = tier.min === 0 ? '۰' : formatPrice(tier.min).replace(' تومان', '');
               const maxDisplay = isLast ? 'به بالا' : formatPrice(tier.max).replace(' تومان', '');
 
@@ -226,13 +209,9 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
               );
             })}
 
-            {/* ردیف سقف کمیسیون */}
             <div
               className="flex items-center justify-between px-4 py-4 border-t"
-              style={{
-                backgroundColor: colors.cardBackground,
-                borderColor: 'rgba(0,0,0,0.05)',
-              }}
+              style={{ backgroundColor: colors.cardBackground, borderColor: 'rgba(0,0,0,0.05)' }}
             >
               <div className="flex items-center gap-2 flex-1">
                 <FiAlertCircle size={14} style={{ color: '#FF9800' }} />
@@ -251,14 +230,10 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
             </div>
           </div>
 
-          {/* نمایش کمیسیون فعلی */}
           {currentPrice > 0 && currentTier && (
             <div
               className="flex items-center gap-3 p-4 rounded-2xl border-2"
-              style={{
-                backgroundColor: '#FF980010',
-                borderColor: '#FF980040',
-              }}
+              style={{ backgroundColor: '#FF980010', borderColor: '#FF980040' }}
             >
               <FiMinusCircle size={20} color="#FF9800" className="flex-shrink-0" />
               <div className="flex-1">
@@ -281,13 +256,9 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
             </div>
           )}
 
-          {/* نکات مهم */}
           <div
             className="rounded-2xl border p-4 space-y-3"
-            style={{
-              borderColor: colors.border,
-              backgroundColor: colors.cardBackground,
-            }}
+            style={{ borderColor: colors.border, backgroundColor: colors.cardBackground }}
           >
             <div className="flex items-center gap-2">
               <FiInfo size={18} color="#FFC107" />

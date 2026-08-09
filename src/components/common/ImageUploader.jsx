@@ -1,14 +1,9 @@
-// src/components/common/ImageUploader.jsx
 'use client';
-
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiCamera, FiEdit, FiX, FiUpload } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 
-/**
- * کامپوننت آپلود تصویر (اصلاح شده برای پشتیبانی از Blob URL)
- */
 export default function ImageUploader({
   value,
   onChange,
@@ -19,11 +14,9 @@ export default function ImageUploader({
   error,
 }) {
   const { colors } = useTheme();
-  // state داخلی برای نگهداری blob url موقت
   const [localPreview, setLocalPreview] = useState(value);
 
-  // همگام‌سازی با prop ورودی (مثلاً وقتی فرم ریست می‌شود)
-  useState(() => {
+  useEffect(() => {
     if (value !== localPreview) {
       setLocalPreview(value);
     }
@@ -33,12 +26,8 @@ export default function ImageUploader({
     (acceptedFiles) => {
       const file = acceptedFiles[0];
       if (!file) return;
-
-      // ایجاد URL موقت برای پیش‌نمایش آنی
       const previewUrl = URL.createObjectURL(file);
       setLocalPreview(previewUrl);
-
-      // ارسال به والد
       onChange?.(previewUrl);
     },
     [onChange]
@@ -46,11 +35,9 @@ export default function ImageUploader({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp'],
-    },
+    accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
     maxFiles: 1,
-    maxSize: 5 * 1024 * 1024, // 5MB
+    maxSize: 5 * 1024 * 1024,
   });
 
   const handleRemove = (e) => {
@@ -59,13 +46,11 @@ export default function ImageUploader({
     onChange?.(null);
   };
 
-  // ابعاد بر اساس variant
   const dimensions = {
     cover: { width: '100%', height: '200px' },
     avatar: { width: '120px', height: '120px' },
     square: { width: '100%', height: '250px' },
   };
-
   const styleDim = dimensions[variant] || dimensions.cover;
 
   return (
@@ -106,10 +91,7 @@ export default function ImageUploader({
 
         {localPreview ? (
           <>
-            {/* ✅ FIX: استفاده از تگ img استاندارد برای نمایش Blob URL */}
             <img src={localPreview} alt="preview" className="object-cover w-full h-full" />
-
-            {/* Overlay با دکمه تغییر */}
             <div
               className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100
                 transition-opacity duration-200 flex items-center justify-center z-10"
@@ -122,8 +104,6 @@ export default function ImageUploader({
                 <span className="text-xs font-[Vazir-Bold] text-white">تغییر تصویر</span>
               </div>
             </div>
-
-            {/* دکمه حذف */}
             <button
               onClick={handleRemove}
               className="absolute top-3 left-3 w-9 h-9 rounded-full flex items-center
@@ -159,7 +139,6 @@ export default function ImageUploader({
         )}
       </div>
 
-      {/* پیام خطا */}
       {error && (
         <p className="text-xs mt-2 text-right font-[Vazir]" style={{ color: '#E53935' }}>
           {error}

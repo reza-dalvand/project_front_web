@@ -1,7 +1,8 @@
 'use client';
 
-import { useTheme } from '@/stores/useThemeStore';
-
+/**
+ * کامپوننت امتیازدهی ستاره‌ای
+ */
 export default function StarRating({
   value = 0,
   maxStars = 5,
@@ -11,8 +12,6 @@ export default function StarRating({
   size = 'md',
   className = '',
 }) {
-  const { colors } = useTheme();
-
   const starSizes = { sm: 14, md: 18, lg: 24 };
   const starSize = starSizes[size] ?? starSizes.md;
 
@@ -25,13 +24,12 @@ export default function StarRating({
             key={i}
             style={{
               fontSize: `${starSize}px`,
-              color: isFilled ? colors.primary : colors.border,
+              color: isFilled ? 'var(--primary)' : 'var(--border)',
             }}
           >
             {isFilled ? '★' : '☆'}
           </span>
         );
-
         if (interactive && onRate) {
           return (
             <button
@@ -43,11 +41,10 @@ export default function StarRating({
             </button>
           );
         }
-
         return star;
       })}
       {showLabel && (
-        <span className="mr-1.5 font-[Vazir] text-[13px]" style={{ color: colors.textSecondary }}>
+        <span className="mr-1.5 font-vazir text-[13px] text-[var(--text-secondary)]">
           {value > 0 ? value.toFixed(1) : '—'}
         </span>
       )}

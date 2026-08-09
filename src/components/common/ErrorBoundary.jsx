@@ -1,6 +1,4 @@
-// src/components/common/ErrorBoundary.jsx
 'use client';
-
 import React from 'react';
 import { FiAlertTriangle, FiRefreshCw } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -42,26 +40,19 @@ function ErrorFallback({ error, onRetry }) {
     >
       <div
         className="max-w-md w-full p-8 rounded-3xl border text-center"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderColor: colors.border,
-        }}
+        style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
       >
-        {/* آیکون */}
         <div
-          className="w-20 h-20 rounded-full mx-auto mb-6 
-                     flex items-center justify-center"
+          className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
           style={{ backgroundColor: '#E5393520' }}
         >
           <FiAlertTriangle size={40} color="#E53935" />
         </div>
 
-        {/* عنوان */}
         <h1 className="text-xl mb-3" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
           خطایی رخ داد
         </h1>
 
-        {/* توضیحات */}
         <p
           className="text-sm mb-6 leading-6"
           style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
@@ -69,7 +60,6 @@ function ErrorFallback({ error, onRetry }) {
           متاسفانه خطای غیرمنتظره‌ای رخ داده است. لطفاً صفحه را مجدداً بارگذاری کنید.
         </p>
 
-        {/* جزئیات خطا */}
         {error && (
           <div
             className="p-4 rounded-xl mb-6 text-right overflow-auto max-h-32"
@@ -85,11 +75,10 @@ function ErrorFallback({ error, onRetry }) {
           </div>
         )}
 
-        {/* دکمه تلاش مجدد */}
         <button
           onClick={onRetry}
           className="w-full py-4 rounded-2xl flex items-center justify-center gap-2
-                     transition-all hover:scale-[1.02] active:scale-[0.98]"
+            transition-all hover:scale-[1.02] active:scale-[0.98]"
           style={{
             backgroundColor: colors.primary,
             color: '#fff',

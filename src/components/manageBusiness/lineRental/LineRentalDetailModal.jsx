@@ -10,11 +10,13 @@ import CollabBadge from '@/components/common/CollabBadge';
 import InfoRow from '@/components/common/InfoRow';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { useToast } from '@/hooks/useToast';
 
 export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, onDelete }) {
   const { colors } = useTheme();
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef('lr-detail-modal');
+  const { showToast } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -48,8 +50,11 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
   const st = statusConfig[ad.status] || statusConfig.inactive;
 
   const handleCall = () => {
-    if (ad.contactPhone) window.location.href = `tel:${ad.contactPhone}`;
-    else alert('شماره تماسی ثبت نشده است');
+    if (ad.contactPhone) {
+      window.location.href = `tel:${ad.contactPhone}`;
+    } else {
+      showToast('شماره تماسی ثبت نشده است', 'error');
+    }
   };
 
   const handleDelete = () => {
