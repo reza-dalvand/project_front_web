@@ -1,4 +1,3 @@
-// src/components/booking/index.js
 export { default as BookingModal } from './BookingModal';
 export { default as BookingStepIndicator } from './BookingStepIndicator';
 export { default as BookingDateSelector } from './BookingDateSelector';

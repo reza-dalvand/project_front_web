@@ -159,6 +159,10 @@ export default function AllAppointmentsPage() {
           setVerifyTarget(null);
         }}
         onConfirm={confirmVerify}
+        // props جدید اختیاری:
+        // showCall={false}   ← پیش‌فرض false
+        // usePortal={true}   ← پیش‌فرض true
+        // variant="orange"   ← پیش‌فرض orange
       />
 
       {/* مدال دلیل لغو */}

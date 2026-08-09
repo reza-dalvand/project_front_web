@@ -1,10 +1,17 @@
-// src/hooks/useRequireAuth.js — بهبود
+// src/hooks/useRequireAuth.js
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useAuthModalStore } from '@/stores/useAuth';
 
+/**
+ * هوک محافظت از صفحاتی که نیاز به لاگین دارند
+ *
+ * @param {object} options
+ * @param {boolean} options.redirectToLogin - اگر true، به صفحه لاگین redirect می‌کند
+ *                                            اگر false، مدال Auth را باز می‌کند
+ */
 export const useRequireAuth = (options = {}) => {
   const { redirectToLogin = false } = options;
   const router = useRouter();

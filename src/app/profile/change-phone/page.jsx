@@ -1,6 +1,6 @@
 // src/app/profile/change-phone/page.jsx
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSmartphone, FiEdit, FiRefreshCw, FiCheck, FiShield } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -11,6 +11,7 @@ import Header from '@/components/common/Header';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import OTPInput from '@/components/common/OTPInput';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { validatePhone } from '@/utils/phoneUtils';
 
@@ -33,7 +34,6 @@ export default function ChangePhonePage() {
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
-  const inputRefs = useRef([]);
 
   // تایمر ارسال مجدد
   useEffect(() => {
@@ -67,38 +67,6 @@ export default function ChangePhonePage() {
     setTimer(RESEND_SECONDS);
     setCanResend(false);
     showToast(`کد تایید به شماره ${toPersianDigit(newPhone)} ارسال شد`, 'success');
-    setTimeout(() => inputRefs.current[0]?.focus(), 300);
-  };
-
-  const handleChangeOtp = (text, index) => {
-    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
-    const newOtp = [...otp];
-    if (cleaned.length > 1) {
-      const digits = cleaned.slice(0, OTP_LENGTH).split('');
-      digits.forEach((digit, i) => {
-        if (index + i < OTP_LENGTH) newOtp[index + i] = digit;
-      });
-      setOtp(newOtp);
-      const nextIndex = Math.min(index + digits.length, OTP_LENGTH - 1);
-      setCurrentBox(nextIndex);
-      inputRefs.current[nextIndex]?.focus();
-      return;
-    }
-    const digit = cleaned[0] || '';
-    newOtp[index] = digit;
-    setOtp(newOtp);
-    if (otpError) setOtpError('');
-    if (digit && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-      setCurrentBox(index + 1);
-    }
-  };
-
-  const handleKeyPress = (e, index) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-      setCurrentBox(index - 1);
-    }
   };
 
   const handleVerifyOtp = async () => {
@@ -126,7 +94,6 @@ export default function ChangePhonePage() {
     setCanResend(false);
     setOtp(['', '', '', '', '']);
     setCurrentBox(0);
-    inputRefs.current[0]?.focus();
     showToast('کد جدید ارسال شد', 'info');
   };
 
@@ -231,34 +198,18 @@ export default function ChangePhonePage() {
               </div>
             </div>
 
-            {/* OTP Inputs */}
-            <div className="flex justify-center gap-2.5" dir="ltr">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(ref) => (inputRefs.current[index] = ref)}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={toPersianDigit(digit)}
-                  onChange={(e) => handleChangeOtp(e.target.value, index)}
-                  onKeyDown={(e) => handleKeyPress(e, index)}
-                  onFocus={() => setCurrentBox(index)}
-                  className="w-14 h-16 rounded-2xl text-center text-2xl font-[Vazir-Bold] outline-none transition-all"
-                  style={{
-                    backgroundColor: colors.cardBackground,
-                    borderColor:
-                      otpError && digit === ''
-                        ? '#E57373'
-                        : currentBox === index
-                          ? colors.primary
-                          : colors.border,
-                    borderWidth: currentBox === index ? 2 : 1.5,
-                    color: colors.textMain,
-                  }}
-                />
-              ))}
-            </div>
+            {/* ✅ OTP Inputs - کامپوننت مشترک */}
+            <OTPInput
+              value={otp}
+              onChange={(newOtp) => {
+                setOtp(newOtp);
+                if (otpError) setOtpError('');
+              }}
+              length={OTP_LENGTH}
+              error={otpError}
+              currentBox={currentBox}
+              onCurrentBoxChange={setCurrentBox}
+            />
 
             {otpError && (
               <p className="text-center text-sm" style={{ color: '#E57373' }}>
@@ -307,7 +258,7 @@ export default function ChangePhonePage() {
               style={{ backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }}
             >
               <span className="text-xs" style={{ color: colors.primary }}>
-                حالت آزمایشی: کد تایید <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
+                حالت آزمایشی: کد <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
               </span>
             </div>
           </div>

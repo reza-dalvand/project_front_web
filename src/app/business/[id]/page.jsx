@@ -1,5 +1,5 @@
+// src/app/business/[id]/page.jsx
 'use client';
-
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
@@ -14,9 +14,6 @@ import BusinessAbout from '@/components/home/BusinessAbout';
 import BookingModal from '@/components/booking/BookingModal';
 import BusinessMapButton from '@/components/home/BusinessMapButton';
 
-// ═══════════════════════════════════════════════════════
-//                    MOCK DATA
-// ═══════════════════════════════════════════════════════
 const MOCK_BUSINESS = {
   id: '1',
   name: 'مجموعه زیبایی و سلامت نیلارام',
@@ -28,10 +25,7 @@ const MOCK_BUSINESS = {
   address: 'سعادت‌آباد، خیابان سرو غربی، ساختمان پزشکان نگین، طبقه ۳',
   phone: '۰۲۱-۲۲۳۳۴۴۵۵',
   workingHours: 'شنبه تا پنج‌شنبه: ۱۰:۰۰ الی ۲۰:۰۰',
-  location: {
-    latitude: 35.7898,
-    longitude: 51.3768,
-  },
+  location: { latitude: 35.7898, longitude: 51.3768 },
   rating: 4.9,
   reviewsCount: 142,
   servicesCount: 24,
@@ -132,7 +126,6 @@ export default function BusinessDetailsPage() {
   const router = useRouter();
   const biz = MOCK_BUSINESS;
 
-  // ─── State Management ───
   const [activeTab, setActiveTab] = useState('services');
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -140,13 +133,11 @@ export default function BusinessDetailsPage() {
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
   const [activePortfolio, setActivePortfolio] = useState(null);
 
-  // ─── Derived Values ───
   const minServicePrice = useMemo(() => {
     if (!biz.services?.length) return 0;
     return Math.min(...biz.services.map((s) => s.price));
   }, [biz.services]);
 
-  // ─── Handlers ───
   const openBooking = useCallback((service) => {
     setSelectedService(service);
     setBookingModalVisible(true);
@@ -179,7 +170,6 @@ export default function BusinessDetailsPage() {
     router.push(`/business/${biz.id}/map`);
   }, [router, biz.id]);
 
-  // ─── Tab Content Renderer ───
   const renderTabContent = () => {
     switch (activeTab) {
       case 'services':
@@ -201,9 +191,7 @@ export default function BusinessDetailsPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      {/* ═══ Main Scrollable Content ═══ */}
       <div className="overflow-y-auto pb-[220px]">
-        {/* ─── 1. Hero Gallery ─── */}
         <BusinessHero
           gallery={biz.gallery}
           businessId={biz.id}
@@ -212,30 +200,19 @@ export default function BusinessDetailsPage() {
           isFavorite={isFavorite}
           onFavoritePress={toggleFavorite}
         />
-
-        {/* ─── 2. Business Info Card ─── */}
         <BusinessInfoCard business={biz} />
-
-        {/* ─── 3. Map Button ─── */}
         <div className="px-5 mt-3">
           <BusinessMapButton business={biz} onPress={openMap} />
         </div>
-
-        {/* ─── 4. Tabs ─── */}
         <BusinessTabs activeTab={activeTab} onTabChange={setActiveTab} colors={colors} />
-
-        {/* ─── 5. Tab Content ─── */}
         <div className="px-5 pt-1">{renderTabContent()}</div>
       </div>
 
-      {/* ═══ Booking Modal ═══ */}
       <BookingModal
         visible={bookingModalVisible}
         onClose={closeBooking}
         service={selectedService}
       />
-
-      {/* ═══ Portfolio Modal ═══ */}
       <PortfolioModal
         visible={portfolioModalVisible}
         onClose={closePortfolio}

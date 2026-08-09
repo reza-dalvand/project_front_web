@@ -263,10 +263,7 @@ export default function ShareBookingLinkModal({ visible, onClose, bookingLink })
               </button>
             ))}
           </div>
-
-          {/* QR Code */}
-          {/* <QRCodeSection bookingLink={bookingLink} /> */}
-
+          
           {/* راهنما */}
           <div
             className="flex items-start gap-2 p-3 rounded-xl border"

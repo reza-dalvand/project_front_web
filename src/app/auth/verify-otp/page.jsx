@@ -1,13 +1,13 @@
 // src/app/auth/verify-otp/page.jsx
 'use client';
-
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiMessageSquare, FiEdit, FiCheck, FiRefreshCw } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/common';
-import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
+import OTPInput from '@/components/common/OTPInput';
+import { toPersianDigit } from '@/utils/numberUtils';
 
 const OTP_LENGTH = 5;
 const RESEND_SECONDS = 60;
@@ -27,8 +27,6 @@ export default function VerifyOtpPage() {
   const [timer, setTimer] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
 
-  const inputRefs = useRef([]);
-
   // اگر شماره موبایل ذخیره نشده، برگرد به لاگین
   useEffect(() => {
     if (!pendingPhone) {
@@ -46,42 +44,9 @@ export default function VerifyOtpPage() {
     return () => clearInterval(interval);
   }, [timer]);
 
-  const maskedPhone = pendingPhone ? pendingPhone.slice(0, 4) + '***' + pendingPhone.slice(-4) : '';
-
-  const handleChange = (text, index) => {
-    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
-
-    if (cleaned.length > 1) {
-      const digits = cleaned.slice(0, OTP_LENGTH).split('');
-      const newOtp = [...otp];
-      digits.forEach((digit, i) => {
-        if (index + i < OTP_LENGTH) newOtp[index + i] = digit;
-      });
-      setOtp(newOtp);
-      const nextIndex = Math.min(index + digits.length, OTP_LENGTH - 1);
-      setCurrentBox(nextIndex);
-      inputRefs.current[nextIndex]?.focus();
-      return;
-    }
-
-    const digit = cleaned[0] || '';
-    const newOtp = [...otp];
-    newOtp[index] = digit;
-    setOtp(newOtp);
-    if (error) setError('');
-
-    if (digit && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-      setCurrentBox(index + 1);
-    }
-  };
-
-  const handleKeyPress = (e, index) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-      setCurrentBox(index - 1);
-    }
-  };
+  const maskedPhone = pendingPhone
+    ? pendingPhone.slice(0, 4) + '***' + pendingPhone.slice(-4)
+    : '';
 
   const handleVerify = async () => {
     const code = otp.join('');
@@ -89,12 +54,9 @@ export default function VerifyOtpPage() {
       setError(`لطفاً کد ${OTP_LENGTH} رقمی را کامل وارد کنید`);
       return;
     }
-
     setLoading(true);
     setError('');
-
     await new Promise((r) => setTimeout(r, 1200));
-
     if (code === MOCK_OTP) {
       login(pendingPhone, pendingName || 'کاربر زیبانو');
       router.replace('/');
@@ -109,7 +71,6 @@ export default function VerifyOtpPage() {
     setCanResend(false);
     setOtp(['', '', '', '', '']);
     setCurrentBox(0);
-    inputRefs.current[0]?.focus();
   };
 
   const formatTime = (seconds) => {
@@ -146,34 +107,18 @@ export default function VerifyOtpPage() {
           </p>
         </div>
 
-        {/* باکس‌های OTP */}
-        <div className="flex justify-center gap-3" dir="ltr">
-          {otp.map((digit, index) => (
-            <input
-              key={index}
-              ref={(ref) => (inputRefs.current[index] = ref)}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={toPersianDigit(digit)}
-              onChange={(e) => handleChange(e.target.value, index)}
-              onKeyDown={(e) => handleKeyPress(e, index)}
-              onFocus={() => setCurrentBox(index)}
-              className="w-14 h-16 rounded-2xl text-center text-2xl font-[Vazir-Bold] outline-none transition-all"
-              style={{
-                backgroundColor: colors.cardBackground,
-                borderColor:
-                  error && digit === ''
-                    ? '#E57373'
-                    : currentBox === index
-                      ? colors.primary
-                      : colors.border,
-                borderWidth: currentBox === index ? 2 : 1.5,
-                color: colors.textMain,
-              }}
-            />
-          ))}
-        </div>
+        {/* ✅ باکس‌های OTP - کامپوننت مشترک */}
+        <OTPInput
+          value={otp}
+          onChange={(newOtp) => {
+            setOtp(newOtp);
+            if (error) setError('');
+          }}
+          length={OTP_LENGTH}
+          error={error}
+          currentBox={currentBox}
+          onCurrentBoxChange={setCurrentBox}
+        />
 
         {/* پیام خطا */}
         {error && (
@@ -194,7 +139,6 @@ export default function VerifyOtpPage() {
               ویرایش شماره
             </span>
           </button>
-
           {canResend ? (
             <button onClick={handleResend} className="flex items-center gap-1" type="button">
               <FiRefreshCw size={14} style={{ color: colors.primary }} />

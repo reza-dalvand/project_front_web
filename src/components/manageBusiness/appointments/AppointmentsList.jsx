@@ -1,3 +1,4 @@
+// src/components/manageBusiness/appointments/AppointmentsList.jsx
 'use client';
 import { useMemo, useState } from 'react';
 import { FiCalendar } from 'react-icons/fi';
@@ -7,7 +8,8 @@ import { useToast } from '@/hooks/useToast';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { todayJalaali, PERSIAN_MONTHS, PERSIAN_WEEKDAYS } from '@/utils/dateUtils';
 import AppointmentListItem from './AppointmentListItem';
-import VerifyServiceCodeModal from './VerifyServiceCodeModal';
+// ✅ تغییر: import از کامپوننت ادغام‌شده
+import VerifyCodeModal from '@/components/manageBusiness/VerifyCodeModal';
 
 const timeToMinutes = (timeStr) => {
   if (!timeStr) return 0;
@@ -26,21 +28,15 @@ export default function AppointmentsList() {
   const { showToast } = useToast();
   const appointments = useBusinessStore((s) => s.businessData?.appointments) || [];
   const updateAppointmentStatus = useBusinessStore((s) => s.updateAppointmentStatus);
-
   const [verifyTarget, setVerifyTarget] = useState(null);
   const [verifyVisible, setVerifyVisible] = useState(false);
 
   const today = useMemo(() => todayJalaali(), []);
 
-  // ✅ فقط نیاز به کد + تایید شده (بدون done)
   const todayAppointments = useMemo(() => {
     const activeStatuses = ['reserved', 'confirmed', 'pending_verification'];
-
     const filtered = appointments.filter((apt) => activeStatuses.includes(apt.status));
-
     if (filtered.length === 0) return [];
-
-    // مرتب‌سازی: اول نیاز به کد، بعد تایید شده، در هر گروه بر اساس ساعت
     return [...filtered].sort((a, b) => {
       const aNeedsCode = a.status === 'pending_verification' ? 0 : 1;
       const bNeedsCode = b.status === 'pending_verification' ? 0 : 1;
@@ -49,7 +45,6 @@ export default function AppointmentsList() {
     });
   }, [appointments]);
 
-  // شمارنده وضعیت‌ها
   const statusCounts = useMemo(() => {
     const counts = { confirmed: 0, pending_verification: 0 };
     todayAppointments.forEach((apt) => {
@@ -110,7 +105,6 @@ export default function AppointmentsList() {
 
   return (
     <div className="px-5 mt-5">
-      {/* هدر */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <FiCalendar size={18} style={{ color: colors.primary }} />
@@ -123,7 +117,6 @@ export default function AppointmentsList() {
         </span>
       </div>
 
-      {/* تگ‌های شمارنده */}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         {statusCounts.pending_verification > 0 && (
           <span
@@ -143,15 +136,14 @@ export default function AppointmentsList() {
         )}
       </div>
 
-      {/* لیست افقی نوبت‌ها */}
       <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
         {todayAppointments.map((apt) => (
           <AppointmentListItem key={apt.id} appointment={apt} onPress={handlePress} />
         ))}
       </div>
 
-      {/* مدال تایید کد */}
-      <VerifyServiceCodeModal
+      {/* ✅ استفاده از کامپوننت ادغام‌شده */}
+      <VerifyCodeModal
         visible={verifyVisible}
         appointment={verifyTarget}
         onClose={() => {
@@ -159,6 +151,9 @@ export default function AppointmentsList() {
           setVerifyTarget(null);
         }}
         onConfirm={handleVerifySuccess}
+        showCall={true}
+        usePortal={true}
+        variant="orange"
       />
     </div>
   );

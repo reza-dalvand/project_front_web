@@ -1,4 +1,5 @@
 // src/components/common/index.js
+
 // ═══════ کامپوننت‌های پایه ═══════
 export { default as Button } from './Button';
 export { default as Input } from './Input';
@@ -15,6 +16,7 @@ export { default as BottomSheet } from './BottomSheet';
 export { default as Chip } from './Chip';
 export { default as SearchBar } from './SearchBar';
 export { default as ScreenWrapper } from './ScreenWrapper';
+export { default as OTPInput } from './OTPInput'; // ✅ اضافه شد
 
 // ═══════ کامپوننت‌های مشترک پیشرفته ═══════
 export { default as SectionHeader } from './SectionHeader';
@@ -29,7 +31,7 @@ export { default as InfoRow } from './InfoRow';
 export { default as SuccessModal } from './SuccessModal';
 export { default as PriceGuideModal } from './PriceGuideModal';
 export { default as Dropdown } from './Dropdown';
-export { default as ImageUploader } from './ImageUploader'; // ✅ اضافه شد
+export { default as ImageUploader } from './ImageUploader';
 
 // ═══════ کامپوننت‌های احراز هویت ═══════
 export { default as AuthModal } from './AuthModal';
