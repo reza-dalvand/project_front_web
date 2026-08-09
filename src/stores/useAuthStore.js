@@ -1,8 +1,4 @@
 // src/stores/useAuthStore.js
-// ═══════════════════════════════════════════════════════
-//    Auth Store واحد (ادغام useAuthStore + useAuthModalStore)
-//    تمام state‌های احراز هویت در یک فایل
-// ═══════════════════════════════════════════════════════
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -23,7 +19,8 @@ export const useAuthStore = create(
       setHydrated: () => set({ _hydrated: true }),
 
       // ─── Actions ───
-      setPendingAuth: (phone, firstName, lastName) => {
+      // ✅ تغییر: نام‌ها اختیاری شدند
+      setPendingAuth: (phone, firstName = '', lastName = '') => {
         set({
           pendingPhone: phone,
           pendingName: `${firstName} ${lastName}`.trim(),
@@ -88,16 +85,22 @@ export const useAuthModalStore = create((set, get) => ({
     set({ showAuthModal: true, pendingAction: action });
   },
 
+  // ✅ اصلاح: بعد از لاگین فقط مدال بسته شود و اکشن اجرا شود
+  // دیگر نیازی به ریدایرکت نیست چون کاربر در همان صفحه مانده است
   closeAuthModal: () => {
-    set({ showAuthModal: false });
     const { pendingAction } = get();
+    
+    set({ showAuthModal: false, pendingAction: null });
+    
+    // اگر اکشنی منتظر بوده (مثلاً لایک کردن پست)، حالا که لاگین شده اجراش کن
     if (pendingAction && useAuthStore.getState().isAuthenticated) {
       setTimeout(() => {
-        pendingAction();
-        set({ pendingAction: null });
+        try {
+          pendingAction();
+        } catch (e) {
+          console.error('Pending action failed:', e);
+        }
       }, 300);
-    } else {
-      set({ pendingAction: null });
     }
   },
 
@@ -133,5 +136,6 @@ export const useAuthModal = () => {
   const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
   const closeAuthModal = useAuthModalStore((s) => s.closeAuthModal);
   const cancelAuthModal = useAuthModalStore((s) => s.cancelAuthModal);
+
   return { showAuthModal, openAuthModal, closeAuthModal, cancelAuthModal };
 };

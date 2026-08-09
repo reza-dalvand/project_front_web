@@ -14,6 +14,7 @@ export const useRequireAuth = (options = {}) => {
 
   useEffect(() => {
     if (!hydrated) return;
+
     if (!isAuthenticated) {
       if (redirectToLogin) {
         router.replace(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
@@ -21,6 +22,7 @@ export const useRequireAuth = (options = {}) => {
         openAuthModal();
       }
     }
+    // ✅ FIX: وقتی isAuthenticated=true شد، دیگر هیچ ریدایرکتی انجام نشود
   }, [isAuthenticated, hydrated, redirectToLogin, router, pathname, openAuthModal]);
 
   return { isAuthenticated, hydrated };

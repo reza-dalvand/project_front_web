@@ -68,6 +68,13 @@ export default function OTPInput({
     }
   };
 
+  // ✅ رنگ border — ضخامت همیشه ثابت 2px (بدون پرش)
+  const getBorderColor = (index) => {
+    if (error && !value[index]) return '#E57373';
+    if (currentBox === index) return colors.primary;
+    return colors.border;
+  };
+
   return (
     <div className="flex justify-center gap-2.5" dir="ltr">
       {Array.from({ length }).map((_, index) => (
@@ -81,17 +88,27 @@ export default function OTPInput({
           onChange={(e) => handleChange(e.target.value, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
           onFocus={() => onCurrentBoxChange?.(index)}
-          className="w-14 h-16 rounded-2xl text-center text-2xl font-[Vazir-Bold] outline-none transition-all"
+          className="outline-none"
           style={{
+            width: '56px',
+            height: '64px',
+            borderRadius: '16px',
             backgroundColor: colors.cardBackground,
-            borderColor:
-              error && !value[index]
-                ? '#E57373'
-                : currentBox === index
-                  ? colors.primary
-                  : colors.border,
-            borderWidth: currentBox === index ? 2 : 1.5,
+            border: `2px solid ${getBorderColor(index)}`,
             color: colors.textMain,
+            fontSize: '24px',
+            fontFamily: "'Vazir-Bold', sans-serif",
+            // ✅ وسط‌چین دقیق: lineHeight = height - (2 × borderWidth)
+            textAlign: 'center',
+            lineHeight: '60px',
+            padding: 0,
+            direction: 'ltr',
+            boxSizing: 'border-box',
+            // ✅ حذف استایل‌های پیش‌فرض مرورگر / iOS
+            appearance: 'textfield',
+            WebkitAppearance: 'none',
+            MozAppearance: 'textfield',
+            transition: 'border-color 0.2s ease',
           }}
         />
       ))}

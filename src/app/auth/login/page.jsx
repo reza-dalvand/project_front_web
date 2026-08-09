@@ -1,9 +1,8 @@
 // src/app/auth/login/page.jsx
 'use client';
-
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { FiSmartphone, FiShield, FiSend, FiUser, FiCheck } from 'react-icons/fi';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { FiSmartphone, FiShield, FiSend, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button, Input } from '@/components/common';
@@ -12,11 +11,13 @@ import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { colors } = useTheme();
   const setPendingAuth = useAuthStore((s) => s.setPendingAuth);
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  // ✅ FIX: خواندن پارامتر redirect از URL
+  const redirectUrl = searchParams.get('redirect') || '/';
+
   const [phone, setPhone] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,12 +37,6 @@ export default function LoginPage() {
       return;
     }
 
-    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-    if (fullName.length < 3) {
-      setError('لطفاً نام و نام خانوادگی را کامل وارد کنید');
-      return;
-    }
-
     if (!phone) {
       setError('لطفاً شماره موبایل خود را وارد کنید');
       return;
@@ -55,23 +50,17 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    // شبیه‌سازی ارسال کد
     await new Promise((r) => setTimeout(r, 1200));
 
-    // ذخیره اطلاعات برای مرحله OTP
-    setPendingAuth(phone, firstName, lastName);
+    setPendingAuth(phone, '', '');
     setLoading(false);
 
-    router.push('/auth/verify-otp');
+    // ✅ FIX: انتقال پارامتر redirect به صفحه OTP
+    router.push(`/auth/verify-otp?redirect=${encodeURIComponent(redirectUrl)}`);
   };
 
   const canSubmit =
-    firstName.trim().length >= 2 &&
-    lastName.trim().length >= 2 &&
-    phone.length === 11 &&
-    validatePhone(phone) &&
-    termsAccepted &&
-    !loading;
+    phone.length === 11 && validatePhone(phone) && termsAccepted && !loading;
 
   return (
     <div
@@ -115,7 +104,10 @@ export default function LoginPage() {
           >
             زیبانو
           </h1>
-          <p className="text-sm text-center" style={{ color: colors.textSecondary }}>
+          <p
+            className="text-sm text-center"
+            style={{ color: colors.textSecondary }}
+          >
             رزرو آنلاین خدمات زیبایی و سلامت
           </p>
         </div>
@@ -134,33 +126,20 @@ export default function LoginPage() {
               className="w-11 h-11 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: colors.primary + '15' }}
             >
-              <FiUser size={22} style={{ color: colors.primary }} />
+              <FiSmartphone size={22} style={{ color: colors.primary }} />
             </div>
             <div>
-              <h2 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                خوش آمدید
+              <h2
+                className="text-lg font-[Vazir-Bold]"
+                style={{ color: colors.textMain }}
+              >
+                ورود به حساب
               </h2>
               <p className="text-xs" style={{ color: colors.textSecondary }}>
-                برای ادامه، اطلاعات خود را وارد کنید
+                شماره موبایل خود را وارد کنید
               </p>
             </div>
           </div>
-
-          <Input
-            label="نام"
-            placeholder="مثال: مریم"
-            value={firstName}
-            onChangeText={setFirstName}
-            rightIcon={<FiUser size={18} style={{ color: colors.textSecondary }} />}
-          />
-
-          <Input
-            label="نام خانوادگی"
-            placeholder="مثال: حسینی"
-            value={lastName}
-            onChangeText={setLastName}
-            rightIcon={<FiUser size={18} style={{ color: colors.textSecondary }} />}
-          />
 
           <Input
             label="شماره موبایل"
@@ -170,7 +149,9 @@ export default function LoginPage() {
             type="tel"
             maxLength={11}
             error={error}
-            rightIcon={<FiSmartphone size={18} style={{ color: colors.textSecondary }} />}
+            rightIcon={
+              <FiSmartphone size={18} style={{ color: colors.textSecondary }} />
+            }
           />
 
           {/* شمارنده ارقام */}
@@ -182,7 +163,10 @@ export default function LoginPage() {
                 borderColor: colors.primary + '25',
               }}
             >
-              <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
+              <span
+                className="text-xs font-[Vazir-Medium]"
+                style={{ color: colors.primary }}
+              >
                 {toPersianDigit(phone.length)} از ۱۱ رقم وارد شده
               </span>
             </div>
@@ -201,13 +185,22 @@ export default function LoginPage() {
             >
               {termsAccepted && <FiCheck size={14} style={{ color: '#fff' }} />}
             </button>
-            <span className="text-[13px] leading-5" style={{ color: colors.textMain }}>
+            <span
+              className="text-[13px] leading-5"
+              style={{ color: colors.textMain }}
+            >
               با{' '}
-              <span className="font-[Vazir-Bold] underline" style={{ color: colors.primary }}>
+              <span
+                className="font-[Vazir-Bold] underline"
+                style={{ color: colors.primary }}
+              >
                 قوانین و مقررات
               </span>{' '}
               و{' '}
-              <span className="font-[Vazir-Bold] underline" style={{ color: colors.primary }}>
+              <span
+                className="font-[Vazir-Bold] underline"
+                style={{ color: colors.primary }}
+              >
                 حریم خصوصی
               </span>{' '}
               موافقم
@@ -237,7 +230,10 @@ export default function LoginPage() {
             }}
           >
             <FiShield size={14} style={{ color: colors.primary }} />
-            <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
+            <span
+              className="text-xs font-[Vazir-Medium]"
+              style={{ color: colors.textSecondary }}
+            >
               ورود امن و رمزنگاری شده
             </span>
           </div>

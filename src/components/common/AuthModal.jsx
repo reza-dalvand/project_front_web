@@ -27,11 +27,9 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const { colors } = useTheme();
   const login = useAuthStore((s) => s.login);
   const { showAuthModal, closeAuthModal, cancelAuthModal } = useAuthModal();
-  const instanceId = useRef('auth-modal');
 
+  const instanceId = useRef('auth-modal');
   const [stage, setStage] = useState('info');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '']);
@@ -45,8 +43,6 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   useEffect(() => {
     if (showAuthModal) {
       setStage('info');
-      setFirstName('');
-      setLastName('');
       setPhone('');
       setTermsAccepted(false);
       setOtp(['', '', '', '', '']);
@@ -96,15 +92,12 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       setError('لطفاً ابتدا قوانین را بپذیرید');
       return;
     }
-    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-    if (fullName.length < 3) {
-      setError('نام و نام خانوادگی کامل نیست');
-      return;
-    }
+
     if (!validatePhone(phone)) {
       setError('شماره موبایل معتبر نیست');
       return;
     }
+
     setLoading(true);
     setError('');
     await new Promise((r) => setTimeout(r, 1000));
@@ -118,6 +111,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const handleChangeOtp = (text, index) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     const newOtp = [...otp];
+
     if (cleaned.length > 1) {
       const digits = cleaned.slice(0, OTP_LENGTH).split('');
       digits.forEach((digit, i) => {
@@ -129,10 +123,12 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       inputRefs.current[nextIndex]?.focus();
       return;
     }
+
     const digit = cleaned[0] || '';
     newOtp[index] = digit;
     setOtp(newOtp);
     if (error) setError('');
+
     if (digit && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
       setCurrentBox(index + 1);
@@ -152,12 +148,13 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       setError(`کد ${OTP_LENGTH} رقمی کامل نیست`);
       return;
     }
+
     setLoading(true);
     setError('');
     await new Promise((r) => setTimeout(r, 1000));
+
     if (code === MOCK_OTP) {
-      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-      login(phone, fullName);
+      login(phone);
       setStage('success');
       setTimeout(() => closeAuthModal(), 1500);
     } else {
@@ -181,12 +178,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   };
 
   const canSubmitInfo =
-    firstName.trim().length >= 2 &&
-    lastName.trim().length >= 2 &&
-    phone.length === 11 &&
-    validatePhone(phone) &&
-    termsAccepted &&
-    !loading;
+    phone.length === 11 && validatePhone(phone) && termsAccepted && !loading;
 
   if (!showAuthModal) return null;
 
@@ -194,6 +186,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const containerClass = isBottomSheet
     ? 'fixed inset-0 z-[9999] flex items-end md:items-center justify-center'
     : 'fixed inset-0 z-[9999] flex items-center justify-center p-4';
+
   const panelClass = isBottomSheet
     ? 'relative w-full max-w-md rounded-t-3xl md:rounded-3xl overflow-hidden flex flex-col max-h-[92vh]'
     : 'relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl';
@@ -223,14 +216,21 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       >
         {isBottomSheet && (
           <div className="flex justify-center pt-3 pb-1 md:hidden">
-            <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
+            <div
+              className="w-10 h-1 rounded-full"
+              style={{ backgroundColor: colors.border }}
+            />
           </div>
         )}
+
         <div
           className="flex items-center justify-between px-6 py-4 border-b"
           style={{ borderColor: colors.border }}
         >
-          <h2 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+          <h2
+            className="text-base font-[Vazir-Bold]"
+            style={{ color: colors.textMain }}
+          >
             {getTitle()}
           </h2>
           <button
@@ -241,6 +241,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
             <FiX size={18} style={{ color: colors.textMain }} />
           </button>
         </div>
+
         <div className="p-6 overflow-y-auto flex-1">
           {stage === 'info' && (
             <div className="flex flex-col gap-4">
@@ -252,33 +253,18 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                   <FiUser size={40} style={{ color: colors.primary }} />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                  <h3
+                    className="text-lg font-[Vazir-Bold]"
+                    style={{ color: colors.textMain }}
+                  >
                     خوش آمدید
                   </h3>
                   <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-                    برای ادامه اطلاعات خود را وارد کنید
+                    شماره موبایل خود را وارد کنید
                   </p>
                 </div>
               </div>
-              <Input
-                label="نام"
-                placeholder="مثال: مریم"
-                value={firstName}
-                onChangeText={(t) => {
-                  setFirstName(t);
-                  if (error) setError('');
-                }}
-                rightIcon={<FiUser size={18} style={{ color: colors.textSecondary }} />}
-              />
-              <Input
-                label="نام خانوادگی"
-                placeholder="مثال: حسینی"
-                value={lastName}
-                onChangeText={(t) => {
-                  setLastName(t);
-                  if (error) setError('');
-                }}
-              />
+
               <Input
                 label="شماره موبایل"
                 placeholder="۰۹۱۲۳۴۵۶۷۸۹"
@@ -287,8 +273,11 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 type="tel"
                 maxLength={11}
                 error={error}
-                rightIcon={<FiSmartphone size={18} style={{ color: colors.textSecondary }} />}
+                rightIcon={
+                  <FiSmartphone size={18} style={{ color: colors.textSecondary }} />
+                }
               />
+
               {phone.length > 0 && phone.length < 11 && (
                 <div
                   className="flex items-center gap-2 py-1.5 px-3 rounded-lg border self-start"
@@ -298,11 +287,15 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                   }}
                 >
                   <FiEdit size={12} style={{ color: colors.primary }} />
-                  <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
+                  <span
+                    className="text-xs font-[Vazir-Medium]"
+                    style={{ color: colors.primary }}
+                  >
                     {toPersianDigit(phone.length)} از ۱۱ رقم وارد شده
                   </span>
                 </div>
               )}
+
               <label className="flex items-start gap-3 cursor-pointer py-2">
                 <button
                   onClick={() => setTermsAccepted(!termsAccepted)}
@@ -315,21 +308,21 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 >
                   {termsAccepted && <FiCheck size={14} style={{ color: '#fff' }} />}
                 </button>
-                <span className="text-[13px] leading-5" style={{ color: colors.textMain }}>
+                <span
+                  className="text-[13px] leading-5"
+                  style={{ color: colors.textMain }}
+                >
                   با{' '}
-                  <a
-                    href="https://zibano.app/rules"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <span
                     className="font-[Vazir-Bold] underline"
                     style={{ color: colors.primary }}
-                    onClick={(e) => e.stopPropagation()}
                   >
                     قوانین و مقررات
-                  </a>{' '}
+                  </span>{' '}
                   موافقم
                 </span>
               </label>
+
               <Button
                 title="دریافت کد تایید"
                 onPress={handleSendOtp}
@@ -339,6 +332,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 size="lg"
                 fullWidth
               />
+
               <div className="flex items-center justify-center gap-2 py-2">
                 <FiShield size={14} style={{ color: colors.textSecondary }} />
                 <span
@@ -350,6 +344,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
               </div>
             </div>
           )}
+
           {stage === 'otp' && (
             <div className="flex flex-col gap-5">
               <div className="flex flex-col items-center gap-3">
@@ -360,17 +355,25 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                   <FiMessageSquare size={40} style={{ color: colors.primary }} />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                  <h3
+                    className="text-lg font-[Vazir-Bold]"
+                    style={{ color: colors.textMain }}
+                  >
                     کد تایید را وارد کنید
                   </h3>
                   <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
                     کد ارسال‌شده به{' '}
-                    <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                      {toPersianDigit(phone.slice(0, 4) + '***' + phone.slice(-4))}
+                    <span
+                      className="font-[Vazir-Bold]"
+                      style={{ color: colors.primary }}
+                    >
+                      {/* ✅ ماسک معکوس */}
+                      {toPersianDigit(phone.slice(-4) + '***' + phone.slice(0, 4))}
                     </span>
                   </p>
                 </div>
               </div>
+
               <div className="flex justify-center gap-2" dir="ltr">
                 {otp.map((digit, index) => (
                   <input
@@ -383,26 +386,42 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                     onChange={(e) => handleChangeOtp(e.target.value, index)}
                     onKeyDown={(e) => handleKeyPress(e, index)}
                     onFocus={() => setCurrentBox(index)}
-                    className="w-14 h-16 rounded-2xl text-center text-2xl font-[Vazir-Bold] outline-none transition-all"
+                    className="outline-none"
                     style={{
+                      width: '56px',
+                      height: '64px',
+                      borderRadius: '16px',
                       backgroundColor: colors.cardBackground,
-                      borderColor:
+                      border: `2px solid ${
                         error && digit === ''
                           ? '#E57373'
                           : currentBox === index
                             ? colors.primary
-                            : colors.border,
-                      borderWidth: currentBox === index ? 2 : 1.5,
+                            : colors.border
+                      }`,
                       color: colors.textMain,
+                      fontSize: '24px',
+                      fontFamily: "'Vazir-Bold', sans-serif",
+                      textAlign: 'center',
+                      lineHeight: '60px',
+                      padding: 0,
+                      direction: 'ltr',
+                      boxSizing: 'border-box',
+                      appearance: 'textfield',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'textfield',
+                      transition: 'border-color 0.2s ease',
                     }}
                   />
                 ))}
               </div>
+
               {error && (
                 <p className="text-center text-sm" style={{ color: '#E57373' }}>
                   {error}
                 </p>
               )}
+
               <div className="flex justify-between items-center px-2">
                 <button
                   onClick={() => setStage('info')}
@@ -410,13 +429,20 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                   type="button"
                 >
                   <FiEdit size={14} style={{ color: colors.primary }} />
-                  <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.primary }}>
+                  <span
+                    className="text-sm font-[Vazir-Medium]"
+                    style={{ color: colors.primary }}
+                  >
                     ویرایش شماره
                   </span>
                 </button>
+
                 {canResend ? (
                   <button onClick={handleResend} type="button">
-                    <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                    <span
+                      className="text-sm font-[Vazir-Bold]"
+                      style={{ color: colors.primary }}
+                    >
                       ارسال مجدد کد
                     </span>
                   </button>
@@ -426,6 +452,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                   </span>
                 )}
               </div>
+
               <Button
                 title="تایید و ورود"
                 onPress={handleVerifyOtp}
@@ -435,6 +462,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 size="lg"
                 fullWidth
               />
+
               <div
                 className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border"
                 style={{
@@ -443,11 +471,13 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 }}
               >
                 <span className="text-xs" style={{ color: colors.primary }}>
-                  حالت آزمایشی: کد <span className="font-[Vazir-Bold]">۱۲۳۴۵</span>
+                  حالت آزمایشی: کد{' '}
+                  <span className="font-[Vazir-Bold]">۱۲۳۴۵</span>
                 </span>
               </div>
             </div>
           )}
+
           {stage === 'success' && (
             <div className="flex flex-col items-center gap-4 py-6">
               <div
@@ -457,11 +487,14 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 <FiCheck size={50} style={{ color: '#fff' }} />
               </div>
               <div className="text-center">
-                <h3 className="text-xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                <h3
+                  className="text-xl font-[Vazir-Bold]"
+                  style={{ color: colors.textMain }}
+                >
                   خوش آمدید! 🎉
                 </h3>
                 <p className="text-sm mt-2" style={{ color: colors.textSecondary }}>
-                  {firstName} {lastName} عزیز، ورود شما موفق بود
+                  ورود شما با موفقیت انجام شد
                 </p>
               </div>
             </div>

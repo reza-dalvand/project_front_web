@@ -1,7 +1,7 @@
 // src/app/auth/verify-otp/page.jsx
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FiMessageSquare, FiEdit, FiCheck, FiRefreshCw } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -15,6 +15,7 @@ const MOCK_OTP = '12345';
 
 export default function VerifyOtpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { colors } = useTheme();
   const login = useAuthStore((s) => s.login);
   const pendingPhone = useAuthStore((s) => s.pendingPhone);
@@ -27,12 +28,18 @@ export default function VerifyOtpPage() {
   const [timer, setTimer] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
 
+  // ✅ جلوگیری از redirect به login بعد از لاگین موفق
+  const isLoggingIn = useRef(false);
+
+  // ✅ خواندن پارامتر redirect از URL
+  const redirectUrl = searchParams.get('redirect') || '/';
+
   // اگر شماره موبایل ذخیره نشده، برگرد به لاگین
   useEffect(() => {
-    if (!pendingPhone) {
-      router.replace('/auth/login');
+    if (!pendingPhone && !isLoggingIn.current) {
+      router.replace(`/auth/login?redirect=${encodeURIComponent(redirectUrl)}`);
     }
-  }, [pendingPhone, router]);
+  }, [pendingPhone, router, redirectUrl]);
 
   // تایمر ارسال مجدد
   useEffect(() => {
@@ -44,7 +51,10 @@ export default function VerifyOtpPage() {
     return () => clearInterval(interval);
   }, [timer]);
 
-  const maskedPhone = pendingPhone ? pendingPhone.slice(0, 4) + '***' + pendingPhone.slice(-4) : '';
+  // ✅ ماسک معکوس: ۴ رقم آخر + *** + ۴ رقم اول
+  const maskedPhone = pendingPhone
+    ? pendingPhone.slice(-4) + '***' + pendingPhone.slice(0, 4)
+    : '';
 
   const handleVerify = async () => {
     const code = otp.join('');
@@ -52,12 +62,16 @@ export default function VerifyOtpPage() {
       setError(`لطفاً کد ${OTP_LENGTH} رقمی را کامل وارد کنید`);
       return;
     }
+
     setLoading(true);
     setError('');
+
     await new Promise((r) => setTimeout(r, 1200));
+
     if (code === MOCK_OTP) {
+      isLoggingIn.current = true;
       login(pendingPhone, pendingName || 'کاربر زیبانو');
-      router.replace('/');
+      router.replace(redirectUrl);
     } else {
       setError('کد وارد شده صحیح نیست');
       setLoading(false);
@@ -93,10 +107,16 @@ export default function VerifyOtpPage() {
 
         {/* عنوان */}
         <div className="text-center">
-          <h1 className="text-2xl font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
+          <h1
+            className="text-2xl font-[Vazir-Bold] mb-2"
+            style={{ color: colors.textMain }}
+          >
             کد تایید را وارد کنید
           </h1>
-          <p className="text-sm leading-6 px-4" style={{ color: colors.textSecondary }}>
+          <p
+            className="text-sm leading-6 px-4"
+            style={{ color: colors.textSecondary }}
+          >
             کد {toPersianDigit(OTP_LENGTH)} رقمی پیامک‌شده به{' '}
             <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
               {toPersianDigit(maskedPhone)}
@@ -105,7 +125,7 @@ export default function VerifyOtpPage() {
           </p>
         </div>
 
-        {/* ✅ باکس‌های OTP - کامپوننت مشترک */}
+        {/* باکس‌های OTP */}
         <OTPInput
           value={otp}
           onChange={(newOtp) => {
@@ -128,19 +148,32 @@ export default function VerifyOtpPage() {
         {/* بخش ارسال مجدد و ویرایش */}
         <div className="flex justify-between items-center px-2">
           <button
-            onClick={() => router.replace('/auth/login')}
+            onClick={() =>
+              router.replace(`/auth/login?redirect=${encodeURIComponent(redirectUrl)}`)
+            }
             className="flex items-center gap-1"
             type="button"
           >
             <FiEdit size={14} style={{ color: colors.primary }} />
-            <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.primary }}>
+            <span
+              className="text-sm font-[Vazir-Medium]"
+              style={{ color: colors.primary }}
+            >
               ویرایش شماره
             </span>
           </button>
+
           {canResend ? (
-            <button onClick={handleResend} className="flex items-center gap-1" type="button">
+            <button
+              onClick={handleResend}
+              className="flex items-center gap-1"
+              type="button"
+            >
               <FiRefreshCw size={14} style={{ color: colors.primary }} />
-              <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
+              <span
+                className="text-sm font-[Vazir-Bold]"
+                style={{ color: colors.primary }}
+              >
                 ارسال مجدد کد
               </span>
             </button>
@@ -173,7 +206,8 @@ export default function VerifyOtpPage() {
           }}
         >
           <span className="text-xs" style={{ color: colors.primary }}>
-            حالت آزمایشی: کد تایید <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
+            حالت آزمایشی: کد تایید{' '}
+            <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
           </span>
         </div>
       </div>
