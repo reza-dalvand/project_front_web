@@ -48,7 +48,6 @@
   --color-error: #e53935;
   --color-info: #2196f3;
 
-
   /* ═══════ Alias برای سازگاری با Tailwind arbitrary values ═══════ */
   --bg: var(--color-background);
   --card: var(--color-card);
@@ -91,7 +90,6 @@
   html {
     direction: rtl;
     overscroll-behavior: none;
-
   }
   body {
     background-color: var(--color-background);
@@ -212,7 +210,7 @@
     border-radius: 8px;
   }
 
-    /* جلوگیری از overscroll bounce در iOS */
+  /* جلوگیری از overscroll bounce در iOS */
   .standalone-safe {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);

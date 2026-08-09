@@ -85,16 +85,19 @@ export default function CancelReasonModal({ visible, appointment, onClose, onCon
           style={{ backgroundColor: '#FF980010', borderColor: '#FF980040' }}
         >
           <FiAlertTriangle size={14} color="#FF9800" className="flex-shrink-0 mt-0.5" />
-          <div className="flex flex-col gap-0.5 flex-1">
+          <div className="flex-1">
             <span className="text-[11px] font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
               بیعانه به مشتری مسترد می‌شود
             </span>
-            <span
-              className="text-[10px] font-[Vazir] leading-[16px]"
-              style={{ color: colors.textSecondary }}
+            <a
+              href="https://zibano.app/rules/cancellation"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] font-[Vazir] leading-[16px] block underline mt-0.5"
+              style={{ color: colors.primary }}
             >
-              با لغو نوبت، کل بیعانه ظرف ۴۸ ساعت به حساب مشتری واریز می‌شود.
-            </span>
+              برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
+            </a>
           </div>
         </div>
 

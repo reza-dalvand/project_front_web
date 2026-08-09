@@ -95,18 +95,21 @@ export default function FinancialManagementPage() {
     setSelectedTx(null);
   }, []);
 
-  const handleSaveBankInfo = useCallback((data) => {
-  setBankInfo((prev) => ({ ...prev, ...data, isRegistered: true, isVerified: false }));
-  setBankEditVisible(false);
-  showToast('✓ اطلاعات حساب بانکی ثبت شد و وارد چرخه تایید شد', 'success');
+  const handleSaveBankInfo = useCallback(
+    (data) => {
+      setBankInfo((prev) => ({ ...prev, ...data, isRegistered: true, isVerified: false }));
+      setBankEditVisible(false);
+      showToast('✓ اطلاعات حساب بانکی ثبت شد و وارد چرخه تایید شد', 'success');
 
-  updateBusinessInfo({
-    bankInfo: {
-      isRegistered: true,
-      isVerified: false,
+      updateBusinessInfo({
+        bankInfo: {
+          isRegistered: true,
+          isVerified: false,
+        },
+      });
     },
-  });
-}, [showToast, updateBusinessInfo]);
+    [showToast, updateBusinessInfo]
+  );
 
   const goBack = useCallback(() => router.push('/manage'), [router]);
 

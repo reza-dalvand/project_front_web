@@ -221,28 +221,48 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
               style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
             >
               <FiInfo size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
-              <p
-                className="text-xs font-[Vazir] leading-5 flex-1"
-                style={{ color: colors.textSecondary }}
-              >
-                تا {toPersianDigit(appointment.hoursLeft)} ساعت دیگر به زمان نوبت باقی مانده و امکان
-                لغو آن وجود دارد.
-              </p>
+              <div className="flex-1">
+                <p
+                  className="text-xs font-[Vazir] leading-5"
+                  style={{ color: colors.textSecondary }}
+                >
+                  امکان لغو این نوبت وجود دارد.
+                </p>
+                <a
+                  href="https://zibano.app/rules/cancellation"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-[Vazir] underline mt-1 inline-block"
+                  style={{ color: colors.primary }}
+                >
+                  برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
+                </a>
+              </div>
             </div>
           )}
-
           {isTooLate && (
             <div
               className="flex items-start gap-3 p-4 rounded-2xl border"
               style={{ backgroundColor: '#E5393508', borderColor: '#E5393530' }}
             >
               <FiAlertTriangle size={18} color="#E53935" className="flex-shrink-0 mt-0.5" />
-              <p
-                className="text-xs font-[Vazir] leading-5 flex-1"
-                style={{ color: colors.textSecondary }}
-              >
-                کمتر از ۱۲ ساعت به زمان نوبت باقی مانده و امکان لغو آن وجود ندارد.
-              </p>
+              <div className="flex-1">
+                <p
+                  className="text-xs font-[Vazir] leading-5"
+                  style={{ color: colors.textSecondary }}
+                >
+                  امکان لغو این نوبت وجود ندارد.
+                </p>
+                <a
+                  href="https://zibano.app/rules/cancellation"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-[Vazir] underline mt-1 inline-block"
+                  style={{ color: colors.primary }}
+                >
+                  برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
+                </a>
+              </div>
             </div>
           )}
         </div>

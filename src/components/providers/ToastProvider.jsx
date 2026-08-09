@@ -6,12 +6,5 @@ import { useToast } from '@/hooks/useToast';
 export default function ToastProvider() {
   const { toast, hideToast } = useToast();
 
-  return (
-    <Toast
-      visible={toast.visible}
-      message={toast.message}
-      type={toast.type}
-      position="top"
-    />
-  );
+  return <Toast visible={toast.visible} message={toast.message} type={toast.type} position="top" />;
 }

@@ -485,29 +485,6 @@ export default function BookingModal({
               </div>
 
               {/* ═══ بخش قوانین ═══ */}
-              <div className="flex items-center gap-2.5 mt-3 mb-1">
-                <div
-                  className="w-9 h-9 rounded-[11px] flex items-center justify-center"
-                  style={{ backgroundColor: '#9C27B015' }}
-                >
-                  <FiShield size={18} color="#9C27B0" />
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span
-                    className="text-[15px] font-[Vazir-Bold]"
-                    style={{ color: colors.textMain }}
-                  >
-                    قوانین رزرو نوبت
-                  </span>
-                  <span
-                    className="text-[11px] font-[Vazir]"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    لطفاً قبل از پرداخت مطالعه فرمایید
-                  </span>
-                </div>
-              </div>
-
               <RulesCard colors={colors} />
             </div>
           )}

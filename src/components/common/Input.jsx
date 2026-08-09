@@ -89,11 +89,11 @@ export default function Input({
           </button>
         )}
       </div>
-      {error && (
-        <div className="text-right text-xs mt-1 text-red-400 font-vazir">{error}</div>
-      )}
+      {error && <div className="text-right text-xs mt-1 text-red-400 font-vazir">{error}</div>}
       {!error && hint && (
-        <div className="text-right text-xs mt-1 text-[var(--text-secondary)] font-vazir">{hint}</div>
+        <div className="text-right text-xs mt-1 text-[var(--text-secondary)] font-vazir">
+          {hint}
+        </div>
       )}
     </div>
   );

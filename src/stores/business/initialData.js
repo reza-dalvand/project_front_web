@@ -28,7 +28,7 @@ export const INITIAL_BUSINESS_DATA = {
     isRegistered: false,
     isVerified: false,
   },
-  
+
   services: [
     {
       id: 'svc_1',
@@ -213,4 +213,3 @@ export const INITIAL_BUSINESS_DATA = {
     },
   ],
 };
-

@@ -317,9 +317,16 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 </button>
                 <span className="text-[13px] leading-5" style={{ color: colors.textMain }}>
                   با{' '}
-                  <span className="font-[Vazir-Bold] underline" style={{ color: colors.primary }}>
+                  <a
+                    href="https://zibano.app/rules"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-[Vazir-Bold] underline"
+                    style={{ color: colors.primary }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     قوانین و مقررات
-                  </span>{' '}
+                  </a>{' '}
                   موافقم
                 </span>
               </label>

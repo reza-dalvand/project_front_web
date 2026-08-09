@@ -51,19 +51,13 @@ export default function TransactionItem({ tx, onPress }) {
         {/* اطلاعات اصلی */}
         <div className="flex-1 min-w-0 flex flex-col gap-1">
           {/* ردیف اول: نام خدمت */}
-          <span
-            className="text-sm font-[Vazir-Bold] truncate"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
             {serviceName}
           </span>
 
           {/* ردیف دوم: تاریخ نوبت + تگ وضعیت */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className="text-[11px] font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
               📅 {appointmentDate}
             </span>
 
@@ -83,10 +77,7 @@ export default function TransactionItem({ tx, onPress }) {
         {/* مبلغ + فلش */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <div className="flex flex-col items-end gap-0.5">
-            <span
-              className="text-[14px] font-[Vazir-Bold]"
-              style={{ color: getAmountColor() }}
-            >
+            <span className="text-[14px] font-[Vazir-Bold]" style={{ color: getAmountColor() }}>
               {formatPrice(tx.amount)}
             </span>
           </div>

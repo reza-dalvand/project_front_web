@@ -89,40 +89,40 @@ export default function Dropdown({
           </button>
         </div>
 
-{/* Options */}
-<div className="flex-1 overflow-y-auto py-2">
-  {options.length === 0 ? (
-    <div className="py-12 text-center">
-      <p className="text-sm text-[var(--text-secondary)]">گزینه‌ای موجود نیست</p>
-    </div>
-  ) : (
-    options.map((item) => {
-      const isSelected = item.id === value;
-      return (
-        <button
-          key={item.id}
-          onClick={() => handleSelect(item)}
-          className={`w-full flex items-center justify-between px-5 py-4 border-b
+        {/* Options */}
+        <div className="flex-1 overflow-y-auto py-2">
+          {options.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-sm text-[var(--text-secondary)]">گزینه‌ای موجود نیست</p>
+            </div>
+          ) : (
+            options.map((item) => {
+              const isSelected = item.id === value;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleSelect(item)}
+                  className={`w-full flex items-center justify-between px-5 py-4 border-b
             transition-colors hover:opacity-80
             ${isSelected ? 'bg-[var(--primary)]/12' : 'bg-transparent'}
           `}
-          // ✅ اصلاح شد: حذف concat نامعتبر، استفاده مستقیم از متغیر تم
-          style={{ borderColor: 'var(--color-border)' }}
-        >
-          <span
-            className={`text-sm flex-1 text-right
+                  // ✅ اصلاح شد: حذف concat نامعتبر، استفاده مستقیم از متغیر تم
+                  style={{ borderColor: 'var(--color-border)' }}
+                >
+                  <span
+                    className={`text-sm flex-1 text-right
               ${isSelected ? 'text-[var(--primary)] font-vazir-bold' : 'text-[var(--text)] font-vazir'}
             `}
-          >
-            {item.label}
-          </span>
-          {isSelected && <FiCheck size={20} className="text-[var(--primary)]" />}
-        </button>
-      );
-    })
-  )}
-  <div className="h-6" />
-</div>
+                  >
+                    {item.label}
+                  </span>
+                  {isSelected && <FiCheck size={20} className="text-[var(--primary)]" />}
+                </button>
+              );
+            })
+          )}
+          <div className="h-6" />
+        </div>
       </div>
     </div>
   ) : null;

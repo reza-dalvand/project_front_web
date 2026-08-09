@@ -34,13 +34,7 @@ const IRANIAN_BANKS = [
   { id: 'tosee', label: 'بانک توسعه صادرات' },
 ];
 
-export default function BankEditModal({
-  visible,
-  onClose,
-  onSave,
-  bankInfo,
-  businessOwnerName,
-}) {
+export default function BankEditModal({ visible, onClose, onSave, bankInfo, businessOwnerName }) {
   const { colors } = useTheme();
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef('bank-edit-modal');
@@ -180,9 +174,7 @@ export default function BankEditModal({
     const selectedBank = IRANIAN_BANKS.find((b) => b.id === form.bankId);
 
     if (
-      confirm(
-        'آیا از صحت اطلاعات وارد شده مطمئن هستید؟ پس از ثبت، حساب وارد مرحله تایید می‌شود.'
-      )
+      confirm('آیا از صحت اطلاعات وارد شده مطمئن هستید؟ پس از ثبت، حساب وارد مرحله تایید می‌شود.')
     ) {
       onSave({
         ...form,
@@ -218,10 +210,7 @@ export default function BankEditModal({
           className="flex items-center justify-between px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
         >
-          <h3
-            className="text-base font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             ثبت حساب بانکی تسویه
           </h3>
           <button
@@ -244,12 +233,8 @@ export default function BankEditModal({
             }}
           >
             <span className="text-lg flex-shrink-0">⚠️</span>
-            <p
-              className="text-xs font-[Vazir] leading-[18px] flex-1"
-              style={{ color: '#E53935' }}
-            >
-              صاحب حساب باید حتماً همان شخصی باشد که کد ملی‌اش در مرحله ثبت کسب‌وکار
-              تایید شده است.
+            <p className="text-xs font-[Vazir] leading-[18px] flex-1" style={{ color: '#E53935' }}>
+              صاحب حساب باید حتماً همان شخصی باشد که کد ملی‌اش در مرحله ثبت کسب‌وکار تایید شده است.
             </p>
           </div>
 
@@ -260,11 +245,7 @@ export default function BankEditModal({
             value={form.ownerName}
             onChangeText={(v) => updateField('ownerName', v)}
             error={errors.ownerName}
-            hint={
-              businessOwnerName
-                ? `نام تایید شده احراز هویت: ${businessOwnerName}`
-                : undefined
-            }
+            hint={businessOwnerName ? `نام تایید شده احراز هویت: ${businessOwnerName}` : undefined}
           />
 
           {/* کد ملی — ✅ اصلاح شده */}
@@ -335,14 +316,8 @@ export default function BankEditModal({
           /> */}
 
           {/* نکات */}
-          <div
-            className="p-4 rounded-xl"
-            style={{ backgroundColor: colors.background }}
-          >
-            <p
-              className="text-xs font-[Vazir-Bold] mb-2"
-              style={{ color: colors.textMain }}
-            >
+          <div className="p-4 rounded-xl" style={{ backgroundColor: colors.background }}>
+            <p className="text-xs font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
               نکات مهم:
             </p>
             <ul className="space-y-1.5">
@@ -352,10 +327,7 @@ export default function BankEditModal({
                 'تغییر حساب بعداً هم ممکن است اما مجدداً وارد چرخه تایید خواهد شد',
               ].map((note, i) => (
                 <li key={i} className="flex items-start gap-2">
-                  <span
-                    className="text-xs mt-0.5"
-                    style={{ color: colors.primary }}
-                  >
+                  <span className="text-xs mt-0.5" style={{ color: colors.primary }}>
                     •
                   </span>
                   <span
@@ -371,17 +343,8 @@ export default function BankEditModal({
         </div>
 
         {/* فوتر */}
-        <div
-          className="p-5 border-t flex gap-3"
-          style={{ borderColor: colors.border }}
-        >
-          <Button
-            title="انصراف"
-            onPress={onClose}
-            variant="outline"
-            size="lg"
-            className="flex-1"
-          />
+        <div className="p-5 border-t flex gap-3" style={{ borderColor: colors.border }}>
+          <Button title="انصراف" onPress={onClose} variant="outline" size="lg" className="flex-1" />
           <Button
             title="ثبت اطلاعات"
             onPress={handleSubmit}

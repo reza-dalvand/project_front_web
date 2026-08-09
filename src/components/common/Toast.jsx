@@ -9,13 +9,7 @@ const TYPE_CONFIG = {
   info: { bg: 'bg-[var(--primary)]', icon: FiInfo },
 };
 
-export default function Toast({
-  visible,
-  message,
-  type = 'info',
-  position = 'bottom',
-  onHide,
-}) {
+export default function Toast({ visible, message, type = 'info', position = 'bottom', onHide }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -35,9 +29,7 @@ export default function Toast({
   const Icon = config.icon;
 
   const positionClasses =
-    position === 'top'
-      ? 'top-6 left-1/2 -translate-x-1/2'
-      : 'bottom-6 left-1/2 -translate-x-1/2';
+    position === 'top' ? 'top-6 left-1/2 -translate-x-1/2' : 'bottom-6 left-1/2 -translate-x-1/2';
 
   return (
     <div

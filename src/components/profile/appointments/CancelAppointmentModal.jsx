@@ -259,16 +259,20 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
                 style={{ backgroundColor: '#4CAF5008', borderColor: '#4CAF5030' }}
               >
                 <FiCheckCircle size={18} color="#4CAF50" className="flex-shrink-0 mt-0.5" />
-                <p
-                  className="text-sm font-[Vazir] leading-6 flex-1"
-                  style={{ color: colors.textMain }}
-                >
-                  بازگشت وجه ظرف{' '}
-                  <span className="font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
-                    ۴۸ ساعت
-                  </span>{' '}
-                  به حساب شما انجام خواهد شد.
-                </p>
+                <div className="flex-1">
+                  <p className="text-sm font-[Vazir] leading-6" style={{ color: colors.textMain }}>
+                    بازگشت وجه به حساب شما انجام خواهد شد.
+                  </p>
+                  <a
+                    href="https://zibano.app/rules/refund"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-[Vazir] underline mt-1 inline-block"
+                    style={{ color: colors.primary }}
+                  >
+                    برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
+                  </a>
+                </div>
               </div>
             </>
           ) : (
@@ -280,13 +284,23 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
                 style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
               >
                 <FiAlertTriangle size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
-                <p
-                  className="text-xs font-[Vazir] leading-5 flex-1"
-                  style={{ color: colors.textSecondary }}
-                >
-                  برای استرداد وجه، اطلاعات حساب بانکی خود را وارد کنید. مبلغ ظرف ۴۸ ساعت به حساب
-                  شما واریز خواهد شد.
-                </p>
+                <div className="flex-1">
+                  <p
+                    className="text-xs font-[Vazir] leading-5"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    برای استرداد وجه، اطلاعات حساب بانکی خود را وارد کنید.
+                  </p>
+                  <a
+                    href="https://zibano.app/rules/refund"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-[Vazir] underline mt-1 inline-block"
+                    style={{ color: colors.primary }}
+                  >
+                    برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
+                  </a>
+                </div>
               </div>
 
               {/* فرم اطلاعات بانکی */}
