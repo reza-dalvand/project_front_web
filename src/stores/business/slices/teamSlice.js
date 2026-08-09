@@ -10,10 +10,7 @@ export const createTeamSlice = (set) => ({
     set((state) => ({
       businessData: {
         ...state.businessData,
-        team: [
-          ...state.businessData.team,
-          { ...member, id: member.id || `emp_${Date.now()}` },
-        ],
+        team: [...state.businessData.team, { ...member, id: member.id || `emp_${Date.now()}` }],
       },
     })),
 
@@ -22,9 +19,7 @@ export const createTeamSlice = (set) => ({
     set((state) => ({
       businessData: {
         ...state.businessData,
-        team: state.businessData.team.map((m) =>
-          m.id === memberId ? { ...m, ...updates } : m
-        ),
+        team: state.businessData.team.map((m) => (m.id === memberId ? { ...m, ...updates } : m)),
       },
     })),
 

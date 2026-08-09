@@ -44,10 +44,10 @@ import {
 import dynamic from 'next/dynamic';
 
 // ✅ Lazy Load
-const PriceGuideModal = dynamic(
-  () => import('@/components/common/PriceGuideModal'),
-  { ssr: false, loading: () => null }
-);
+const PriceGuideModal = dynamic(() => import('@/components/common/PriceGuideModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 const MIN_FINAL_PRICE = 100000;
 const MIN_DEPOSIT = 100000;

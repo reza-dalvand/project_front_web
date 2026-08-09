@@ -19,7 +19,6 @@ const ModelRequestDetailModal = dynamic(
   { ssr: false, loading: () => null }
 );
 
-
 export default function ModelRequestsPage() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -32,16 +31,22 @@ export default function ModelRequestsPage() {
 
   const handleCreate = useCallback(() => router.push('/manage/model-requests/create'), [router]);
 
-  const handleEdit = useCallback((request) => {
-    router.push(`/manage/model-requests/create?id=${request.id}`);
-  }, [router]);
+  const handleEdit = useCallback(
+    (request) => {
+      router.push(`/manage/model-requests/create?id=${request.id}`);
+    },
+    [router]
+  );
 
-  const handleDelete = useCallback((request) => {
-    setRequests((prev) => prev.filter((r) => r.id !== request.id));
-    setDetailVisible(false);
-    setSelectedRequest(null);
-    showToast('درخواست مدل با موفقیت حذف شد', 'success');
-  }, [showToast]);
+  const handleDelete = useCallback(
+    (request) => {
+      setRequests((prev) => prev.filter((r) => r.id !== request.id));
+      setDetailVisible(false);
+      setSelectedRequest(null);
+      showToast('درخواست مدل با موفقیت حذف شد', 'success');
+    },
+    [showToast]
+  );
 
   const openDetail = useCallback((request) => {
     setSelectedRequest(request);
@@ -70,18 +75,39 @@ export default function ModelRequestsPage() {
       <Header title="درخواست‌های مدل" onBackPress={goBack} />
       <div className="flex-1 overflow-y-auto p-4 pb-32">
         <div className="flex flex-col items-center gap-2 py-4 mb-4">
-          <div className="w-[72px] h-[72px] rounded-3xl flex items-center justify-center" style={{ backgroundColor: colors.primary + '15' }}>
+          <div
+            className="w-[72px] h-[72px] rounded-3xl flex items-center justify-center"
+            style={{ backgroundColor: colors.primary + '15' }}
+          >
             <FiUser size={32} style={{ color: colors.primary }} />
           </div>
-          <h2 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>درخواست‌های مدل</h2>
-          <p className="text-xs font-[Vazir] text-center px-5" style={{ color: colors.textSecondary }}>برای مشاهده جزئیات، روی هر درخواست ضربه بزنید</p>
+          <h2 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+            درخواست‌های مدل
+          </h2>
+          <p
+            className="text-xs font-[Vazir] text-center px-5"
+            style={{ color: colors.textSecondary }}
+          >
+            برای مشاهده جزئیات، روی هر درخواست ضربه بزنید
+          </p>
         </div>
 
-        {requests.length > 0 && <div className="mb-4"><ModelRequestStats requests={requests} /></div>}
+        {requests.length > 0 && (
+          <div className="mb-4">
+            <ModelRequestStats requests={requests} />
+          </div>
+        )}
 
         {requests.length > 0 && (
-          <button onClick={handleCreate} className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-4 transition-all hover:scale-[1.01] active:scale-[0.99]" style={{ backgroundColor: '#43A047' }}>
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+          <button
+            onClick={handleCreate}
+            className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-4 transition-all hover:scale-[1.01] active:scale-[0.99]"
+            style={{ backgroundColor: '#43A047' }}
+          >
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+            >
               <FiPlus size={22} color="#fff" />
             </div>
             <div className="flex-1 text-right">
@@ -96,11 +122,23 @@ export default function ModelRequestsPage() {
             <ModelRequestCard key={request.id} request={request} onPress={openDetail} />
           ))
         ) : (
-          <EmptyState icon="🧑‍🎨" title="هنوز درخواست مدلی ثبت نکرده‌اید" description="با ثبت درخواست مدل، می‌توانید نمونه‌کارهای جدید بسازید" actionLabel="ایجاد اولین درخواست" onAction={handleCreate} />
+          <EmptyState
+            icon="🧑‍🎨"
+            title="هنوز درخواست مدلی ثبت نکرده‌اید"
+            description="با ثبت درخواست مدل، می‌توانید نمونه‌کارهای جدید بسازید"
+            actionLabel="ایجاد اولین درخواست"
+            onAction={handleCreate}
+          />
         )}
       </div>
 
-      <ModelRequestDetailModal visible={detailVisible} request={selectedRequest} onClose={closeDetail} onEdit={handleEdit} onDelete={handleDelete} />
+      <ModelRequestDetailModal
+        visible={detailVisible}
+        request={selectedRequest}
+        onClose={closeDetail}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </ScreenWrapper>
   );
 }

@@ -40,10 +40,7 @@ export const MOCK_POSTS = [
     subCategory: 'bridal_makeup',
     caption: 'میکاپ عروس اروپایی با سبک مینیمال و طبیعی 👰‍♀️',
     saved: false,
-    gallery: [
-      'https://picsum.photos/800/800?random=4',
-      'https://picsum.photos/800/800?random=5',
-    ],
+    gallery: ['https://picsum.photos/800/800?random=4', 'https://picsum.photos/800/800?random=5'],
   },
   {
     id: 'p3',

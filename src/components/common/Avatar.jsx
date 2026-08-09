@@ -1,17 +1,8 @@
 'use client';
 import Image from 'next/image';
-import { FaUser } from 'react-icons/fa';
+import defaultAvatar from '@/assets/images/avatar.png';
 
-/**
- * کامپوننت آواتار مشترک
- */
-export default function Avatar({
-  uri,
-  name,
-  size = 'md',
-  showBorder = false,
-  className = '',
-}) {
+export default function Avatar({ uri, name, size = 'md', showBorder = false, className = '' }) {
   const sizes = {
     xs: { dim: 28, icon: 16, font: 11 },
     sm: { dim: 36, icon: 20, font: 13 },
@@ -20,21 +11,18 @@ export default function Avatar({
     xl: { dim: 88, icon: 50, font: 30 },
   };
   const { dim, icon, font } = sizes[size] || sizes.md;
-  const initials = name ? name.trim().charAt(0).toUpperCase() : null;
 
   return (
     <div
       className={`
         relative flex items-center justify-center
-        rounded-full overflow-hidden bg-[var(--primary)]/20
+        rounded-full overflow-hidden
         ${className}
       `}
       style={{
         width: `${dim}px`,
         height: `${dim}px`,
-        border: showBorder
-          ? '2px solid var(--primary)'
-          : '1px solid var(--border)',
+        border: showBorder ? '2px solid var(--primary)' : '1px solid var(--border)',
       }}
     >
       {uri ? (
@@ -45,12 +33,14 @@ export default function Avatar({
           height={dim}
           className="object-cover w-full h-full"
         />
-      ) : initials ? (
-        <span className="font-vazir-bold text-[var(--primary)]" style={{ fontSize: `${font}px` }}>
-          {initials}
-        </span>
       ) : (
-        <FaUser className="text-[var(--primary)]" style={{ fontSize: `${icon}px` }} />
+        <Image
+          src={defaultAvatar}
+          alt={name || 'avatar'}
+          width={dim}
+          height={dim}
+          className="object-cover w-full h-full"
+        />
       )}
     </div>
   );

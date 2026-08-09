@@ -4,21 +4,15 @@ import { FiX } from 'react-icons/fi';
 /**
  * کامپوننت Chip مشترک
  */
-export default function Chip({
-  label,
-  selected = false,
-  onPress,
-  icon,
-  onRemove,
-  className = '',
-}) {
+export default function Chip({ label, selected = false, onPress, icon, onRemove, className = '' }) {
   const content = (
     <div
       className={`
         flex items-center gap-1.5 border-[1.5px] rounded-[20px] py-1.5 px-3.5 self-start
-        ${selected
-          ? 'bg-[var(--primary)]/20 border-[var(--primary)]'
-          : 'bg-[var(--card)] border-[var(--border)]'
+        ${
+          selected
+            ? 'bg-[var(--primary)]/20 border-[var(--primary)]'
+            : 'bg-[var(--card)] border-[var(--border)]'
         }
         ${className}
       `}

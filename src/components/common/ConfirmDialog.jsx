@@ -108,19 +108,13 @@ export default function ConfirmDialog({
         </div>
 
         {/* عنوان */}
-        <h3
-          className="text-lg font-[Vazir-Bold] text-center"
-          style={{ color: colors.textMain }}
-        >
+        <h3 className="text-lg font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
           {title}
         </h3>
 
         {/* پیام */}
         {message && (
-          <p
-            className="text-sm text-center leading-6"
-            style={{ color: colors.textSecondary }}
-          >
+          <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
             {message}
           </p>
         )}

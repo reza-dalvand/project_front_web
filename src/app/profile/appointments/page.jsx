@@ -3,9 +3,7 @@ import { useState, useMemo } from 'react';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import { toPersianDigit } from '@/utils/numberUtils';
-import {
-  AppointmentCompactCard,
-} from '@/components/profile/appointments';
+import { AppointmentCompactCard } from '@/components/profile/appointments';
 import dynamic from 'next/dynamic';
 
 // ✅ Lazy Load

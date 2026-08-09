@@ -44,9 +44,7 @@ export default function VerifyOtpPage() {
     return () => clearInterval(interval);
   }, [timer]);
 
-  const maskedPhone = pendingPhone
-    ? pendingPhone.slice(0, 4) + '***' + pendingPhone.slice(-4)
-    : '';
+  const maskedPhone = pendingPhone ? pendingPhone.slice(0, 4) + '***' + pendingPhone.slice(-4) : '';
 
   const handleVerify = async () => {
     const code = otp.join('');

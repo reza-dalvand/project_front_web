@@ -1,9 +1,13 @@
+// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins: ['192.168.1.43', 'localhost', '127.0.0.1'],
 
-  // ✅ فعال‌سازی بهینه‌سازی تصویر با remotePatterns صحیح
   images: {
+    // ✅ غیرفعال کردن بهینه‌سازی سرور-side
+    // تصاویر مستقیم از مرورگر لود می‌شوند
+    unoptimized: true,
+
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'picsum.photos' },
@@ -30,18 +34,13 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
         ],
       },
-      // ✅ Cache headers برای assets استاتیک
       {
         source: '/fonts/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
         source: '/icons/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
     ];
   },

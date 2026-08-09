@@ -41,11 +41,7 @@ const jalaaliToJDN = (jy, jm, jd) => {
   const gy = jy + 621;
   const r = jalCal(jy);
   const jdn =
-    gregorianToJDN(gy, 3, r.march) +
-    (jm - 1) * 31 -
-    Math.floor((jm - 1) / 7) * (jm - 7) +
-    jd -
-    1;
+    gregorianToJDN(gy, 3, r.march) + (jm - 1) * 31 - Math.floor((jm - 1) / 7) * (jm - 7) + jd - 1;
   return jdn;
 };
 
@@ -79,8 +75,8 @@ const jdnToJalaali = (jdn) => {
 // محاسبه سال جلالی (الگوریتم تقویم جلالی)
 const jalCal = (jy) => {
   const breaks = [
-    -61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097,
-    2192, 2262, 2324, 2394, 2456, 3178,
+    -61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394,
+    2456, 3178,
   ];
   let bl = breaks.length;
   const gy = jy + 621;
@@ -102,14 +98,14 @@ const jalCal = (jy) => {
 
   let n = jy - jp;
   leapJ += Math.floor(n / 33) * 8 + Math.floor(((n % 33) + 3) / 4);
-  if ((jump % 33) === 4 && jump - n === 4) leapJ += 1;
+  if (jump % 33 === 4 && jump - n === 4) leapJ += 1;
 
-  const leapG = Math.floor(gy / 4) - Math.floor((Math.floor(gy / 100) + 1) * 3 / 4) - 150;
+  const leapG = Math.floor(gy / 4) - Math.floor(((Math.floor(gy / 100) + 1) * 3) / 4) - 150;
   const march = 20 + leapJ - leapG;
 
   if (jump - n < 6) n = n - jump + Math.floor((jump + 4) / 33) * 33;
 
-  let leap = ((((n + 1) % 33) - 1) % 4);
+  let leap = (((n + 1) % 33) - 1) % 4;
   if (leap === -1) leap = 4;
 
   return { leap, march };
@@ -120,12 +116,28 @@ const jalCal = (jy) => {
 // ═══════════════════════════════════════════════════════
 
 export const PERSIAN_MONTHS = [
-  'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
-  'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند',
+  'فروردین',
+  'اردیبهشت',
+  'خرداد',
+  'تیر',
+  'مرداد',
+  'شهریور',
+  'مهر',
+  'آبان',
+  'آذر',
+  'دی',
+  'بهمن',
+  'اسفند',
 ];
 
 export const PERSIAN_WEEKDAYS = [
-  'شنبه', 'یک‌شنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه',
+  'شنبه',
+  'یک‌شنبه',
+  'دوشنبه',
+  'سه‌شنبه',
+  'چهارشنبه',
+  'پنج‌شنبه',
+  'جمعه',
 ];
 
 // ═══════════════════════════════════════════════════════

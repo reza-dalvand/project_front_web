@@ -123,8 +123,8 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
               className="text-xs font-[Vazir] leading-6 flex-1"
               style={{ color: colors.textSecondary }}
             >
-              زیبانو برای ارائه خدماتی مانند پشتیبانی، پردازش پرداخت، مدیریت نوبت‌ها و
-              اطلاع‌رسانی خودکار، کمیسیونی از مبلغ هر رزرو دریافت می‌کند.{' '}
+              زیبانو برای ارائه خدماتی مانند پشتیبانی، پردازش پرداخت، مدیریت نوبت‌ها و اطلاع‌رسانی
+              خودکار، کمیسیونی از مبلغ هر رزرو دریافت می‌کند.{' '}
               <span className="font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
                 این مبلغ از قیمت کل خدمت کسر خواهد شد.
               </span>

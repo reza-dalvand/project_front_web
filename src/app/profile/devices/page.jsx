@@ -22,7 +22,6 @@ import InfoRow from '@/components/common/InfoRow';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { MOCK_DEVICES } from '@/data/devices';
 
-
 export default function ActiveDevicesPage() {
   const router = useRouter();
   const { colors } = useTheme();

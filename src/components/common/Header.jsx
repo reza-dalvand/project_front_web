@@ -33,9 +33,10 @@ export default function Header({
           onClick={handleBack}
           className={`
             w-[42px] h-[42px] rounded-full flex items-center justify-center border transition-colors
-            ${isTransparent
-              ? 'bg-white/85 border-[var(--border)]/60'
-              : 'bg-[var(--card)] border-[var(--border)]/60'
+            ${
+              isTransparent
+                ? 'bg-white/85 border-[var(--border)]/60'
+                : 'bg-[var(--card)] border-[var(--border)]/60'
             }
           `}
         >

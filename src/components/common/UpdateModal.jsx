@@ -110,16 +110,24 @@ export default function UpdateModal() {
           }}
         >
           <div className="text-center flex-1">
-            <p className="text-xs mb-1" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
+            <p
+              className="text-xs mb-1"
+              style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
+            >
               فعلی
             </p>
             <p className="text-base" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
               {toPersianDigit(updateInfo.currentVersion)}
             </p>
           </div>
-          <div className="text-2xl" style={{ color: colors.textSecondary }}>←</div>
+          <div className="text-2xl" style={{ color: colors.textSecondary }}>
+            ←
+          </div>
           <div className="text-center flex-1">
-            <p className="text-xs mb-1" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
+            <p
+              className="text-xs mb-1"
+              style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
+            >
               جدید
             </p>
             <p

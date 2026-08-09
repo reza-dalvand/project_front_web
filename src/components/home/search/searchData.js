@@ -3,11 +3,9 @@
 //    داده‌های جستجو — یکپارچه با src/data/
 //    فقط توابع جستجو و فیلتر اینجا باقی می‌مانند
 // ═══════════════════════════════════════════════════════
-import {
-  MOCK_BUSINESSES_LIST,
-  MOCK_MODEL_REQUESTS as _MODEL_REQUESTS,
-  MOCK_LINE_RENTALS as _LINE_RENTALS,
-} from '@/data/businesses';
+import { MOCK_BUSINESSES_LIST } from '@/data/businesses';
+import { MOCK_MODEL_REQUESTS as _MODEL_REQUESTS } from '@/data/modelRequests';
+import { MOCK_LINE_RENTALS as _LINE_RENTALS } from '@/data/lineRentals';
 import { MOCK_POSTS } from '@/data/posts';
 
 // ═══════ تبدیل داده‌ها به فرمت جستجو ═══════
@@ -52,31 +50,18 @@ export const searchAll = (query) => {
   const matches = (text) => text && text.toLowerCase().includes(q);
 
   const businesses = SEARCH_BUSINESSES.filter(
-    (b) =>
-      matches(b.name) ||
-      matches(b.serviceType) ||
-      matches(b.category) ||
-      matches(b.address)
+    (b) => matches(b.name) || matches(b.serviceType) || matches(b.category) || matches(b.address)
   );
 
-  const posts = SEARCH_POSTS.filter(
-    (p) => matches(p.businessName) || matches(p.caption)
-  );
+  const posts = SEARCH_POSTS.filter((p) => matches(p.businessName) || matches(p.caption));
 
   const modelRequests = SEARCH_MODEL_REQUESTS.filter(
-    (m) =>
-      matches(m.title) ||
-      matches(m.serviceName) ||
-      matches(m.businessName) ||
-      matches(m.city)
+    (m) => matches(m.title) || matches(m.serviceName) || matches(m.businessName) || matches(m.city)
   );
 
   const lineRentals = SEARCH_LINE_RENTALS.filter(
     (l) =>
-      matches(l.title) ||
-      matches(l.serviceTypeName) ||
-      matches(l.businessName) ||
-      matches(l.city)
+      matches(l.title) || matches(l.serviceTypeName) || matches(l.businessName) || matches(l.city)
   );
 
   return { businesses, posts, modelRequests, lineRentals };

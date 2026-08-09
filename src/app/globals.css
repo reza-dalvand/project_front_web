@@ -75,7 +75,9 @@
     color: var(--color-text-main);
     font-family: 'Vazir', sans-serif;
     min-height: 100vh;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
   }
   html:not([data-theme-loaded]) body {
     visibility: hidden;
@@ -90,35 +92,78 @@
 /* ═══════ Utility Classes (جایگزین inline styles) ═══════ */
 @layer utilities {
   /* ─── رنگ‌های پس‌زمینه ─── */
-  .bg-app { background-color: var(--color-background); }
-  .bg-card { background-color: var(--color-card); }
-  .bg-primary { background-color: var(--color-primary); }
-  .bg-primary-5 { background-color: var(--color-primary-5); }
-  .bg-primary-10 { background-color: var(--color-primary-10); }
-  .bg-primary-15 { background-color: var(--color-primary-15); }
-  .bg-primary-20 { background-color: var(--color-primary-20); }
+  .bg-app {
+    background-color: var(--color-background);
+  }
+  .bg-card {
+    background-color: var(--color-card);
+  }
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  .bg-primary-5 {
+    background-color: var(--color-primary-5);
+  }
+  .bg-primary-10 {
+    background-color: var(--color-primary-10);
+  }
+  .bg-primary-15 {
+    background-color: var(--color-primary-15);
+  }
+  .bg-primary-20 {
+    background-color: var(--color-primary-20);
+  }
 
   /* ─── رنگ‌های متن ─── */
-  .text-app { color: var(--color-text-main); }
-  .text-muted { color: var(--color-text-secondary); }
-  .text-primary { color: var(--color-primary); }
-  .text-success { color: var(--color-success); }
-  .text-warning { color: var(--color-warning); }
-  .text-error { color: var(--color-error); }
-  .text-info { color: var(--color-info); }
+  .text-app {
+    color: var(--color-text-main);
+  }
+  .text-muted {
+    color: var(--color-text-secondary);
+  }
+  .text-primary {
+    color: var(--color-primary);
+  }
+  .text-success {
+    color: var(--color-success);
+  }
+  .text-warning {
+    color: var(--color-warning);
+  }
+  .text-error {
+    color: var(--color-error);
+  }
+  .text-info {
+    color: var(--color-info);
+  }
 
   /* ─── حاشیه ─── */
-  .border-app { border-color: var(--color-border); }
-  .border-primary { border-color: var(--color-primary); }
+  .border-app {
+    border-color: var(--color-border);
+  }
+  .border-primary {
+    border-color: var(--color-primary);
+  }
 
   /* ─── فونت‌ها ─── */
-  .font-vazir { font-family: 'Vazir', sans-serif; }
-  .font-vazir-medium { font-family: 'Vazir-Medium', sans-serif; }
-  .font-vazir-bold { font-family: 'Vazir-Bold', sans-serif; }
+  .font-vazir {
+    font-family: 'Vazir', sans-serif;
+  }
+  .font-vazir-medium {
+    font-family: 'Vazir-Medium', sans-serif;
+  }
+  .font-vazir-bold {
+    font-family: 'Vazir-Bold', sans-serif;
+  }
 
   /* ─── مخفی کردن scrollbar ─── */
-  .scrollbar-hide::-webkit-scrollbar { display: none; }
-  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 
   /* ─── انیمیشن‌ها ─── */
   .animate-slide-up {
@@ -147,18 +192,36 @@
 
 /* ═══════ Keyframes ═══════ */
 @keyframes slide-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

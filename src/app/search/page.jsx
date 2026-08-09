@@ -35,17 +35,18 @@ export default function SearchPage() {
     return searchAll(activeQuery);
   }, [activeQuery]);
 
-  const resultCounts = useMemo(
-    () => getResultCounts(searchResults),
-    [searchResults]
-  );
+  const resultCounts = useMemo(() => getResultCounts(searchResults), [searchResults]);
 
   const filteredResults = useMemo(() => {
     switch (activeTab) {
-      case 'businesses': return searchResults.businesses;
-      case 'modelRequests': return searchResults.modelRequests;
-      case 'lineRentals': return searchResults.lineRentals;
-      default: return null;
+      case 'businesses':
+        return searchResults.businesses;
+      case 'modelRequests':
+        return searchResults.modelRequests;
+      case 'lineRentals':
+        return searchResults.lineRentals;
+      default:
+        return null;
     }
   }, [searchResults, activeTab]);
 
@@ -65,7 +66,9 @@ export default function SearchPage() {
   }, []);
 
   const handleBusinessPress = useCallback(
-    (business) => { router.push(`/business/${business.id}`); },
+    (business) => {
+      router.push(`/business/${business.id}`);
+    },
     [router]
   );
 
@@ -78,7 +81,9 @@ export default function SearchPage() {
   }, []);
 
   const handleCategoryPress = useCallback(
-    (category) => { router.push(`/category/${category.id}`); },
+    (category) => {
+      router.push(`/category/${category.id}`);
+    },
     [router]
   );
 
@@ -101,7 +106,11 @@ export default function SearchPage() {
               />
               <div className="space-y-3">
                 {searchResults.businesses.slice(0, 3).map((business) => (
-                  <SearchBusinessCard key={business.id} business={business} onPress={handleBusinessPress} />
+                  <SearchBusinessCard
+                    key={business.id}
+                    business={business}
+                    onPress={handleBusinessPress}
+                  />
                 ))}
               </div>
               {searchResults.businesses.length > 3 && (
@@ -117,7 +126,12 @@ export default function SearchPage() {
           )}
           {searchResults.modelRequests.length > 0 && (
             <div>
-              <SectionHeader icon={<FiSearch size={18} />} iconColor="#E91E63" title="فرصت‌های مدلینگ" subtitle="با تخفیف ویژه مدل شوید" />
+              <SectionHeader
+                icon={<FiSearch size={18} />}
+                iconColor="#E91E63"
+                title="فرصت‌های مدلینگ"
+                subtitle="با تخفیف ویژه مدل شوید"
+              />
               <div className="grid grid-cols-2 gap-3">
                 {searchResults.modelRequests.slice(0, 4).map((request) => (
                   <SearchModelCard key={request.id} request={request} onPress={handleModelPress} />
@@ -127,7 +141,12 @@ export default function SearchPage() {
           )}
           {searchResults.lineRentals.length > 0 && (
             <div>
-              <SectionHeader icon={<FiSearch size={18} />} iconColor="#667eea" title="اجاره لاین" subtitle="فرصت‌های همکاری و اجاره" />
+              <SectionHeader
+                icon={<FiSearch size={18} />}
+                iconColor="#667eea"
+                title="اجاره لاین"
+                subtitle="فرصت‌های همکاری و اجاره"
+              />
               <div className="grid grid-cols-2 gap-3">
                 {searchResults.lineRentals.slice(0, 4).map((ad) => (
                   <SearchLineCard key={ad.id} ad={ad} onPress={handleLinePress} />
@@ -144,7 +163,11 @@ export default function SearchPage() {
         return (
           <div className="space-y-3">
             {filteredResults.map((business) => (
-              <SearchBusinessCard key={business.id} business={business} onPress={handleBusinessPress} />
+              <SearchBusinessCard
+                key={business.id}
+                business={business}
+                onPress={handleBusinessPress}
+              />
             ))}
           </div>
         );
@@ -172,15 +195,26 @@ export default function SearchPage() {
   const renderEmptyState = () => (
     <div className="px-4 py-6 space-y-6">
       <div>
-        <SectionHeader icon={<FiSearch size={18} />} iconColor="#FF9800" title="دسته‌بندی‌های محبوب" subtitle="یک دسته‌بندی انتخاب کنید" />
+        <SectionHeader
+          icon={<FiSearch size={18} />}
+          iconColor="#FF9800"
+          title="دسته‌بندی‌های محبوب"
+          subtitle="یک دسته‌بندی انتخاب کنید"
+        />
         <CategoryGrid categories={MOCK_CATEGORIES} onSelect={handleCategoryPress} />
       </div>
       <Card variant="elevated" padding={20} radius={18}>
         <div className="flex flex-col items-center gap-4">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.primary + '15' }}>
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: colors.primary + '15' }}
+          >
             <FiSearch size={28} color={colors.primary} />
           </div>
-          <h3 className="text-base font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
+          <h3
+            className="text-base font-[Vazir-Bold] text-center"
+            style={{ color: colors.textMain }}
+          >
             چه چیزهایی می‌توانید جستجو کنید؟
           </h3>
           <div className="w-full space-y-3">
@@ -190,10 +224,15 @@ export default function SearchPage() {
               { icon: '🏢', text: 'آگهی‌های اجاره لاین', color: '#667eea' },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3 py-2">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: item.color + '18' }}>
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: item.color + '18' }}
+                >
                   <span className="text-sm">{item.icon}</span>
                 </div>
-                <span className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>{item.text}</span>
+                <span className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
+                  {item.text}
+                </span>
               </div>
             ))}
           </div>
@@ -204,13 +243,27 @@ export default function SearchPage() {
 
   return (
     <ScreenWrapper scrollable padding={0}>
-      <div className="px-4 py-3 border-b" style={{ backgroundColor: colors.background, borderBottomColor: colors.border }}>
+      <div
+        className="px-4 py-3 border-b"
+        style={{ backgroundColor: colors.background, borderBottomColor: colors.border }}
+      >
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="w-11 h-11 rounded-2xl flex items-center justify-center border" style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}>
+          <button
+            onClick={() => router.back()}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center border"
+            style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+          >
             <FiArrowRight size={22} color={colors.textMain} />
           </button>
           <div className="flex-1">
-            <SearchBar value={searchQuery} onChangeText={setSearchQuery} onSubmit={() => handleSearch(searchQuery)} onClear={handleClear} placeholder="جستجوی خدمات، کسب‌وکارها..." autoFocus />
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmit={() => handleSearch(searchQuery)}
+              onClear={handleClear}
+              placeholder="جستجوی خدمات، کسب‌وکارها..."
+              autoFocus
+            />
           </div>
         </div>
       </div>

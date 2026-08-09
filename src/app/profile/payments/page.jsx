@@ -15,11 +15,10 @@ import {
 import dynamic from 'next/dynamic';
 
 // ✅ Lazy Load
-const InvoiceModal = dynamic(
-  () => import('@/components/profile/paymentHistory/InvoiceModal'),
-  { ssr: false, loading: () => null }
-);
-
+const InvoiceModal = dynamic(() => import('@/components/profile/paymentHistory/InvoiceModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function PaymentsPage() {
   const { colors } = useTheme();

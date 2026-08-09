@@ -8,24 +8,17 @@ import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
-import {
-  ReminderStats,
-  ReminderTabs,
-  ReminderList,
-} from '@/components/manageBusiness/reminders';
+import { ReminderStats, ReminderTabs, ReminderList } from '@/components/manageBusiness/reminders';
 import { toPersianDigit } from '@/utils/numberUtils';
 import dynamic from 'next/dynamic';
 import { MOCK_REMINDER_CUSTOMERS } from '@/data/reminders';
-
 
 const SendReminderModal = dynamic(
   () => import('@/components/manageBusiness/reminders/SendReminderModal'),
   { ssr: false, loading: () => null }
 );
 
-
 const REMINDER_THRESHOLD_DAYS = 2;
-
 
 export default function RemindersPage() {
   const router = useRouter();

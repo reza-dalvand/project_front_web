@@ -23,15 +23,12 @@ const DARK_COLORS = {
   border: '#3D3734',
 };
 
-const getColors = (resolved) =>
-  resolved === 'dark' ? DARK_COLORS : LIGHT_COLORS;
+const getColors = (resolved) => (resolved === 'dark' ? DARK_COLORS : LIGHT_COLORS);
 
 // ═══════ تشخیص تم سیستم ═══════
 const getSystemTheme = () => {
   if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
 const getResolvedTheme = (theme) => {

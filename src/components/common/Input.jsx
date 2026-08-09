@@ -78,9 +78,7 @@ export default function Input({
           rows={multiline ? 3 : undefined}
           className="flex-1 bg-transparent outline-none text-right text-[var(--text-main)] font-vazir text-[15px] rtl"
         />
-        {leftIcon && !secureTextEntry && (
-          <span className="mr-3 flex items-center">{leftIcon}</span>
-        )}
+        {leftIcon && !secureTextEntry && <span className="mr-3 flex items-center">{leftIcon}</span>}
         {secureTextEntry && (
           <button
             onClick={() => setShowPassword(!showPassword)}
@@ -91,9 +89,7 @@ export default function Input({
           </button>
         )}
       </div>
-      {error && (
-        <p className="text-right text-xs mt-1 text-red-400 font-vazir">{error}</p>
-      )}
+      {error && <p className="text-right text-xs mt-1 text-red-400 font-vazir">{error}</p>}
       {!error && hint && (
         <p className="text-right text-xs mt-1 text-[var(--text-secondary)] font-vazir">{hint}</p>
       )}

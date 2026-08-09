@@ -26,9 +26,10 @@ export default function Card({
       className={`
         overflow-hidden
         ${variantClasses[variant]}
-        ${onPress
-          ? 'cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]'
-          : ''
+        ${
+          onPress
+            ? 'cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]'
+            : ''
         }
         ${className}
       `}

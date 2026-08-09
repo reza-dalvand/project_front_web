@@ -70,7 +70,10 @@ export default function BottomTabBar() {
               <div className="relative">
                 <Icon
                   size={24}
-                  style={{ color: active ? colors.primary : colors.textSecondary, transition: 'color 0.2s' }}
+                  style={{
+                    color: active ? colors.primary : colors.textSecondary,
+                    transition: 'color 0.2s',
+                  }}
                 />
               </div>
               <span

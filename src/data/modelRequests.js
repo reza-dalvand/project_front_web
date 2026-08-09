@@ -80,8 +80,7 @@ export const MOCK_MODEL_REQUESTS = [
     serviceImage: 'https://picsum.photos/400/300?random=53',
     serviceTypeId: 'laser',
     title: 'مدل لیزر الکس ۲۰۲۴',
-    description:
-      'تست دستگاه جدید لیزر الکساندرایت ۲۰۲۴. بدون درد و با خنک‌کننده قوی.',
+    description: 'تست دستگاه جدید لیزر الکساندرایت ۲۰۲۴. بدون درد و با خنک‌کننده قوی.',
     costType: 'material_cost',
     discount: 0,
     isUrgent: true,

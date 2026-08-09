@@ -189,10 +189,7 @@ export default function VerifyCodeModal({
         <div className="flex items-center gap-3 py-1">
           <Avatar name={appointment.customerName} size="md" />
           <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <span
-              className="text-sm font-[Vazir-Bold] truncate"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               {appointment.customerName}
             </span>
             <span className="text-xs truncate" style={{ color: colors.textSecondary }}>

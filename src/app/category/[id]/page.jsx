@@ -11,12 +11,10 @@ import dynamic from 'next/dynamic';
 import { MOCK_BUSINESSES_LIST, CATEGORY_NAMES } from '@/data/businesses';
 
 // ✅ Lazy Load
-const CategoryFilterModal = dynamic(
-  () => import('@/components/home/CategoryFilterModal'),
-  { ssr: false, loading: () => null }
-);
-
-
+const CategoryFilterModal = dynamic(() => import('@/components/home/CategoryFilterModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function CategoryBusinessesPage() {
   const params = useParams();

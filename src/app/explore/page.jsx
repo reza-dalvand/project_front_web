@@ -114,18 +114,24 @@ export default function ExplorePage() {
     setIsLoadingMore(false);
   }, [isLoadingMore, hasMore, page]);
 
-  const handleSave = useCallback((postId) => {
-    setAllPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, saved: !p.saved } : p)));
-    if (activePost?.id === postId) {
-      setActivePost((prev) => ({ ...prev, saved: !prev.saved }));
-    }
-  }, [activePost]);
+  const handleSave = useCallback(
+    (postId) => {
+      setAllPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, saved: !p.saved } : p)));
+      if (activePost?.id === postId) {
+        setActivePost((prev) => ({ ...prev, saved: !prev.saved }));
+      }
+    },
+    [activePost]
+  );
 
-  const handleNavigateToProfile = useCallback((businessId) => {
-    if (businessId && businessId !== 'magazine') {
-      router.push(`/business/${businessId}`);
-    }
-  }, [router]);
+  const handleNavigateToProfile = useCallback(
+    (businessId) => {
+      if (businessId && businessId !== 'magazine') {
+        router.push(`/business/${businessId}`);
+      }
+    },
+    [router]
+  );
 
   const handleClearFilters = useCallback(() => setFilters(INITIAL_FILTERS), []);
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
@@ -149,11 +155,12 @@ export default function ExplorePage() {
           iconColor={colors.primary}
           title="ویترین"
           subtitle="نمونه‌کار کسب‌وکارها در زیبانو"
+          centered // ← اضافه شد
           rightElement={
             <button
               onClick={handleFilterOpen}
               className="w-10 h-10 rounded-xl border flex items-center justify-center
-relative transition-colors hover:opacity-80"
+                relative transition-colors hover:opacity-80"
               style={{
                 backgroundColor: hasActiveFilter ? colors.primary + '15' : colors.cardBackground,
                 borderColor: hasActiveFilter ? colors.primary : colors.border,

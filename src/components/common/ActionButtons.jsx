@@ -76,10 +76,10 @@ export default function ActionButtons({ phone, shareMessage, shareUrl }) {
         onClick={handleShare}
         className="flex items-center gap-3 py-4 px-5 rounded-2xl border
           transition-all hover:scale-[1.02] active:scale-[0.98]"
-          style={{
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
-          }}
+        style={{
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+        }}
       >
         <FiShare2 size={22} style={{ color: colors.primary }} />
         <span

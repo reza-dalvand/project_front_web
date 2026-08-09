@@ -263,7 +263,7 @@ export default function ShareBookingLinkModal({ visible, onClose, bookingLink })
               </button>
             ))}
           </div>
-          
+
           {/* راهنما */}
           <div
             className="flex items-start gap-2 p-3 rounded-xl border"

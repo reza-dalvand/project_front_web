@@ -113,8 +113,8 @@ export default function ManageSchedulePage() {
           <div className="flex items-center gap-2">
             <span className="text-base">💡</span>
             <span className="text-xs font-[Vazir] flex-1" style={{ color: colors.textSecondary }}>
-              با ضربه روی دکمه زیر هر خدمت، می‌توانید نوبت‌ها را تنظیم یا ویرایش کنید. امکان
-              انتخاب چند روز همزمان وجود دارد.
+              با ضربه روی دکمه زیر هر خدمت، می‌توانید نوبت‌ها را تنظیم یا ویرایش کنید. امکان انتخاب
+              چند روز همزمان وجود دارد.
             </span>
           </div>
         </Card>
@@ -154,22 +154,37 @@ export default function ManageSchedulePage() {
                     style={{ borderTopColor: colors.border }}
                   >
                     <div className="flex-1 flex items-center justify-center gap-1">
-                      <span className="text-[11px]" style={{ color: '#43A047' }}>📅</span>
-                      <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.textSecondary }}>
+                      <span className="text-[11px]" style={{ color: '#43A047' }}>
+                        📅
+                      </span>
+                      <span
+                        className="text-[11px] font-[Vazir-Bold]"
+                        style={{ color: colors.textSecondary }}
+                      >
                         {toPersianDigit(stats.daysCount)} روز
                       </span>
                     </div>
                     <div className="w-px h-6" style={{ backgroundColor: colors.border }} />
                     <div className="flex-1 flex items-center justify-center gap-1">
-                      <span className="text-[11px]" style={{ color: '#2196F3' }}>🕐</span>
-                      <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.textSecondary }}>
+                      <span className="text-[11px]" style={{ color: '#2196F3' }}>
+                        🕐
+                      </span>
+                      <span
+                        className="text-[11px] font-[Vazir-Bold]"
+                        style={{ color: colors.textSecondary }}
+                      >
                         {toPersianDigit(stats.totalSlots)} نوبت
                       </span>
                     </div>
                     <div className="w-px h-6" style={{ backgroundColor: colors.border }} />
                     <div className="flex-1 flex items-center justify-center gap-1">
-                      <span className="text-[11px]" style={{ color: '#9C27B0' }}>☕</span>
-                      <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.textSecondary }}>
+                      <span className="text-[11px]" style={{ color: '#9C27B0' }}>
+                        ☕
+                      </span>
+                      <span
+                        className="text-[11px] font-[Vazir-Bold]"
+                        style={{ color: colors.textSecondary }}
+                      >
                         {toPersianDigit(stats.totalBreaks)} استراحت
                       </span>
                     </div>

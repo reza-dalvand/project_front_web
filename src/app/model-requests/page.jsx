@@ -9,11 +9,10 @@ import dynamic from 'next/dynamic';
 import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 
 // ✅ Lazy Load
-const ModelRequestFilterModal = dynamic(
-  () => import('@/components/home/ModelRequestFilterModal'),
-  { ssr: false, loading: () => null }
-);
-
+const ModelRequestFilterModal = dynamic(() => import('@/components/home/ModelRequestFilterModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function AllModelRequestsPage() {
   const router = useRouter();

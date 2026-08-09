@@ -35,9 +35,7 @@ export default function Toast({
   const config = TYPE_CONFIG[type] || TYPE_CONFIG.info;
   const Icon = config.icon;
   const positionClasses =
-    position === 'top'
-      ? 'top-6 left-1/2 -translate-x-1/2'
-      : 'bottom-6 left-1/2 -translate-x-1/2';
+    position === 'top' ? 'top-6 left-1/2 -translate-x-1/2' : 'bottom-6 left-1/2 -translate-x-1/2';
 
   return (
     <div

@@ -7,7 +7,6 @@ import AllAdsCard from '@/components/home/AllAdsCard';
 import EmptyState from '@/components/common/EmptyState';
 import { MOCK_ALL_ADS } from '@/data/ads';
 
-
 export default function AllAdsPage() {
   const router = useRouter();
   const ads = MOCK_ALL_ADS;

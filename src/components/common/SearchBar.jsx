@@ -2,9 +2,6 @@
 import { useState } from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
 
-/**
- * کامپوننت نوار جستجو مشترک
- */
 export default function SearchBar({
   value,
   onChangeText,
@@ -12,9 +9,11 @@ export default function SearchBar({
   onSubmit,
   onClear,
   autoFocus = false,
+  variant = 'default', // ✅ 'default' | 'onPrimary'
   className = '',
 }) {
   const [focused, setFocused] = useState(false);
+  const isOnPrimary = variant === 'onPrimary';
 
   const handleClear = () => {
     onChangeText?.('');
@@ -25,19 +24,39 @@ export default function SearchBar({
     if (e.key === 'Enter') onSubmit?.();
   };
 
+  // ✅ رنگ‌بندی بر اساس variant
+  const borderColor = focused
+    ? isOnPrimary
+      ? 'border-white/50'
+      : 'border-[var(--primary)]'
+    : isOnPrimary
+      ? 'border-white/30'
+      : 'border-[var(--border)]';
+
+  const iconColor = isOnPrimary
+    ? 'text-white/80'
+    : focused
+      ? 'text-[var(--primary)]'
+      : 'text-[var(--text-secondary)]';
+
+  const textColor = isOnPrimary ? 'text-white' : 'text-[var(--text-main)]';
+
+  const placeholderColor = isOnPrimary ? 'placeholder:text-white/60' : '';
+
+  const clearBg = isOnPrimary ? 'bg-white/20' : 'bg-[var(--bg)]';
+  const clearIcon = isOnPrimary ? 'text-white/80' : 'text-[var(--text-secondary)]';
+  const bgColor = isOnPrimary ? 'bg-white/15' : 'bg-[var(--card)]';
+
   return (
     <div
       className={`
         flex items-center gap-3 px-4 rounded-2xl border transition-all duration-200 h-[52px]
-        bg-[var(--card)]
-        ${focused ? 'border-[var(--primary)]' : 'border-[var(--border)]'}
+        ${bgColor}
+        ${borderColor}
         ${className}
       `}
     >
-      <FiSearch
-        size={22}
-        className={`flex-shrink-0 ${focused ? 'text-[var(--primary)]' : 'text-[var(--text-secondary)]'}`}
-      />
+      <FiSearch size={22} className={`flex-shrink-0 ${iconColor}`} />
       <input
         type="text"
         value={value}
@@ -47,14 +66,14 @@ export default function SearchBar({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onKeyDown={handleKeyDown}
-        className="flex-1 bg-transparent outline-none text-right text-[var(--text-main)] text-sm font-vazir rtl"
+        className={`flex-1 bg-transparent outline-none text-right text-sm font-vazir rtl ${textColor} ${placeholderColor}`}
       />
       {value?.length > 0 && (
         <button
           onClick={handleClear}
-          className="p-1 rounded-lg hover:bg-black/5 transition-colors bg-[var(--bg)]"
+          className={`p-1 rounded-lg hover:opacity-70 transition-opacity ${clearBg}`}
         >
-          <FiX size={16} className="text-[var(--text-secondary)]" />
+          <FiX size={16} className={clearIcon} />
         </button>
       )}
     </div>

@@ -25,13 +25,11 @@ import SeeAllButton from '@/components/home/SeeAllButton';
 import ActiveFiltersBar from '@/components/home/ActiveFiltersBar';
 import { useToast } from '@/hooks/useToast';
 
-
 import { MOCK_CATEGORIES } from '@/data/businesses';
 import { MOCK_ADS } from '@/data/ads';
 import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 import { MOCK_DONE_APPOINTMENTS } from '@/data/appointments';
-
 
 // ✅ Lazy Load — مودال‌های سنگین
 const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), {
@@ -48,7 +46,6 @@ const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), {
   ssr: false,
   loading: () => null,
 });
-
 
 export default function HomePage() {
   const router = useRouter();
@@ -93,26 +90,41 @@ export default function HomePage() {
   }, [pendingReviews, reviewVisible]);
 
   // ─── Handlers (useCallback) ───
-  const handleThemeToggle = useCallback(() => setTheme(isDark ? 'light' : 'dark'), [isDark, setTheme]);
+  const handleThemeToggle = useCallback(
+    () => setTheme(isDark ? 'light' : 'dark'),
+    [isDark, setTheme]
+  );
 
-  const handleAdPress = useCallback((ad) => {
-    if (ad.businessId) {
-      router.push(`/business/${ad.businessId}`);
-    }
-  }, [router]);
+  const handleAdPress = useCallback(
+    (ad) => {
+      if (ad.businessId) {
+        router.push(`/business/${ad.businessId}`);
+      }
+    },
+    [router]
+  );
 
-  const handleCategorySelect = useCallback((item) => {
-    setSelectedCategory(item.id);
-    router.push(`/category/${item.id}`);
-  }, [router]);
+  const handleCategorySelect = useCallback(
+    (item) => {
+      setSelectedCategory(item.id);
+      router.push(`/category/${item.id}`);
+    },
+    [router]
+  );
 
-  const handleModelRequestPress = useCallback((request) => {
-    router.push(`/model-requests/${request.id}`);
-  }, [router]);
+  const handleModelRequestPress = useCallback(
+    (request) => {
+      router.push(`/model-requests/${request.id}`);
+    },
+    [router]
+  );
 
-  const handleLineRentalPress = useCallback((ad) => {
-    router.push(`/line-rentals/${ad.id}`);
-  }, [router]);
+  const handleLineRentalPress = useCallback(
+    (ad) => {
+      router.push(`/line-rentals/${ad.id}`);
+    },
+    [router]
+  );
 
   const handleReviewClose = useCallback(() => {
     setReviewVisible(false);
@@ -156,7 +168,11 @@ export default function HomePage() {
       />
 
       {/* ═══════════ نوار فیلترهای فعال ═══════════ */}
-      <ActiveFiltersBar filters={filters} onChange={handleFilterChange} onClearAll={handleClearAllFilters} />
+      <ActiveFiltersBar
+        filters={filters}
+        onChange={handleFilterChange}
+        onClearAll={handleClearAllFilters}
+      />
 
       {/* ═══════════ بنر دعوت به ثبت‌نام (فقط لاگین‌نشده) ═══════════ */}
       {!isAuthenticated && (
@@ -270,15 +286,15 @@ export default function HomePage() {
                         request.costType === 'free'
                           ? '#4CAF50'
                           : request.costType === 'paid'
-                          ? '#2196F3'
-                          : '#FF9800',
+                            ? '#2196F3'
+                            : '#FF9800',
                     }}
                   >
                     {request.costType === 'free'
                       ? 'رایگان'
                       : request.costType === 'paid'
-                      ? 'با هزینه'
-                      : 'هزینه مواد'}
+                        ? 'با هزینه'
+                        : 'هزینه مواد'}
                   </div>
                   {request.isUrgent && (
                     <div
@@ -368,8 +384,8 @@ export default function HomePage() {
                     {ad.collabType === 'percent'
                       ? 'درصدی'
                       : ad.collabType === 'hourly'
-                      ? 'ساعتی'
-                      : 'اجاره ثابت'}
+                        ? 'ساعتی'
+                        : 'اجاره ثابت'}
                     {ad.priceDisplay && ` • ${ad.priceDisplay}`}
                   </div>
                   <div className="flex items-center gap-1">

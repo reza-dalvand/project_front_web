@@ -16,13 +16,17 @@ import FinancialStatsCards from '@/components/manageBusiness/financial/Financial
 import BankInfoCard from '@/components/manageBusiness/financial/BankInfoCard';
 import FinancialTabs from '@/components/manageBusiness/financial/FinancialTabs';
 import TransactionItem from '@/components/manageBusiness/financial/TransactionItem';
-import { MOCK_TRANSACTIONS, MOCK_BANK_INFO, toPersianDigit } from '@/components/manageBusiness/financial/constants';
+import {
+  MOCK_TRANSACTIONS,
+  MOCK_BANK_INFO,
+  toPersianDigit,
+} from '@/components/manageBusiness/financial/constants';
 
 // ✅ Lazy Load
-const BankEditModal = dynamic(
-  () => import('@/components/manageBusiness/financial/BankEditModal'),
-  { ssr: false, loading: () => null }
-);
+const BankEditModal = dynamic(() => import('@/components/manageBusiness/financial/BankEditModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 const TransactionDetailModal = dynamic(
   () => import('@/components/manageBusiness/financial/TransactionDetailModal'),
@@ -61,7 +65,13 @@ export default function FinancialManagementPage() {
 
   const tabCounts = useMemo(() => {
     const c = (status) => transactions.filter((t) => t.status === status).length;
-    return { all: transactions.length, blocked: c('blocked'), settling: c('settling'), settled: c('settled'), refunded: c('refunded') };
+    return {
+      all: transactions.length,
+      blocked: c('blocked'),
+      settling: c('settling'),
+      settled: c('settled'),
+      refunded: c('refunded'),
+    };
   }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
@@ -75,11 +85,14 @@ export default function FinancialManagementPage() {
   const handleOpenBankEdit = useCallback(() => setBankEditVisible(true), []);
   const handleCloseBankEdit = useCallback(() => setBankEditVisible(false), []);
 
-  const handleSaveBankInfo = useCallback((data) => {
-    setBankInfo((prev) => ({ ...prev, ...data, isRegistered: true, isVerified: false }));
-    setBankEditVisible(false);
-    showToast('✓ اطلاعات حساب بانکی ثبت شد و وارد چرخه تایید شد', 'success');
-  }, [showToast]);
+  const handleSaveBankInfo = useCallback(
+    (data) => {
+      setBankInfo((prev) => ({ ...prev, ...data, isRegistered: true, isVerified: false }));
+      setBankEditVisible(false);
+      showToast('✓ اطلاعات حساب بانکی ثبت شد و وارد چرخه تایید شد', 'success');
+    },
+    [showToast]
+  );
 
   const handleTxPress = useCallback((tx) => {
     setSelectedTx(tx);
@@ -134,7 +147,11 @@ export default function FinancialManagementPage() {
           ))
         ) : (
           <Card variant="elevated" padding={0} radius={16}>
-            <EmptyState icon="🧾" title="تراکنشی یافت نشد" description="در این دسته‌بندی هنوز تراکنشی ثبت نشده است" />
+            <EmptyState
+              icon="🧾"
+              title="تراکنشی یافت نشد"
+              description="در این دسته‌بندی هنوز تراکنشی ثبت نشده است"
+            />
           </Card>
         )}
       </div>

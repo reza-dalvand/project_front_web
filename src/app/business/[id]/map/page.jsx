@@ -23,7 +23,6 @@ import { useToast } from '@/hooks/useToast';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MOCK_BUSINESSES_MAP } from '@/data/businesses';
 
-
 // ═══════════════════════════════════════════════════════
 //              MapLibre Style (OpenStreetMap)
 // ═══════════════════════════════════════════════════════

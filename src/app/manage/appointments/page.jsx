@@ -19,15 +19,15 @@ const AppointmentDetailSheet = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const VerifyCodeModal = dynamic(
-  () => import('@/components/manageBusiness/VerifyCodeModal'),
-  { ssr: false, loading: () => null }
-);
+const VerifyCodeModal = dynamic(() => import('@/components/manageBusiness/VerifyCodeModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
-const CancelReasonModal = dynamic(
-  () => import('@/components/manageBusiness/CancelReasonModal'),
-  { ssr: false, loading: () => null }
-);
+const CancelReasonModal = dynamic(() => import('@/components/manageBusiness/CancelReasonModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function AllAppointmentsPage() {
   const { colors } = useTheme();
@@ -70,16 +70,22 @@ export default function AllAppointmentsPage() {
     setVerifyVisible(true);
   }, []);
 
-  const confirmVerify = useCallback((aptId) => {
-    handleVerify(aptId);
-    setVerifyVisible(false);
-    setVerifyTarget(null);
-  }, [handleVerify]);
+  const confirmVerify = useCallback(
+    (aptId) => {
+      handleVerify(aptId);
+      setVerifyVisible(false);
+      setVerifyTarget(null);
+    },
+    [handleVerify]
+  );
 
-  const handleTrust = useCallback((apt) => {
-    handleTrustConfirm(apt.id);
-    setDetailVisible(false);
-  }, [handleTrustConfirm]);
+  const handleTrust = useCallback(
+    (apt) => {
+      handleTrustConfirm(apt.id);
+      setDetailVisible(false);
+    },
+    [handleTrustConfirm]
+  );
 
   const openCancel = useCallback((apt) => {
     setDetailVisible(false);
@@ -87,11 +93,14 @@ export default function AllAppointmentsPage() {
     setCancelVisible(true);
   }, []);
 
-  const confirmCancel = useCallback((aptId, reason) => {
-    handleCancel(aptId, reason);
-    setCancelVisible(false);
-    setCancelTarget(null);
-  }, [handleCancel]);
+  const confirmCancel = useCallback(
+    (aptId, reason) => {
+      handleCancel(aptId, reason);
+      setCancelVisible(false);
+      setCancelTarget(null);
+    },
+    [handleCancel]
+  );
 
   const closeVerify = useCallback(() => {
     setVerifyVisible(false);
@@ -111,10 +120,26 @@ export default function AllAppointmentsPage() {
       return { icon: '🔍', title: 'نتیجه‌ای یافت نشد', description: 'فیلترها را تغییر دهید' };
     }
     const configs = {
-      all: { icon: '📅', title: 'هنوز نوبتی ثبت نشده', description: 'پس از رزرو اولین نوبت، اینجا نمایش داده می‌شود' },
-      reserved: { icon: '📋', title: 'نوبت رزرو شده‌ای نیست', description: 'در حال حاضر نوبت فعالی وجود ندارد' },
-      needs_code: { icon: '🔑', title: 'نوبتی بدون کد تایید نیست', description: 'همه نوبت‌ها اعتمادی هستند' },
-      trust_based: { icon: '🛡️', title: 'نوبت اعتمادی نیست', description: 'هنوز مشتری‌ای گزینه اعتماد را فعال نکرده' },
+      all: {
+        icon: '📅',
+        title: 'هنوز نوبتی ثبت نشده',
+        description: 'پس از رزرو اولین نوبت، اینجا نمایش داده می‌شود',
+      },
+      reserved: {
+        icon: '📋',
+        title: 'نوبت رزرو شده‌ای نیست',
+        description: 'در حال حاضر نوبت فعالی وجود ندارد',
+      },
+      needs_code: {
+        icon: '🔑',
+        title: 'نوبتی بدون کد تایید نیست',
+        description: 'همه نوبت‌ها اعتمادی هستند',
+      },
+      trust_based: {
+        icon: '🛡️',
+        title: 'نوبت اعتمادی نیست',
+        description: 'هنوز مشتری‌ای گزینه اعتماد را فعال نکرده',
+      },
       done: { icon: '✅', title: 'نوبت انجام شده‌ای نیست', description: 'هنوز خدمتی تکمیل نشده' },
       cancelled: { icon: '❌', title: 'نوبت لغو شده‌ای نیست', description: 'هیچ نوبتی لغو نشده' },
     };

@@ -26,10 +26,7 @@ export default function TrustToggle({ enabled, onToggle }) {
         {/* متن‌ها */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span
-              className="text-[13px] font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               اعتماد به سالن
             </span>
 
@@ -53,8 +50,8 @@ export default function TrustToggle({ enabled, onToggle }) {
             className="text-[11px] font-[Vazir] leading-[18px] mt-1.5"
             style={{ color: colors.textSecondary }}
           >
-            اگه به این سالن اعتماد دارید، این گزینه رو فعال کنید. دیگه نیازی به تحویل کد ۴ رقمی
-            نیست و عملیات تایید به‌صورت خودکار انجام میشه.
+            اگه به این سالن اعتماد دارید، این گزینه رو فعال کنید. دیگه نیازی به تحویل کد ۴ رقمی نیست
+            و عملیات تایید به‌صورت خودکار انجام میشه.
           </p>
         </div>
       </div>

@@ -65,7 +65,10 @@ export default function MaintenanceModal() {
           {maintenanceInfo.title}
         </h1>
 
-        <p className="text-sm leading-7 mb-6" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
+        <p
+          className="text-sm leading-7 mb-6"
+          style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
+        >
           {maintenanceInfo.message}
         </p>
 
@@ -81,7 +84,10 @@ export default function MaintenanceModal() {
               <FiTool size={18} color="#43A047" />
             </div>
             <div className="text-right flex-1">
-              <p className="text-xs mb-1" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
+              <p
+                className="text-xs mb-1"
+                style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
+              >
                 زمان تقریبی پایان
               </p>
               <p className="text-sm" style={{ color: '#43A047', fontFamily: 'Vazir-Bold' }}>

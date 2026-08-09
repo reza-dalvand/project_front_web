@@ -44,8 +44,7 @@ export const useBusinessStore = create(
       },
 
       // ─── Selectors ───
-      getActiveServices: () =>
-        get().businessData.services.filter((s) => s.isActive !== false),
+      getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
 
       // ─── ریست دستی ───
       resetToDefaults: () => {

@@ -78,16 +78,19 @@ export default function ManagePortfolioPage() {
     setEditingPortfolio(null);
   }, []);
 
-  const handleSave = useCallback((portfolioData, editingId) => {
-    if (editingId) {
-      showToast('✓ نمونه‌کار با موفقیت ویرایش شد', 'success');
-    } else {
-      addPortfolio(portfolioData);
-      showToast('✓ نمونه‌کار جدید اضافه شد', 'success');
-    }
-    setFormVisible(false);
-    setEditingPortfolio(null);
-  }, [showToast, addPortfolio]);
+  const handleSave = useCallback(
+    (portfolioData, editingId) => {
+      if (editingId) {
+        showToast('✓ نمونه‌کار با موفقیت ویرایش شد', 'success');
+      } else {
+        addPortfolio(portfolioData);
+        showToast('✓ نمونه‌کار جدید اضافه شد', 'success');
+      }
+      setFormVisible(false);
+      setEditingPortfolio(null);
+    },
+    [showToast, addPortfolio]
+  );
 
   const handleDelete = useCallback(() => {
     setDetailVisible(false);
@@ -95,10 +98,13 @@ export default function ManagePortfolioPage() {
     showToast('✓ نمونه‌کار حذف شد', 'info');
   }, [showToast]);
 
-  const handleEditFromDetail = useCallback((p) => {
-    setDetailVisible(false);
-    setTimeout(() => openEditForm(p), 300);
-  }, [openEditForm]);
+  const handleEditFromDetail = useCallback(
+    (p) => {
+      setDetailVisible(false);
+      setTimeout(() => openEditForm(p), 300);
+    },
+    [openEditForm]
+  );
 
   const goBack = useCallback(() => router.push('/manage'), [router]);
 
@@ -137,9 +143,21 @@ export default function ManagePortfolioPage() {
             {/* Stats */}
             <Card variant="elevated" padding={14} radius={18} className="mb-4">
               <div className="flex items-center">
-                <StatsCard icon="📸" label="نمونه‌کار" value={toPersianDigit(stats.total)} color="#9C27B0" variant="compact" />
+                <StatsCard
+                  icon="📸"
+                  label="نمونه‌کار"
+                  value={toPersianDigit(stats.total)}
+                  color="#9C27B0"
+                  variant="compact"
+                />
                 <div className="w-px h-10 mx-2" style={{ backgroundColor: colors.border }} />
-                <StatsCard icon="🖼️" label="تصویر" value={toPersianDigit(stats.totalImages)} color="#2196F3" variant="compact" />
+                <StatsCard
+                  icon="🖼️"
+                  label="تصویر"
+                  value={toPersianDigit(stats.totalImages)}
+                  color="#2196F3"
+                  variant="compact"
+                />
               </div>
             </Card>
 
@@ -149,7 +167,10 @@ export default function ManagePortfolioPage() {
               className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-4 transition-all hover:scale-[1.01] active:scale-[0.99]"
               style={{ backgroundColor: '#43A047' }}
             >
-              <div className="w-11 h-11 rounded-[14px] flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+              <div
+                className="w-11 h-11 rounded-[14px] flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+              >
                 <FiPlus size={22} color="#fff" />
               </div>
               <div className="flex-1 text-right">

@@ -5,15 +5,60 @@ import Button from './Button';
  * کامپوننت EmptyState - حالت خالی لیست (ادغام‌شده)
  */
 const VARIANTS = {
-  service:      { emoji: '💆‍♀️', title: 'هنوز خدمتی ثبت نشده',       description: 'اولین خدمت خود را اضافه کنید تا مشتریان بتوانند نوبت رزرو کنند', actionLabel: 'افزودن اولین خدمت' },
-  appointment:  { emoji: '📅',   title: 'نوبتی ثبت نشده است',         description: 'هنوز هیچ نوبتی برای شما ثبت نشده است',                     actionLabel: null },
-  portfolio:    { emoji: '📸',   title: 'نمونه‌کاری ثبت نشده',        description: 'با ثبت نمونه‌کارها، اعتماد مشتریان را جلب کنید',           actionLabel: 'افزودن نمونه‌کار' },
-  favorite:     { emoji: '❤️',   title: 'لیست علاقه‌مندی خالی است',   description: 'کسب‌وکارها و پست‌های مورد علاقه خود را ذخیره کنید',       actionLabel: null },
-  payment:      { emoji: '💳',   title: 'تراکنشی ثبت نشده',           description: 'هنوز هیچ تراکنش مالی انجام نشده است',                    actionLabel: null },
-  ads:          { emoji: '🔥',   title: 'فعلاً پیشنهاد ویژه‌ای نیست', description: 'به زودی تخفیف‌ها و جشنواره‌های جدید اضافه می‌شود',          actionLabel: null },
-  lineRental:   { emoji: '🏢',   title: 'آگهی لاینی یافت نشد',        description: 'فیلترهای خود را تغییر دهید',                              actionLabel: null },
-  modelRequest: { emoji: '👤',   title: 'فرصت مدلینگی یافت نشد',      description: 'به زودی فرصت‌های جدید اضافه می‌شود',                      actionLabel: null },
-  default:      { emoji: '📭',   title: 'موردی یافت نشد',             description: 'هیچ نتیجه‌ای برای نمایش وجود ندارد',                       actionLabel: null },
+  service: {
+    emoji: '💆‍♀️',
+    title: 'هنوز خدمتی ثبت نشده',
+    description: 'اولین خدمت خود را اضافه کنید تا مشتریان بتوانند نوبت رزرو کنند',
+    actionLabel: 'افزودن اولین خدمت',
+  },
+  appointment: {
+    emoji: '📅',
+    title: 'نوبتی ثبت نشده است',
+    description: 'هنوز هیچ نوبتی برای شما ثبت نشده است',
+    actionLabel: null,
+  },
+  portfolio: {
+    emoji: '📸',
+    title: 'نمونه‌کاری ثبت نشده',
+    description: 'با ثبت نمونه‌کارها، اعتماد مشتریان را جلب کنید',
+    actionLabel: 'افزودن نمونه‌کار',
+  },
+  favorite: {
+    emoji: '❤️',
+    title: 'لیست علاقه‌مندی خالی است',
+    description: 'کسب‌وکارها و پست‌های مورد علاقه خود را ذخیره کنید',
+    actionLabel: null,
+  },
+  payment: {
+    emoji: '💳',
+    title: 'تراکنشی ثبت نشده',
+    description: 'هنوز هیچ تراکنش مالی انجام نشده است',
+    actionLabel: null,
+  },
+  ads: {
+    emoji: '🔥',
+    title: 'فعلاً پیشنهاد ویژه‌ای نیست',
+    description: 'به زودی تخفیف‌ها و جشنواره‌های جدید اضافه می‌شود',
+    actionLabel: null,
+  },
+  lineRental: {
+    emoji: '🏢',
+    title: 'آگهی لاینی یافت نشد',
+    description: 'فیلترهای خود را تغییر دهید',
+    actionLabel: null,
+  },
+  modelRequest: {
+    emoji: '👤',
+    title: 'فرصت مدلینگی یافت نشد',
+    description: 'به زودی فرصت‌های جدید اضافه می‌شود',
+    actionLabel: null,
+  },
+  default: {
+    emoji: '📭',
+    title: 'موردی یافت نشد',
+    description: 'هیچ نتیجه‌ای برای نمایش وجود ندارد',
+    actionLabel: null,
+  },
 };
 
 export default function EmptyState({

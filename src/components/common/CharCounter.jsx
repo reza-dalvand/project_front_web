@@ -14,7 +14,11 @@ export default function CharCounter({ current, max }) {
       ? 'text-[#FF9800]'
       : 'text-[var(--primary)]';
 
-  const barColor = isAtLimit ? 'bg-[#E53935]' : isNearLimit ? 'bg-[#FF9800]' : 'bg-[var(--primary)]';
+  const barColor = isAtLimit
+    ? 'bg-[#E53935]'
+    : isNearLimit
+      ? 'bg-[#FF9800]'
+      : 'bg-[var(--primary)]';
 
   return (
     <div>
@@ -37,8 +41,10 @@ export default function CharCounter({ current, max }) {
 
       {/* هشدار نزدیک به محدودیت */}
       {isNearLimit && !isAtLimit && (
-        <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg border -mt-0.5 mb-1
-          bg-[#FF9800]/10 border-[#FF9800]/30">
+        <div
+          className="flex items-center gap-2 py-1.5 px-3 rounded-lg border -mt-0.5 mb-1
+          bg-[#FF9800]/10 border-[#FF9800]/30"
+        >
           <span className="text-xs text-[#FF9800]">⚠️</span>
           <span className="text-xs font-vazir-medium text-[#FF9800]">
             فقط {toPersianDigit(remaining)} کاراکتر باقی مانده است
@@ -48,8 +54,10 @@ export default function CharCounter({ current, max }) {
 
       {/* هشدار رسیدن به محدودیت */}
       {isAtLimit && (
-        <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg border -mt-0.5 mb-1
-          bg-[#E53935]/10 border-[#E53935]/30">
+        <div
+          className="flex items-center gap-2 py-1.5 px-3 rounded-lg border -mt-0.5 mb-1
+          bg-[#E53935]/10 border-[#E53935]/30"
+        >
           <span className="text-xs text-[#E53935]">❌</span>
           <span className="text-xs font-vazir-medium text-[#E53935]">
             به حداکثر تعداد کاراکتر رسیدید

@@ -103,8 +103,8 @@ export default function AppointmentDetailSheet({
           >
             <FiShield size={16} color="#43A047" className="flex-shrink-0 mt-0.5" />
             <p className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: '#43A047' }}>
-              مشتری به شما اعتماد داشت. نیازی به کد تایید نیست و پس از انجام خدمت، بیعانه
-              به صورت خودکار آزاد می‌شود.
+              مشتری به شما اعتماد داشت. نیازی به کد تایید نیست و پس از انجام خدمت، بیعانه به صورت
+              خودکار آزاد می‌شود.
             </p>
           </div>
         )}
@@ -132,8 +132,18 @@ export default function AppointmentDetailSheet({
           <p className="text-sm font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
             جزئیات نوبت
           </p>
-          <InfoRow icon={<FiBriefcase size={16} />} label="خدمت" value={appointment.serviceName} showDivider />
-          <InfoRow icon={<FiUser size={16} />} label="کارمند" value={appointment.employeeName || '—'} showDivider />
+          <InfoRow
+            icon={<FiBriefcase size={16} />}
+            label="خدمت"
+            value={appointment.serviceName}
+            showDivider
+          />
+          <InfoRow
+            icon={<FiUser size={16} />}
+            label="کارمند"
+            value={appointment.employeeName || '—'}
+            showDivider
+          />
           <InfoRow icon={<FiCalendar size={16} />} label="تاریخ" value={dateStr} showDivider />
           <InfoRow icon={<FiClock size={16} />} label="ساعت" value={appointment.time} />
         </Card>

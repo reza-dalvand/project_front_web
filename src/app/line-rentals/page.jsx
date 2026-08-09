@@ -10,11 +10,10 @@ import dynamic from 'next/dynamic';
 import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 
 // ✅ Lazy Load
-const LineRentalFilterModal = dynamic(
-  () => import('@/components/home/LineRentalFilterModal'),
-  { ssr: false, loading: () => null }
-);
-
+const LineRentalFilterModal = dynamic(() => import('@/components/home/LineRentalFilterModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function AllLineRentalsPage() {
   const { colors } = useTheme();
@@ -61,10 +60,7 @@ export default function AllLineRentalsPage() {
             <AllLineRentalsCard key={ad.id} ad={ad} onPress={handleAdPress} />
           ))
         ) : (
-          <EmptyState
-            title="آگهی لاینی یافت نشد"
-            description="فیلترهای خود را تغییر دهید"
-          />
+          <EmptyState title="آگهی لاینی یافت نشد" description="فیلترهای خود را تغییر دهید" />
         )}
       </div>
 

@@ -13,7 +13,6 @@ import BusinessAbout from '@/components/home/BusinessAbout';
 import BusinessMapButton from '@/components/home/BusinessMapButton';
 import { MOCK_BUSINESS } from '@/data/businesses';
 
-
 // ✅ Lazy Load — مودال‌های سنگین فقط وقتی لازم شوند لود می‌شوند
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), {
   ssr: false,
@@ -24,7 +23,6 @@ const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'),
   ssr: false,
   loading: () => null,
 });
-
 
 export default function BusinessDetailsPage() {
   const { colors } = useTheme();

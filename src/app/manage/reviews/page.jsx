@@ -14,7 +14,6 @@ import EmptyState from '@/components/common/EmptyState';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { MOCK_REVIEWS } from '@/data/reviews';
 
-
 const FILTER_OPTIONS = [
   { id: 'all', label: 'همه' },
   { id: '5', label: '۵ ستاره' },

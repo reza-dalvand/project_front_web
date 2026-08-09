@@ -23,10 +23,7 @@ export default function StatusBadge({ meta, size = 'md', showIcon = true }) {
       {showIcon && meta.icon && (
         <IconComponent size={12} style={{ color: meta.color }} className={currentSize.text} />
       )}
-      <span
-        className={`font-vazir-bold ${currentSize.text}`}
-        style={{ color: meta.color }}
-      >
+      <span className={`font-vazir-bold ${currentSize.text}`} style={{ color: meta.color }}>
         {meta.label}
       </span>
     </div>

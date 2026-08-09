@@ -65,10 +65,7 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
         <div className="flex-1 min-w-0 flex flex-col gap-1">
           {/* نام + Badge */}
           <div className="flex items-center justify-between gap-2">
-            <span
-              className="text-sm font-[Vazir-Bold] truncate"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               {appointment.customerName}
             </span>
             <span
@@ -90,10 +87,7 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
               🕐 {appointment.time}
             </span>
             {appointment.depositPaid > 0 && (
-              <span
-                className="text-[11px] font-[Vazir-Bold]"
-                style={{ color: colors.primary }}
-              >
+              <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
                 💰 {formatPrice(appointment.depositPaid)}
               </span>
             )}
@@ -124,8 +118,7 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
             className="text-[11px] font-[Vazir] leading-[19px] flex-1"
             style={{ color: '#43A047' }}
           >
-            این نوبت بصورت خودکار بدون نیاز به کد تایید شده چون مشتری تیک اعتماد به سالن
-            رو زده
+            این نوبت بصورت خودکار بدون نیاز به کد تایید شده چون مشتری تیک اعتماد به سالن رو زده
           </span>
         </div>
       )}

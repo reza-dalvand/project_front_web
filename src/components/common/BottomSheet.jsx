@@ -144,9 +144,7 @@ export default function BottomSheet({
 
         {/* Footer */}
         {footer && (
-          <div className="px-5 py-4 border-t border-[var(--border)] bg-[var(--card)]">
-            {footer}
-          </div>
+          <div className="px-5 py-4 border-t border-[var(--border)] bg-[var(--card)]">{footer}</div>
         )}
       </div>
     </>

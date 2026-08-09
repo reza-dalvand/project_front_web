@@ -52,7 +52,6 @@ export const TX_TABS = [
   { id: 'refunded', label: 'مسترد شده' },
 ];
 
-
 // اطلاعات بانکی موقت
 export const MOCK_BANK_INFO = {
   ownerName: 'مریم حسینی',

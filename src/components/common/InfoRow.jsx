@@ -17,8 +17,16 @@ export default function InfoRow({
   warn = false,
   highlight = false,
 }) {
-  const finalIconColor = warn ? '#E53935' : highlight ? '#2196F3' : iconColor || 'var(--text-secondary)';
-  const finalValueColor = warn ? '#E53935' : highlight ? '#2196F3' : valueColor || 'var(--text-main)';
+  const finalIconColor = warn
+    ? '#E53935'
+    : highlight
+      ? '#2196F3'
+      : iconColor || 'var(--text-secondary)';
+  const finalValueColor = warn
+    ? '#E53935'
+    : highlight
+      ? '#2196F3'
+      : valueColor || 'var(--text-main)';
 
   const content = (
     <div
@@ -29,9 +37,7 @@ export default function InfoRow({
     >
       {icon && <span className="flex-shrink-0 mt-0.5">{icon}</span>}
       <div className="flex-1 gap-1">
-        {label && (
-          <p className="text-xs font-vazir text-[var(--text-secondary)]">{label}</p>
-        )}
+        {label && <p className="text-xs font-vazir text-[var(--text-secondary)]">{label}</p>}
         <div
           className={`
             text-sm break-words

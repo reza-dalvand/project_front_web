@@ -1,10 +1,5 @@
 // src/stores/index.js
-export {
-  useAuthStore,
-  useAuthModalStore,
-  useAuth,
-  useAuthModal,
-} from './useAuthStore';
+export { useAuthStore, useAuthModalStore, useAuth, useAuthModal } from './useAuthStore';
 
 export { useBusinessStore } from './useBusinessStore';
 export { useThemeStore, useTheme } from './useThemeStore';

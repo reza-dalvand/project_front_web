@@ -7,7 +7,6 @@ import Button from '@/components/common/Button';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { MOCK_NOTIFICATIONS } from '@/data/notifications';
 
-
 const NOTIFICATION_ICONS = {
   booking: FiCalendar,
   discount: FiTag,
@@ -16,8 +15,6 @@ const NOTIFICATION_ICONS = {
   review: FiStar,
   refund: FiRotateCcw,
 };
-
-
 
 export default function NotificationModal({ visible, onClose }) {
   const { colors } = useTheme();
