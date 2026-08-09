@@ -89,19 +89,6 @@ export default function BookingNameStep({
           <span className="font-[Vazir-Bold]">تسویه مالی</span> با مشکل مواجه
           خواهید شد.
         </p>
-        <div
-          className="flex items-start gap-2 p-3 rounded-xl"
-          style={{ backgroundColor: '#E5393515' }}
-        >
-          <span className="text-sm flex-shrink-0">⚠️</span>
-          <p
-            className="text-[11px] font-[Vazir-Bold] leading-[19px]"
-            style={{ color: '#E53935' }}
-          >
-            مسئولیت صحت اطلاعات وارد شده و عواقب ناشی از مغایرت آن، مستقیماً بر
-            عهده شما خواهد بود و زیبانو هیچ مسئولیتی در این خصوص نخواهد داشت.
-          </p>
-        </div>
       </div>
 
       {/* ═══ فیلد نام ═══ */}
