@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { FiStar, FiMapPin, FiCreditCard, FiSettings } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCreditCard, FiSettings, FiAlertTriangle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -12,6 +12,9 @@ export default function ManageHeader() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const businessData = useBusinessStore((s) => s.businessData);
+
+  // ✅ بررسی وضعیت حساب بانکی
+  const needsBankRegistration = !businessData?.bankInfo?.isRegistered;
 
   // خوشامدگویی بر اساس ساعت
   const hour = new Date().getHours();
@@ -113,6 +116,7 @@ export default function ManageHeader() {
             <FiCreditCard size={16} className="text-white" />
             <span className="text-xs font-[Vazir-Bold] text-white">کیف پول</span>
           </button>
+
           <button
             onClick={() => router.push('/manage/settings')}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border transition-all hover:opacity-80"
@@ -125,6 +129,26 @@ export default function ManageHeader() {
             <span className="text-xs font-[Vazir-Bold] text-white">تنظیمات</span>
           </button>
         </div>
+
+        {/* ✅ هشدار ثبت حساب بانکی */}
+        {needsBankRegistration && (
+          <button
+            onClick={() => router.push('/manage/financial')}
+            className="w-full flex items-center gap-2.5 p-3 rounded-xl border transition-all hover:opacity-90 active:scale-[0.99]"
+            style={{
+              backgroundColor: '#FF980015',
+              borderColor: '#FF980040',
+            }}
+          >
+            <FiAlertTriangle size={16} color="#FF9800" className="flex-shrink-0" />
+            <span
+              className="text-[11px] font-[Vazir-Bold] leading-[18px] flex-1 text-right"
+              style={{ color: '#FF9800' }}
+            >
+              برای انجام فرآیند تسویه، حساب بانکی خود را ثبت کنید.
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );

@@ -23,6 +23,12 @@ export const INITIAL_BUSINESS_DATA = {
   ownerName: 'مریم حسینی',
   verifiedName: 'مریم حسینی',
 
+  // ✅ فیلد جدید: وضعیت حساب بانکی
+  bankInfo: {
+    isRegistered: false,
+    isVerified: false,
+  },
+  
   services: [
     {
       id: 'svc_1',
@@ -207,3 +213,4 @@ export const INITIAL_BUSINESS_DATA = {
     },
   ],
 };
+
