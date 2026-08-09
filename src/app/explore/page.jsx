@@ -1,12 +1,24 @@
 'use client';
 import { useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ ۱. ایمپورت useRouter
+import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { FiFilter, FiGrid } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import SectionHeader from '@/components/common/SectionHeader';
-import { FilterModal, PostModal, PostGrid, ActiveFilterChips } from '@/components/explore';
+import { PostGrid, ActiveFilterChips } from '@/components/explore';
 import { MOCK_POSTS } from '@/constants/exploreFilters';
+
+// ✅ Lazy Load — مودال‌های سنگین
+const FilterModal = dynamic(() => import('@/components/explore/FilterModal'), {
+  ssr: false,
+  loading: () => null,
+});
+
+const PostModal = dynamic(() => import('@/components/explore/PostModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 const INITIAL_FILTERS = {
   province: null,
@@ -17,11 +29,9 @@ const INITIAL_FILTERS = {
   source: 'all',
 };
 
-// تنظیمات لیزی لودینگ
 const PAGE_SIZE = 12;
 const MAX_PAGES = 10;
 
-// ✅ ۲. تولید پست‌های بیشتر (این تابع باید کاملاً Pure باشد و هیچ هوکی داخل آن استفاده نشود)
 const generateMorePosts = (page, size) => {
   if (page > MAX_PAGES) return [];
   const samplePosts = MOCK_POSTS.filter((p) => p.source === 'business');
@@ -44,21 +54,18 @@ const generateMorePosts = (page, size) => {
 };
 
 export default function ExplorePage() {
-  const router = useRouter(); // ✅ ۳. مقداردهی هوک useRouter در بدنه اصلی کامپوننت
+  const router = useRouter();
   const { colors } = useTheme();
 
-  // State های لیزی لودینگ
   const [allPosts, setAllPosts] = useState(MOCK_POSTS.slice(0, PAGE_SIZE));
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-
-  // State های مدال‌ها
   const [activePost, setActivePost] = useState(null);
   const [filterVisible, setFilterVisible] = useState(false);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
 
-  // فیلتر پست‌ها
+  // ✅ useMemo برای فیلتر
   const filteredPosts = useMemo(() => {
     return allPosts.filter((post) => {
       if (filters.province && post.provinceId !== filters.province) return false;
@@ -78,15 +85,19 @@ export default function ExplorePage() {
     });
   }, [allPosts, filters]);
 
-  const hasActiveFilter =
-    filters.province ||
-    filters.city ||
-    filters.businessType ||
-    filters.mainCategory !== 'all' ||
-    filters.subCategory !== 'all' ||
-    filters.source !== 'all';
+  // ✅ useMemo برای hasActiveFilter
+  const hasActiveFilter = useMemo(
+    () =>
+      filters.province ||
+      filters.city ||
+      filters.businessType ||
+      filters.mainCategory !== 'all' ||
+      filters.subCategory !== 'all' ||
+      filters.source !== 'all',
+    [filters]
+  );
 
-  // لود پست‌های بیشتر
+  // ✅ useCallback برای loadMore
   const loadMorePosts = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
     setIsLoadingMore(true);
@@ -103,22 +114,25 @@ export default function ExplorePage() {
     setIsLoadingMore(false);
   }, [isLoadingMore, hasMore, page]);
 
-  // Save/Unsave
-  const handleSave = (postId) => {
+  const handleSave = useCallback((postId) => {
     setAllPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, saved: !p.saved } : p)));
     if (activePost?.id === postId) {
       setActivePost((prev) => ({ ...prev, saved: !prev.saved }));
     }
-  };
+  }, [activePost]);
 
-  // ✅ ۴. رفع خطای router is not defined
-  const handleNavigateToProfile = (businessId) => {
+  const handleNavigateToProfile = useCallback((businessId) => {
     if (businessId && businessId !== 'magazine') {
       router.push(`/business/${businessId}`);
     }
-  };
+  }, [router]);
 
-  const handleClearFilters = () => setFilters(INITIAL_FILTERS);
+  const handleClearFilters = useCallback(() => setFilters(INITIAL_FILTERS), []);
+  const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
+  const handlePostPress = useCallback((post) => setActivePost(post), []);
+  const handlePostClose = useCallback(() => setActivePost(null), []);
+  const handleFilterOpen = useCallback(() => setFilterVisible(true), []);
+  const handleFilterClose = useCallback(() => setFilterVisible(false), []);
 
   return (
     <ScreenWrapper scrollable={false} padding={0}>
@@ -137,9 +151,9 @@ export default function ExplorePage() {
           subtitle="نمونه‌کار کسب‌وکارها در زیبانو"
           rightElement={
             <button
-              onClick={() => setFilterVisible(true)}
+              onClick={handleFilterOpen}
               className="w-10 h-10 rounded-xl border flex items-center justify-center
-                relative transition-colors hover:opacity-80"
+relative transition-colors hover:opacity-80"
               style={{
                 backgroundColor: hasActiveFilter ? colors.primary + '15' : colors.cardBackground,
                 borderColor: hasActiveFilter ? colors.primary : colors.border,
@@ -166,13 +180,13 @@ export default function ExplorePage() {
       </div>
 
       {/* چیپ‌های فیلتر فعال */}
-      <ActiveFilterChips filters={filters} onChange={setFilters} />
+      <ActiveFilterChips filters={filters} onChange={handleFilterChange} />
 
       {/* Grid پست‌ها */}
       <div className="flex-1 overflow-y-auto px-2 pt-2">
         <PostGrid
           posts={filteredPosts}
-          onPostPress={setActivePost}
+          onPostPress={handlePostPress}
           onClearFilters={hasActiveFilter ? handleClearFilters : null}
           onLoadMore={loadMorePosts}
           isLoadingMore={isLoadingMore}
@@ -181,19 +195,19 @@ export default function ExplorePage() {
         />
       </div>
 
-      {/* مدال فیلتر */}
+      {/* مدال فیلتر (Lazy) */}
       <FilterModal
         visible={filterVisible}
-        onClose={() => setFilterVisible(false)}
+        onClose={handleFilterClose}
         onApply={setFilters}
         currentFilters={filters}
       />
 
-      {/* مدال پست */}
+      {/* مدال پست (Lazy) */}
       <PostModal
         post={activePost}
         visible={!!activePost}
-        onClose={() => setActivePost(null)}
+        onClose={handlePostClose}
         onSave={handleSave}
         onNavigateToProfile={handleNavigateToProfile}
       />

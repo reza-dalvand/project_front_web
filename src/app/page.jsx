@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
   FiZap,
   FiGrid,
@@ -21,13 +22,26 @@ import HomeHeader from '@/components/home/HomeHeader';
 import AdSlider from '@/components/home/AdSlider';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import SeeAllButton from '@/components/home/SeeAllButton';
-import NotificationModal from '@/components/home/NotificationModal';
-import HomeFilterModal from '@/components/home/HomeFilterModal';
 import ActiveFiltersBar from '@/components/home/ActiveFiltersBar';
-import ReviewModal from '@/components/customer/ReviewModal';
 import { useToast } from '@/hooks/useToast';
 
-// ═══════════ داده‌های آگهی‌ها (مشابه اندروید) ═══════════
+// ✅ Lazy Load — مودال‌های سنگین
+const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), {
+  ssr: false,
+  loading: () => null,
+});
+
+const HomeFilterModal = dynamic(() => import('@/components/home/HomeFilterModal'), {
+  ssr: false,
+  loading: () => null,
+});
+
+const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), {
+  ssr: false,
+  loading: () => null,
+});
+
+// ═══════════ داده‌های آگهی‌ها ═══════════
 const MOCK_ADS = [
   {
     id: 1,
@@ -55,7 +69,7 @@ const MOCK_ADS = [
   },
 ];
 
-// ═══════════ دسته‌بندی‌ها (مشابه اندروید) ═══════════
+// ═══════════ دسته‌بندی‌ها ═══════════
 const MOCK_CATEGORIES = [
   { id: 1, name: 'میکاپ', icon: 'face', count: 6 },
   { id: 2, name: 'کاشت ناخن', icon: 'brush', count: 6 },
@@ -67,7 +81,7 @@ const MOCK_CATEGORIES = [
   { id: 8, name: 'ماساژ', icon: 'self-improvement', count: 4 },
 ];
 
-// ═══════════ فرصت‌های مدلینگ (مشابه اندروید) ═══════════
+// ═══════════ فرصت‌های مدلینگ ═══════════
 const MOCK_MODEL_REQUESTS = [
   {
     id: 'mr_1',
@@ -104,7 +118,7 @@ const MOCK_MODEL_REQUESTS = [
   },
 ];
 
-// ═══════════ اجاره لاین (مشابه اندروید) ═══════════
+// ═══════════ اجاره لاین ═══════════
 const MOCK_LINE_RENTALS = [
   {
     id: 'lr_1',
@@ -159,7 +173,6 @@ export default function HomePage() {
   const { requireAuth } = useAuth();
   const { showToast } = useToast();
   const { pendingReviews, addPendingReview } = useReviewStore();
-
   const isDark = resolvedTheme === 'dark';
 
   // ─── State‌ها ───
@@ -171,8 +184,10 @@ export default function HomePage() {
   const [reviewVisible, setReviewVisible] = useState(false);
   const [currentReviewAppointment, setCurrentReviewAppointment] = useState(null);
 
-  const hasActiveFilter = Object.values(filters).some(
-    (v) => v && v !== 'all' && v !== 'recommended'
+  // ✅ useMemo به جای محاسبه در هر render
+  const hasActiveFilter = useMemo(
+    () => Object.values(filters).some((v) => v && v !== 'all' && v !== 'recommended'),
+    [filters]
   );
 
   // ─── افزودن نوبت‌های انجام‌شده به pendingReviews ───
@@ -193,35 +208,40 @@ export default function HomePage() {
     }
   }, [pendingReviews, reviewVisible]);
 
-  // ─── Handlers ───
-  const handleThemeToggle = () => setTheme(isDark ? 'light' : 'dark');
+  // ─── Handlers (useCallback) ───
+  const handleThemeToggle = useCallback(() => setTheme(isDark ? 'light' : 'dark'), [isDark, setTheme]);
 
-  const handleAdPress = (ad) => {
+  const handleAdPress = useCallback((ad) => {
     if (ad.businessId) {
       router.push(`/business/${ad.businessId}`);
     }
-  };
+  }, [router]);
 
-  const handleCategorySelect = (item) => {
+  const handleCategorySelect = useCallback((item) => {
     setSelectedCategory(item.id);
     router.push(`/category/${item.id}`);
-  };
+  }, [router]);
 
-  const handleModelRequestPress = (request) => {
+  const handleModelRequestPress = useCallback((request) => {
     router.push(`/model-requests/${request.id}`);
-  };
+  }, [router]);
 
-  const handleLineRentalPress = (ad) => {
+  const handleLineRentalPress = useCallback((ad) => {
     router.push(`/line-rentals/${ad.id}`);
-  };
+  }, [router]);
 
-  const handleReviewClose = () => {
+  const handleReviewClose = useCallback(() => {
     setReviewVisible(false);
     setCurrentReviewAppointment(null);
-  };
+  }, []);
 
-  // ─── تشخیص فیلتر فعال ───
-  const hasActiveHomeFilter = Object.values(filters).some((v) => v && v !== 'all');
+  const handleFilterChange = useCallback((newFilters) => {
+    setFilters(newFilters);
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    setFilters({});
+  }, []);
 
   return (
     <div className="min-h-screen pb-28" style={{ backgroundColor: colors.background }}>
@@ -238,7 +258,7 @@ export default function HomePage() {
         }}
         onSearchClick={() => router.push('/search')}
         onFilterPress={() => setFilterVisible(true)}
-        hasActiveFilter={hasActiveHomeFilter}
+        hasActiveFilter={hasActiveFilter}
         isDark={isDark}
         onThemeToggle={handleThemeToggle}
         onNotificationPress={() => {
@@ -252,7 +272,7 @@ export default function HomePage() {
       />
 
       {/* ═══════════ نوار فیلترهای فعال ═══════════ */}
-      <ActiveFiltersBar filters={filters} onChange={setFilters} onClearAll={() => setFilters({})} />
+      <ActiveFiltersBar filters={filters} onChange={handleFilterChange} onClearAll={handleClearAllFilters} />
 
       {/* ═══════════ بنر دعوت به ثبت‌نام (فقط لاگین‌نشده) ═══════════ */}
       {!isAuthenticated && (
@@ -263,7 +283,6 @@ export default function HomePage() {
             borderColor: colors.border,
           }}
         >
-          {/* نقطه‌های تزئینی */}
           <div
             className="absolute -top-3 -left-3 w-16 h-16 rounded-full"
             style={{ backgroundColor: colors.primary + '18' }}
@@ -272,7 +291,6 @@ export default function HomePage() {
             className="absolute -bottom-4 -right-4 w-14 h-14 rounded-full"
             style={{ backgroundColor: '#FFC10720' }}
           />
-
           <div className="flex items-center justify-between gap-3 relative z-10">
             <div className="flex items-center gap-3 flex-1">
               <div
@@ -361,7 +379,6 @@ export default function HomePage() {
                     alt={request.title}
                     className="w-full h-full object-cover"
                   />
-                  {/* Badge نوع هزینه */}
                   <div
                     className="absolute top-2 left-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
                     style={{
@@ -369,17 +386,16 @@ export default function HomePage() {
                         request.costType === 'free'
                           ? '#4CAF50'
                           : request.costType === 'paid'
-                            ? '#2196F3'
-                            : '#FF9800',
+                          ? '#2196F3'
+                          : '#FF9800',
                     }}
                   >
                     {request.costType === 'free'
                       ? 'رایگان'
                       : request.costType === 'paid'
-                        ? 'با هزینه'
-                        : 'هزینه مواد'}
+                      ? 'با هزینه'
+                      : 'هزینه مواد'}
                   </div>
-                  {/* Badge فوری */}
                   {request.isUrgent && (
                     <div
                       className="absolute bottom-2 left-2 px-2 py-0.5 rounded-lg text-[9px] font-[Vazir-Bold] text-white"
@@ -468,8 +484,8 @@ export default function HomePage() {
                     {ad.collabType === 'percent'
                       ? 'درصدی'
                       : ad.collabType === 'hourly'
-                        ? 'ساعتی'
-                        : 'اجاره ثابت'}
+                      ? 'ساعتی'
+                      : 'اجاره ثابت'}
                     {ad.priceDisplay && ` • ${ad.priceDisplay}`}
                   </div>
                   <div className="flex items-center gap-1">
@@ -488,13 +504,13 @@ export default function HomePage() {
       {/* ═══════════ Bottom Tab Bar ═══════════ */}
       <BottomTabBar />
 
-      {/* ═══════════ مدال اعلان‌ها ═══════════ */}
+      {/* ═══════════ مدال اعلان‌ها (Lazy) ═══════════ */}
       <NotificationModal
         visible={notificationVisible}
         onClose={() => setNotificationVisible(false)}
       />
 
-      {/* ═══════════ مدال فیلتر خانه ═══════════ */}
+      {/* ═══════════ مدال فیلتر خانه (Lazy) ═══════════ */}
       <HomeFilterModal
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
@@ -502,7 +518,7 @@ export default function HomePage() {
         currentFilters={filters}
       />
 
-      {/* ═══════════ مدال نظردهی ═══════════ */}
+      {/* ═══════════ مدال نظردهی (Lazy) ═══════════ */}
       <ReviewModal
         visible={reviewVisible}
         appointment={currentReviewAppointment}

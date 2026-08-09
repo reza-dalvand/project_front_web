@@ -1,6 +1,7 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { FiClock, FiCalendar, FiEdit2 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -11,9 +12,17 @@ import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
 import EmptyState from '@/components/common/EmptyState';
 import ServiceTypeIcon from '@/components/manageBusiness/services/ServiceTypeIcon';
-import { ScheduleModal } from '@/components/manageBusiness/schedule';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { toJalaali } from '@/utils/dateUtils';
+
+// ✅ Lazy Load — مدال سنگین زمان‌بندی
+const ScheduleModal = dynamic(
+  () => import('@/components/manageBusiness/schedule').then((mod) => mod.ScheduleModal),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 export default function ManageSchedulePage() {
   const router = useRouter();
@@ -21,7 +30,6 @@ export default function ManageSchedulePage() {
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
   const businessData = useBusinessStore((s) => s.businessData);
-
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState(null);
 
@@ -33,68 +41,76 @@ export default function ManageSchedulePage() {
   const schedules = businessData?.schedules || {};
   const ownerId = 'owner';
 
-  const getServiceStats = (serviceId) => {
-    const schedule = schedules[ownerId]?.[serviceId] || {};
-    const allDays = Object.values(schedule);
-    const activeDays = allDays.filter((d) => d.active);
-    const totalSlots = activeDays.reduce((sum, d) => sum + (d.slotCount || 0), 0);
-    const totalBreaks = activeDays.reduce((sum, d) => sum + (d.breaks?.length || 0), 0);
+  const getServiceStats = useCallback(
+    (serviceId) => {
+      const schedule = schedules[ownerId]?.[serviceId] || {};
+      const allDays = Object.values(schedule);
+      const activeDays = allDays.filter((d) => d.active);
+      const totalSlots = activeDays.reduce((sum, d) => sum + (d.slotCount || 0), 0);
+      const totalBreaks = activeDays.reduce((sum, d) => sum + (d.breaks?.length || 0), 0);
+      const existingDates = activeDays
+        .filter((d) => d.dateKey)
+        .map((d) => {
+          const parts = d.dateKey.split('/').map(Number);
+          if (parts.length === 3 && !parts.some(isNaN)) {
+            return { jy: parts[0], jm: parts[1], jd: parts[2] };
+          }
+          return null;
+        })
+        .filter(Boolean);
+      return {
+        daysCount: activeDays.length,
+        totalSlots,
+        totalBreaks,
+        existingDates,
+      };
+    },
+    [schedules, ownerId]
+  );
 
-    const existingDates = activeDays
-      .filter((d) => d.dateKey)
-      .map((d) => {
-        const parts = d.dateKey.split('/').map(Number);
-        if (parts.length === 3 && !parts.some(isNaN)) {
-          return { jy: parts[0], jm: parts[1], jd: parts[2] };
-        }
-        return null;
-      })
-      .filter(Boolean);
-
-    return {
-      daysCount: activeDays.length,
-      totalSlots,
-      totalBreaks,
-      existingDates,
-    };
-  };
-
-  const openModal = (serviceId) => {
+  const openModal = useCallback((serviceId) => {
     setSelectedServiceId(serviceId);
     setModalVisible(true);
-  };
+  }, []);
 
-  const handleSave = ({ serviceId, date, workStart, workEnd, slotDuration, breaks, slotCount }) => {
-    const dateKey = `${date.jy}/${String(date.jm).padStart(2, '0')}/${String(date.jd).padStart(2, '0')}`;
-    const scheduleData = {
-      active: true,
-      workStart,
-      workEnd,
-      slotDuration,
-      breaks: breaks || [],
-      slotCount: slotCount || 0,
-      dateKey,
-      updatedAt: new Date().toISOString(),
-    };
+  const closeModal = useCallback(() => {
+    setModalVisible(false);
+  }, []);
 
-    useBusinessStore.setState((state) => ({
-      businessData: {
-        ...state.businessData,
-        schedules: {
-          ...state.businessData.schedules,
-          [ownerId]: {
-            ...(state.businessData.schedules?.[ownerId] || {}),
-            [serviceId]: {
-              ...(state.businessData.schedules?.[ownerId]?.[serviceId] || {}),
-              [`d_${date.jy}_${date.jm}_${date.jd}`]: scheduleData,
+  const handleSave = useCallback(
+    ({ serviceId, date, workStart, workEnd, slotDuration, breaks, slotCount }) => {
+      const dateKey = `${date.jy}/${String(date.jm).padStart(2, '0')}/${String(date.jd).padStart(2, '0')}`;
+      const scheduleData = {
+        active: true,
+        workStart,
+        workEnd,
+        slotDuration,
+        breaks: breaks || [],
+        slotCount: slotCount || 0,
+        dateKey,
+        updatedAt: new Date().toISOString(),
+      };
+
+      useBusinessStore.setState((state) => ({
+        businessData: {
+          ...state.businessData,
+          schedules: {
+            ...state.businessData.schedules,
+            [ownerId]: {
+              ...(state.businessData.schedules?.[ownerId] || {}),
+              [serviceId]: {
+                ...(state.businessData.schedules?.[ownerId]?.[serviceId] || {}),
+                [`d_${date.jy}_${date.jm}_${date.jd}`]: scheduleData,
+              },
             },
           },
         },
-      },
-    }));
+      }));
 
-    showToast(`✓ ${toPersianDigit(slotCount)} نوبت کاری با موفقیت تنظیم شد`, 'success');
-  };
+      showToast(`✓ ${toPersianDigit(slotCount)} نوبت کاری با موفقیت تنظیم شد`, 'success');
+    },
+    [ownerId, showToast]
+  );
 
   if (!isAuthenticated) {
     return (
@@ -109,7 +125,6 @@ export default function ManageSchedulePage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="مدیریت زمان‌بندی" onBackPress={() => router.push('/manage')} />
-
       <div className="flex-1 overflow-y-auto px-4 pb-32">
         {/* هدر */}
         <div className="flex flex-col items-center gap-2 py-4">
@@ -150,7 +165,6 @@ export default function ManageSchedulePage() {
             {services.map((service) => {
               const stats = getServiceStats(service.id);
               const hasSchedule = stats.daysCount > 0;
-
               return (
                 <Card key={service.id} variant="elevated" padding={0} radius={18}>
                   {/* محتوای خدمت */}
@@ -258,10 +272,10 @@ export default function ManageSchedulePage() {
         )}
       </div>
 
-      {/* مدال زمان‌بندی */}
+      {/* مدال زمان‌بندی (Lazy) */}
       <ScheduleModal
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={closeModal}
         services={services}
         initialServiceId={selectedServiceId}
         existingSchedule={schedules[ownerId] || {}}
