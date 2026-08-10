@@ -74,7 +74,7 @@ export default function ModelRequestDetailPage() {
         </div>
         {/* Badge تاریخ */}
         <div
-          className="absolute bottom-4 left-4 flex items-center gap-1.5 px-3 py-2 rounded-xl"
+          className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3 py-2 rounded-xl"
           style={{ backgroundColor: 'rgba(233,30,99,0.85)' }}
         >
           <span className="text-[11px] font-[Vazir-Bold] text-white">ثبت: {request.createdAt}</span>
