@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">زیبانو</string>
+    <string name="title_activity_main">زیبانو</string>
+    <string name="package_name">com.zibano.app</string>
+    <string name="custom_url_scheme">com.zibano.app</string>
+</resources>

@@ -1,18 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d8a681e-51dd-49fe-92b7-96012088480a" name="Changes" comment="" />
+    <list default="true" id="6d8a681e-51dd-49fe-92b7-96012088480a" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/next.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/next.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/business/[id]/map/page.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/business/[id]/map/page.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/business/[id]/page.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/business/[id]/page.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/category/[id]/page.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/category/[id]/page.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/line-rentals/[id]/page.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/line-rentals/[id]/page.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/manage/financial/page.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/manage/financial/page.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/model-requests/[id]/page.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/model-requests/[id]/page.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/profile/devices/page.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/profile/devices/page.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 0
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="3HOlNaGHR27iI5eDvyAEgzd5d7Y" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -21,8 +38,13 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
     "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/reza/Documents/project_front_web",
     "nodejs_interpreter_path": "/home/reza/.nvm/versions/node/v22.23.1/bin/node",
     "nodejs_package_manager_path": "npm",

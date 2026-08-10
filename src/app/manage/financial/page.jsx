@@ -38,6 +38,8 @@ export default function FinancialManagementPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const businessData = useBusinessStore((s) => s.businessData);
+  const updateBusinessInfo = useBusinessStore((s) => s.updateBusinessInfo); // ✅ این خط را اضافه کنید
+
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
 
