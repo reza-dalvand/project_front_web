@@ -11,7 +11,6 @@ import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
 import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 
-
 // ✅ اضافه کردن generateStaticParams برای Static Export
 export async function generateStaticParams() {
   return MOCK_MODEL_REQUESTS.map((req) => ({

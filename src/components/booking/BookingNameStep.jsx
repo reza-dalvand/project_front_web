@@ -38,16 +38,10 @@ export default function BookingNameStep({
           <FiUser size={18} style={{ color: colors.primary }} />
         </div>
         <div className="flex flex-col gap-0.5">
-          <span
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             مشخصات خود را وارد کنید
           </span>
-          <span
-            className="text-[11px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             برای رزرو نوبت، نام و نام خانوادگی الزامی است
           </span>
         </div>
@@ -63,10 +57,7 @@ export default function BookingNameStep({
       >
         <div className="flex items-center gap-2">
           <FiAlertTriangle size={20} color="#E53935" />
-          <span
-            className="text-[14px] font-[Vazir-Bold]"
-            style={{ color: '#E53935' }}
-          >
+          <span className="text-[14px] font-[Vazir-Bold]" style={{ color: '#E53935' }}>
             هشدار مهم
           </span>
         </div>
@@ -84,10 +75,8 @@ export default function BookingNameStep({
           className="text-[12px] font-[Vazir] leading-[22px] text-justify"
           style={{ color: colors.textMain }}
         >
-          در صورت مغایرت اطلاعات، در فرآیند{' '}
-          <span className="font-[Vazir-Bold]">استرداد وجه</span> و{' '}
-          <span className="font-[Vazir-Bold]">تسویه مالی</span> با مشکل مواجه
-          خواهید شد.
+          در صورت مغایرت اطلاعات، در فرآیند <span className="font-[Vazir-Bold]">استرداد وجه</span> و{' '}
+          <span className="font-[Vazir-Bold]">تسویه مالی</span> با مشکل مواجه خواهید شد.
         </p>
       </div>
 
@@ -128,10 +117,7 @@ export default function BookingNameStep({
         >
           {nameConfirmed && <FiCheck size={14} style={{ color: '#fff' }} />}
         </button>
-        <span
-          className="text-[12px] leading-5 flex-1"
-          style={{ color: colors.textMain }}
-        >
+        <span className="text-[12px] leading-5 flex-1" style={{ color: colors.textMain }}>
           نام و نام خانوادگی خود را مطابق با کارت بانکی وارد کرده‌ام و{' '}
           <span className="font-[Vazir-Bold]" style={{ color: '#E53935' }}>
             مسئولیت صحت اطلاعات و عواقب ناشی از مغایرت آن را می‌پذیرم.

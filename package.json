@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:host": "next dev -H 0.0.0.0",
+    "dev:android": "cap sync android && cap run android",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

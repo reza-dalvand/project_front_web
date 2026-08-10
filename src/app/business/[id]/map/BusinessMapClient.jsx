@@ -85,7 +85,7 @@ const NAVIGATION_APPS = [
 // ✅ اضافه کردن generateStaticParams برای Static Export
 export async function generateStaticParams() {
   const ids = Object.keys(MOCK_BUSINESSES_MAP);
-  
+
   return ids.map((id) => ({
     id: id.toString(),
   }));

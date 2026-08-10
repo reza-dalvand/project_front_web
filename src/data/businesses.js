@@ -293,39 +293,39 @@ export const MOCK_FAVORITE_BUSINESSES = [
 ];
 
 export const MOCK_FAVORITE_POSTS = [
-{
-id: 'p1',
-businessId: 'b1', // ✅ برای ناوبری به صفحه کسب‌وکار
-businessName: 'کلینیک زیبایی صدف',
-businessLogo: 'https://picsum.photos/100/100?random=1',
-caption: 'فیشیال VIP با ماسک طلا ✨',
-image: 'https://picsum.photos/400/400?random=101',
-imageCount: 3,
-gallery: [
-'https://picsum.photos/400/400?random=101',
-'https://picsum.photos/400/400?random=102',
-'https://picsum.photos/400/400?random=103',
-],
-source: 'business',
-rating: 4.8,
-discount: 15,
-},
-{
-id: 'p2',
-businessId: 'b2', // ✅ برای ناوبری به صفحه کسب‌وکار
-businessName: 'سالن زیبایی ماهرو',
-businessLogo: 'https://picsum.photos/100/100?random=2',
-caption: 'میکاپ عروس اروپایی 👰‍♀️',
-image: 'https://picsum.photos/400/400?random=103',
-imageCount: 4,
-gallery: [
-'https://picsum.photos/400/400?random=103',
-'https://picsum.photos/400/400?random=104',
-'https://picsum.photos/400/400?random=105',
-'https://picsum.photos/400/400?random=106',
-],
-source: 'business',
-rating: 4.6,
-discount: 0,
-},
+  {
+    id: 'p1',
+    businessId: 'b1', // ✅ برای ناوبری به صفحه کسب‌وکار
+    businessName: 'کلینیک زیبایی صدف',
+    businessLogo: 'https://picsum.photos/100/100?random=1',
+    caption: 'فیشیال VIP با ماسک طلا ✨',
+    image: 'https://picsum.photos/400/400?random=101',
+    imageCount: 3,
+    gallery: [
+      'https://picsum.photos/400/400?random=101',
+      'https://picsum.photos/400/400?random=102',
+      'https://picsum.photos/400/400?random=103',
+    ],
+    source: 'business',
+    rating: 4.8,
+    discount: 15,
+  },
+  {
+    id: 'p2',
+    businessId: 'b2', // ✅ برای ناوبری به صفحه کسب‌وکار
+    businessName: 'سالن زیبایی ماهرو',
+    businessLogo: 'https://picsum.photos/100/100?random=2',
+    caption: 'میکاپ عروس اروپایی 👰‍♀️',
+    image: 'https://picsum.photos/400/400?random=103',
+    imageCount: 4,
+    gallery: [
+      'https://picsum.photos/400/400?random=103',
+      'https://picsum.photos/400/400?random=104',
+      'https://picsum.photos/400/400?random=105',
+      'https://picsum.photos/400/400?random=106',
+    ],
+    source: 'business',
+    rating: 4.6,
+    discount: 0,
+  },
 ];

@@ -89,9 +89,9 @@ export const useAuthModalStore = create((set, get) => ({
   // دیگر نیازی به ریدایرکت نیست چون کاربر در همان صفحه مانده است
   closeAuthModal: () => {
     const { pendingAction } = get();
-    
+
     set({ showAuthModal: false, pendingAction: null });
-    
+
     // اگر اکشنی منتظر بوده (مثلاً لایک کردن پست)، حالا که لاگین شده اجراش کن
     if (pendingAction && useAuthStore.getState().isAuthenticated) {
       setTimeout(() => {

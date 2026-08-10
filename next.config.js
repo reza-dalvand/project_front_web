@@ -1,10 +1,15 @@
 // next.config.js
+const isProd = process.env.NODE_ENV === 'production';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // ✅ این خط را اضافه کنید
+  // ✅ فقط در بیلد نهایی
+  ...(isProd ? { output: 'export' } : {}),
+
   allowedDevOrigins: ['192.168.1.43', 'localhost', '127.0.0.1'],
+
   images: {
-    unoptimized: true, // ✅ برای Static Export ضروری است
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'picsum.photos' },
@@ -16,28 +21,28 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
+
   experimental: {
     optimizePackageImports: ['react-icons'],
   },
-  // async headers() {
-  //   return [
-  //     {
-  //       source: '/:path*',
-  //       headers: [
-  //         { key: 'X-Frame-Options', value: 'DENY' },
-  //         { key: 'X-Content-Type-Options', value: 'nosniff' },
-  //         { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
-  //       ],
-  //     },
-  //     {
-  //       source: '/fonts/:path*',
-  //       headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-  //     },
-  //     {
-  //       source: '/icons/:path*',
-  //       headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-  //     },
-  //   ];
-  // },
+
+  // ✅ headers فقط در production (در dev خطا می‌دهد با output: export)
+  ...(isProd
+    ? {
+        async headers() {
+          return [
+            {
+              source: '/:path*',
+              headers: [
+                { key: 'X-Frame-Options', value: 'DENY' },
+                { key: 'X-Content-Type-Options', value: 'nosniff' },
+                { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
+              ],
+            },
+          ];
+        },
+      }
+    : {}),
 };
+
 module.exports = nextConfig;

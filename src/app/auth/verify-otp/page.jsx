@@ -52,9 +52,7 @@ export default function VerifyOtpPage() {
   }, [timer]);
 
   // ✅ ماسک معکوس: ۴ رقم آخر + *** + ۴ رقم اول
-  const maskedPhone = pendingPhone
-    ? pendingPhone.slice(-4) + '***' + pendingPhone.slice(0, 4)
-    : '';
+  const maskedPhone = pendingPhone ? pendingPhone.slice(-4) + '***' + pendingPhone.slice(0, 4) : '';
 
   const handleVerify = async () => {
     const code = otp.join('');
@@ -107,16 +105,10 @@ export default function VerifyOtpPage() {
 
         {/* عنوان */}
         <div className="text-center">
-          <h1
-            className="text-2xl font-[Vazir-Bold] mb-2"
-            style={{ color: colors.textMain }}
-          >
+          <h1 className="text-2xl font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
             کد تایید را وارد کنید
           </h1>
-          <p
-            className="text-sm leading-6 px-4"
-            style={{ color: colors.textSecondary }}
-          >
+          <p className="text-sm leading-6 px-4" style={{ color: colors.textSecondary }}>
             کد {toPersianDigit(OTP_LENGTH)} رقمی پیامک‌شده به{' '}
             <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
               {toPersianDigit(maskedPhone)}
@@ -155,25 +147,15 @@ export default function VerifyOtpPage() {
             type="button"
           >
             <FiEdit size={14} style={{ color: colors.primary }} />
-            <span
-              className="text-sm font-[Vazir-Medium]"
-              style={{ color: colors.primary }}
-            >
+            <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.primary }}>
               ویرایش شماره
             </span>
           </button>
 
           {canResend ? (
-            <button
-              onClick={handleResend}
-              className="flex items-center gap-1"
-              type="button"
-            >
+            <button onClick={handleResend} className="flex items-center gap-1" type="button">
               <FiRefreshCw size={14} style={{ color: colors.primary }} />
-              <span
-                className="text-sm font-[Vazir-Bold]"
-                style={{ color: colors.primary }}
-              >
+              <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
                 ارسال مجدد کد
               </span>
             </button>
@@ -206,8 +188,7 @@ export default function VerifyOtpPage() {
           }}
         >
           <span className="text-xs" style={{ color: colors.primary }}>
-            حالت آزمایشی: کد تایید{' '}
-            <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
+            حالت آزمایشی: کد تایید <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
           </span>
         </div>
       </div>

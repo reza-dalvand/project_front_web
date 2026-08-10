@@ -10,16 +10,14 @@ import EmptyState from '@/components/common/EmptyState';
 import dynamic from 'next/dynamic';
 import { MOCK_BUSINESSES_LIST, CATEGORY_NAMES, MOCK_CATEGORIES } from '@/data/businesses';
 
-
 // ✅ اضافه کردن generateStaticParams برای Static Export
 export async function generateStaticParams() {
   const ids = MOCK_CATEGORIES.map((c) => c.id.toString());
-  
+
   return ids.map((id) => ({
     id: id,
   }));
 }
-
 
 // ✅ Lazy Load
 const CategoryFilterModal = dynamic(() => import('@/components/home/CategoryFilterModal'), {

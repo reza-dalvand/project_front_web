@@ -9,14 +9,12 @@ import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
 import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 
-
 // ✅ اضافه کردن generateStaticParams برای Static Export
 export async function generateStaticParams() {
   return MOCK_LINE_RENTALS.map((ad) => ({
     id: ad.id.toString(),
   }));
 }
-
 
 // داده‌های MOCK (در production از API)
 const MOCK_AD = {

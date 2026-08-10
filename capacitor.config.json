@@ -1,7 +1,7 @@
 {
-  "appId": "app.zibano",
-  "appName": "زیبانو",
-  "webDir": "out",
+  "appId": "app.Nobino",
+  "appName": "Nobino",
+  "webDir": "public",
   "bundledWebRuntime": false,
   "android": {
     "allowMixedContent": true,
@@ -9,6 +9,8 @@
     "webContentsDebuggingEnabled": true
   },
   "server": {
-    "androidScheme": "https"
+    "url": "http://192.168.1.43:3000",
+    "cleartext": true,
+    "androidScheme": "http"
   }
 }

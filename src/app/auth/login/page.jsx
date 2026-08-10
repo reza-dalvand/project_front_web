@@ -59,8 +59,7 @@ export default function LoginPage() {
     router.push(`/auth/verify-otp?redirect=${encodeURIComponent(redirectUrl)}`);
   };
 
-  const canSubmit =
-    phone.length === 11 && validatePhone(phone) && termsAccepted && !loading;
+  const canSubmit = phone.length === 11 && validatePhone(phone) && termsAccepted && !loading;
 
   return (
     <div
@@ -104,10 +103,7 @@ export default function LoginPage() {
           >
             زیبانو
           </h1>
-          <p
-            className="text-sm text-center"
-            style={{ color: colors.textSecondary }}
-          >
+          <p className="text-sm text-center" style={{ color: colors.textSecondary }}>
             رزرو آنلاین خدمات زیبایی و سلامت
           </p>
         </div>
@@ -129,10 +125,7 @@ export default function LoginPage() {
               <FiSmartphone size={22} style={{ color: colors.primary }} />
             </div>
             <div>
-              <h2
-                className="text-lg font-[Vazir-Bold]"
-                style={{ color: colors.textMain }}
-              >
+              <h2 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 ورود به حساب
               </h2>
               <p className="text-xs" style={{ color: colors.textSecondary }}>
@@ -149,9 +142,7 @@ export default function LoginPage() {
             type="tel"
             maxLength={11}
             error={error}
-            rightIcon={
-              <FiSmartphone size={18} style={{ color: colors.textSecondary }} />
-            }
+            rightIcon={<FiSmartphone size={18} style={{ color: colors.textSecondary }} />}
           />
 
           {/* شمارنده ارقام */}
@@ -163,10 +154,7 @@ export default function LoginPage() {
                 borderColor: colors.primary + '25',
               }}
             >
-              <span
-                className="text-xs font-[Vazir-Medium]"
-                style={{ color: colors.primary }}
-              >
+              <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
                 {toPersianDigit(phone.length)} از ۱۱ رقم وارد شده
               </span>
             </div>
@@ -185,22 +173,13 @@ export default function LoginPage() {
             >
               {termsAccepted && <FiCheck size={14} style={{ color: '#fff' }} />}
             </button>
-            <span
-              className="text-[13px] leading-5"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[13px] leading-5" style={{ color: colors.textMain }}>
               با{' '}
-              <span
-                className="font-[Vazir-Bold] underline"
-                style={{ color: colors.primary }}
-              >
+              <span className="font-[Vazir-Bold] underline" style={{ color: colors.primary }}>
                 قوانین و مقررات
               </span>{' '}
               و{' '}
-              <span
-                className="font-[Vazir-Bold] underline"
-                style={{ color: colors.primary }}
-              >
+              <span className="font-[Vazir-Bold] underline" style={{ color: colors.primary }}>
                 حریم خصوصی
               </span>{' '}
               موافقم
@@ -230,10 +209,7 @@ export default function LoginPage() {
             }}
           >
             <FiShield size={14} style={{ color: colors.primary }} />
-            <span
-              className="text-xs font-[Vazir-Medium]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.textSecondary }}>
               ورود امن و رمزنگاری شده
             </span>
           </div>

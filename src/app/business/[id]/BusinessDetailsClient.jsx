@@ -14,7 +14,6 @@ import BusinessMapButton from '@/components/home/BusinessMapButton';
 import { MOCK_BUSINESS } from '@/data/businesses';
 import { MOCK_BUSINESSES_LIST, MOCK_BUSINESSES_MAP } from '@/data/businesses';
 
-
 // ✅ Lazy Load — مودال‌های سنگین فقط وقتی لازم شوند لود می‌شوند
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), {
   ssr: false,
@@ -29,13 +28,10 @@ const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'),
 // ✅ اضافه کردن generateStaticParams برای Static Export
 export async function generateStaticParams() {
   // لیست تمام ID‌های موجود در داده‌های MOCK
-  const allIds = [
-    ...MOCK_BUSINESSES_LIST.map((b) => b.id),
-    ...Object.keys(MOCK_BUSINESSES_MAP),
-  ];
+  const allIds = [...MOCK_BUSINESSES_LIST.map((b) => b.id), ...Object.keys(MOCK_BUSINESSES_MAP)];
   // حذف موارد تکراری
   const uniqueIds = [...new Set(allIds)];
-  
+
   return uniqueIds.map((id) => ({
     id: id.toString(),
   }));

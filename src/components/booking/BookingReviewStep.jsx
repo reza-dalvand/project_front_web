@@ -1,12 +1,6 @@
 // src/components/booking/BookingReviewStep.jsx
 'use client';
-import {
-  FiCreditCard,
-  FiDollarSign,
-  FiTag,
-  FiInfo,
-  FiShield,
-} from 'react-icons/fi';
+import { FiCreditCard, FiDollarSign, FiTag, FiInfo, FiShield } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import RulesCard from './RulesCard';
 import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
@@ -44,16 +38,10 @@ export default function BookingReviewStep({
           <FiCreditCard size={20} color="#43A047" />
         </div>
         <div className="flex flex-col gap-0.5">
-          <span
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             خلاصه پرداخت
           </span>
-          <span
-            className="text-[11px] font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             فقط بیعانه را الان پرداخت کنید
           </span>
         </div>
@@ -68,17 +56,11 @@ export default function BookingReviewStep({
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <FiDollarSign size={16} style={{ color: colors.textSecondary }} />
-            <span
-              className="text-[13px] font-[Vazir]"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-[13px] font-[Vazir]" style={{ color: colors.textSecondary }}>
               مبلغ کل خدمت
             </span>
           </div>
-          <span
-            className="text-[14px] font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[14px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {formatPrice(originalPrice)}
           </span>
         </div>
@@ -90,10 +72,7 @@ export default function BookingReviewStep({
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-2">
                 <FiTag size={16} color="#4CAF50" />
-                <span
-                  className="text-[13px] font-[Vazir]"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-[13px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                   تخفیف ({toPersianDigit(discountPercent)}٪)
                 </span>
               </div>
@@ -109,17 +88,11 @@ export default function BookingReviewStep({
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <FiInfo size={16} style={{ color: colors.textMain }} />
-            <span
-              className="text-[13px] font-[Vazir-Bold]"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               قیمت نهایی خدمت
             </span>
           </div>
-          <span
-            className="text-[15px] font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {formatPrice(finalPrice)}
           </span>
         </div>
@@ -138,16 +111,10 @@ export default function BookingReviewStep({
               <FiCreditCard size={14} color="#fff" />
             </div>
             <div className="flex flex-col gap-0.5">
-              <span
-                className="text-[13px] font-[Vazir-Bold]"
-                style={{ color: colors.primary }}
-              >
+              <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
                 مبلغ بیعانه (پرداخت آنلاین)
               </span>
-              <span
-                className="text-[10px] font-[Vazir]"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                 {toPersianDigit(depositPercent)}٪ از قیمت نهایی
               </span>
             </div>
@@ -164,10 +131,7 @@ export default function BookingReviewStep({
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-2">
                 <span className="text-[12px]">🏪</span>
-                <span
-                  className="text-[12px] font-[Vazir]"
-                  style={{ color: colors.textSecondary }}
-                >
+                <span className="text-[12px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                   مابقی (پرداخت در سالن)
                 </span>
               </div>
@@ -201,8 +165,7 @@ export default function BookingReviewStep({
       </div>
 
       {/* ═══ بخش قوانین ═══ */}
-      <div className="flex items-center gap-2.5 mt-3 mb-1">
-      </div>
+      <div className="flex items-center gap-2.5 mt-3 mb-1"></div>
       <RulesCard colors={colors} />
     </div>
   );

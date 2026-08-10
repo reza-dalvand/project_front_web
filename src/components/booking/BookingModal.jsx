@@ -7,8 +7,9 @@ import {
   FiCalendar,
   FiClock,
   FiCheck,
-  FiInfo,       // ⬅️ این خط را اضافه کنید
-} from 'react-icons/fi';import { useTheme } from '@/stores/useThemeStore';
+  FiInfo, // ⬅️ این خط را اضافه کنید
+} from 'react-icons/fi';
+import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import BookingStepIndicator from './BookingStepIndicator';
 import BookingDateSelector from './BookingDateSelector';
@@ -283,9 +284,7 @@ export default function BookingModal({
     }
 
     if (currentStep === dateStepId) {
-      return (
-        <BookingDateSelector selectedDate={selectedDate} onDateSelect={setSelectedDate} />
-      );
+      return <BookingDateSelector selectedDate={selectedDate} onDateSelect={setSelectedDate} />;
     }
 
     if (currentStep === timeStepId) {
@@ -330,9 +329,7 @@ export default function BookingModal({
           />
 
           {/* سوئیچ اعتماد */}
-          {hasPreviousBookings && (
-            <TrustToggle enabled={trustEnabled} onToggle={setTrustEnabled} />
-          )}
+          {hasPreviousBookings && <TrustToggle enabled={trustEnabled} onToggle={setTrustEnabled} />}
         </div>
       );
     }

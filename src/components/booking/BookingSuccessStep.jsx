@@ -36,10 +36,7 @@ export default function BookingSuccessStep({
         <FiCheck size={48} color="#fff" />
       </div>
 
-      <span
-        className="text-xl font-[Vazir-Bold] text-center"
-        style={{ color: colors.textMain }}
-      >
+      <span className="text-xl font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
         رزرو با موفقیت ثبت شد!
       </span>
 
@@ -65,10 +62,7 @@ export default function BookingSuccessStep({
           >
             خدمت:
           </span>
-          <span
-            className="text-[13px] font-[Vazir-Bold] flex-1"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-[13px] font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
             {service?.name || ''}
           </span>
         </div>
@@ -118,10 +112,7 @@ export default function BookingSuccessStep({
           >
             بیعانه پرداختی:
           </span>
-          <span
-            className="text-[13px] font-[Vazir-Bold] flex-1"
-            style={{ color: '#43A047' }}
-          >
+          <span className="text-[13px] font-[Vazir-Bold] flex-1" style={{ color: '#43A047' }}>
             {formatPrice(depositAmount)}
           </span>
         </div>
@@ -147,12 +138,7 @@ export default function BookingSuccessStep({
       </div>
 
       <div className="w-full mt-3">
-        <Button
-          title="بازگشت به صفحه کسب‌وکار"
-          onPress={onClose}
-          variant="outline"
-          fullWidth
-        />
+        <Button title="بازگشت به صفحه کسب‌وکار" onPress={onClose} variant="outline" fullWidth />
       </div>
     </div>
   );
