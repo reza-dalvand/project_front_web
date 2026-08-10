@@ -85,143 +85,35 @@
   --border: var(--color-border);
 }
 
-/* ═══════ Base Layer ═══════ */
+/* ═══ Base Layer ═══ */
 @layer base {
   html {
     direction: rtl;
     overscroll-behavior: none;
   }
+
   body {
     background-color: var(--color-background);
     color: var(--color-text-main);
     font-family: 'Vazir', sans-serif;
     min-height: 100vh;
-    transition:
-      background-color 0.2s ease,
-      color 0.2s ease;
-  }
-  html:not([data-theme-loaded]) body {
-    visibility: hidden;
-  }
-  input::placeholder,
-  textarea::placeholder {
-    color: var(--color-text-secondary);
-    opacity: 0.5;
+    /* ✅ padding کلی برای safe area */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
-/* ═══════ Utility Classes (جایگزین inline styles) ═══════ */
 @layer utilities {
-  /* ─── رنگ‌های پس‌زمینه ─── */
-  .bg-app {
-    background-color: var(--color-background);
+  /* ✅ کلاس‌های کمکی safe area */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
   }
-  .bg-card {
-    background-color: var(--color-card);
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  .bg-primary {
-    background-color: var(--color-primary);
-  }
-  .bg-primary-5 {
-    background-color: var(--color-primary-5);
-  }
-  .bg-primary-10 {
-    background-color: var(--color-primary-10);
-  }
-  .bg-primary-15 {
-    background-color: var(--color-primary-15);
-  }
-  .bg-primary-20 {
-    background-color: var(--color-primary-20);
-  }
-
-  /* ─── رنگ‌های متن ─── */
-  .text-app {
-    color: var(--color-text-main);
-  }
-  .text-muted {
-    color: var(--color-text-secondary);
-  }
-  .text-primary {
-    color: var(--color-primary);
-  }
-  .text-success {
-    color: var(--color-success);
-  }
-  .text-warning {
-    color: var(--color-warning);
-  }
-  .text-error {
-    color: var(--color-error);
-  }
-  .text-info {
-    color: var(--color-info);
-  }
-
-  /* ─── حاشیه ─── */
-  .border-app {
-    border-color: var(--color-border);
-  }
-  .border-primary {
-    border-color: var(--color-primary);
-  }
-
-  /* ─── فونت‌ها ─── */
-  .font-vazir {
-    font-family: 'Vazir', sans-serif;
-  }
-  .font-vazir-medium {
-    font-family: 'Vazir-Medium', sans-serif;
-  }
-  .font-vazir-bold {
-    font-family: 'Vazir-Bold', sans-serif;
-  }
-
-  /* ─── مخفی کردن scrollbar ─── */
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  /* ─── انیمیشن‌ها ─── */
-  .animate-slide-up {
-    animation: slide-up 0.3s ease-out;
-  }
-  .animate-fade-in {
-    animation: fade-in 0.2s ease-out;
-  }
-  .animate-scale-in {
-    animation: scale-in 0.2s ease-out;
-  }
-
-  /* ─── Skeleton Loading ─── */
-  .skeleton {
-    background: linear-gradient(
-      90deg,
-      var(--color-card) 25%,
-      var(--color-border) 50%,
-      var(--color-card) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 8px;
-  }
-
-  /* جلوگیری از overscroll bounce در iOS */
-  .standalone-safe {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-
-  /* ارتفاع تمام‌صفحه واقعی (با احتساب نوار آدرس) */
-  .h-full-screen {
-    height: 100vh;
-    height: 100dvh;
+  .safe-x {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
 }
 

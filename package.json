@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:host": "next dev -H 0.0.0.0",
-    "dev:android": "cap sync android && cap run android",
+    "dev:android": "cap sync android && cap run android -l",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -15,8 +15,10 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/status-bar": "^8.0.3",
     "embla-carousel-react": "^8.6.0",
     "maplibre-gl": "^6.1.0",
     "next": "16.2.12",
@@ -25,6 +27,7 @@
     "react-dropzone": "^20.0.0",
     "react-icons": "^5.7.0",
     "react-map-gl": "^8.1.2",
+    "typescript": "^7.0.2",
     "zustand": "^5.0.14",
     "zustand-persist": "^0.4.0"
   },

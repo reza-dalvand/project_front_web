@@ -48,13 +48,17 @@ export default function BottomTabBar() {
 
   return (
     <>
-      <div className="h-24" />
+      <div className="h-24" style={{
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }} />
       <div
-        className="fixed bottom-4 left-4 right-4 h-16 rounded-2xl flex items-center justify-around px-2 z-40 shadow-xl"
+        className="fixed left-4 right-4 h-16 rounded-2xl flex items-center justify-around px-2 z-40 shadow-xl"
         style={{
           backgroundColor: colors.cardBackground,
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           border: `1px solid ${colors.border}`,
+          /* ✅ فاصله از پایین صفحه به اندازه safe area */
+          bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
         }}
       >
         {tabs.map((tab) => {
