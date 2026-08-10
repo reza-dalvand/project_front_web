@@ -136,41 +136,43 @@ export default function FilterModal({ visible, onClose, onApply, currentFilters 
 
         <Divider />
 
-        {/* بخش ۲: دسته‌بندی خدمات */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#FF980018' }}
-            >
-              <FiGrid size={16} color="#FF9800" />
-            </div>
-            <span className="text-sm font-bold" style={{ color: colors.textMain }}>
-              دسته‌بندی خدمات
-            </span>
-          </div>
-
-          <Dropdown
-            label="دسته‌بندی کلی"
-            placeholder="انتخاب دسته‌بندی"
-            value={mainCategory}
-            options={MAIN_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
-            onSelect={handleMainCategoryChange}
-          />
-
-          {mainCategory !== 'all' && availableSubCategories.length > 0 && (
-            <Dropdown
-              label="نوع خدمت"
-              placeholder="همه"
-              value={subCategory}
-              options={availableSubCategories.map((c) => ({
-                id: c.id,
-                label: c.label,
-              }))}
-              onSelect={setSubCategory}
-            />
-          )}
-        </div>
+{/* بخش ۲: دسته‌بندی خدمات */}
+<div className="space-y-3">
+  <div className="flex items-center gap-2">
+    <div
+      className="w-8 h-8 rounded-lg flex items-center justify-center"
+      style={{ backgroundColor: '#FF980018' }}
+    >
+      <FiGrid size={16} color="#FF9800" />
+    </div>
+    <span className="text-sm font-bold" style={{ color: colors.textMain }}>
+      دسته‌بندی خدمات
+    </span>
+  </div>
+  <Dropdown
+    label="دسته‌بندی کلی"
+    placeholder="انتخاب دسته‌بندی"
+    value={mainCategory}
+    options={MAIN_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
+    onSelect={handleMainCategoryChange}
+  />
+  {/* ✅ همیشه نمایش داده می‌شود، ولی تا انتخاب دسته‌بندی کلی غیرفعال است */}
+  <Dropdown
+    label="نوع خدمت"
+    placeholder={
+      mainCategory === 'all'
+        ? 'ابتدا دسته‌بندی کلی را انتخاب کنید'
+        : 'همه'
+    }
+    value={subCategory}
+    options={availableSubCategories.map((c) => ({
+      id: c.id,
+      label: c.label,
+    }))}
+    onSelect={setSubCategory}
+    disabled={mainCategory === 'all'}
+  />
+</div>
 
         <Divider />
 

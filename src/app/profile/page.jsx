@@ -79,27 +79,27 @@ export default function ProfilePage() {
       route: '/profile/edit',
     },
     // ✅ آیتم جدید: دعوت از دوستان
-    {
-      id: 'invite',
-      title: 'دعوت از دوستان',
-      subtitle: 'کد معرف خود را به اشتراک بگذارید',
-      icon: FiGift,
-      color: '#9C27B0',
-      route: '/profile/invite',
-    },
+    // {
+    //   id: 'invite',
+    //   title: 'دعوت از دوستان',
+    //   subtitle: 'کد معرف خود را به اشتراک بگذارید',
+    //   icon: FiGift,
+    //   color: '#9C27B0',
+    //   route: '/profile/invite',
+    // },
   ];
 
   // ─── منوی تنظیمات ───
   const settingsMenuItems = [
-    {
-      id: 'devices',
-      title: 'دستگاه‌های فعال',
-      subtitle: 'مدیریت نشست‌های فعال',
-      icon: FiSmartphone,
-      color: '#2196F3',
-      badge: 4,
-      route: '/profile/devices',
-    },
+    // {
+    //   id: 'devices',
+    //   title: 'دستگاه‌های فعال',
+    //   subtitle: 'مدیریت نشست‌های فعال',
+    //   icon: FiSmartphone,
+    //   color: '#2196F3',
+    //   badge: 4,
+    //   route: '/profile/devices',
+    // },
     {
       id: 'support',
       title: 'پشتیبانی و راهنما',
