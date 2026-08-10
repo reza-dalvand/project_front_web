@@ -1,11 +1,10 @@
+// src/components/common/BottomSheet.jsx
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX } from 'react-icons/fi';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
-
 let bottomSheetCounter = 0;
-
 export default function BottomSheet({
   visible,
   onClose,
@@ -21,7 +20,6 @@ export default function BottomSheet({
   const dragStartY = useRef(0);
   const currentTranslateY = useRef(0);
   const instanceId = useRef(`bottomsheet-${++bottomSheetCounter}`);
-
   useEffect(() => {
     setMounted(true);
     return () => {
@@ -29,7 +27,6 @@ export default function BottomSheet({
       releaseScrollLock(instanceId.current);
     };
   }, []);
-
   useEffect(() => {
     if (visible) {
       setShow(true);
@@ -53,7 +50,6 @@ export default function BottomSheet({
       };
     }
   }, [visible]);
-
   useEffect(() => {
     if (!visible) return;
     const handleEscape = (e) => {
@@ -62,12 +58,10 @@ export default function BottomSheet({
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
   }, [visible, onClose]);
-
   const handleTouchStart = (e) => {
     dragStartY.current = e.touches[0].clientY;
     currentTranslateY.current = 0;
   };
-
   const handleTouchMove = (e) => {
     const deltaY = e.touches[0].clientY - dragStartY.current;
     if (deltaY > 0 && sheetRef.current) {
@@ -75,7 +69,6 @@ export default function BottomSheet({
       sheetRef.current.style.transform = `translateY(${deltaY}px)`;
     }
   };
-
   const handleTouchEnd = () => {
     if (sheetRef.current) {
       sheetRef.current.style.transform = '';
@@ -85,32 +78,29 @@ export default function BottomSheet({
     }
     currentTranslateY.current = 0;
   };
-
   if (!mounted || !show) return null;
-
   const maxHeight = `${snapPoint * 100}vh`;
-
   const content = (
     <>
       {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[9998] transition-opacity duration-300
-          ${animating && !visible ? 'opacity-0' : 'opacity-100'}
-          ${visible && !animating ? 'opacity-100' : 'opacity-0'}
-        `}
+${animating && !visible ? 'opacity-0' : 'opacity-100'}
+${visible && !animating ? 'opacity-100' : 'opacity-0'}
+`}
         style={{ backgroundColor: 'rgba(0, 0, 0, 0.55)' }}
         onClick={onClose}
       />
-
       {/* Sheet */}
       <div
         ref={sheetRef}
         className={`fixed bottom-0 left-0 right-0 z-[9999]
-          rounded-t-3xl border-t border-[var(--border)]
-          transition-transform duration-300 ease-out flex flex-col
-          bg-[var(--card)] shadow-[0_-4px_20px_rgba(0,0,0,0.15)]
-          ${visible && !animating ? 'translate-y-0' : 'translate-y-full'}
-        `}
+  rounded-t-3xl border-t border-[var(--border)]
+  transition-transform duration-300 ease-out flex flex-col
+  bg-[var(--card)] shadow-[0_-4px_20px_rgba(0,0,0,0.15)]
+  safe-bottom
+  ${visible && !animating ? 'translate-y-0' : 'translate-y-full'}
+  `}
         style={{ maxHeight }}
       >
         {/* Drag Handle */}
@@ -122,7 +112,6 @@ export default function BottomSheet({
         >
           <div className="w-10 h-1 rounded-full bg-[var(--border)]" />
         </div>
-
         {/* Title + Close */}
         {title && (
           <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
@@ -132,23 +121,22 @@ export default function BottomSheet({
             <button
               onClick={onClose}
               className="w-8 h-8 rounded-full flex items-center justify-center
-                transition-colors duration-200 bg-[var(--bg)]"
+transition-colors duration-200 bg-[var(--bg)]"
             >
               <FiX size={18} className="text-[var(--text)]" />
             </button>
           </div>
         )}
-
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
-
-        {/* Footer */}
+        {/* Footer - ✅ اضافه کردن padding-bottom برای فاصله از BottomTabBar */}
         {footer && (
-          <div className="px-5 py-4 border-t border-[var(--border)] bg-[var(--card)]">{footer}</div>
+          <div className="px-5 py-4 pb-8 border-t border-[var(--border)] bg-[var(--card)]">
+            {footer}
+          </div>
         )}
       </div>
     </>
   );
-
   return createPortal(content, document.body);
 }

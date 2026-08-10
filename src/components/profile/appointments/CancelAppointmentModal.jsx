@@ -376,7 +376,13 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
         </div>
 
         {/* فوتر */}
-        <div className="px-5 py-4 border-t flex gap-3" style={{ borderColor: colors.border }}>
+        <div
+          className="px-5 pt-4 border-t"
+          style={{
+            borderColor: colors.border,
+            paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+          }}
+        >
           <button
             onClick={onClose}
             className="flex-1 py-3.5 rounded-2xl border-2 text-sm font-[Vazir-Bold]

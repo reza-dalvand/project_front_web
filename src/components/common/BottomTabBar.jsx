@@ -48,9 +48,12 @@ export default function BottomTabBar() {
 
   return (
     <>
-      <div className="h-24" style={{
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      }} />
+      <div
+        className="h-24"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
+      />
       <div
         className="fixed left-4 right-4 h-16 rounded-2xl flex items-center justify-around px-2 z-40 shadow-xl"
         style={{

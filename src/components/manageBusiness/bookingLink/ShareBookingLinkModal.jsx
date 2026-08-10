@@ -284,7 +284,14 @@ export default function ShareBookingLinkModal({ visible, onClose, bookingLink })
         </div>
 
         {/* فوتر */}
-        <div className="px-5 py-4 border-t" style={{ borderColor: colors.border }}>
+        <div
+          className="px-5 pt-4 border-t"
+          style={{
+            borderColor: colors.border,
+            paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+          }}
+        >
+          {' '}
           <Button title="بستن" onPress={onClose} variant="outline" size="lg" fullWidth />
         </div>
       </div>

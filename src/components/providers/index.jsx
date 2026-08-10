@@ -4,13 +4,12 @@ import { useEffect, Suspense } from 'react';
 import ThemeProvider from './ThemeProvider';
 import ToastProvider from './ToastProvider';
 import AuthProvider from './AuthProvider';
-import BackButtonHandler from './BackButtonHandler'; 
+import BackButtonHandler from './BackButtonHandler';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import OfflineBanner from '@/components/common/OfflineBanner';
 import { useNetworkStore } from '@/stores/useNetworkStore';
 import { useMaintenanceStore } from '@/stores/useMaintenanceStore';
 import { useAppVersionStore } from '@/stores/useAppVersionStore';
-
 
 // ✅ Lazy load مدال‌های غیربحرانی
 import dynamic from 'next/dynamic';
@@ -63,11 +62,11 @@ export default function Providers({ children }) {
         <StoreInitializers />
         <ToastProvider />
         <OfflineBanner />
-          <BackButtonHandler>
-            <AuthProvider>
-              <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
-            </AuthProvider>
-          </BackButtonHandler>
+        <BackButtonHandler>
+          <AuthProvider>
+            <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+          </AuthProvider>
+        </BackButtonHandler>
         <UpdateModal />
         <MaintenanceModal />
       </ThemeProvider>

@@ -223,7 +223,13 @@ export default function InvoiceModal({ visible, payment, onClose, onShare }) {
         </div>
 
         {/* فوتر */}
-        <div className="px-5 py-4 border-t" style={{ borderTopColor: colors.border }}>
+        <div
+          className="px-5 pt-4 border-t"
+          style={{
+            borderColor: colors.border,
+            paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+          }}
+        >
           <Button
             title="اشتراک‌گذاری فاکتور"
             onPress={onShare}
