@@ -1,10 +1,8 @@
 // src/components/profile/paymentHistory/constants.js
 // ✅ بازنویسی کامل — حذف MOCK_PAYMENTS محلی
 
-export { STATUS_META, PAYMENT_TYPE_META } from '@/constants/meta';
+export { STATUS_META, PAYMENT_TYPE_META, PAYMENT_METHOD_META } from '@/constants/meta';
 export { formatPrice } from '@/utils/numberUtils';
-
-// ✅ import از منبع واحد
 export { MOCK_PAYMENTS } from '@/data/payments';
 
 export const MONTHS = [
@@ -28,4 +26,13 @@ export const YEARS = [
   { id: 1403, label: '۱۴۰۳' },
   { id: 1402, label: '۱۴۰۲' },
   { id: 1401, label: '۱۴۰۱' },
+];
+
+
+export const FILTER_OPTIONS = [
+  { id: 'all', label: 'همه پرداخت‌ها' },
+  { id: 'yesterday', label: 'دیروز' },
+  { id: 'last_week', label: 'هفته قبل' },
+  { id: 'last_month', label: 'ماه قبل' },
+  { id: 'last_3months', label: 'سه ماه قبل' },
 ];
