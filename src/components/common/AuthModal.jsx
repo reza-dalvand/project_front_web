@@ -2,15 +2,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  FiX,
-  FiSmartphone,
-  FiUser,
-  FiShield,
-  FiCheck,
-  FiEdit,
-  FiMessageSquare,
-} from 'react-icons/fi';
+import { FiMessageSquare, FiSmartphone, FiUser, FiShield, FiCheck, FiEdit, FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore, useAuthModal } from '@/stores/useAuthStore';
 import Button from './Button';

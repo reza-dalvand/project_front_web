@@ -288,11 +288,6 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
             onChangeText={handleShebaChange}
             error={errors.sheba}
             maxLength={26}
-            hint={
-              <span style={{ direction: 'ltr', display: 'inline-block' }}>
-                {toPersianDigit(shebaDigits.length)} از ۲۴ رقم بعد از IR
-              </span>
-            }
           />
 
           {/* شماره کارت — ✅ اصلاح شده */}

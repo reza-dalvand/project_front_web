@@ -2,13 +2,7 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  FiX,
-  FiCalendar,
-  FiClock,
-  FiCheck,
-  FiInfo, // ⬅️ این خط را اضافه کنید
-} from 'react-icons/fi';
+import { FiUser, FiInfo, FiCalendar, FiClock, FiX, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import BookingStepIndicator from './BookingStepIndicator';
