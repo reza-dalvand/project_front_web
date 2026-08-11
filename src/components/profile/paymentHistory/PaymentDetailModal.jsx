@@ -1,14 +1,12 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   FiX,
   FiUser,
   FiCalendar,
   FiCreditCard,
-  FiDollarSign,
   FiTag,
-  FiCheckCircle,
   FiShare2,
   FiDownload,
   FiFileText,
@@ -19,7 +17,7 @@ import Avatar from '@/components/common/Avatar';
 import Button from '@/components/common/Button';
 import InfoRow from '@/components/common/InfoRow';
 import PriceBreakdown from '@/components/common/PriceBreakdown';
-import { formatPrice, toPersianDigit } from '@/utils/numberUtils';
+import { formatPrice } from '@/utils/numberUtils';
 import { PAYMENT_METHOD_META, STATUS_META } from '@/constants/meta';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { useToast } from '@/hooks/useToast';
@@ -28,7 +26,6 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
   const instanceId = useRef('payment-detail-modal');
-  const [showShareToast, setShowShareToast] = useState(false);
 
   useEffect(() => {
     if (visible) acquireScrollLock(instanceId.current);
@@ -48,13 +45,12 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
   if (!visible || !payment) return null;
 
   const statusMeta = STATUS_META[payment.status] || STATUS_META.pending;
-  const methodMeta = PAYMENT_METHOD_META[payment.paymentMethod] || PAYMENT_METHOD_META.online;
 
-  // ═══ اشتراک‌گذاری فاکتور ═══
-  const handleShare = async () => {
-    const msg = [
+  // ═══ ساخت متن فاکتور ═══
+  const buildShareMessage = () =>
+    [
       '🧾 فاکتور زیبانو',
-      `📋 ${payment.title}`,
+      `📋 ${payment.title || payment.serviceName}`,
       `🏪 ${payment.businessName}`,
       `📅 ${payment.dayName} ${payment.date} - ساعت ${payment.time}`,
       `💰 مبلغ پرداختی: ${formatPrice(payment.paidAmount)}`,
@@ -62,18 +58,65 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
       '✅ زیبانو - رزرو آنلاین خدمات زیبایی',
     ].join('\n');
 
+  // ═══ تابع کمکی کپی (با fallback امن) ═══
+  const copyToClipboard = async (text) => {
+    // روش ۱: Clipboard API مدرن (فقط HTTPS/localhost)
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.warn('Clipboard API failed:', err);
+      }
+    }
+    // روش ۲: execCommand fallback (برای HTTP و WebView و کپاسیتور)
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return success;
+    } catch (err) {
+      console.error('execCommand copy failed:', err);
+      return false;
+    }
+  };
+
+  // ═══ اشتراک‌گذاری فاکتور ═══
+  const handleShare = async () => {
+    const msg = buildShareMessage();
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+
+    // ۱. تلاش برای Web Share API (موبایل)
     if (navigator.share) {
       try {
-        await navigator.share({ message: msg });
-        return;
-      } catch {}
+        await navigator.share({
+          title: 'فاکتور زیبانو',
+          text: msg,
+          url: shareUrl,
+        });
+        return; // موفق بود → خروج
+      } catch (err) {
+        // اگر کاربر خودش cancel کرد، هیچ کاری نکن
+        if (err?.name === 'AbortError') return;
+        // در غیر این صورت به fallback برو
+      }
     }
-    try {
-      await navigator.clipboard.writeText(msg);
-      setShowShareToast(true);
-      showToast('فاکتور کپی شد', 'success');
-      setTimeout(() => setShowShareToast(false), 2000);
-    } catch {}
+
+    // ۲. Fallback: کپی در کلیپ‌بورد
+    const copied = await copyToClipboard(msg);
+    if (copied) {
+      showToast('فاکتور با موفقیت کپی شد', 'success');
+    } else {
+      showToast('امکان کپی فاکتور وجود ندارد', 'error');
+    }
   };
 
   // ═══ دانلود PDF (با print) ═══
@@ -81,16 +124,19 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
     const printContent = `
       <html dir="rtl">
       <head>
+        <meta charset="UTF-8">
         <title>فاکتور زیبانو - ${payment.refNumber}</title>
         <style>
-          body { font-family: 'Vazir', Tahoma, sans-serif; padding: 30px; direction: rtl; }
+          @page { size: A4; margin: 15mm; }
+          body { font-family: 'Vazir', Tahoma, sans-serif; padding: 30px; direction: rtl; color: #2C2521; }
           .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #A88B7D; padding-bottom: 15px; }
-          .header h1 { color: #A88B7D; font-size: 22px; }
-          .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+          .header h1 { color: #A88B7D; font-size: 24px; margin: 0 0 8px 0; }
+          .header p { color: #5A504B; font-size: 13px; margin: 0; }
+          .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
           .row .label { color: #666; font-size: 13px; }
           .row .value { font-weight: bold; font-size: 13px; }
-          .total { background: #f5f5f5; padding: 12px; border-radius: 8px; margin-top: 15px; }
-          .footer { text-align: center; margin-top: 30px; color: #999; font-size: 11px; }
+          .total { background: #F5F0EC; padding: 14px; border-radius: 10px; margin-top: 18px; border: 1px solid #DCD1CB; }
+          .footer { text-align: center; margin-top: 30px; color: #999; font-size: 11px; border-top: 1px solid #eee; padding-top: 15px; }
         </style>
       </head>
       <body>
@@ -104,29 +150,41 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
         <div class="row"><span class="label">تاریخ نوبت</span><span class="value">${payment.appointmentDate} - ${payment.appointmentTime}</span></div>
         <div class="row"><span class="label">تاریخ تراکنش</span><span class="value">${payment.dayName} ${payment.date} - ${payment.time}</span></div>
         <div class="row"><span class="label">مبلغ کل خدمت</span><span class="value">${formatPrice(payment.totalPrice)}</span></div>
-        ${payment.discountPercent > 0 ? `<div class="row"><span class="label">تخفیف (${payment.discountPercent}٪)</span><span class="value" style="color:green">- ${formatPrice(payment.discountAmount)}</span></div>` : ''}
+        ${payment.discountPercent > 0 ? `<div class="row"><span class="label">تخفیف (${payment.discountPercent}٪)</span><span class="value" style="color:#43A047">- ${formatPrice(payment.discountAmount)}</span></div>` : ''}
         <div class="row"><span class="label">بیعانه پرداختی</span><span class="value">${formatPrice(payment.paidAmount)}</span></div>
-        ${payment.remainingAmount > 0 ? `<div class="row"><span class="label">باقیمانده (در سالن)</span><span class="value">${formatPrice(payment.remainingAmount)}</span></div>` : ''}
+        ${payment.remainingAmount > 0 ? `<div class="row"><span class="label">باقیمانده (در سالن)</span><span class="value" style="color:#2196F3">${formatPrice(payment.remainingAmount)}</span></div>` : ''}
         <div class="row"><span class="label">وضعیت</span><span class="value">${statusMeta.label}</span></div>
         <div class="row"><span class="label">درگاه پرداخت</span><span class="value">${payment.paymentGateway}</span></div>
+        ${payment.cardNumber ? `<div class="row"><span class="label">شماره کارت</span><span class="value">${payment.cardNumber}</span></div>` : ''}
         <div class="row"><span class="label">کد پیگیری</span><span class="value">${payment.trackingCode}</span></div>
         <div class="total">
-          <div class="row"><span class="label">مبلغ نهایی پرداخت شده</span><span class="value" style="font-size:16px;color:#A88B7D">${formatPrice(payment.paidAmount)}</span></div>
+          <div class="row" style="border:none"><span class="label" style="font-size:15px">مبلغ نهایی پرداخت شده</span><span class="value" style="font-size:18px;color:#A88B7D">${formatPrice(payment.paidAmount)}</span></div>
         </div>
         <div class="footer">
-          <p>زیبانو - رزرو آنلاین خدمات زیبایی و سلامت</p>
+          <p>زیبانو — رزرو آنلاین خدمات زیبایی و سلامت</p>
           <p>این فاکتور به صورت خودکار تولید شده است</p>
         </div>
       </body>
       </html>
     `;
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
-    showToast('در حال آماده‌سازی PDF...', 'info');
+
+    try {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        showToast('لطفاً پنجره‌های بازشو (Popup) را فعال کنید', 'warning');
+        return;
+      }
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 500);
+      showToast('در حال آماده‌سازی PDF...', 'info');
+    } catch (err) {
+      console.error('Print failed:', err);
+      showToast('خطا در آماده‌سازی PDF', 'error');
+    }
   };
 
   const content = (
@@ -151,11 +209,11 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
           >
             <FiFileText size={22} style={{ color: colors.primary }} />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               فاکتور پرداخت
             </h3>
-            <p className="text-xs" style={{ color: colors.textSecondary }}>
+            <p className="text-xs truncate" style={{ color: colors.textSecondary }}>
               {payment.refNumber}
             </p>
           </div>
@@ -174,7 +232,10 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
           <div className="flex justify-center">
             <span
               className="px-4 py-2 rounded-xl text-sm font-[Vazir-Bold]"
-              style={{ backgroundColor: statusMeta.bg || statusMeta.color + '18', color: statusMeta.color }}
+              style={{
+                backgroundColor: statusMeta.bg || statusMeta.color + '18',
+                color: statusMeta.color,
+              }}
             >
               {statusMeta.label}
             </span>
@@ -186,11 +247,11 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
             style={{ backgroundColor: colors.background, borderColor: colors.border }}
           >
             <Avatar uri={payment.businessLogo} name={payment.businessName} size="md" />
-            <div className="flex-1 gap-1">
-              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
                 {payment.businessName}
               </p>
-              <p className="text-xs" style={{ color: colors.textSecondary }}>
+              <p className="text-xs truncate" style={{ color: colors.textSecondary }}>
                 {payment.serviceName}
               </p>
             </div>
@@ -216,8 +277,22 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
               icon={<FiClock size={16} />}
               iconColor={colors.textSecondary}
               label="وضعیت نوبت"
-              value={payment.appointmentStatus === 'done' ? 'انجام شده ✓' : payment.appointmentStatus === 'upcoming' ? 'در پیش رو' : payment.appointmentStatus === 'cancelled' ? 'لغو شده' : '—'}
-              valueColor={payment.appointmentStatus === 'done' ? '#43A047' : payment.appointmentStatus === 'cancelled' ? '#E53935' : colors.textMain}
+              value={
+                payment.appointmentStatus === 'done'
+                  ? 'انجام شده ✓'
+                  : payment.appointmentStatus === 'upcoming'
+                  ? 'در پیش رو'
+                  : payment.appointmentStatus === 'cancelled'
+                  ? 'لغو شده'
+                  : '—'
+              }
+              valueColor={
+                payment.appointmentStatus === 'done'
+                  ? '#43A047'
+                  : payment.appointmentStatus === 'cancelled'
+                  ? '#E53935'
+                  : colors.textMain
+              }
             />
           </div>
 
@@ -284,7 +359,7 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
               size="lg"
               className="flex-1"
               icon={<FiShare2 size={18} style={{ color: colors.primary }} />}
-              iconPosition="right"
+              iconPosition="left"
             />
             <Button
               title="دانلود PDF"

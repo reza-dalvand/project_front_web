@@ -11,6 +11,7 @@ import {
   FiTag,
   FiCheckCircle,
   FiShare2,
+  FiFileText,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Avatar from '@/components/common/Avatar';
