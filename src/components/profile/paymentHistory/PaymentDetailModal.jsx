@@ -281,17 +281,17 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
                 payment.appointmentStatus === 'done'
                   ? 'انجام شده ✓'
                   : payment.appointmentStatus === 'upcoming'
-                  ? 'در پیش رو'
-                  : payment.appointmentStatus === 'cancelled'
-                  ? 'لغو شده'
-                  : '—'
+                    ? 'در پیش رو'
+                    : payment.appointmentStatus === 'cancelled'
+                      ? 'لغو شده'
+                      : '—'
               }
               valueColor={
                 payment.appointmentStatus === 'done'
                   ? '#43A047'
                   : payment.appointmentStatus === 'cancelled'
-                  ? '#E53935'
-                  : colors.textMain
+                    ? '#E53935'
+                    : colors.textMain
               }
             />
           </div>

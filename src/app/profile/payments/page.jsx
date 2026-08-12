@@ -38,67 +38,66 @@ export default function PaymentsPage() {
   const filteredPayments = useMemo(() => {
     if (activeFilter === 'all') return MOCK_PAYMENTS;
 
-
     const handleShareInvoice = async () => {
-    if (!selectedPayment) return;
+      if (!selectedPayment) return;
 
-    const msg = [
-      '🧾 فاکتور زیبانو',
-      `📋 ${selectedPayment.title}`,
-      `🏪 ${selectedPayment.businessName}`,
-      `📅 ${selectedPayment.dayName} ${selectedPayment.date} - ساعت ${selectedPayment.time}`,
-      `💰 مبلغ پرداختی: ${formatPrice(selectedPayment.paidAmount)}`,
-      `🔖 کد پیگیری: ${selectedPayment.trackingCode}`,
-      '✅ زیبانو - رزرو آنلاین خدمات زیبایی',
-    ].join('\n');
+      const msg = [
+        '🧾 فاکتور زیبانو',
+        `📋 ${selectedPayment.title}`,
+        `🏪 ${selectedPayment.businessName}`,
+        `📅 ${selectedPayment.dayName} ${selectedPayment.date} - ساعت ${selectedPayment.time}`,
+        `💰 مبلغ پرداختی: ${formatPrice(selectedPayment.paidAmount)}`,
+        `🔖 کد پیگیری: ${selectedPayment.trackingCode}`,
+        '✅ زیبانو - رزرو آنلاین خدمات زیبایی',
+      ].join('\n');
 
-    // روش ۱: Web Share API (موبایل و مرورگرهای مدرن)
-    if (navigator.share) {
+      // روش ۱: Web Share API (موبایل و مرورگرهای مدرن)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'فاکتور زیبانو',
+            text: msg,
+          });
+          return;
+        } catch (err) {
+          // اگر کاربر خودش لغو کرد، خروج
+          if (err.name === 'AbortError') return;
+          // در غیر این صورت به fallback ادامه می‌دهیم
+        }
+      }
+
+      // روش ۲: Clipboard API مدرن (فقط HTTPS/localhost)
       try {
-        await navigator.share({
-          title: 'فاکتور زیبانو',
-          text: msg,
-        });
+        await navigator.clipboard.writeText(msg);
+        showToast('فاکتور کپی شد', 'success');
         return;
       } catch (err) {
-        // اگر کاربر خودش لغو کرد، خروج
-        if (err.name === 'AbortError') return;
-        // در غیر این صورت به fallback ادامه می‌دهیم
+        // fallback به روش ۳
       }
-    }
 
-    // روش ۲: Clipboard API مدرن (فقط HTTPS/localhost)
-    try {
-      await navigator.clipboard.writeText(msg);
-      showToast('فاکتور کپی شد', 'success');
-      return;
-    } catch (err) {
-      // fallback به روش ۳
-    }
-
-    // روش ۳: execCommand fallback (برای HTTP و WebView)
-    try {
-      const textArea = document.createElement('textarea');
-      textArea.value = msg;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-9999px';
-      textArea.style.top = '-9999px';
-      textArea.style.opacity = '0';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      const success = document.execCommand('copy');
-      document.body.removeChild(textArea);
-      if (success) {
-        showToast('فاکتور کپی شد', 'success');
-      } else {
+      // روش ۳: execCommand fallback (برای HTTP و WebView)
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = msg;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (success) {
+          showToast('فاکتور کپی شد', 'success');
+        } else {
+          showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
+        }
+      } catch {
         showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
       }
-    } catch {
-      showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
-    }
-  };
-  
+    };
+
     const now = new Date();
     let cutoff;
 
@@ -179,10 +178,7 @@ export default function PaymentsPage() {
               {FILTER_LABELS[activeFilter]}
             </span>
             {hasActiveFilter && (
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: colors.primary }}
-              />
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.primary }} />
             )}
           </button>
         </div>
@@ -197,11 +193,7 @@ export default function PaymentsPage() {
       <div className="px-4 pb-32 space-y-3">
         {filteredPayments.length > 0 ? (
           filteredPayments.map((payment) => (
-            <PaymentCompactCard
-              key={payment.id}
-              payment={payment}
-              onPress={handleOpenDetail}
-            />
+            <PaymentCompactCard key={payment.id} payment={payment} onPress={handleOpenDetail} />
           ))
         ) : (
           <EmptyState

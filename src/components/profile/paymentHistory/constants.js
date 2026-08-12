@@ -28,7 +28,6 @@ export const YEARS = [
   { id: 1401, label: '۱۴۰۱' },
 ];
 
-
 export const FILTER_OPTIONS = [
   { id: 'all', label: 'همه پرداخت‌ها' },
   { id: 'yesterday', label: 'دیروز' },
