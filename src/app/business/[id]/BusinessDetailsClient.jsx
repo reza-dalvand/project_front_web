@@ -1,9 +1,8 @@
+// src/app/business/[id]/BusinessDetailsClient.jsx
 'use client';
-
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import BusinessHero from '@/components/home/BusinessHero';
@@ -13,7 +12,9 @@ import ServiceBookingCard from '@/components/home/ServiceBookingCard';
 import PortfolioGrid from '@/components/home/PortfolioGrid';
 import BusinessAbout from '@/components/home/BusinessAbout';
 import BusinessMapButton from '@/components/home/BusinessMapButton';
-
+import HonorMedalsSection from './HonorMedalsSection'; // ✅ مدال‌های افتخار
+import PriceListMenu from '@/components/priceList/PriceListMenu'; // ✅ لیست قیمت
+import { usePriceListStore } from '@/stores/usePriceListStore'; // ✅ استور لیست قیمت
 import { MOCK_BUSINESS } from '@/data/businesses';
 
 // ✅ Lazy Load
@@ -26,12 +27,14 @@ const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'),
   loading: () => null,
 });
 
-// ✅ generateStaticParams حذف شد — فقط در page.jsx باشد
-
 export default function BusinessDetailsPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const biz = MOCK_BUSINESS;
+
+  // ✅ لیست قیمت این کسب‌وکار (فقط اگر منتشر شده باشد نمایش داده می‌شود)
+  const priceList = usePriceListStore((s) => s.lists[biz.id]);
+  const showPrices = Boolean(priceList?.isPublished);
 
   const [activeTab, setActiveTab] = useState('services');
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
@@ -87,6 +90,19 @@ export default function BusinessDetailsPage() {
             ))}
           </div>
         );
+      // ✅ تب لیست قیمت (فقط اگر منتشر شده)
+      case 'prices':
+        return showPrices ? (
+          <PriceListMenu
+            businessName={biz.name}
+            businessLogo={biz.logo}
+            services={biz.services}
+            settings={priceList}
+          />
+        ) : null;
+      // ✅ تب مدال‌های افتخار
+      case 'honors':
+        return <HonorMedalsSection businessId={biz.id} />;
       case 'portfolio':
         return <PortfolioGrid portfolios={biz.portfolios} onPortfolioPress={openPortfolio} />;
       case 'about':
@@ -111,7 +127,12 @@ export default function BusinessDetailsPage() {
         <div className="px-5 mt-3">
           <BusinessMapButton business={biz} onPress={openMap} />
         </div>
-        <BusinessTabs activeTab={activeTab} onTabChange={setActiveTab} colors={colors} />
+        <BusinessTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          colors={colors}
+          showPrices={showPrices}
+        />
         <div className="px-5 pt-1">{renderTabContent()}</div>
       </div>
 

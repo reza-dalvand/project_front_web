@@ -1,3 +1,4 @@
+// src/components/manageBusiness/QuickAccessGrid.jsx
 'use client';
 import {
   FiCalendar,
@@ -8,6 +9,7 @@ import {
   FiUser,
   FiHome,
   FiBell,
+  FiTag,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
@@ -34,7 +36,6 @@ const QUICK_ACTIONS = [
     route: '/manage/schedule',
     color: '#43e97b',
   },
-  // ✅ آیتم جدید: یادآوری خدمت
   {
     id: 'reminders',
     label: 'یادآوری رزرو',
@@ -56,6 +57,14 @@ const QUICK_ACTIONS = [
     route: '/manage/booking-link',
     color: '#0088cc',
   },
+  // ✅ آیتم جدید: لیست قیمت
+  {
+    id: 'priceList',
+    label: 'لیست قیمت',
+    icon: <FiTag size={22} />,
+    route: '/manage/price-list',
+    color: '#E91E63',
+  },
   {
     id: 'modelRequests',
     label: 'درخواست مدل',
@@ -74,17 +83,14 @@ const QUICK_ACTIONS = [
 
 export default function QuickAccessGrid({ onNavigate, badge = 0 }) {
   const { colors } = useTheme();
-
   return (
     <div className="px-5 mt-5">
       <h2 className="text-base font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
         دسترسی سریع
       </h2>
-
       <div className="grid grid-cols-3 gap-2.5">
         {QUICK_ACTIONS.map((item) => {
           const showBadge = item.id === 'appointments' && badge > 0;
-
           return (
             <button
               key={item.id}
@@ -111,7 +117,6 @@ export default function QuickAccessGrid({ onNavigate, badge = 0 }) {
                   {badge > 9 ? '۹+' : toPersianDigit(badge)}
                 </div>
               )}
-
               {/* آیکون */}
               <div
                 className="w-11 h-11 rounded-xl flex items-center justify-center"
@@ -119,7 +124,6 @@ export default function QuickAccessGrid({ onNavigate, badge = 0 }) {
               >
                 <span style={{ color: item.color }}>{item.icon}</span>
               </div>
-
               {/* لیبل */}
               <span
                 className="text-[11px] font-[Vazir-Bold] text-center leading-4"
