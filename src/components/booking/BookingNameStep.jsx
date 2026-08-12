@@ -75,8 +75,8 @@ export default function BookingNameStep({
           className="text-[12px] font-[Vazir] leading-[22px] text-justify"
           style={{ color: colors.textMain }}
         >
-          در صورت مغایرت اطلاعات، در فرآیند <span className="font-[Vazir-Bold]">استرداد وجه</span> و{' '}
-          <span className="font-[Vazir-Bold]">تسویه مالی</span> با مشکل مواجه خواهید شد.
+          در صورت مغایرت اطلاعات، در فرآیند <span className="font-[Vazir-Bold]">استرداد وجه</span>{' '}
+          با مشکل مواجه خواهید شد.
         </p>
       </div>
 
@@ -103,34 +103,6 @@ export default function BookingNameStep({
         error={nameErrors.lastName}
         rightIcon={<FiUser size={18} style={{ color: colors.textSecondary }} />}
       />
-
-      {/* ═══ چک‌باکس تایید مسئولیت ═══ */}
-      <label className="flex items-start gap-3 cursor-pointer py-2">
-        <button
-          onClick={() => onNameConfirmedChange(!nameConfirmed)}
-          className="mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors"
-          style={{
-            backgroundColor: nameConfirmed ? '#E53935' : 'transparent',
-            borderColor: nameConfirmed ? '#E53935' : colors.border,
-          }}
-          type="button"
-        >
-          {nameConfirmed && <FiCheck size={14} style={{ color: '#fff' }} />}
-        </button>
-        <span className="text-[12px] leading-5 flex-1" style={{ color: colors.textMain }}>
-          نام و نام خانوادگی خود را مطابق با کارت بانکی وارد کرده‌ام و{' '}
-          <span className="font-[Vazir-Bold]" style={{ color: '#E53935' }}>
-            مسئولیت صحت اطلاعات و عواقب ناشی از مغایرت آن را می‌پذیرم.
-          </span>
-        </span>
-      </label>
-
-      {/* خطای چک‌باکس */}
-      {nameErrors.confirm && (
-        <p className="text-center text-xs" style={{ color: '#E53935' }}>
-          {nameErrors.confirm}
-        </p>
-      )}
     </div>
   );
 }

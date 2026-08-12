@@ -1,115 +1,179 @@
+// src/components/home/BusinessInfoCard.jsx
 'use client';
-
 import Image from 'next/image';
-import { FiMapPin, FiStar } from 'react-icons/fi';
+import { FiNavigation, FiPhone, FiShare2, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { Card } from '@/components/common';
-import StatsCard from '@/components/common/StatsCard';
+import { useToast } from '@/hooks/useToast';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { cleanPhone } from '@/utils/phoneUtils';
 
-export default function BusinessInfoCard({ business }) {
+/**
+ * 🏪 کارت اطلاعات کسب‌وکار — نسخه مینیمال تخت
+ * بدون سایه سنگین، چیپ‌های ظریف، دکمه‌های دایره‌ای
+ */
+export default function BusinessInfoCard({ business, onMapPress }) {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const memberSince = business.memberSince || '۲ سال';
+  const servicesCount = business.servicesCount || business.services?.length || 0;
+
+  // ═══ تماس ═══
+  const handleCall = () => {
+    const phone = cleanPhone(business.phone || '');
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    } else {
+      showToast('شماره تماسی ثبت نشده است', 'error');
+    }
+  };
+
+  // ═══ اشتراک‌گذاری ═══
+  const handleShare = async () => {
+    const shareMessage = `🌸 ${business.name}\n📍 ${business.address}\n✨ رزرو از اپلیکیشن زیبانو`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: business.name, text: shareMessage });
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareMessage);
+      showToast('✓ لینک کپی شد', 'success');
+    } catch {
+      showToast('امکان کپی کردن لینک وجود ندارد', 'error');
+    }
+  };
+
+  const actions = [
+    {
+      id: 'map',
+      label: 'مسیریابی',
+      icon: <FiNavigation size={18} />,
+      color: '#E53935',
+      onClick: onMapPress,
+    },
+    {
+      id: 'call',
+      label: 'تماس',
+      icon: <FiPhone size={17} />,
+      color: '#43A047',
+      onClick: handleCall,
+    },
+    {
+      id: 'share',
+      label: 'اشتراک',
+      icon: <FiShare2 size={16} />,
+      color: colors.primary,
+      onClick: handleShare,
+    },
+  ];
 
   return (
-    <div className="px-5 pt-5 pb-4">
-      {/* لوگو و Badge */}
-      <div className="flex items-center gap-3 mb-3">
-        <div
-          className="relative w-[92px] h-[92px] rounded-[26px] overflow-hidden -mt-[70px] shadow-lg"
-          style={{ border: `4px solid ${colors.background}` }}
-        >
-          <Image
-            src={business.logo}
-            alt={business.name}
-            fill
-            className="object-cover"
-            sizes="92px"
-          />
-        </div>
+    <div className="px-5 pt-5">
+      {/* ═══ لوگو (زیر کاور — بدون تغییر) ═══ */}
+      <div
+        className="relative w-[88px] h-[88px] -mt-[64px] rounded-[24px] overflow-hidden"
+        style={{ border: `4px solid ${colors.background}` }}
+      >
+        <Image src={business.logo} alt={business.name} fill className="object-cover" sizes="88px" />
       </div>
 
-      {/* نام کسب‌وکار */}
-      <h1
-        className="text-[22px] font-[Vazir-Bold] leading-[30px] mb-2 mt-[4%]"
-        style={{ color: colors.textMain }}
-      >
-        {business.name}
-      </h1>
+      {/* ═══ نام + VIP ═══ */}
+      <div className="flex items-center gap-2 mt-3">
+        <h1 className="text-[20px] font-[Vazir-Bold] leading-7" style={{ color: colors.textMain }}>
+          {business.name}
+        </h1>
+        {business.VIP && <span className="text-[15px]">👑</span>}
+      </div>
 
-      {/* نام مدیر */}
+      {/* ═══ مدیر + تایید ═══ */}
       {business.ownerName && (
-        <div className="flex items-center gap-2 mb-2">
-          <div
-            className="w-[26px] h-[26px] rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: colors.primary + '15' }}
-          >
-            <span className="text-sm">👤</span>
-          </div>
-          <span className="text-xs" style={{ color: colors.textSecondary }}>
+        <div className="flex items-center gap-1.5 mt-1.5">
+          <span className="text-[11px]" style={{ color: colors.textSecondary }}>
             مدیریت:
           </span>
-          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+          <span className="text-[12px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {business.ownerName}
           </span>
           {business.ownerVerified && (
-            <div
-              className="flex items-center gap-1 px-2 py-0.5 rounded-md"
-              style={{ backgroundColor: '#4CAF5020' }}
+            <span
+              className="flex items-center gap-0.5 text-[10px] font-[Vazir-Bold]"
+              style={{ color: '#43A047' }}
             >
-              <span className="text-[10px]">✓</span>
-              <span className="text-[9px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
-                تایید شده
-              </span>
-            </div>
+              <FiCheck size={11} />
+              تایید شده
+            </span>
           )}
         </div>
       )}
 
-      {/* دسته‌بندی و شهر */}
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-base">💆‍♀️</span>
-        <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.primary }}>
-          {business.category}
+      {/* ═══ چیپ‌های ظریف: دسته‌بندی / شهر ═══ */}
+      <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+        <span
+          className="px-2.5 py-1 rounded-full border text-[10px] font-[Vazir-Medium]"
+          style={{ borderColor: colors.border, color: colors.textSecondary }}
+        >
+          💆‍♀️ {business.category}
         </span>
-        <div className="w-1 h-1 rounded-full mx-0.5" style={{ backgroundColor: colors.border }} />
-        <FiMapPin size={16} style={{ color: colors.textSecondary }} />
-        <span className="text-sm" style={{ color: colors.textSecondary }}>
-          {business.city}
+        <span
+          className="px-2.5 py-1 rounded-full border text-[10px] font-[Vazir-Medium]"
+          style={{ borderColor: colors.border, color: colors.textSecondary }}
+        >
+          📍 {business.city}
         </span>
       </div>
 
-      {/* کارت آمار */}
-      <Card variant="elevated" padding={16} radius={20} className="mt-2">
-        <div className="flex items-center">
-          <StatsCard
-            icon="⭐"
-            label="امتیاز"
-            value={toPersianDigit(business.rating)}
-            subtitle={`${toPersianDigit(business.reviewsCount)} نظر`}
-            color="#FFC107"
-            variant="compact"
-          />
-          <div className="w-px h-[50px] mx-2" style={{ backgroundColor: colors.border }} />
-          <StatsCard
-            icon="💆‍♀️"
-            label="خدمات"
-            value={toPersianDigit(business.servicesCount || 0)}
-            subtitle="فعال"
-            color="#4CAF50"
-            variant="compact"
-          />
-          <div className="w-px h-[50px] mx-2" style={{ backgroundColor: colors.border }} />
-          <StatsCard
-            icon="🏆"
-            label="عضویت"
-            value={memberSince}
-            subtitle="در زیبانو"
-            color="#2196F3"
-            variant="compact"
-          />
-        </div>
-      </Card>
+      {/* ═══ چیپ‌های آمار یک‌ردیفی ═══ */}
+      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+        <span
+          className="flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-[Vazir-Bold]"
+          style={{ borderColor: colors.border, color: colors.textMain }}
+        >
+          <span style={{ color: '#FFC107' }}>★</span>
+          {toPersianDigit((business.rating || 0).toFixed(1))}
+          <span className="font-[Vazir]" style={{ color: colors.textSecondary }}>
+            ({toPersianDigit(business.reviewsCount || 0)})
+          </span>
+        </span>
+        <span
+          className="flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-[Vazir-Bold]"
+          style={{ borderColor: colors.border, color: colors.textMain }}
+        >
+          💆‍♀️ {toPersianDigit(servicesCount)} خدمت
+        </span>
+        <span
+          className="flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-[Vazir-Bold]"
+          style={{ borderColor: colors.border, color: colors.textMain }}
+        >
+          🏆 {memberSince} عضویت
+        </span>
+      </div>
+
+      {/* ═══ دکمه‌های دایره‌ای اکشن ═══ */}
+      <div className="flex items-center gap-5 mt-4 pb-1">
+        {actions.map((a) => (
+          <button key={a.id} onClick={a.onClick} className="flex flex-col items-center gap-1.5">
+            <span
+              className="w-12 h-12 rounded-full border flex items-center justify-center transition-transform active:scale-90"
+              style={{
+                borderColor: colors.border,
+                backgroundColor: colors.cardBackground,
+                color: a.color,
+              }}
+            >
+              {a.icon}
+            </span>
+            <span
+              className="text-[10px] font-[Vazir-Medium]"
+              style={{ color: colors.textSecondary }}
+            >
+              {a.label}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

@@ -11,10 +11,9 @@ import BusinessTabs from '@/components/home/BusinessTabs';
 import ServiceBookingCard from '@/components/home/ServiceBookingCard';
 import PortfolioGrid from '@/components/home/PortfolioGrid';
 import BusinessAbout from '@/components/home/BusinessAbout';
-import BusinessMapButton from '@/components/home/BusinessMapButton';
-import HonorMedalsSection from './HonorMedalsSection'; // ✅ مدال‌های افتخار
-import PriceListMenu from '@/components/priceList/PriceListMenu'; // ✅ لیست قیمت
-import { usePriceListStore } from '@/stores/usePriceListStore'; // ✅ استور لیست قیمت
+import HonorMedalsSection from './HonorMedalsSection';
+import PriceListMenu from '@/components/priceList/PriceListMenu';
+import { usePriceListStore } from '@/stores/usePriceListStore';
 import { MOCK_BUSINESS } from '@/data/businesses';
 
 // ✅ Lazy Load
@@ -32,7 +31,7 @@ export default function BusinessDetailsPage() {
   const router = useRouter();
   const biz = MOCK_BUSINESS;
 
-  // ✅ لیست قیمت این کسب‌وکار (فقط اگر منتشر شده باشد نمایش داده می‌شود)
+  // ✅ لیست قیمت (فقط اگر منتشر شده)
   const priceList = usePriceListStore((s) => s.lists[biz.id]);
   const showPrices = Boolean(priceList?.isPublished);
 
@@ -83,6 +82,7 @@ export default function BusinessDetailsPage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'services':
+        // ✅ هر خدمت یک کارت جدا با دکمه رزرو تمام‌عرض چسبیده
         return (
           <div className="flex flex-col gap-3 pb-2">
             {biz.services.map((service) => (
@@ -90,7 +90,6 @@ export default function BusinessDetailsPage() {
             ))}
           </div>
         );
-      // ✅ تب لیست قیمت (فقط اگر منتشر شده)
       case 'prices':
         return showPrices ? (
           <PriceListMenu
@@ -100,7 +99,6 @@ export default function BusinessDetailsPage() {
             settings={priceList}
           />
         ) : null;
-      // ✅ تب مدال‌های افتخار
       case 'honors':
         return <HonorMedalsSection businessId={biz.id} />;
       case 'portfolio':
@@ -123,10 +121,7 @@ export default function BusinessDetailsPage() {
           isFavorite={isFavorite}
           onFavoritePress={toggleFavorite}
         />
-        <BusinessInfoCard business={biz} />
-        <div className="px-5 mt-3">
-          <BusinessMapButton business={biz} onPress={openMap} />
-        </div>
+        <BusinessInfoCard business={biz} onMapPress={openMap} />
         <BusinessTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
