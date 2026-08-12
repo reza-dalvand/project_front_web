@@ -1,121 +1,5 @@
 // src/data/businesses.js
-/**
- * 🏪 داده‌های کسب‌وکارها
- * استفاده شده در: صفحه اصلی، دسته‌بندی، جستجو، جزئیات، نقشه
- */
 
-// ═══════ کسب‌وکار اصلی (صفحه جزئیات) ═══════
-export const MOCK_BUSINESS = {
-  id: '1',
-  name: 'مجموعه زیبایی و سلامت نیلارام',
-  ownerName: 'مریم حسینی',
-  ownerVerified: true,
-  memberSince: '۲ سال',
-  category: 'کلینیک پوست و مو',
-  city: 'تهران، سعادت‌آباد',
-  address: 'سعادت‌آباد، خیابان سرو غربی، ساختمان پزشکان نگین، طبقه ۳',
-  phone: '۰۲۱-۲۲۳۳۴۴۵۵',
-  workingHours: 'شنبه تا پنج‌شنبه: ۱۰:۰۰ الی ۲۰:۰۰',
-  location: {
-    latitude: 35.7898,
-    longitude: 51.3768,
-  },
-  rating: 4.9,
-  reviewsCount: 142,
-  servicesCount: 24,
-  VIP: true,
-  logo: 'https://picsum.photos/150?random=21',
-  gallery: [
-    'https://picsum.photos/800/600?random=45',
-    'https://picsum.photos/800/600?random=46',
-    'https://picsum.photos/800/600?random=47',
-    'https://picsum.photos/800/600?random=48',
-  ],
-  about:
-    'مجموعه نیلارام با بیش از ۱۰ سال سابقه درخشان در زمینه خدمات تخصصی پوست، فیشیال، مژه و ناخن، با کادری مجرب و محیطی کاملاً بهداشتی و آرامش‌بخش میزبان شما بانوان عزیز است.',
-  services: [
-    {
-      id: 's1',
-      name: 'فیشیال تخصصی و پاکسازی پوست',
-      typeId: 'facial',
-      price: 750000,
-      originalPrice: 850000,
-      discount: 12,
-      duration: 60,
-    },
-    {
-      id: 's2',
-      name: 'کاشت مژه هالیوودی (تار به تار)',
-      typeId: 'eyelash',
-      price: 580000,
-      originalPrice: 580000,
-      discount: 0,
-      duration: 90,
-    },
-    {
-      id: 's3',
-      name: 'ژلیش و پدیکور VIP پا',
-      typeId: 'nail',
-      price: 320000,
-      originalPrice: 380000,
-      discount: 15,
-      duration: 45,
-    },
-    {
-      id: 's4',
-      name: 'کراتینه و احیای موهای آسیب‌دیده',
-      typeId: 'keratin',
-      price: 1800000,
-      originalPrice: 1900000,
-      discount: 5,
-      duration: 120,
-    },
-  ],
-  portfolios: [
-    {
-      id: 'pf1',
-      title: 'فیشیال VIP عروس',
-      coverImage: 'https://picsum.photos/400/400?random=60',
-      images: [
-        'https://picsum.photos/800/800?random=60',
-        'https://picsum.photos/800/800?random=160',
-        'https://picsum.photos/800/800?random=260',
-      ],
-      description: 'فیشیال تخصصی عروس با استفاده از بهترین محصولات روز دنیا.',
-    },
-    {
-      id: 'pf2',
-      title: 'کاشت ناخن ژلیش',
-      coverImage: 'https://picsum.photos/400/400?random=61',
-      images: [
-        'https://picsum.photos/800/800?random=61',
-        'https://picsum.photos/800/800?random=161',
-      ],
-      description: 'کاشت ناخن با طراحی مینیمال و ژلیش ماندگار تا ۳ هفته.',
-    },
-    {
-      id: 'pf3',
-      title: 'میکاپ و شینیون عروس',
-      coverImage: 'https://picsum.photos/400/400?random=62',
-      images: [
-        'https://picsum.photos/800/800?random=62',
-        'https://picsum.photos/800/800?random=162',
-        'https://picsum.photos/800/800?random=262',
-        'https://picsum.photos/800/800?random=362',
-      ],
-      description: 'میکاپ حرفه‌ای عروس با سبک اروپایی و شینیون مدرن.',
-    },
-    {
-      id: 'pf4',
-      title: 'لیزر موهای زائد',
-      coverImage: 'https://picsum.photos/400/400?random=63',
-      images: ['https://picsum.photos/800/800?random=63'],
-      description: 'لیزر با دستگاه الکساندرایت ۲۰۲۴ - بدون درد و ماندگار.',
-    },
-  ],
-};
-
-// ═══════ لیست کسب‌وکارها (دسته‌بندی + جستجو) ═══════
 export const MOCK_BUSINESSES_LIST = [
   {
     id: '1',
@@ -133,6 +17,8 @@ export const MOCK_BUSINESSES_LIST = [
     logo: 'https://picsum.photos/150?random=21',
     servicesCount: 24,
     isNew: false,
+    latitude: 35.7898,
+    longitude: 51.3768,
   },
   {
     id: '2',
@@ -150,6 +36,8 @@ export const MOCK_BUSINESSES_LIST = [
     logo: 'https://picsum.photos/150?random=22',
     servicesCount: 18,
     isNew: true,
+    latitude: 35.8069,
+    longitude: 51.4744,
   },
   {
     id: '3',
@@ -167,6 +55,8 @@ export const MOCK_BUSINESSES_LIST = [
     logo: 'https://picsum.photos/150?random=23',
     servicesCount: 32,
     isNew: false,
+    latitude: 32.6546,
+    longitude: 51.668,
   },
   {
     id: '4',
@@ -184,6 +74,8 @@ export const MOCK_BUSINESSES_LIST = [
     logo: 'https://picsum.photos/150?random=24',
     servicesCount: 15,
     isNew: false,
+    latitude: 35.8355,
+    longitude: 50.9782,
   },
   {
     id: '5',
@@ -201,131 +93,124 @@ export const MOCK_BUSINESSES_LIST = [
     logo: 'https://picsum.photos/150?random=27',
     servicesCount: 20,
     isNew: false,
+    latitude: 35.7807,
+    longitude: 51.3735,
   },
 ];
 
-// ═══════ کسب‌وکارها برای نقشه ═══════
-export const MOCK_BUSINESSES_MAP = {
-  1: {
-    id: '1',
-    name: 'مجموعه زیبایی و سلامت نیلارام',
-    category: 'کلینیک پوست و مو',
-    address: 'سعادت‌آباد، خیابان سرو غربی، ساختمان پزشکان نگین، طبقه ۳',
-    phone: '۰۲۱-۲۲۳۳۴۴۵۵',
-    workingHours: 'شنبه تا پنج‌شنبه: ۱۰:۰۰ الی ۲۰:۰۰',
+// ═══════ مپ کسب‌وکارها (برای نقشه و صفحات جزئیات) ═══════
+export const MOCK_BUSINESSES_MAP = MOCK_BUSINESSES_LIST.reduce((acc, biz) => {
+  acc[biz.id] = {
+    ...biz,
+    gallery: [
+      'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800',
+      'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800',
+    ],
     location: {
-      latitude: 35.7898,
-      longitude: 51.3768,
+      latitude: biz.latitude,
+      longitude: biz.longitude,
     },
-  },
-  2: {
-    id: '2',
-    name: 'سالن زیبایی لاویا',
-    category: 'سالن زیبایی',
-    address: 'نیاوران، خیابان باهنر، پلاک ۱۲۴',
-    phone: '۰۲۱-۲۲۷۷۸۸۹۹',
-    workingHours: 'شنبه تا پنج‌شنبه: ۰۹:۰۰ الی ۲۱:۰۰',
-    location: {
-      latitude: 35.8069,
-      longitude: 51.4744,
+    about:
+      'این کسب‌وکار با ارائه خدمات باکیفیت و استفاده از جدیدترین متدهای روز دنیا، تجربه‌ای بی‌نظیر برای شما فراهم می‌کند. تیم متخصص ما آماده پذیرایی از شماست.',
+    phone: '021-12345678',
+    workingHours: 'شنبه تا پنج‌شنبه ۹ الی ۲۰',
+  };
+  return acc;
+}, {});
+
+// ═══════ یک کسب‌وکار پیش‌فرض برای صفحه جزئیات ═══════
+export const MOCK_BUSINESS = {
+  ...(MOCK_BUSINESSES_MAP['1'] || MOCK_BUSINESSES_LIST[0]),
+  services: [
+    {
+      id: 's1',
+      name: 'فیشیال تخصصی پوست VIP',
+      typeName: 'پاکسازی پوست',
+      price: 850000,
+      originalPrice: 950000,
+      discountPercent: 10,
+      duration: 60,
+      hasDeposit: true,
+      depositAmount: 200000,
+      depositPercent: 30,
     },
-  },
-  3: {
-    id: '3',
-    name: 'مرکز لیزر رویال',
-    category: 'مرکز لیزر',
-    address: 'شهرک غرب، خیابان ایران زمین، مجتمع رویال',
-    phone: '۰۲۱-۸۸۶۶۵۵۴۴',
-    workingHours: 'شنبه تا پنج‌شنبه: ۱۰:۰۰ الی ۲۲:۰۰',
-    location: {
-      latitude: 35.7807,
-      longitude: 51.3735,
+    {
+      id: 's2',
+      name: 'میکاپ عروس اروپایی',
+      typeName: 'میکاپ',
+      price: 2500000,
+      originalPrice: 2500000,
+      discountPercent: 0,
+      duration: 120,
+      hasDeposit: true,
+      depositAmount: 500000,
+      depositPercent: 20,
     },
-  },
+    {
+      id: 's3',
+      name: 'کاشت ناخن ژلیش',
+      typeName: 'ناخن',
+      price: 450000,
+      originalPrice: 450000,
+      discountPercent: 0,
+      duration: 90,
+      hasDeposit: false,
+      depositAmount: 0,
+    },
+  ],
+  portfolios: [
+    {
+      id: 'pf1',
+      title: 'نمونه کار میکاپ عروس',
+      coverImage: 'https://picsum.photos/400/400?random=201',
+      images: [
+        'https://picsum.photos/800/800?random=201',
+        'https://picsum.photos/800/800?random=202',
+      ],
+      serviceName: 'میکاپ عروس',
+    },
+    {
+      id: 'pf2',
+      title: 'فیشیال و پاکسازی',
+      coverImage: 'https://picsum.photos/400/400?random=203',
+      images: ['https://picsum.photos/800/800?random=203'],
+      serviceName: 'فیشیال',
+    },
+  ],
+  appointments: [],
 };
 
-// ═══════ دسته‌بندی‌ها (صفحه اصلی) ═══════
+// ═══════ دسته‌بندی‌ها ═══════
 export const MOCK_CATEGORIES = [
-  { id: 1, name: 'میکاپ', icon: 'face', count: 6 },
-  { id: 2, name: 'کاشت ناخن', icon: 'brush', count: 6 },
-  { id: 3, name: 'لیزر مو', icon: 'flash-on', count: 5 },
-  { id: 4, name: 'پاکسازی', icon: 'spa', count: 6 },
-  { id: 5, name: 'رنگ مو', icon: 'palette', count: 6 },
-  { id: 6, name: 'کراتین', icon: 'auto-awesome', count: 5 },
-  { id: 7, name: 'مژه', icon: 'visibility', count: 6 },
-  { id: 8, name: 'ماساژ', icon: 'self-improvement', count: 4 },
+  { id: '1', name: 'میکاپ و گریم', icon: '💄', count: 120 },
+  { id: '2', name: 'کاشت ناخن', icon: '💅', count: 85 },
+  { id: '3', name: 'لیزر مو', icon: '⚡', count: 45 },
+  { id: '4', name: 'پاکسازی پوست', icon: '✨', count: 92 },
+  { id: '5', name: 'رنگ و لایت مو', icon: '🎨', count: 110 },
+  { id: '6', name: 'کراتین و احیا', icon: '💆‍♀️', count: 60 },
+  { id: '7', name: 'مژه و ابرو', icon: '👁️', count: 75 },
+  { id: '8', name: 'ماساژ و اسپا', icon: '💆‍♂️', count: 30 },
 ];
 
-// ═══════ نگاشت نام دسته‌بندی ═══════
-export const CATEGORY_NAMES = {
-  1: 'میکاپ',
-  2: 'کاشت ناخن',
-  3: 'لیزر مو',
-  4: 'پاکسازی',
-  5: 'رنگ مو',
-  6: 'کراتین',
-  7: 'مژه',
-  8: 'ماساژ',
-};
+export const CATEGORY_NAMES = MOCK_CATEGORIES.reduce((acc, cat) => {
+  acc[cat.id] = cat.name;
+  return acc;
+}, {});
 
-// ═══════ علاقه‌مندی‌ها (favorites) ═══════
-export const MOCK_FAVORITE_BUSINESSES = [
-  {
-    id: 'b1',
-    name: 'سالن زیبایی نیلارام',
-    category: 'کلینیک پوست و مو',
-    city: 'تهران، سعادت‌آباد',
-    rating: 4.9,
-    reviewsCount: 142,
-    logo: 'https://picsum.photos/150?random=21',
-    VIP: true,
-  },
-  {
-    id: 'b2',
-    name: 'مرکز لیزر رویال',
-    category: 'مرکز لیزر',
-    city: 'تهران، شهرک غرب',
-    rating: 4.8,
-    reviewsCount: 178,
-    logo: 'https://picsum.photos/150?random=25',
-    VIP: true,
-  },
-];
+// ═══════ علاقه‌مندی‌ها ═══════
+export const MOCK_FAVORITE_BUSINESSES = MOCK_BUSINESSES_LIST.slice(0, 2);
 
 export const MOCK_FAVORITE_POSTS = [
   {
-    id: 'p1',
-    businessId: 'b1', // ✅ برای ناوبری به صفحه کسب‌وکار
+    id: 'fav_p1',
     businessName: 'کلینیک زیبایی صدف',
     businessLogo: 'https://picsum.photos/100/100?random=1',
-    caption: 'فیشیال VIP با ماسک طلا ✨',
-    image: 'https://picsum.photos/400/400?random=101',
-    imageCount: 3,
-    gallery: [
-      'https://picsum.photos/400/400?random=101',
-      'https://picsum.photos/400/400?random=102',
-      'https://picsum.photos/400/400?random=103',
-    ],
-    source: 'business',
+    businessId: 'b1',
+    caption: 'فیشیال تخصصی VIP ✨',
+    image: 'https://picsum.photos/400/300?random=101',
+    gallery: ['https://picsum.photos/800/800?random=101'],
     rating: 4.8,
-    discount: 15,
-  },
-  {
-    id: 'p2',
-    businessId: 'b2', // ✅ برای ناوبری به صفحه کسب‌وکار
-    businessName: 'سالن زیبایی ماهرو',
-    businessLogo: 'https://picsum.photos/100/100?random=2',
-    caption: 'میکاپ عروس اروپایی 👰‍♀️',
-    image: 'https://picsum.photos/400/400?random=103',
-    imageCount: 4,
-    gallery: [
-      'https://picsum.photos/400/400?random=103',
-      'https://picsum.photos/400/400?random=104',
-      'https://picsum.photos/400/400?random=105',
-      'https://picsum.photos/400/400?random=106',
-    ],
     source: 'business',
-    rating: 4.6,
-    discount: 0,
   },
 ];

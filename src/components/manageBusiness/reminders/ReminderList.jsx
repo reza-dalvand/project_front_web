@@ -1,3 +1,4 @@
+// src/components/manageBusiness/reminders/ReminderList.jsx
 'use client';
 import { FiCheckSquare, FiSquare } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -5,15 +6,6 @@ import ReminderCustomerCard from './ReminderCustomerCard';
 import ReminderEmptyState from './ReminderEmptyState';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-/**
- * لیست مشتریان یادآوری با دکمه انتخاب همه
- *
- * @param {Array}    customers       - لیست مشتریان فیلترشده
- * @param {Array}    selectedIds     - آرایه id های انتخاب شده
- * @param {function} onToggle        - تغییر انتخاب یک مشتری
- * @param {function} onSelectAll     - انتخاب همه / لغو همه
- * @param {function} canSendCustomer - تابع تشخیص قابلیت ارسال
- */
 export default function ReminderList({
   customers,
   selectedIds,
@@ -35,10 +27,8 @@ export default function ReminderList({
 
   const handleSelectAll = () => {
     if (allSelected) {
-      // لغو انتخاب همه
       onSelectAll([]);
     } else {
-      // انتخاب همه قابل ارسال‌ها
       onSelectAll(sendableCustomers.map((c) => c.id));
     }
   };
@@ -67,7 +57,6 @@ export default function ReminderList({
               {allSelected ? 'لغو انتخاب همه' : 'انتخاب همه'}
             </span>
           </button>
-
           <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
             {toPersianDigit(sendableCustomers.length)} مشتری قابل ارسال
             {someSelected && (

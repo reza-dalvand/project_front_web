@@ -1,6 +1,17 @@
 // src/stores/useAuthStore.js
+/**
+ * Store احراز هویت - بازنویسی برای JWT
+ *
+ * هماهنگ با بک‌اند:
+ * - OTP ۵ رقمی
+ * - JWT Access + Refresh Token
+ * - Logout با Blacklist
+ */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { authService } from '@/api';
+import { useTokenStore } from './useTokenStore';
+import { isTokenExpired } from '@/utils/jwt-utils';
 
 // ═══════════════════════════════════════════
 //    ۱. Store اصلی احراز هویت (با persist)
@@ -19,7 +30,12 @@ export const useAuthStore = create(
       setHydrated: () => set({ _hydrated: true }),
 
       // ─── Actions ───
-      // ✅ تغییر: نام‌ها اختیاری شدند
+      /**
+       * ذخیره شماره در انتظار OTP
+       * @param {string} phone
+       * @param {string} firstName
+       * @param {string} lastName
+       */
       setPendingAuth: (phone, firstName = '', lastName = '') => {
         set({
           pendingPhone: phone,
@@ -27,22 +43,55 @@ export const useAuthStore = create(
         });
       },
 
-      login: (phone, name = 'کاربر زیبانو', token = 'mock_token_' + Date.now()) => {
+      /**
+       * ورود موفق — ذخیره user + توکن‌ها
+       * @param {object} userData - داده‌های کاربر از API
+       * @param {object} tokens - { access_token, refresh_token, expires_in }
+       */
+      login: (userData, tokens) => {
+        // ذخیره توکن‌ها در store جداگانه
+        if (tokens?.access_token) {
+          useTokenStore.getState().setTokens({
+            access: tokens.access_token,
+            refresh: tokens.refresh_token,
+            expiresIn: tokens.expires_in,
+          });
+        }
+
         set({
           isAuthenticated: true,
           user: {
-            phone,
-            name,
-            avatar: null,
-            token,
-            memberSince: 'از مرداد ۱۴۰۵',
+            id: userData.id,
+            phone: userData.phone,
+            phoneDisplay: userData.phone_display,
+            name: userData.full_name || `${userData.first_name} ${userData.last_name}`.trim(),
+            firstName: userData.first_name,
+            lastName: userData.last_name,
+            avatar: userData.avatar,
+            isVerified: userData.is_verified,
+            isNationalIdVerified: userData.is_national_id_verified,
+            verifiedName: userData.verified_name,
+            dateJoined: userData.date_joined,
           },
           pendingPhone: null,
           pendingName: null,
         });
       },
 
-      logout: () => {
+      /**
+       * خروج — فراخوانی API + پاک کردن state
+       */
+      logout: async () => {
+        const refreshToken = useTokenStore.getState().getRefreshToken();
+        try {
+          if (refreshToken) {
+            await authService.logout(refreshToken, false);
+          }
+        } catch (e) {
+          console.log('Logout API failed (probably offline):', e.message);
+        }
+        // پاک کردن توکن‌ها
+        useTokenStore.getState().clearTokens();
         set({
           isAuthenticated: false,
           user: null,
@@ -51,10 +100,74 @@ export const useAuthStore = create(
         });
       },
 
+      /**
+       * خروج از همه دستگاه‌ها
+       */
+      logoutAllDevices: async () => {
+        const refreshToken = useTokenStore.getState().getRefreshToken();
+        try {
+          if (refreshToken) {
+            await authService.logout(refreshToken, true);
+          }
+        } catch (e) {
+          console.log('Logout all API failed:', e.message);
+        }
+        useTokenStore.getState().clearTokens();
+        set({
+          isAuthenticated: false,
+          user: null,
+        });
+      },
+
+      /**
+       * بروزرسانی پروفایل کاربر
+       * @param {object} updates
+       */
       updateUser: (updates) =>
         set((state) => ({
           user: { ...state.user, ...updates },
         })),
+
+      /**
+       * بررسی اعتبار session
+       * اگر access token منقضی شده ولی refresh token داریم، تلاش برای refresh
+       * @returns {Promise<boolean>}
+       */
+      checkSession: async () => {
+        const { accessToken, refreshToken } = useTokenStore.getState();
+
+        // اگر اصلاً توکنی نداریم
+        if (!accessToken && !refreshToken) {
+          set({ isAuthenticated: false, user: null });
+          return false;
+        }
+
+        // اگر access token هنوز معتبر است
+        if (accessToken && !isTokenExpired(accessToken)) {
+          return true;
+        }
+
+        // اگر refresh token داریم، تلاش برای refresh
+        if (refreshToken) {
+          try {
+            const result = await authService.refreshToken(refreshToken);
+            const { access, refresh } = result.data;
+            useTokenStore.getState().setTokens({
+              access,
+              refresh,
+              expiresIn: null,
+            });
+            return true;
+          } catch {
+            // Refresh failed — خروج
+            useTokenStore.getState().clearTokens();
+            set({ isAuthenticated: false, user: null });
+            return false;
+          }
+        }
+
+        return false;
+      },
     }),
     {
       name: 'zibano-auth-storage',
@@ -85,14 +198,9 @@ export const useAuthModalStore = create((set, get) => ({
     set({ showAuthModal: true, pendingAction: action });
   },
 
-  // ✅ اصلاح: بعد از لاگین فقط مدال بسته شود و اکشن اجرا شود
-  // دیگر نیازی به ریدایرکت نیست چون کاربر در همان صفحه مانده است
   closeAuthModal: () => {
     const { pendingAction } = get();
-
     set({ showAuthModal: false, pendingAction: null });
-
-    // اگر اکشنی منتظر بوده (مثلاً لایک کردن پست)، حالا که لاگین شده اجراش کن
     if (pendingAction && useAuthStore.getState().isAuthenticated) {
       setTimeout(() => {
         try {
@@ -116,6 +224,7 @@ export const useAuth = () => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
+  const logout = useAuthStore((s) => s.logout);
 
   const requireAuth = (action) => {
     if (isAuthenticated) {
@@ -125,7 +234,7 @@ export const useAuth = () => {
     }
   };
 
-  return { isAuthenticated, user, requireAuth, openAuthModal };
+  return { isAuthenticated, user, requireAuth, openAuthModal, logout };
 };
 
 // ═══════════════════════════════════════════
@@ -136,6 +245,5 @@ export const useAuthModal = () => {
   const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
   const closeAuthModal = useAuthModalStore((s) => s.closeAuthModal);
   const cancelAuthModal = useAuthModalStore((s) => s.cancelAuthModal);
-
   return { showAuthModal, openAuthModal, closeAuthModal, cancelAuthModal };
 };

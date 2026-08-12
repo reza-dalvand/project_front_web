@@ -22,6 +22,7 @@ import InfoRow from '@/components/common/InfoRow';
 import { toPersianDigit } from '@/utils/numberUtils';
 import ConfirmDialog from '@/components/common/ConfirmDialog'; // ✅ این خط را اضافه کنید
 import { MOCK_DEVICES } from '@/data/devices';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 
 export default function ActiveDevicesPage() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function ActiveDevicesPage() {
   const [devices, setDevices] = useState(MOCK_DEVICES);
   const [removeDeviceTarget, setRemoveDeviceTarget] = useState(null);
   const [removeDeviceDialogVisible, setRemoveDeviceDialogVisible] = useState(false);
+  const [logoutAllDialogVisible, setLogoutAllDialogVisible] = useState(false);
 
   const currentDevice = devices.find((d) => d.isCurrent);
   const otherDevices = devices.filter((d) => !d.isCurrent);
@@ -56,11 +58,14 @@ export default function ActiveDevicesPage() {
     setRemoveDeviceDialogVisible(true);
   };
 
-  const handleLogoutAll = () => {
-    if (confirm('از تمام دستگاه‌های متصل خارج می‌شوید (به جز دستگاه فعلی)')) {
-      setDevices((prev) => prev.filter((d) => d.isCurrent));
-      showToast('از همه دستگاه‌ها خارج شدید', 'success');
-    }
+  const handleLogoutAllRequest = () => {
+    setLogoutAllDialogVisible(true);
+  };
+
+  const handleLogoutAllConfirm = () => {
+    setDevices((prev) => prev.filter((d) => d.isCurrent));
+    showToast('از همه دستگاه‌ها خارج شدید', 'success');
+    setLogoutAllDialogVisible(false);
   };
 
   return (
@@ -237,7 +242,7 @@ export default function ActiveDevicesPage() {
         {otherDevices.length > 0 && (
           <Button
             title="خروج از همه دستگاه‌ها"
-            onPress={handleLogoutAll}
+            onPress={handleLogoutAllRequest} // ✅ تغییر
             variant="outline"
             size="lg"
             fullWidth
@@ -265,6 +270,17 @@ export default function ActiveDevicesPage() {
           setRemoveDeviceDialogVisible(false);
           setRemoveDeviceTarget(null);
         }}
+      />
+
+      <ConfirmDialog
+        visible={logoutAllDialogVisible}
+        title="خروج از همه دستگاه‌ها"
+        message="از تمام دستگاه‌های متصل خارج می‌شوید (به جز دستگاه فعلی). آیا مطمئن هستید؟"
+        confirmText="خروج از همه"
+        cancelText="انصراف"
+        variant="warning"
+        onConfirm={handleLogoutAllConfirm}
+        onCancel={() => setLogoutAllDialogVisible(false)}
       />
     </ScreenWrapper>
   );

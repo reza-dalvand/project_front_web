@@ -1,11 +1,10 @@
 // src/stores/business/slices/schedulesSlice.js
-
 /**
  * Slice زمان‌بندی
- * اکشن‌های مدیریت ساعات کاری و نوبت‌های هر خدمت
+ * اکشن‌های مدیریت schedules کسب‌وکار
  */
 export const createSchedulesSlice = (set) => ({
-  // ─── ذخیره زمان‌بندی یک خدمت در یک روز خاص ───
+  // ─── ذخیره زمان‌بندی برای یک خدمت و تاریخ ───
   saveSchedule: (ownerId, serviceId, dateKey, scheduleData) =>
     set((state) => ({
       businessData: {
@@ -26,7 +25,7 @@ export const createSchedulesSlice = (set) => ({
       },
     })),
 
-  // ─── حذف زمان‌بندی یک روز خاص ───
+  // ─── حذف زمان‌بندی یک تاریخ خاص ───
   deleteSchedule: (ownerId, serviceId, dateKey) =>
     set((state) => {
       const ownerSchedules = { ...(state.businessData.schedules?.[ownerId] || {}) };
@@ -44,7 +43,7 @@ export const createSchedulesSlice = (set) => ({
       };
     }),
 
-  // ─── حذف کل زمان‌بندی یک خدمت ───
+  // ─── پاک کردن تمام زمان‌بندی‌های یک خدمت ───
   clearServiceSchedule: (ownerId, serviceId) =>
     set((state) => {
       const ownerSchedules = { ...(state.businessData.schedules?.[ownerId] || {}) };

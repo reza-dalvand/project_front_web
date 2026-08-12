@@ -5,7 +5,6 @@
 // ═══════════════════════════════════════════════════════
 //    الگوریتم تبدیل میلادی ↔ جلالی (بدون کتابخانه)
 // ═══════════════════════════════════════════════════════
-
 // تبدیل میلادی به عدد روز از مبدأ (Julian Day Number)
 const gregorianToJDN = (year, month, day) => {
   const a = Math.floor((14 - month) / 12);
@@ -52,7 +51,6 @@ const jdnToJalaali = (jdn) => {
   const r = jalCal(jy);
   const jdn1f = gregorianToJDN(gy, 3, r.march);
   let jd, jm, k;
-
   k = jdn - jdn1f;
   if (k >= 0) {
     if (k <= 185) {
@@ -66,7 +64,6 @@ const jdnToJalaali = (jdn) => {
     k += 179;
     if (r.leap === 1) k += 1;
   }
-
   jm = 7 + Math.floor(k / 30);
   jd = (k % 30) + 1;
   return { jy, jm, jd };
@@ -82,11 +79,9 @@ const jalCal = (jy) => {
   const gy = jy + 621;
   let leapJ = -14;
   let jp = breaks[0];
-
   if (jy < jp || jy >= breaks[bl - 1]) {
     throw new Error('Invalid Jalaali year ' + jy);
   }
-
   let jump = 0;
   for (let i = 1; i < bl; i += 1) {
     const jm = breaks[i];
@@ -95,26 +90,20 @@ const jalCal = (jy) => {
     leapJ += Math.floor(jump / 33) * 8 + Math.floor((jump % 33) / 4);
     jp = jm;
   }
-
   let n = jy - jp;
   leapJ += Math.floor(n / 33) * 8 + Math.floor(((n % 33) + 3) / 4);
   if (jump % 33 === 4 && jump - n === 4) leapJ += 1;
-
   const leapG = Math.floor(gy / 4) - Math.floor(((Math.floor(gy / 100) + 1) * 3) / 4) - 150;
   const march = 20 + leapJ - leapG;
-
   if (jump - n < 6) n = n - jump + Math.floor((jump + 4) / 33) * 33;
-
   let leap = (((n + 1) % 33) - 1) % 4;
   if (leap === -1) leap = 4;
-
   return { leap, march };
 };
 
 // ═══════════════════════════════════════════════════════
 //    نام ماه‌ها و روزهای هفته
 // ═══════════════════════════════════════════════════════
-
 export const PERSIAN_MONTHS = [
   'فروردین',
   'اردیبهشت',
@@ -143,7 +132,6 @@ export const PERSIAN_WEEKDAYS = [
 // ═══════════════════════════════════════════════════════
 //    API عمومی (همان interface قبلی)
 // ═══════════════════════════════════════════════════════
-
 /**
  * تبدیل میلادی به جلالی
  * @param {number} year - سال میلادی
@@ -249,7 +237,6 @@ export const minutesToTime = (totalMinutes) => {
 // ═══════════════════════════════════════════════════════
 //    توابع کمکی مقایسه و فیلتر
 // ═══════════════════════════════════════════════════════
-
 /**
  * تبدیل تاریخ جلالی به عدد قابل مقایسه
  */
@@ -297,4 +284,31 @@ export const formatDateIntl = (date, options = {}) => {
     day: 'numeric',
     ...options,
   }).format(d);
+};
+
+// ═══════════════════════════════════════════════════════
+//    🆕 توابع جدید برای سازگاری با بک‌اند
+// ═══════════════════════════════════════════════════════
+/**
+ * تبدیل تاریخ جلالی به date_key (فرمت بک‌اند)
+ * @param {number} jy - سال جلالی
+ * @param {number} jm - ماه جلالی (1-12)
+ * @param {number} jd - روز جلالی (1-31)
+ * @returns {string} - "1405/04/22"
+ */
+export const toJalaaliKey = (jy, jm, jd) => {
+  if (!jy || !jm || !jd) return '';
+  return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
+};
+
+/**
+ * تبدیل date_key به تاریخ جلالی
+ * @param {string} dateKey - "1405/04/22"
+ * @returns {{ jy: number, jm: number, jd: number }}
+ */
+export const fromJalaaliKey = (dateKey) => {
+  if (!dateKey) return { jy: 0, jm: 0, jd: 0 };
+  const parts = dateKey.split('/').map(Number);
+  if (parts.length !== 3) return { jy: 0, jm: 0, jd: 0 };
+  return { jy: parts[0], jm: parts[1], jd: parts[2] };
 };

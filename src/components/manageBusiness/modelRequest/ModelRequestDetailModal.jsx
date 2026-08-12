@@ -20,10 +20,12 @@ import CostTypeBadge from '@/components/common/CostTypeBadge';
 import InfoRow from '@/components/common/InfoRow';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 
 export default function ModelRequestDetailModal({ visible, request, onClose, onEdit, onDelete }) {
   const { colors } = useTheme();
   const instanceId = useRef('mr-detail-modal');
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -57,10 +59,14 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
     }
   };
 
-  const handleDelete = () => {
-    if (confirm(`آیا از حذف "${request.title}" مطمئن هستید؟`)) {
-      onDelete?.(request);
-    }
+  const handleDeleteRequest = () => {
+    setDeleteDialogVisible(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    setDeleteDialogVisible(false);
+    onClose();
+    onDelete?.(request);
   };
 
   const content = (
@@ -207,7 +213,7 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
             />
             <Button
               title="حذف"
-              onPress={handleDelete}
+              onPress={handleDeleteRequest}
               variant="primary"
               size="lg"
               className="flex-1"
@@ -218,6 +224,16 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        visible={deleteDialogVisible}
+        title="حذف درخواست مدل"
+        message={`آیا از حذف "${request.title}" مطمئن هستید؟ این عمل قابل بازگشت نیست.`}
+        confirmText="حذف"
+        cancelText="انصراف"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteDialogVisible(false)}
+      />
     </div>
   );
 

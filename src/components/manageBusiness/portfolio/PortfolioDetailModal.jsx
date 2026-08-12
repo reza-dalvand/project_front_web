@@ -12,6 +12,7 @@ import {
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
 import { toPersianDigit } from '@/utils/numberUtils';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 
 export default function PortfolioDetailModal({
   visible,
@@ -23,6 +24,7 @@ export default function PortfolioDetailModal({
 }) {
   const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
 
   useEffect(() => {
     setCurrentIndex(0);
@@ -41,10 +43,14 @@ export default function PortfolioDetailModal({
     if (currentIndex < images.length - 1) setCurrentIndex(currentIndex + 1);
   };
 
-  const handleDelete = () => {
-    if (confirm(`آیا از حذف "${portfolio.title}" مطمئن هستید؟`)) {
-      onDelete?.(portfolio);
-    }
+  const handleDeleteRequest = () => {
+    setDeleteDialogVisible(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    setDeleteDialogVisible(false);
+    onClose();
+    onDelete?.(portfolio);
   };
 
   return (
@@ -294,7 +300,7 @@ export default function PortfolioDetailModal({
             />
             <Button
               title="حذف"
-              onPress={handleDelete}
+              onPress={handleDeleteRequest} // ✅ تغییر
               variant="primary"
               size="lg"
               className="flex-1"
@@ -305,6 +311,16 @@ export default function PortfolioDetailModal({
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        visible={deleteDialogVisible}
+        title="حذف نمونه‌کار"
+        message={`آیا از حذف "${portfolio.title}" مطمئن هستید؟ این عمل قابل بازگشت نیست.`}
+        confirmText="حذف"
+        cancelText="انصراف"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteDialogVisible(false)}
+      />
     </div>
   );
 }

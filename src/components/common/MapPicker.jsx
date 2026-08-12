@@ -54,7 +54,6 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
         setMapLoading(false);
       })
       .catch((err) => {
-        console.error('Failed to load maplibre:', err);
         setMapLoading(false);
       });
   }, []);
@@ -68,7 +67,6 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
       const data = await response.json();
       return data.display_name || 'آدرس یافت نشد';
     } catch (error) {
-      console.log('Error getting address:', error);
       return 'خطا در دریافت آدرس';
     }
   };

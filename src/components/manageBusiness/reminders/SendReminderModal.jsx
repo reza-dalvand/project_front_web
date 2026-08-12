@@ -1,3 +1,4 @@
+// src/components/manageBusiness/reminders/SendReminderModal.jsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -7,17 +8,9 @@ import Button from '@/components/common/Button';
 import ReminderMessagePreview from './ReminderMessagePreview';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { remindersService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 
-/**
- * مدال تایید ارسال پیام یادآوری
- *
- * @param {boolean}  visible       - وضعیت نمایش
- * @param {Array}    customers     - لیست مشتریان انتخاب شده
- * @param {string}   businessName  - نام کسب‌وکار
- * @param {string}   bookingLink   - لینک رزرو
- * @param {function} onClose       - بستن مدال
- * @param {function} onConfirm     - تایید و ارسال
- */
 export default function SendReminderModal({
   visible,
   customers = [],
@@ -60,10 +53,19 @@ export default function SendReminderModal({
 
   const handleConfirm = async () => {
     setLoading(true);
-    // شبیه‌سازی ارسال پیام
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    onConfirm?.(customers.map((c) => c.id));
+    try {
+      // در آینده: ارسال پیام یادآوری از طریق API
+      if (!USE_MOCK) {
+        // await remindersService.sendReminders(customers.map(c => c.id));
+      }
+      // شبیه‌سازی ارسال پیام
+      await new Promise((r) => setTimeout(r, 1500));
+      setLoading(false);
+      onConfirm?.(customers.map((c) => c.id));
+    } catch (error) {
+      console.error('Failed to send reminders:', error);
+      setLoading(false);
+    }
   };
 
   if (!mounted || !visible) return null;
@@ -78,7 +80,7 @@ export default function SendReminderModal({
     >
       <div
         className="w-full max-w-lg max-h-[90vh] rounded-t-3xl md:rounded-3xl
-          flex flex-col overflow-hidden shadow-2xl"
+flex flex-col overflow-hidden shadow-2xl"
         style={{
           backgroundColor: colors.cardBackground,
           borderTop: `1px solid ${colors.border}`,
@@ -200,28 +202,30 @@ export default function SendReminderModal({
             paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
           }}
         >
-          <Button
-            title="انصراف"
-            onPress={() => onClose?.()}
-            disabled={loading}
-            variant="outline"
-            size="lg"
-            className="flex-1"
-          />
-          <Button
-            title={
-              loading ? 'در حال ارسال...' : `ارسال به ${toPersianDigit(customers.length)} مشتری`
-            }
-            onPress={handleConfirm}
-            loading={loading}
-            disabled={loading || customers.length === 0}
-            variant="primary"
-            size="lg"
-            className="flex-[2]"
-            style={{ backgroundColor: '#FF9800' }}
-            icon={<FiSend size={16} color="#fff" />}
-            iconPosition="left"
-          />
+          <div className="flex gap-3">
+            <Button
+              title="انصراف"
+              onPress={() => onClose?.()}
+              disabled={loading}
+              variant="outline"
+              size="lg"
+              className="flex-1"
+            />
+            <Button
+              title={
+                loading ? 'در حال ارسال...' : `ارسال به ${toPersianDigit(customers.length)} مشتری`
+              }
+              onPress={handleConfirm}
+              loading={loading}
+              disabled={loading || customers.length === 0}
+              variant="primary"
+              size="lg"
+              className="flex-[2]"
+              style={{ backgroundColor: '#FF9800' }}
+              icon={<FiSend size={16} color="#fff" />}
+              iconPosition="left"
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 // src/app/auth/verify-otp/page.jsx
 'use client';
-import { useState, useEffect, useRef } from 'react';
+
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiMessageSquare, FiEdit, FiCheck, FiRefreshCw } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -8,18 +9,22 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/common';
 import OTPInput from '@/components/common/OTPInput';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { authService } from '@/api';
+import { OTP_CONFIG } from '@/api/config';
 
-const OTP_LENGTH = 5;
-const RESEND_SECONDS = 60;
-const MOCK_OTP = '12345';
+const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH; // 5
+const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS; // 60
 
-export default function VerifyOtpPage() {
+// ═══════════ کامپوننت داخلی با useSearchParams ═══════════
+function VerifyOtpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { colors } = useTheme();
   const login = useAuthStore((s) => s.login);
   const pendingPhone = useAuthStore((s) => s.pendingPhone);
   const pendingName = useAuthStore((s) => s.pendingName);
+  const isLoggingIn = useRef(false);
+  const redirectUrl = searchParams.get('redirect') || '/';
 
   const [otp, setOtp] = useState(['', '', '', '', '']);
   const [currentBox, setCurrentBox] = useState(0);
@@ -27,12 +32,6 @@ export default function VerifyOtpPage() {
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
-
-  // ✅ جلوگیری از redirect به login بعد از لاگین موفق
-  const isLoggingIn = useRef(false);
-
-  // ✅ خواندن پارامتر redirect از URL
-  const redirectUrl = searchParams.get('redirect') || '/';
 
   // اگر شماره موبایل ذخیره نشده، برگرد به لاگین
   useEffect(() => {
@@ -51,36 +50,45 @@ export default function VerifyOtpPage() {
     return () => clearInterval(interval);
   }, [timer]);
 
-  // ✅ ماسک معکوس: ۴ رقم آخر + *** + ۴ رقم اول
+  // ماسک معکوس
   const maskedPhone = pendingPhone ? pendingPhone.slice(-4) + '***' + pendingPhone.slice(0, 4) : '';
 
   const handleVerify = async () => {
     const code = otp.join('');
     if (code.length < OTP_LENGTH) {
-      setError(`لطفاً کد ${OTP_LENGTH} رقمی را کامل وارد کنید`);
+      setError(`لطفاً کد ${toPersianDigit(OTP_LENGTH)} رقمی را کامل وارد کنید`);
       return;
     }
-
     setLoading(true);
     setError('');
-
-    await new Promise((r) => setTimeout(r, 1200));
-
-    if (code === MOCK_OTP) {
+    try {
+      const result = await authService.verifyOTP(pendingPhone, code);
+      const { user, access_token, refresh_token, expires_in } = result.data;
       isLoggingIn.current = true;
-      login(pendingPhone, pendingName || 'کاربر زیبانو');
+      login(user, {
+        access_token,
+        refresh_token,
+        expires_in,
+      });
       router.replace(redirectUrl);
-    } else {
-      setError('کد وارد شده صحیح نیست');
+    } catch (err) {
       setLoading(false);
+      setError(err.message || 'کد وارد شده صحیح نیست');
+      setOtp(['', '', '', '', '']);
+      setCurrentBox(0);
     }
   };
 
-  const handleResend = () => {
-    setTimer(RESEND_SECONDS);
-    setCanResend(false);
-    setOtp(['', '', '', '', '']);
-    setCurrentBox(0);
+  const handleResend = async () => {
+    try {
+      await authService.sendOTP(pendingPhone);
+      setTimer(RESEND_SECONDS);
+      setCanResend(false);
+      setOtp(['', '', '', '', '']);
+      setCurrentBox(0);
+    } catch (err) {
+      setError(err.message || 'خطا در ارسال مجدد کد');
+    }
   };
 
   const formatTime = (seconds) => {
@@ -117,7 +125,7 @@ export default function VerifyOtpPage() {
           </p>
         </div>
 
-        {/* باکس‌های OTP */}
+        {/* OTP Inputs */}
         <OTPInput
           value={otp}
           onChange={(newOtp) => {
@@ -137,7 +145,7 @@ export default function VerifyOtpPage() {
           </p>
         )}
 
-        {/* بخش ارسال مجدد و ویرایش */}
+        {/* ارسال مجدد / ویرایش */}
         <div className="flex justify-between items-center px-2">
           <button
             onClick={() =>
@@ -151,7 +159,6 @@ export default function VerifyOtpPage() {
               ویرایش شماره
             </span>
           </button>
-
           {canResend ? (
             <button onClick={handleResend} className="flex items-center gap-1" type="button">
               <FiRefreshCw size={14} style={{ color: colors.primary }} />
@@ -175,7 +182,6 @@ export default function VerifyOtpPage() {
           variant="primary"
           size="lg"
           fullWidth
-          // icon={<FiCheck size={18} />}
           iconPosition="left"
         />
 
@@ -193,5 +199,20 @@ export default function VerifyOtpPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ═══════════ کامپوننت اصلی با Suspense ═══════════
+export default function VerifyOtpPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-app">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <VerifyOtpPageContent />
+    </Suspense>
   );
 }

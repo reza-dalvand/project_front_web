@@ -1,54 +1,101 @@
+// src/app/model-requests/[id]/ModelRequestDetailClient.jsx
 'use client';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FiArrowRight, FiShare2, FiPhone, FiMapPin, FiClock, FiInfo } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Card from '@/components/common/Card';
-import ActionButtons from '@/components/common/ActionButtons';
+import Button from '@/components/common/Button';
 import CostTypeBadge from '@/components/common/CostTypeBadge';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
-import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
-
-// ✅ اضافه کردن generateStaticParams برای Static Export
-export async function generateStaticParams() {
-  return MOCK_MODEL_REQUESTS.map((req) => ({
-    id: req.id.toString(),
-  }));
-}
-
-const MOCK_REQUEST = {
-  id: 'mr_1',
-  title: 'مدل فیشیال VIP عروس',
-  serviceName: 'فیشیال تخصصی پوست',
-  serviceImage: 'https://picsum.photos/800/600?random=50',
-  businessName: 'کلینیک زیبایی صدف',
-  businessId: 'b1',
-  city: 'تهران، سعادت‌آباد',
-  costType: 'paid',
-  discount: 50,
-  description:
-    'نیاز به مدل برای تست محصولات جدید فیشیال. این خدمت شامل پاکسازی عمیق پوست، استفاده از ماسک طلای ۲۴ عیار و ماساژ صورت با روغن‌های طبیعی است. مدل باید پوست حساس نداشته باشد و ترجیحاً بین ۲۰ تا ۳۵ سال سن داشته باشد.',
-  contactPhone: '09121234567',
-  createdAt: '۱۴۰۳/۰۴/۱۰',
-  expiresAt: '۱۴۰۳/۰۴/۲۰',
-};
+import { useToast } from '@/hooks/useToast';
+import { adsService } from '@/api';
+import { USE_MOCK } from '@/api/config';
+import { MOCK_MODEL_REQUEST_DETAIL } from '@/data/modelRequests';
 
 export default function ModelRequestDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { colors } = useTheme();
-  const request = MOCK_REQUEST;
+  const { showToast } = useToast();
+  const [request, setRequest] = useState(MOCK_MODEL_REQUEST_DETAIL);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // ═══ دریافت جزئیات از API ═══
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (USE_MOCK) return;
+      setIsLoading(true);
+      try {
+        const result = await adsService.getModelRequestDetail(params.id);
+        setRequest(result.data);
+      } catch (error) {
+        console.error('Failed to fetch model request detail:', error);
+        showToast('خطا در بارگذاری جزئیات', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDetail();
+  }, [params.id, showToast]);
 
   const handleBusinessPress = () => {
     router.push(`/business/${request.businessId}`);
   };
 
+  const handleCall = () => {
+    if (request.contactPhone) {
+      window.location.href = `tel:${cleanPhone(request.contactPhone)}`;
+    } else {
+      showToast('شماره تماسی ثبت نشده است', 'error');
+    }
+  };
+
+  // ✅ بعد: اشتراک‌گذاری با fallback امن
+  const handleShare = async () => {
+    const shareMessage = `👤 ${request.title}
+🏪 ${request.businessName}
+📍 ${request.city}
+🔗 ${typeof window !== 'undefined' ? window.location.href : ''}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: request.title,
+          text: shareMessage,
+          url: typeof window !== 'undefined' ? window.location.href : undefined,
+        });
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+      }
+    }
+    // Fallback: کپی در کلیپ‌بورد
+    try {
+      await navigator.clipboard.writeText(shareMessage);
+      showToast('لینک کپی شد', 'success');
+    } catch {
+      showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <ScreenWrapper>
+        <div className="flex items-center justify-center min-h-screen">
+          <p style={{ color: colors.textMain }}>در حال بارگذاری...</p>
+        </div>
+      </ScreenWrapper>
+    );
+  }
+
   return (
     <ScreenWrapper scrollable padding={0}>
       {/* Hero */}
-      <div className="relative w-full h-[320px] bg-black">
+      <div className="relative w-full h-[320px] bg-black overflow-hidden">
         <Image
           src={request.serviceImage}
           alt={request.title}
@@ -58,56 +105,60 @@ export default function ModelRequestDetailPage() {
           priority
         />
         <div
-          className="absolute bottom-0 left-0 right-0 h-[120px]"
-          style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
+          className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
+          style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
         />
         {/* دکمه‌ها */}
-        <div className="absolute top-4 left-4 right-4 flex items-center gap-3">
+        <div className="absolute top-4 left-4 right-4 flex items-center gap-3 z-10">
           <button
             onClick={() => router.back()}
             className="w-11 h-11 rounded-full flex items-center justify-center
-              border border-white/15"
+border border-white/15 transition-all hover:scale-110 active:scale-95"
             style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
           >
             <FiArrowRight size={22} color="#fff" />
           </button>
           <div className="flex-1" />
           <button
+            onClick={handleShare}
             className="w-11 h-11 rounded-full flex items-center justify-center
-              border border-white/15"
+border border-white/15 transition-all hover:scale-110 active:scale-95"
             style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
           >
             <FiShare2 size={20} color="#fff" />
           </button>
         </div>
-        {/* Badge تاریخ */}
-        <div
-          className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3 py-2 rounded-xl"
-          style={{ backgroundColor: 'rgba(233,30,99,0.85)' }}
-        >
-          <span className="text-[11px] font-[Vazir-Bold] text-white">ثبت: {request.createdAt}</span>
-        </div>
+        {/* Badge فوری */}
+        {request.isUrgent && (
+          <div
+            className="absolute top-20 right-4 px-3 py-1.5 rounded-xl shadow-md"
+            style={{ backgroundColor: '#FF9800' }}
+          >
+            <span className="text-[11px] font-[Vazir-Bold] text-white">🔥 فوری</span>
+          </div>
+        )}
       </div>
 
       {/* محتوا */}
       <div className="p-5 space-y-4 pb-32">
-        {/* عنوان */}
-        <h1
-          className="text-2xl font-[Vazir-Bold] leading-[34px]"
-          style={{ color: colors.textMain }}
-        >
-          {request.title}
-        </h1>
-
-        {/* Chip خدمت */}
-        <div
-          className="flex items-center gap-1.5 self-start px-3 py-1.5 rounded-xl"
-          style={{ backgroundColor: colors.primary + '15' }}
-        >
-          <span className="text-sm">💆‍♀️</span>
-          <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
-            {request.serviceName}
-          </span>
+        {/* عنوان و badges */}
+        <div className="space-y-3">
+          <h1 className="text-xl font-[Vazir-Bold] leading-8" style={{ color: colors.textMain }}>
+            {request.title}
+          </h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <CostTypeBadge type={request.costType} variant="default" />
+            {request.discount > 0 && (
+              <div
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl"
+                style={{ backgroundColor: '#E5393515' }}
+              >
+                <span className="text-[11px] font-[Vazir-Bold]" style={{ color: '#E53935' }}>
+                  {toPersianDigit(request.discount)}٪ تخفیف مدل‌ها
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* کارت کسب‌وکار */}
@@ -115,7 +166,7 @@ export default function ModelRequestDetailPage() {
           <Card variant="elevated" padding={14} radius={16}>
             <div className="flex items-center gap-3">
               <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
                 style={{ backgroundColor: colors.primary + '15' }}
               >
                 <span className="text-xl">🏪</span>
@@ -141,31 +192,6 @@ export default function ModelRequestDetailPage() {
           </Card>
         </button>
 
-        {/* نوع هزینه */}
-        <Card variant="elevated" padding={16} radius={18}>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">💰</span>
-            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              شرایط هزینه
-            </span>
-          </div>
-          <CostTypeBadge type={request.costType} variant="default" />
-          {request.discount > 0 && (
-            <div
-              className="flex items-center gap-2 mt-3 p-3 rounded-xl border"
-              style={{
-                backgroundColor: '#E5393510',
-                borderColor: '#E5393530',
-              }}
-            >
-              <span className="text-sm">🏷️</span>
-              <span className="text-sm font-[Vazir-Bold]" style={{ color: '#E53935' }}>
-                {toPersianDigit(request.discount)}٪ تخفیف ویژه مدل‌ها
-              </span>
-            </div>
-          )}
-        </Card>
-
         {/* توضیحات */}
         <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center gap-2 mb-3">
@@ -174,46 +200,38 @@ export default function ModelRequestDetailPage() {
               توضیحات آگهی
             </span>
           </div>
-          <p className="text-sm leading-[26px] text-justify" style={{ color: colors.textMain }}>
+          <p className="text-sm leading-7 text-justify" style={{ color: colors.textMain }}>
             {request.description}
           </p>
         </Card>
 
-        {/* تماس */}
-        <ActionButtons
-          phone={cleanPhone(request.contactPhone)}
-          shareMessage={`${request.title}
-${request.description || ''}
-🏪 ${request.businessName}
-📍 ${request.city}`}
-        />
-
-        {/* نکات */}
-        <Card variant="default" padding={16} radius={18}>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">💡</span>
-            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              نکات مهم
+        {/* اطلاعات تکمیلی */}
+        <Card variant="elevated" padding={14} radius={16}>
+          <div className="flex items-center gap-3 mb-2">
+            <FiClock size={16} color={colors.textSecondary} />
+            <span className="text-xs" style={{ color: colors.textSecondary }}>
+              ثبت: {request.createdAt}
             </span>
           </div>
-          <div className="space-y-2.5">
-            {[
-              'قبل از تماس، شرایط آگهی را به دقت مطالعه کنید',
-              'برای رزرو نوبت با سالن تماس بگیرید',
-              'مدل‌ها اجازه استفاده از تصاویر را به سالن می‌دهند',
-              'شرایط همکاری را قبل از شروع کار مشخص کنید',
-            ].map((tip, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-xs mt-0.5" style={{ color: '#4CAF50' }}>
-                  ✓
-                </span>
-                <span className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
-                  {tip}
-                </span>
-              </div>
-            ))}
+          <div className="flex items-center gap-3">
+            <FiClock size={16} color="#FF9800" />
+            <span className="text-xs" style={{ color: colors.textSecondary }}>
+              انقضا: {request.expiresAt}
+            </span>
           </div>
         </Card>
+
+        {/* دکمه تماس */}
+        <Button
+          title="تماس با کسب‌وکار"
+          onPress={handleCall}
+          variant="primary"
+          size="lg"
+          fullWidth
+          icon={<FiPhone size={18} color="#fff" />}
+          iconPosition="right"
+          style={{ backgroundColor: '#4CAF50' }}
+        />
       </div>
     </ScreenWrapper>
   );

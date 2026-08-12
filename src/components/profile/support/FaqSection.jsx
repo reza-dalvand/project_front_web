@@ -1,19 +1,47 @@
 // src/components/profile/support/FaqSection.jsx
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FiChevronDown, FiChevronUp, FiHelpCircle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { supportService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 import { FAQ_ITEMS, FAQ_CATEGORIES } from './constants';
 
 export default function FaqSection() {
   const { colors } = useTheme();
   const [activeCategory, setActiveCategory] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
+  const [faqs, setFaqs] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // ═══════ دریافت FAQ از API ═══════
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      setIsLoading(true);
+      try {
+        if (USE_MOCK) {
+          setFaqs(FAQ_ITEMS);
+        } else {
+          const result = await supportService.getFAQ();
+          setFaqs(result.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch FAQs:', error);
+        setFaqs(FAQ_ITEMS); // fallback
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFaqs();
+  }, []);
 
   const filteredFaqs = useMemo(() => {
-    if (activeCategory === 'all') return FAQ_ITEMS;
-    return FAQ_ITEMS.filter((item) => item.categoryId === activeCategory);
-  }, [activeCategory]);
+    if (activeCategory === 'all') return faqs;
+    return faqs.filter(
+      (item) => item.category === activeCategory || item.categoryId === activeCategory
+    );
+  }, [faqs, activeCategory]);
 
   const toggleFaq = (id) => {
     setExpandedId(expandedId === id ? null : id);
@@ -45,8 +73,8 @@ export default function FaqSection() {
           const isActive = activeCategory === cat.id;
           const count =
             cat.id === 'all'
-              ? FAQ_ITEMS.length
-              : FAQ_ITEMS.filter((f) => f.categoryId === cat.id).length;
+              ? faqs.length
+              : faqs.filter((f) => f.category === cat.id || f.categoryId === cat.id).length;
           return (
             <button
               key={cat.id}
@@ -82,9 +110,18 @@ export default function FaqSection() {
 
       {/* لیست سوالات */}
       <div className="space-y-2.5">
-        {filteredFaqs.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div
+              className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+              style={{ color: colors.primary }}
+            />
+          </div>
+        ) : filteredFaqs.length > 0 ? (
           filteredFaqs.map((item) => {
-            const category = FAQ_CATEGORIES.find((c) => c.id === item.categoryId);
+            const category = FAQ_CATEGORIES.find(
+              (c) => c.id === item.category || c.id === item.categoryId
+            );
             const isExpanded = expandedId === item.id;
             return (
               <div

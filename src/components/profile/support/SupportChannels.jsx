@@ -2,7 +2,7 @@
 'use client';
 import { FiSend, FiMessageSquare, FiPhone, FiArrowRight } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { SUPPORT_CHANNELS, SUPPORT_PHONE_DISPLAY, SUPPORT_HOURS_SIMPLE } from './constants';
+import { SUPPORT_CHANNELS, SUPPORT_HOURS_SIMPLE } from './constants';
 
 const CHANNEL_ICONS = {
   send: FiSend,
@@ -26,7 +26,7 @@ export default function SupportChannels() {
           className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: colors.primary + '15' }}
         >
-          <FiPhone size={20} color={colors.primary} />
+          <FiPhone size={20} style={{ color: colors.primary }} />
         </div>
         <div className="flex-1 gap-1">
           <p className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>

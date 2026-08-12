@@ -1,8 +1,9 @@
 // src/stores/business/slices/servicesSlice.js
-
 /**
  * Slice خدمات
  * اکشن‌های add / update / delete / toggle برای خدمات کسب‌وکار
+ *
+ * ✅ هماهنگ با API بک‌اند
  */
 export const createServicesSlice = (set) => ({
   // ─── افزودن خدمت جدید ───
@@ -12,7 +13,11 @@ export const createServicesSlice = (set) => ({
         ...state.businessData,
         services: [
           ...state.businessData.services,
-          { ...service, id: service.id || `svc_${Date.now()}` },
+          {
+            ...service,
+            id: service.id || `svc_${Date.now()}`,
+            isActive: service.isActive !== false,
+          },
         ],
       },
     })),

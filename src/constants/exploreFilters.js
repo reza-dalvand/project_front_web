@@ -1,4 +1,5 @@
 // src/constants/exploreFilters.js
+import { MOCK_POSTS } from '@/data/posts';
 
 export const PROVINCES = [
   { id: 'tehran', label: 'تهران' },
@@ -121,83 +122,6 @@ export const SOURCE_FILTERS = [
   { id: 'all', label: 'همه', icon: 'apps' },
   { id: 'business', label: 'پست کسب‌وکارها', icon: 'store' },
   { id: 'magazine', label: 'مجله زیبانو', icon: 'auto-awesome' },
-];
-
-// داده‌های MOCK پست‌ها
-export const MOCK_POSTS = [
-  {
-    id: 'p1',
-    businessName: 'کلینیک زیبایی صدف',
-    businessLogo: 'https://picsum.photos/100/100?random=1',
-    businessId: 'b1',
-    provinceId: 'tehran',
-    cityId: 'tehran-city',
-    businessTypeId: 'clinic',
-    rating: 4.8,
-    discount: 15,
-    caption: 'فیشیال تخصصی VIP با استفاده از بهترین متریال روز دنیا ✨',
-    saved: false,
-    source: 'business',
-    mainCategory: 'skin',
-    subCategory: 'facial',
-    gallery: [
-      'https://picsum.photos/800/800?random=1',
-      'https://picsum.photos/800/800?random=2',
-      'https://picsum.photos/800/800?random=3',
-    ],
-  },
-  {
-    id: 'p2',
-    businessName: 'سالن زیبایی ماهرو',
-    businessLogo: 'https://picsum.photos/100/100?random=2',
-    businessId: 'b2',
-    provinceId: 'tehran',
-    cityId: 'shemiran',
-    businessTypeId: 'makeup',
-    rating: 4.6,
-    discount: 0,
-    caption: 'میکاپ عروس اروپایی با سبک مینیمال و طبیعی 👰‍♀️',
-    saved: false,
-    source: 'business',
-    mainCategory: 'makeup',
-    subCategory: 'bridal_makeup',
-    gallery: ['https://picsum.photos/800/800?random=4', 'https://picsum.photos/800/800?random=5'],
-  },
-  {
-    id: 'p3',
-    businessName: 'ناخن گالری پریا',
-    businessLogo: 'https://picsum.photos/100/100?random=3',
-    businessId: 'b3',
-    provinceId: 'alborz',
-    cityId: 'fardis',
-    businessTypeId: 'nail',
-    rating: 4.4,
-    discount: 0,
-    caption: 'طراحی ناخن با سبک ژورنالی و مینیمال 💖',
-    saved: false,
-    source: 'business',
-    mainCategory: 'nail',
-    subCategory: 'nail_design',
-    gallery: [
-      'https://picsum.photos/800/800?random=6',
-      'https://picsum.photos/800/800?random=7',
-      'https://picsum.photos/800/800?random=8',
-    ],
-  },
-  {
-    id: 'p4',
-    businessName: 'مجله زیبانو',
-    businessLogo: 'https://picsum.photos/100/100?random=10',
-    businessId: 'magazine',
-    rating: 0,
-    discount: 0,
-    caption: '۱۰ ترفند طلایی برای مراقبت از پوست در تابستان ☀️',
-    saved: false,
-    source: 'magazine',
-    mainCategory: 'skin',
-    subCategory: 'skin_cleansing',
-    gallery: ['https://picsum.photos/800/800?random=20'],
-  },
 ];
 
 // تابع کمکی: یافتن label بر اساس id

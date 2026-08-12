@@ -21,7 +21,6 @@ import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
 import { useToast } from '@/hooks/useToast';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { MOCK_BUSINESSES_MAP } from '@/data/businesses';
 
 // ═══════════════════════════════════════════════════════
 //              MapLibre Style (OpenStreetMap)
@@ -82,15 +81,6 @@ const NAVIGATION_APPS = [
   },
 ];
 
-// ✅ اضافه کردن generateStaticParams برای Static Export
-export async function generateStaticParams() {
-  const ids = Object.keys(MOCK_BUSINESSES_MAP);
-
-  return ids.map((id) => ({
-    id: id.toString(),
-  }));
-}
-
 export default function BusinessMapPage() {
   const params = useParams();
   const router = useRouter();
@@ -120,7 +110,6 @@ export default function BusinessMapPage() {
         setMapLoading(false);
       })
       .catch((err) => {
-        console.error('Failed to load maplibre:', err);
         setMapError(true);
         setMapLoading(false);
       });
@@ -198,9 +187,7 @@ export default function BusinessMapPage() {
       try {
         await navigator.clipboard.writeText(text);
         return true;
-      } catch (err) {
-        console.log('Clipboard API failed:', err);
-      }
+      } catch (err) {}
     }
 
     // روش ۲: execCommand fallback (برای HTTP و WebView)
@@ -218,7 +205,6 @@ export default function BusinessMapPage() {
       document.body.removeChild(textarea);
       return success;
     } catch (err) {
-      console.log('execCommand copy failed:', err);
       return false;
     }
   };
@@ -234,16 +220,12 @@ export default function BusinessMapPage() {
           text: shareMessage,
           url: shareUrl,
         });
-      } catch (err) {
-        console.log('Share cancelled');
-      }
+      } catch (err) {}
     } else {
       try {
         await navigator.clipboard.writeText(shareMessage);
         showToast('لینک موقعیت کپی شد', 'success');
-      } catch (err) {
-        console.error('Failed to copy:', err);
-      }
+      } catch (err) {}
     }
   };
 

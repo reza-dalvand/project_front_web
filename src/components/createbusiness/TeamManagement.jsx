@@ -20,6 +20,7 @@ import BottomSheet from '@/components/common/BottomSheet';
 import Avatar from '@/components/common/Avatar';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { validatePhone } from '@/utils/phoneUtils';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 
 /**
  * کامپوننت مدیریت تیم
@@ -33,7 +34,8 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
   const [modalStep, setModalStep] = useState(1);
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
-
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   // فرم
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -110,10 +112,17 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
     closeModal();
   };
 
-  const handleDelete = (member) => {
-    if (confirm(`آیا از حذف "${member.name}" مطمئن هستید؟`)) {
-      onChange?.(team.filter((m) => m.id !== member.id));
+  const handleDeleteRequest = (member) => {
+    setDeleteTarget(member);
+    setDeleteDialogVisible(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteTarget) {
+      onChange?.(team.filter((m) => m.id !== deleteTarget.id));
     }
+    setDeleteDialogVisible(false);
+    setDeleteTarget(null);
   };
 
   const getServiceName = (id) => services.find((s) => s.id === id)?.name || 'خدمت';
@@ -163,8 +172,9 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
                     <FiEdit2 size={16} style={{ color: colors.primary }} />
                   </button>
                   <button
-                    onClick={() => handleDelete(member)}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-[#E5393515]"
+                    onClick={() => handleDeleteRequest(member)} // ✅ تغییر
+                    className="w-9 h-9 rounded-xl flex items-center justify-center"
+                    style={{ backgroundColor: '#E5393515' }}
                   >
                     <FiTrash2 size={16} color="#E53935" />
                   </button>
@@ -431,6 +441,19 @@ export default function TeamManagement({ team = [], services = [], onChange }) {
           )}
         </div>
       </BottomSheet>
+      <ConfirmDialog
+        visible={deleteDialogVisible}
+        title="حذف عضو تیم"
+        message={`آیا از حذف "${deleteTarget?.name || ''}" مطمئن هستید؟ این عمل قابل بازگشت نیست.`}
+        confirmText="حذف"
+        cancelText="انصراف"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setDeleteDialogVisible(false);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }

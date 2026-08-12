@@ -15,21 +15,22 @@ import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore, useAuthModal } from '@/stores/useAuthStore';
 import Button from './Button';
 import Input from './Input';
-import { validatePhone } from '@/utils/phoneUtils';
+import { validatePhone, cleanPhone } from '@/utils/phoneUtils';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { authService } from '@/api';
+import { OTP_CONFIG } from '@/api/config';
 
-const OTP_LENGTH = 5;
-const RESEND_SECONDS = 60;
-const MOCK_OTP = '12345';
+const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH; // 5
+const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS; // 60
 
 export default function AuthModal({ variant = 'bottomsheet' }) {
   const { colors } = useTheme();
   const login = useAuthStore((s) => s.login);
   const { showAuthModal, closeAuthModal, cancelAuthModal } = useAuthModal();
-
   const instanceId = useRef('auth-modal');
-  const [stage, setStage] = useState('info');
+
+  const [stage, setStage] = useState('info'); // 'info' | 'otp' | 'success'
   const [phone, setPhone] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '']);
@@ -40,6 +41,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const [error, setError] = useState('');
   const inputRefs = useRef([]);
 
+  // Reset هنگام باز شدن
   useEffect(() => {
     if (showAuthModal) {
       setStage('info');
@@ -54,6 +56,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     }
   }, [showAuthModal]);
 
+  // تایمر
   useEffect(() => {
     if (!showAuthModal || stage !== 'otp') return;
     if (timer <= 0) {
@@ -64,6 +67,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     return () => clearInterval(interval);
   }, [stage, timer, showAuthModal]);
 
+  // Escape
   useEffect(() => {
     if (!showAuthModal) return;
     const handleEsc = (e) => {
@@ -73,6 +77,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [showAuthModal, cancelAuthModal]);
 
+  // قفل اسکرول
   useEffect(() => {
     if (showAuthModal) acquireScrollLock(instanceId.current);
     else releaseScrollLock(instanceId.current);
@@ -92,7 +97,6 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       setError('لطفاً ابتدا قوانین را بپذیرید');
       return;
     }
-
     if (!validatePhone(phone)) {
       setError('شماره موبایل معتبر نیست');
       return;
@@ -100,18 +104,23 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
 
     setLoading(true);
     setError('');
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoading(false);
-    setStage('otp');
-    setTimer(RESEND_SECONDS);
-    setCanResend(false);
-    setTimeout(() => inputRefs.current[0]?.focus(), 400);
+
+    try {
+      await authService.sendOTP(cleanPhone(phone));
+      setLoading(false);
+      setStage('otp');
+      setTimer(RESEND_SECONDS);
+      setCanResend(false);
+      setTimeout(() => inputRefs.current[0]?.focus(), 400);
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || 'خطا در ارسال کد تایید');
+    }
   };
 
   const handleChangeOtp = (text, index) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     const newOtp = [...otp];
-
     if (cleaned.length > 1) {
       const digits = cleaned.slice(0, OTP_LENGTH).split('');
       digits.forEach((digit, i) => {
@@ -123,12 +132,10 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       inputRefs.current[nextIndex]?.focus();
       return;
     }
-
     const digit = cleaned[0] || '';
     newOtp[index] = digit;
     setOtp(newOtp);
     if (error) setError('');
-
     if (digit && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
       setCurrentBox(index + 1);
@@ -145,30 +152,39 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const handleVerifyOtp = async () => {
     const code = otp.join('');
     if (code.length < OTP_LENGTH) {
-      setError(`کد ${OTP_LENGTH} رقمی کامل نیست`);
+      setError(`کد ${toPersianDigit(OTP_LENGTH)} رقمی کامل نیست`);
       return;
     }
 
     setLoading(true);
     setError('');
-    await new Promise((r) => setTimeout(r, 1000));
 
-    if (code === MOCK_OTP) {
-      login(phone);
+    try {
+      const result = await authService.verifyOTP(cleanPhone(phone), code);
+      const { user, access_token, refresh_token, expires_in } = result.data;
+
+      login(user, { access_token, refresh_token, expires_in });
       setStage('success');
       setTimeout(() => closeAuthModal(), 1500);
-    } else {
-      setError('کد وارد شده صحیح نیست');
+    } catch (err) {
       setLoading(false);
+      setError(err.message || 'کد وارد شده صحیح نیست');
+      setOtp(['', '', '', '', '']);
+      setCurrentBox(0);
     }
   };
 
-  const handleResend = () => {
-    setTimer(RESEND_SECONDS);
-    setCanResend(false);
-    setOtp(['', '', '', '', '']);
-    setCurrentBox(0);
-    inputRefs.current[0]?.focus();
+  const handleResend = async () => {
+    try {
+      await authService.sendOTP(cleanPhone(phone));
+      setTimer(RESEND_SECONDS);
+      setCanResend(false);
+      setOtp(['', '', '', '', '']);
+      setCurrentBox(0);
+      inputRefs.current[0]?.focus();
+    } catch (err) {
+      setError(err.message || 'خطا در ارسال مجدد');
+    }
   };
 
   const formatTime = (seconds) => {
@@ -178,6 +194,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   };
 
   const canSubmitInfo = phone.length === 11 && validatePhone(phone) && termsAccepted && !loading;
+  const maskedPhone = phone ? phone.slice(-4) + '***' + phone.slice(0, 4) : '';
 
   if (!showAuthModal) return null;
 
@@ -219,6 +236,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
           </div>
         )}
 
+        {/* هدر */}
         <div
           className="flex items-center justify-between px-6 py-4 border-b"
           style={{ borderColor: colors.border }}
@@ -236,6 +254,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
         </div>
 
         <div className="p-6 overflow-y-auto flex-1">
+          {/* ═══ مرحله ۱: شماره موبایل ═══ */}
           {stage === 'info' && (
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-center gap-3 mb-4">
@@ -265,21 +284,6 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 error={error}
                 rightIcon={<FiSmartphone size={18} style={{ color: colors.textSecondary }} />}
               />
-
-              {phone.length > 0 && phone.length < 11 && (
-                <div
-                  className="flex items-center gap-2 py-1.5 px-3 rounded-lg border self-start"
-                  style={{
-                    backgroundColor: colors.primary + '08',
-                    borderColor: colors.primary + '25',
-                  }}
-                >
-                  <FiEdit size={12} style={{ color: colors.primary }} />
-                  <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
-                    {toPersianDigit(phone.length)} از ۱۱ رقم وارد شده
-                  </span>
-                </div>
-              )}
 
               <label className="flex items-start gap-3 cursor-pointer py-2">
                 <button
@@ -324,6 +328,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
             </div>
           )}
 
+          {/* ═══ مرحله ۲: کد OTP ═══ */}
           {stage === 'otp' && (
             <div className="flex flex-col gap-5">
               <div className="flex flex-col items-center gap-3">
@@ -340,8 +345,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                   <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
                     کد ارسال‌شده به{' '}
                     <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                      {/* ✅ ماسک معکوس */}
-                      {toPersianDigit(phone.slice(-4) + '***' + phone.slice(0, 4))}
+                      {toPersianDigit(maskedPhone)}
                     </span>
                   </p>
                 </div>
@@ -380,9 +384,6 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                       padding: 0,
                       direction: 'ltr',
                       boxSizing: 'border-box',
-                      appearance: 'textfield',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'textfield',
                       transition: 'border-color 0.2s ease',
                     }}
                   />
@@ -406,7 +407,6 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                     ویرایش شماره
                   </span>
                 </button>
-
                 {canResend ? (
                   <button onClick={handleResend} type="button">
                     <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
@@ -429,21 +429,10 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 size="lg"
                 fullWidth
               />
-
-              <div
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border"
-                style={{
-                  backgroundColor: colors.primary + '10',
-                  borderColor: colors.primary + '30',
-                }}
-              >
-                <span className="text-xs" style={{ color: colors.primary }}>
-                  حالت آزمایشی: کد <span className="font-[Vazir-Bold]">۱۲۳۴۵</span>
-                </span>
-              </div>
             </div>
           )}
 
+          {/* ═══ مرحله ۳: موفقیت ═══ */}
           {stage === 'success' && (
             <div className="flex flex-col items-center gap-4 py-6">
               <div

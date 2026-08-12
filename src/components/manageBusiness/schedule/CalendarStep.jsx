@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { FiChevronRight, FiChevronLeft, FiCheck, FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { toPersianDigit } from '@/utils/numberUtils';
+import { toPersianDigit, toJalaaliKey } from '@/utils/numberUtils';
 import {
   toJalaali,
   PERSIAN_MONTHS,
@@ -14,7 +14,6 @@ import {
 
 export default function CalendarStep({ selectedDates, onDatesChange, existingDates = [] }) {
   const { colors } = useTheme();
-
   const today = useMemo(() => {
     const now = new Date();
     return toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
@@ -129,7 +128,6 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
           <FiChevronLeft size={22} style={{ color: colors.textMain }} />
         </button>
       </div>
-
       {/* دکمه‌های انتخاب همه / پاک کردن */}
       <div className="flex gap-2">
         <button
@@ -157,7 +155,6 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
           پاک کردن همه
         </button>
       </div>
-
       {/* ردیف نام روزهای هفته */}
       <div className="grid grid-cols-7 gap-1 mb-1">
         {PERSIAN_WEEKDAYS.map((d, i) => (
@@ -171,19 +168,17 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
           </div>
         ))}
       </div>
-
       {/* شبکه روزها */}
       <div className="grid grid-cols-7 gap-1">
         {days.map((day) => {
           if (day.empty) return <div key={day.key} />;
-
           const disabled = isPast(day.jy, day.jm, day.jd);
           const isToday = isSameDate(day, today);
           const selected = isSelected(day.jd);
           const existing = isExisting(day.jd);
+
           // ✅ FIX: جمعه دیگر قرمز نیست و غیرفعال نیست
           // فقط روزهای گذشته غیرفعال هستند
-
           return (
             <button
               key={day.key}
@@ -210,13 +205,11 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
               }}
             >
               {toPersianDigit(day.jd)}
-
               {selected && (
                 <div className="absolute top-1 right-1">
                   <FiCheck size={10} color="#fff" />
                 </div>
               )}
-
               {!selected && existing && (
                 <div className="absolute bottom-1 left-1">
                   <span className="text-[8px]" style={{ color: '#43A047' }}>
@@ -224,7 +217,6 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
                   </span>
                 </div>
               )}
-
               {isToday && !selected && !existing && (
                 <div
                   className="absolute bottom-1 w-1 h-1 rounded-full"
@@ -235,7 +227,6 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
           );
         })}
       </div>
-
       {/* شمارنده انتخاب‌ها */}
       {selectedDates.length > 0 && (
         <div

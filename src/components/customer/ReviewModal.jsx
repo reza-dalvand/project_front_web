@@ -1,3 +1,4 @@
+// src/components/customer/ReviewModal.jsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -7,6 +8,8 @@ import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
 import StarRating from '@/components/common/StarRating';
 import { useToast } from '@/hooks/useToast';
+import { reviewsService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 const REVIEW_TAGS = [
@@ -53,7 +56,6 @@ export default function ReviewModal({ visible, appointment, onClose, onSubmit })
     };
   }, [visible]);
 
-  // بستن با Escape
   useEffect(() => {
     if (!visible) return;
     const handleEsc = (e) => {
@@ -76,22 +78,41 @@ export default function ReviewModal({ visible, appointment, onClose, onSubmit })
     }
 
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 800));
 
-    onSubmit?.({
-      appointmentId: appointment?.id,
-      rating,
-      tags: selectedTags,
-      comment: comment.trim(),
-    });
+    try {
+      // ✅ فراخوانی API (در حالت mock از سرویس استفاده می‌شود)
+      if (!USE_MOCK) {
+        await reviewsService.createReview({
+          appointment_id: appointment?.id,
+          rating,
+          comment: comment.trim(),
+          tags: selectedTags,
+        });
+      }
 
-    setIsSubmitting(false);
-    setShowSuccess(true);
+      // در حالت mock، شبیه‌سازی تأخیر
+      if (USE_MOCK) {
+        await new Promise((r) => setTimeout(r, 800));
+      }
 
-    setTimeout(() => {
-      setShowSuccess(false);
-      onClose?.();
-    }, 2500);
+      // فراخوانی callback برای آپدیت store
+      onSubmit?.({
+        appointmentId: appointment?.id,
+        rating,
+        tags: selectedTags,
+        comment: comment.trim(),
+      });
+
+      setIsSubmitting(false);
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        onClose?.();
+      }, 2500);
+    } catch (error) {
+      setIsSubmitting(false);
+      showToast(error.message || 'خطا در ثبت نظر', 'error');
+    }
   };
 
   if (!mounted || !visible || !appointment) return null;
@@ -106,7 +127,7 @@ export default function ReviewModal({ visible, appointment, onClose, onSubmit })
     >
       <div
         className="relative w-full max-w-md rounded-t-3xl md:rounded-3xl flex flex-col
-        max-h-[90vh] overflow-hidden shadow-2xl"
+max-h-[90vh] overflow-hidden shadow-2xl"
         style={{
           backgroundColor: colors.cardBackground,
           borderTop: `1px solid ${colors.border}`,
@@ -134,15 +155,15 @@ export default function ReviewModal({ visible, appointment, onClose, onSubmit })
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center"
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: colors.background }}
           >
-            <FiX size={18} style={{ color: colors.textMain }} />
+            <FiX size={20} style={{ color: colors.textMain }} />
           </button>
         </div>
 
         {/* محتوای اسکرولی */}
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {showSuccess ? (
             /* ═══ حالت موفقیت ═══ */
             <div className="flex flex-col items-center gap-4 py-8">
@@ -215,8 +236,8 @@ export default function ReviewModal({ visible, appointment, onClose, onSubmit })
                         key={tag.id}
                         onClick={() => toggleTag(tag.id)}
                         className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl
-                        border-[1.5px] transition-all duration-200
-                        hover:scale-105 active:scale-95"
+border-[1.5px] transition-all duration-200
+hover:scale-105 active:scale-95"
                         style={{
                           backgroundColor: isSelected
                             ? colors.primary + '22'
@@ -254,7 +275,7 @@ export default function ReviewModal({ visible, appointment, onClose, onSubmit })
                   maxLength={300}
                   rows={3}
                   className="w-full p-4 rounded-2xl border-2 outline-none resize-none
-                  text-sm font-[Vazir] leading-6 transition-colors"
+text-sm font-[Vazir] leading-6 transition-colors"
                   style={{
                     backgroundColor: colors.background,
                     borderColor: colors.border,

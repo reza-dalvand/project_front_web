@@ -37,7 +37,7 @@ export default function BackButtonHandler({ children }) {
           }
         });
       } catch (e) {
-        console.log('BackButton init failed:', e);
+        // Capacitor در دسترس نیست (محیط وب)
       }
     };
 

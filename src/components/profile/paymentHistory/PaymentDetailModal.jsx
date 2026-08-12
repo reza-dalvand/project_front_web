@@ -1,4 +1,6 @@
 'use client';
+import { paymentsService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -84,7 +86,6 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
       document.body.removeChild(textarea);
       return success;
     } catch (err) {
-      console.error('execCommand copy failed:', err);
       return false;
     }
   };
@@ -182,7 +183,6 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
       }, 500);
       showToast('در حال آماده‌سازی PDF...', 'info');
     } catch (err) {
-      console.error('Print failed:', err);
       showToast('خطا در آماده‌سازی PDF', 'error');
     }
   };

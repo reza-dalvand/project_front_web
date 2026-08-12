@@ -1,7 +1,7 @@
 {
-  "name": "زیبانو",
+  "name": "زیبانو | رزرو آنلاین خدمات زیبایی و سلامت",
   "short_name": "زیبانو",
-  "description": "رزرو آنلاین خدمات زیبایی و سلامت",
+  "description": "رزرو آنلاین خدمات زیبایی، سلامت، سالن‌ها، کلینیک‌ها و متخصصان زیبایی",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -11,7 +11,7 @@
   "theme_color": "#A88B7D",
   "dir": "rtl",
   "lang": "fa-IR",
-  "categories": ["health", "beauty", "lifestyle"],
+  "categories": ["health", "beauty", "lifestyle", "booking", "utilities"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -30,6 +30,36 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "رزرو نوبت",
+      "short_name": "رزرو",
+      "description": "جستجو و رزرو نوبت از سالن‌های زیبایی",
+      "url": "/search",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "پروفایل من",
+      "short_name": "پروفایل",
+      "description": "نوبت‌ها، علاقه‌مندی‌ها و تنظیمات",
+      "url": "/profile",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "ویترین",
+      "short_name": "ویترین",
+      "description": "نمونه‌کار کسب‌وکارها",
+      "url": "/explore",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "مدیریت کسب‌وکار",
+      "short_name": "مدیریت",
+      "description": "مدیریت نوبت‌ها، خدمات و مالی",
+      "url": "/manage",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

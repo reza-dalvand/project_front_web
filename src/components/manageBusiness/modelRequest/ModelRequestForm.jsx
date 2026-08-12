@@ -1,6 +1,7 @@
+// src/components/manageBusiness/modelRequest/ModelRequestForm.jsx
 'use client';
 import { useState } from 'react';
-import { FiImage, FiTag, FiFileText, FiPhone, FiDollarSign, FiCheck } from 'react-icons/fi';
+import { FiImage, FiFileText, FiPhone, FiDollarSign, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
@@ -10,25 +11,16 @@ import SectionHeader from '@/components/common/SectionHeader';
 import ImageUploader from '@/components/common/ImageUploader';
 import CostTypeBadge from '@/components/common/CostTypeBadge';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { COST_TYPE_OPTIONS, LIMITS } from '@/constants/collabTypes';
 
-// گزینه‌های نوع هزینه
-const COST_TYPE_OPTIONS = [
-  {
-    id: 'paid',
-    label: 'با هزینه',
-    description: 'مدل بخشی از هزینه خدمت را پرداخت می‌کند',
-  },
-  {
-    id: 'material_cost',
-    label: 'با هزینه مواد',
-    description: 'فقط هزینه مواد مصرفی دریافت می‌شود',
-  },
-  {
-    id: 'free',
-    label: 'کاملاً رایگان',
-    description: 'هیچ هزینه‌ای از مدل دریافت نمی‌شود',
-  },
-];
+// ═══════ محدودیت‌های بک‌اند ═══════
+// title: max 100
+// description: max 500
+// contact_phone: max 11
+// discount: int >= 0
+const MAX_TITLE = 100;
+const MAX_DESCRIPTION = 500;
+const MAX_PHONE = 11;
 
 export default function ModelRequestForm({ services, initialData, defaultPhone, onSave, onClose }) {
   const { colors } = useTheme();
@@ -39,6 +31,8 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
     contactPhone: initialData?.contactPhone || defaultPhone || '',
     serviceImage: initialData?.serviceImage || null,
     costType: initialData?.costType || 'material_cost',
+    discount: initialData?.discount || 0,
+    isUrgent: initialData?.isUrgent || false,
   });
   const [errors, setErrors] = useState({});
 
@@ -47,16 +41,47 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: '' }));
   };
 
-  const handleSave = () => {
+  // ═══════ اعتبارسنجی مطابق بک‌اند ═══════
+  const validate = () => {
     const newErrors = {};
-    if (!formData.serviceId) newErrors.serviceId = 'خدمت را انتخاب کنید';
-    if (!formData.title.trim()) newErrors.title = 'عنوان الزامی است';
-    if (!formData.description.trim()) newErrors.description = 'توضیحات الزامی است';
-    if (!formData.serviceImage) newErrors.serviceImage = 'تصویر خدمت الزامی است';
+
+    // title: الزامی، max 100
+    if (!formData.title.trim()) {
+      newErrors.title = 'عنوان الزامی است';
+    } else if (formData.title.trim().length > MAX_TITLE) {
+      newErrors.title = `عنوان نمی‌تواند بیشتر از ${toPersianDigit(MAX_TITLE)} کاراکتر باشد`;
+    }
+
+    // description: الزامی، max 500
+    if (!formData.description.trim()) {
+      newErrors.description = 'توضیحات الزامی است';
+    } else if (formData.description.trim().length > MAX_DESCRIPTION) {
+      newErrors.description = `توضیحات نمی‌تواند بیشتر از ${toPersianDigit(MAX_DESCRIPTION)} کاراکتر باشد`;
+    }
+
+    // serviceId: الزامی
+    if (!formData.serviceId) {
+      newErrors.serviceId = 'خدمت را انتخاب کنید';
+    }
+
+    // contactPhone: الزامی، ۱۱ رقم
+    if (!formData.contactPhone.trim()) {
+      newErrors.contactPhone = 'شماره تماس الزامی است';
+    } else if (formData.contactPhone.trim().length !== MAX_PHONE) {
+      newErrors.contactPhone = `شماره تماس باید دقیقاً ${toPersianDigit(MAX_PHONE)} رقم باشد`;
+    }
+
+    // serviceImage: الزامی
+    if (!formData.serviceImage) {
+      newErrors.serviceImage = 'تصویر خدمت الزامی است';
+    }
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    return Object.keys(newErrors).length === 0;
+  };
 
+  const handleSave = () => {
+    if (!validate()) return;
     onSave(formData);
   };
 
@@ -94,32 +119,44 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
             options={serviceOptions}
             onSelect={(val) => updateField('serviceId', val)}
           />
-          {errors.serviceId && <p className="text-xs text-[#E53935] mt-1">{errors.serviceId}</p>}
+          {errors.serviceId && (
+            <p className="text-xs text-[#E53935] mt-1 mb-3">{errors.serviceId}</p>
+          )}
 
           <Input
             label="عنوان درخواست *"
             placeholder="مثال: مدل برای فیشیال VIP عروس"
             value={formData.title}
-            onChangeText={(t) => updateField('title', t)}
+            onChangeText={(t) => {
+              if (t.length <= MAX_TITLE) updateField('title', t);
+            }}
             error={errors.title}
+            hint={`${toPersianDigit(formData.title.length)} از ${toPersianDigit(MAX_TITLE)} کاراکتر`}
           />
 
           <Input
             label="توضیحات *"
             placeholder="توضیحات کامل درباره نیاز به مدل..."
             value={formData.description}
-            onChangeText={(t) => updateField('description', t)}
+            onChangeText={(t) => {
+              if (t.length <= MAX_DESCRIPTION) updateField('description', t);
+            }}
             multiline
             error={errors.description}
+            hint={`${toPersianDigit(formData.description.length)} از ${toPersianDigit(MAX_DESCRIPTION)} کاراکتر`}
           />
 
           <Input
             label="شماره تماس برای مدل‌ها *"
             placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹"
-            value={toPersianDigit(formData.contactPhone)}
-            onChangeText={(t) => updateField('contactPhone', t.replace(/[^0-9]/g, ''))}
+            value={formData.contactPhone}
+            onChangeText={(t) => {
+              const cleaned = t.replace(/[^0-9]/g, '');
+              if (cleaned.length <= MAX_PHONE) updateField('contactPhone', cleaned);
+            }}
             type="tel"
-            maxLength={11}
+            maxLength={MAX_PHONE}
+            error={errors.contactPhone}
           />
         </Card>
       </div>
@@ -134,8 +171,7 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
               <button
                 key={option.id}
                 onClick={() => updateField('costType', option.id)}
-                className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 text-right
-                  transition-all"
+                className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 text-right transition-all"
                 style={{
                   backgroundColor: isSelected ? colors.primary + '08' : colors.cardBackground,
                   borderColor: isSelected ? colors.primary : colors.border,
@@ -150,7 +186,7 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
                     className="text-xs font-[Vazir] mt-0.5"
                     style={{ color: colors.textSecondary }}
                   >
-                    {option.description}
+                    {option.subtitle}
                   </p>
                 </div>
                 {isSelected && (

@@ -1,5 +1,6 @@
+// src/app/explore/page.jsx
 'use client';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { FiFilter, FiGrid } from 'react-icons/fi';
@@ -7,14 +8,15 @@ import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import SectionHeader from '@/components/common/SectionHeader';
 import { PostGrid, ActiveFilterChips } from '@/components/explore';
-import { MOCK_POSTS } from '@/constants/exploreFilters';
+import { MOCK_POSTS } from '@/data/posts';
+import { exploreService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 
 // ✅ Lazy Load — مودال‌های سنگین
 const FilterModal = dynamic(() => import('@/components/explore/FilterModal'), {
   ssr: false,
   loading: () => null,
 });
-
 const PostModal = dynamic(() => import('@/components/explore/PostModal'), {
   ssr: false,
   loading: () => null,
@@ -56,7 +58,6 @@ const generateMorePosts = (page, size) => {
 export default function ExplorePage() {
   const router = useRouter();
   const { colors } = useTheme();
-
   const [allPosts, setAllPosts] = useState(MOCK_POSTS.slice(0, PAGE_SIZE));
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -64,6 +65,26 @@ export default function ExplorePage() {
   const [activePost, setActivePost] = useState(null);
   const [filterVisible, setFilterVisible] = useState(false);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // ═══ دریافت پست‌ها از API ═══
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (USE_MOCK) return;
+
+      setIsLoading(true);
+      try {
+        const response = await exploreService.getPosts({ page: 1, page_size: PAGE_SIZE });
+        setAllPosts(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch posts:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   // ✅ useMemo برای فیلتر
   const filteredPosts = useMemo(() => {
@@ -100,7 +121,31 @@ export default function ExplorePage() {
   // ✅ useCallback برای loadMore
   const loadMorePosts = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
+
     setIsLoadingMore(true);
+
+    // در production، از API استفاده می‌شود
+    if (!USE_MOCK) {
+      try {
+        const nextPage = page + 1;
+        const response = await exploreService.getPosts({ page: nextPage, page_size: PAGE_SIZE });
+        const newPosts = response.data || [];
+        if (newPosts.length === 0 || nextPage >= MAX_PAGES) {
+          setHasMore(false);
+        }
+        if (newPosts.length > 0) {
+          setAllPosts((prev) => [...prev, ...newPosts]);
+          setPage(nextPage);
+        }
+      } catch (error) {
+        console.error('Failed to load more posts:', error);
+      } finally {
+        setIsLoadingMore(false);
+      }
+      return;
+    }
+
+    // در حالت mock، شبیه‌سازی
     await new Promise((r) => setTimeout(r, 800 + Math.random() * 700));
     const nextPage = page + 1;
     const newPosts = generateMorePosts(nextPage, PAGE_SIZE);
@@ -155,12 +200,12 @@ export default function ExplorePage() {
           iconColor={colors.primary}
           title="ویترین"
           subtitle="نمونه‌کار کسب‌وکارها در زیبانو"
-          centered // ← اضافه شد
+          centered
           rightElement={
             <button
               onClick={handleFilterOpen}
               className="w-10 h-10 rounded-xl border flex items-center justify-center
-                relative transition-colors hover:opacity-80"
+relative transition-colors hover:opacity-80"
               style={{
                 backgroundColor: hasActiveFilter ? colors.primary + '15' : colors.cardBackground,
                 borderColor: hasActiveFilter ? colors.primary : colors.border,
@@ -174,10 +219,10 @@ export default function ExplorePage() {
               />
               {hasActiveFilter && (
                 <div
-                  className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border"
+                  className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-[1.5px]"
                   style={{
-                    backgroundColor: colors.primary,
-                    borderColor: colors.cardBackground,
+                    backgroundColor: '#FFD700',
+                    borderColor: 'rgba(0,0,0,0.15)',
                   }}
                 />
               )}

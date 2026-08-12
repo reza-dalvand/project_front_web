@@ -16,6 +16,10 @@ const nextConfig = {
       { protocol: 'https', hostname: 'i.pravatar.cc' },
       { protocol: 'https', hostname: '*.tile.openstreetmap.org' },
       { protocol: 'https', hostname: 'api.maptiler.com' },
+      // ✅ Production: Arvan Storage
+      { protocol: 'https', hostname: '*.arvanstorage.ir' },
+      { protocol: 'https', hostname: 'cdn.zibano.app' },
+      { protocol: 'https', hostname: '*.zibano.app' },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200],

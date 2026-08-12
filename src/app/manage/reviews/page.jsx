@@ -1,7 +1,8 @@
+// src/app/manage/reviews/page.jsx
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiStar, FiMessageSquare, FiThumbsUp, FiFilter, FiUser } from 'react-icons/fi';
+import { FiStar, FiMessageSquare, FiThumbsUp, FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -12,6 +13,8 @@ import StarRating from '@/components/common/StarRating';
 import StatsCard from '@/components/common/StatsCard';
 import EmptyState from '@/components/common/EmptyState';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { reviewsService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 import { MOCK_REVIEWS } from '@/data/reviews';
 
 const FILTER_OPTIONS = [
@@ -28,8 +31,28 @@ export default function ReviewsPage() {
   const { colors } = useTheme();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const [activeFilter, setActiveFilter] = useState('all');
+  const [reviews, setReviews] = useState(MOCK_REVIEWS);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const reviews = MOCK_REVIEWS;
+  // ═══ دریافت نظرات از API ═══
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (USE_MOCK) return; // در حالت mock از داده‌های محلی استفاده می‌شود
+
+      setIsLoading(true);
+      try {
+        // در production، business_id باید از store گرفته شود
+        const response = await reviewsService.getBusinessReviews(1); // business_id = 1
+        setReviews(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch reviews:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
 
   // آمار کلی
   const stats = useMemo(() => {
@@ -59,11 +82,11 @@ export default function ReviewsPage() {
   }
 
   return (
-    <ScreenWrapper padding={0}>
-      <Header title="نظرات و امتیازات" onBackPress={() => router.back()} />
+    <ScreenWrapper scrollable padding={0}>
+      <Header title="نظرات و امتیازات" onBackPress={() => router.push('/manage')} />
 
-      <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
-        {/* ═══════ کارت خلاصه امتیاز ═══════ */}
+      <div className="p-4 pb-32 space-y-5">
+        {/* ═══ کارت خلاصه امتیاز ═══ */}
         <Card variant="elevated" padding={20} radius={20}>
           <div className="flex items-center gap-6">
             {/* امتیاز کلی */}
@@ -76,7 +99,6 @@ export default function ReviewsPage() {
                 {toPersianDigit(stats.total)} نظر
               </span>
             </div>
-
             {/* نوارهای توزیع */}
             <div className="flex-1 space-y-1.5">
               {stats.dist.map((item) => {
@@ -115,7 +137,7 @@ export default function ReviewsPage() {
           </div>
         </Card>
 
-        {/* ═══════ فیلتر امتیاز ═══════ */}
+        {/* ═══ فیلتر امتیاز ═══ */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           {FILTER_OPTIONS.map((opt) => {
             const isActive = activeFilter === opt.id;
@@ -147,7 +169,7 @@ export default function ReviewsPage() {
           })}
         </div>
 
-        {/* ═══════ لیست نظرات ═══════ */}
+        {/* ═══ لیست نظرات ═══ */}
         {filteredReviews.length > 0 ? (
           <div className="space-y-3">
             {filteredReviews.map((review) => (
@@ -158,7 +180,7 @@ export default function ReviewsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span
-                        className="text-sm font-[Vazir-Bold]"
+                        className="text-sm font-[Vazir-Bold] truncate"
                         style={{ color: colors.textMain }}
                       >
                         {review.userName}
@@ -174,7 +196,7 @@ export default function ReviewsPage() {
                       <StarRating value={review.rating} size="sm" />
                       {review.serviceName && (
                         <span
-                          className="text-[10px] font-[Vazir] px-2 py-0.5 rounded-md"
+                          className="text-[10px] font-[Vazir-Bold] px-2 py-0.5 rounded-md"
                           style={{
                             backgroundColor: colors.primary + '10',
                             color: colors.primary,
@@ -186,7 +208,6 @@ export default function ReviewsPage() {
                     </div>
                   </div>
                 </div>
-
                 {/* متن نظر */}
                 <p
                   className="text-sm font-[Vazir] leading-6 text-justify"
@@ -194,7 +215,6 @@ export default function ReviewsPage() {
                 >
                   {review.comment}
                 </p>
-
                 {/* دکمه پاسخ */}
                 <div className="mt-3 pt-3 border-t" style={{ borderColor: colors.border }}>
                   <button

@@ -1,220 +1,201 @@
+// src/app/line-rentals/[id]/LineRentalDetailClient.jsx
 'use client';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FiArrowRight, FiShare2, FiMapPin, FiPhone, FiInfo, FiCheckCircle } from 'react-icons/fi';
+import { FiArrowRight, FiShare2, FiPhone, FiMapPin, FiClock, FiInfo } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
-import { Card, ActionButtons, CollabBadge } from '@/components/common';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import CollabBadge from '@/components/common/CollabBadge';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
-import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
+import { useToast } from '@/hooks/useToast';
+import { adsService } from '@/api';
+import { USE_MOCK } from '@/api/config';
+import { MOCK_LINE_RENTAL_DETAIL } from '@/data/lineRentals';
 
-// ✅ اضافه کردن generateStaticParams برای Static Export
-export async function generateStaticParams() {
-  return MOCK_LINE_RENTALS.map((ad) => ({
-    id: ad.id.toString(),
-  }));
-}
-
-// داده‌های MOCK (در production از API)
-const MOCK_AD = {
-  id: 'lr_1',
-  businessId: 'b1',
-  title: 'لاین ناخن VIP با تجهیزات کامل',
-  serviceTypeId: 'nail',
-  serviceTypeName: 'کاشت و طراحی ناخن',
-  collabType: 'percent',
-  collabLabel: 'درصدی',
-  percentSalon: 40,
-  percentPartner: 60,
-  priceDisplay: '۴۰-۶۰٪',
-  description:
-    'لاین ناخن کامل با میز حرفه‌ای، دستگاه UV/LED، و مجموعه کامل لاک ژل. مناسب ناخن‌کار حرفه‌ای با سابقه کار حداقل ۲ سال. فضای اختصاصی با نور طبیعی و تهویه مناسب. امکان استفاده از انبار و محصولات مشترک.',
-  lineImage: 'https://picsum.photos/800/600?random=70',
-  businessName: 'سالن زیبایی نیلارام',
-  city: 'تهران، سعادت‌آباد',
-  contactPhone: '09121234567',
-  createdAt: '۱۴۰۳/۰۴/۱۱',
-  expiresAt: '۱۴۰۳/۰۵/۱۱',
+// متادیتای انواع خدمات
+const SERVICE_TYPE_META = {
+  facial: { color: '#C2185B', icon: '💆‍♀️' },
+  nail: { color: '#7B1FA2', icon: '💅' },
+  hair_color: { color: '#0277BD', icon: '🎨' },
+  keratin: { color: '#E65100', icon: '✨' },
+  laser: { color: '#00838F', icon: '⚡' },
+  makeup: { color: '#AD1457', icon: '💄' },
+  eyelash: { color: '#4527A0', icon: '👁️' },
+  massage: { color: '#2E7D32', icon: '💆‍♀️' },
+  hair_cut: { color: '#5D4037', icon: '✂️' },
+  bridal: { color: '#880E4F', icon: '👰' },
+  other: { color: '#455A64', icon: '💼' },
 };
 
 export default function LineRentalDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { colors } = useTheme();
-  const ad = MOCK_AD; // در production: بر اساس params.id از API
+  const { showToast } = useToast();
+  const [ad, setAd] = useState(MOCK_LINE_RENTAL_DETAIL);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const shareUrl = `https://zibano.app/line-rental/${ad.id}`;
+  // ═══ دریافت جزئیات از API ═══
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (USE_MOCK) return;
+      setIsLoading(true);
+      try {
+        const result = await adsService.getLineRentalDetail(params.id);
+        setAd(result.data);
+      } catch (error) {
+        console.error('Failed to fetch line rental detail:', error);
+        showToast('خطا در بارگذاری جزئیات', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDetail();
+  }, [params.id, showToast]);
 
-  const handleBusinessPress = () => {
-    router.push(`/business/${ad.businessId}`);
+  const serviceMeta = SERVICE_TYPE_META[ad.serviceTypeId] || SERVICE_TYPE_META.other;
+
+  const handleCall = () => {
+    if (ad.contactPhone) {
+      window.location.href = `tel:${cleanPhone(ad.contactPhone)}`;
+    } else {
+      showToast('شماره تماسی ثبت نشده است', 'error');
+    }
   };
+
+  const handleShare = async () => {
+    const shareMessage = `🏢 ${ad.title}
+🏪 ${ad.businessName}
+📍 ${ad.city}
+🔗 ${typeof window !== 'undefined' ? window.location.href : ''}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: ad.title,
+          text: shareMessage,
+          url: typeof window !== 'undefined' ? window.location.href : undefined,
+        });
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareMessage);
+      showToast('لینک کپی شد', 'success');
+    } catch {
+      showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <ScreenWrapper>
+        <div className="flex items-center justify-center min-h-screen">
+          <p style={{ color: colors.textMain }}>در حال بارگذاری...</p>
+        </div>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper scrollable padding={0}>
-      {/* ═══ Hero Section ═══ */}
+      {/* Hero */}
       <div className="relative w-full h-[320px] bg-black overflow-hidden">
         <Image
           src={ad.lineImage}
           alt={ad.title}
           fill
           className="object-cover"
-          priority
           sizes="100vw"
+          priority
         />
         <div
-          className="absolute bottom-0 left-0 right-0 h-[17%]"
-          style={{ backgroundColor: 'rgba(0,0,0,0.20)' }}
+          className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
+          style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
         />
-        <div
-          className="absolute top-0 left-0 right-0 h-[120px]"
-          style={{ backgroundColor: 'rgba(0,0,0,0.20)' }}
-        />
-
-        {/* دکمه‌های بالا */}
-        <div
-          className="absolute top-0 left-4 right-4 flex items-center gap-3 z-10"
-          style={{ paddingTop: '20px' }}
-        >
+        {/* دکمه‌ها */}
+        <div className="absolute top-4 left-4 right-4 flex items-center gap-3 z-10">
           <button
             onClick={() => router.back()}
             className="w-11 h-11 rounded-full flex items-center justify-center
-              border border-white/15 transition-transform hover:scale-105"
+border border-white/15 transition-all hover:scale-110 active:scale-95"
             style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
           >
             <FiArrowRight size={22} color="#fff" />
           </button>
           <div className="flex-1" />
           <button
-            onClick={async () => {
-              if (navigator.share) {
-                await navigator.share({
-                  title: ad.title,
-                  text: ad.description,
-                  url: shareUrl,
-                });
-              } else {
-                navigator.clipboard?.writeText(shareUrl);
-              }
-            }}
+            onClick={handleShare}
             className="w-11 h-11 rounded-full flex items-center justify-center
-              border border-white/15 transition-transform hover:scale-105"
+border border-white/15 transition-all hover:scale-110 active:scale-95"
             style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
           >
             <FiShare2 size={20} color="#fff" />
           </button>
         </div>
-
-        {/* بج‌های پایین هیرو */}
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-2">
-          {/* تگ تاریخ ثبت */}
-          <div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl shadow-md"
-            style={{ backgroundColor: 'rgba(33,150,243,0.85)' }}
-          >
-            <span className="text-xs">📅</span>
-            <span className="text-[11px] font-[Vazir-Bold] text-white">ثبت: {ad.createdAt}</span>
-          </div>
-
-          {/* تگ نوع خدمت */}
-          <div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl shadow-md"
-            style={{ backgroundColor: '#7B1FA2' }}
-          >
-            <span className="text-xs">💅</span>
-            <span className="text-[11px] font-[Vazir-Bold] text-white">{ad.serviceTypeName}</span>
-          </div>
+        {/* Badge نوع خدمت */}
+        <div
+          className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl shadow-md"
+          style={{ backgroundColor: serviceMeta.color }}
+        >
+          <span className="text-[10px]">{serviceMeta.icon}</span>
+          <span className="text-[10px] font-[Vazir-Bold] text-white">{ad.serviceTypeName}</span>
         </div>
       </div>
 
-      {/* ═══ Content ═══ */}
-      <div className="p-5 space-y-4 pb-16">
-        {/* عنوان */}
-        <h1
-          className="text-[22px] font-[Vazir-Bold] leading-[34px]"
-          style={{ color: colors.textMain }}
-        >
-          {ad.title}
-        </h1>
+      {/* محتوا */}
+      <div className="p-5 space-y-4 pb-32">
+        {/* عنوان و badges */}
+        <div className="space-y-3">
+          <h1 className="text-xl font-[Vazir-Bold] leading-8" style={{ color: colors.textMain }}>
+            {ad.title}
+          </h1>
+          <CollabBadge type={ad.collabType} priceDisplay={ad.priceDisplay} variant="default" />
+        </div>
 
-        {/* شهر و نام کسب‌وکار */}
-        <div className="flex items-center gap-2 -mt-1">
-          <span className="text-sm">🏪</span>
-          <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
+        {/* نام کسب‌وکار و شهر */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs">🏪</span>
+          <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
             {ad.businessName}
           </span>
-          <div className="w-1 h-1 rounded-full mx-0.5" style={{ backgroundColor: colors.border }} />
-          <FiMapPin size={14} color={colors.textSecondary} />
+        </div>
+        <div className="flex items-center gap-2">
+          <FiMapPin size={12} color={colors.textSecondary} />
           <span className="text-xs" style={{ color: colors.textSecondary }}>
             {ad.city}
           </span>
         </div>
 
-        {/* ═══ کارت کسب و کار ═══ */}
-        <Card variant="elevated" padding={14} radius={16}>
-          <button onClick={handleBusinessPress} className="w-full">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: colors.primary + '15' }}
-              >
-                <span className="text-xl">🏪</span>
-              </div>
-              <div className="flex-1 text-right">
-                <span
-                  className="text-[15px] font-[Vazir-Bold] block"
-                  style={{ color: colors.textMain }}
-                >
-                  {ad.businessName}
-                </span>
-                <div className="flex items-center gap-1 mt-1">
-                  <FiMapPin size={12} color={colors.textSecondary} />
-                  <span className="text-xs" style={{ color: colors.textSecondary }}>
-                    {ad.city}
-                  </span>
-                </div>
-              </div>
-              <span className="text-2xl" style={{ color: colors.textSecondary }}>
-                ←
-              </span>
-            </div>
-          </button>
-        </Card>
-
-        {/* ═══ کارت شرایط همکاری ═══ */}
-        <Card variant="elevated" padding={16} radius={18} className="border-[1.5px]">
+        {/* شرایط همکاری */}
+        <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🤝</span>
-            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+            <span className="text-base">🤝</span>
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               شرایط همکاری
             </span>
           </div>
-
-          <CollabBadge type={ad.collabType} priceDisplay={ad.priceDisplay} variant="solid" />
-
           <div
-            className="flex items-start gap-2 p-3 rounded-xl border mt-3"
-            style={{
-              backgroundColor: colors.primary + '08',
-              borderColor: colors.primary + '25',
-            }}
+            className="p-3 rounded-xl border"
+            style={{ backgroundColor: colors.primary + '08', borderColor: colors.primary + '25' }}
           >
-            <FiInfo size={14} style={{ color: colors.primary, flexShrink: 0 }} />
-            <p className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
-              {ad.collabType === 'percent'
-                ? 'درصدی از درآمد بین سالن و همکار تقسیم می‌شود'
-                : ad.collabType === 'fixed'
-                  ? 'مبلغ ثابت ماهانه + رهن (اختیاری)'
-                  : 'به ازای هر ساعت استفاده از لاین'}
+            <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
+              {ad.priceDisplay}
             </p>
           </div>
         </Card>
 
-        {/* ═══ کارت توضیحات ═══ */}
+        {/* توضیحات */}
         <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">📝</span>
-            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+            <FiInfo size={18} color="#2196F3" />
+            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               توضیحات آگهی
             </span>
           </div>
@@ -223,53 +204,33 @@ export default function LineRentalDetailPage() {
           </p>
         </Card>
 
-        {/* ═══ کارت ارتباط و همکاری ═══ */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🤝</span>
-            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              ارتباط و همکاری
+        {/* تاریخ‌ها */}
+        <Card variant="elevated" padding={14} radius={16}>
+          <div className="flex items-center gap-3 mb-2">
+            <FiClock size={16} color={colors.textSecondary} />
+            <span className="text-xs" style={{ color: colors.textSecondary }}>
+              ثبت: {ad.createdAt}
             </span>
           </div>
-
-          <ActionButtons
-            phone={cleanPhone(ad.contactPhone)}
-            shareMessage={`${ad.title}
-${ad.description || ''}
-🏪 ${ad.businessName}
-📍 ${ad.city}`}
-            shareUrl={shareUrl}
-          />
-        </div>
-
-        {/* ═══ کارت نکات مهم ═══ */}
-        <Card variant="default" padding={16} radius={18} className="border">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">💡</span>
-            <span className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              نکات مهم
+          <div className="flex items-center gap-3">
+            <FiClock size={16} color="#FF9800" />
+            <span className="text-xs" style={{ color: colors.textSecondary }}>
+              انقضا: {ad.expiresAt}
             </span>
-          </div>
-          <div className="space-y-2.5">
-            {[
-              'قبل از تماس، شرایط آگهی را به دقت مطالعه کنید',
-              'شرایط همکاری را حضوری و قبل از شروع کار نهایی کنید',
-              'از هویت و مجوزهای کسب‌وکار اطمینان حاصل کنید',
-            ].map((text, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <div
-                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                  style={{ backgroundColor: '#4CAF5018' }}
-                >
-                  <FiCheckCircle size={12} color="#4CAF50" />
-                </div>
-                <p className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
-                  {text}
-                </p>
-              </div>
-            ))}
           </div>
         </Card>
+
+        {/* دکمه تماس */}
+        <Button
+          title="تماس با کسب‌وکار"
+          onPress={handleCall}
+          variant="primary"
+          size="lg"
+          fullWidth
+          icon={<FiPhone size={18} color="#fff" />}
+          iconPosition="right"
+          style={{ backgroundColor: '#667eea' }}
+        />
       </div>
     </ScreenWrapper>
   );

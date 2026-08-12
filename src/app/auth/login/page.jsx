@@ -1,21 +1,21 @@
-// src/app/auth/login/page.jsx
 'use client';
-import { useState } from 'react';
+
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiSmartphone, FiShield, FiSend, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button, Input } from '@/components/common';
-import { validatePhone } from '@/utils/phoneUtils';
+import { validatePhone, cleanPhone } from '@/utils/phoneUtils';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
+import { authService } from '@/api';
 
-export default function LoginPage() {
+// ✅ کامپوننت داخلی که از useSearchParams استفاده می‌کند
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { colors } = useTheme();
   const setPendingAuth = useAuthStore((s) => s.setPendingAuth);
-
-  // ✅ FIX: خواندن پارامتر redirect از URL
   const redirectUrl = searchParams.get('redirect') || '/';
 
   const [phone, setPhone] = useState('');
@@ -36,27 +36,26 @@ export default function LoginPage() {
       setError('لطفاً ابتدا قوانین و مقررات را بپذیرید');
       return;
     }
-
     if (!phone) {
       setError('لطفاً شماره موبایل خود را وارد کنید');
       return;
     }
-
     if (!validatePhone(phone)) {
       setError('شماره موبایل معتبر نیست (مثال: ۰۹۱۲۳۴۵۶۷۸۹)');
       return;
     }
-
     setLoading(true);
     setError('');
-
-    await new Promise((r) => setTimeout(r, 1200));
-
-    setPendingAuth(phone, '', '');
-    setLoading(false);
-
-    // ✅ FIX: انتقال پارامتر redirect به صفحه OTP
-    router.push(`/auth/verify-otp?redirect=${encodeURIComponent(redirectUrl)}`);
+    try {
+      const cleanedPhone = cleanPhone(phone);
+      await authService.sendOTP(cleanedPhone);
+      setPendingAuth(cleanedPhone, '', '');
+      setLoading(false);
+      router.push(`/auth/verify-otp?redirect=${encodeURIComponent(redirectUrl)}`);
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || 'خطا در ارسال کد تایید. لطفاً دوباره تلاش کنید.');
+    }
   };
 
   const canSubmit = phone.length === 11 && validatePhone(phone) && termsAccepted && !loading;
@@ -219,5 +218,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ✅ کامپوننت اصلی با Suspense
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

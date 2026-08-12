@@ -1,6 +1,7 @@
 // src/app/manage/services/edit/page.jsx
 'use client';
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   FiInfo,
@@ -10,7 +11,7 @@ import {
   FiShield,
   FiRefreshCw,
   FiChevronLeft,
-  FiX, // ← اضافه شد
+  FiX,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -40,7 +41,6 @@ import {
   formatPriceInput,
   calculateAppFee,
 } from '@/utils/numberUtils';
-
 import dynamic from 'next/dynamic';
 
 // ✅ Lazy Load
@@ -53,7 +53,8 @@ const MIN_FINAL_PRICE = 100000;
 const MIN_DEPOSIT = 100000;
 const MAX_DESCRIPTION_LENGTH = 300;
 
-export default function EditServicePage() {
+// ═══════════ کامپوننت داخلی با useSearchParams ═══════════
+function EditServicePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const serviceId = searchParams.get('id');
@@ -62,6 +63,7 @@ export default function EditServicePage() {
   const businessData = useBusinessStore((s) => s.businessData);
   const addService = useBusinessStore((s) => s.addService);
   const updateService = useBusinessStore((s) => s.updateService);
+
   const existingService = serviceId
     ? businessData?.services?.find((s) => s.id === serviceId)
     : null;
@@ -86,6 +88,9 @@ export default function EditServicePage() {
   const [isActive, setIsActive] = useState(existingService?.isActive !== false);
   const [description, setDescription] = useState(existingService?.description || '');
   const [renewalDays, setRenewalDays] = useState(existingService?.renewalDays || 0);
+  const [errors, setErrors] = useState({});
+  const [priceGuideVisible, setPriceGuideVisible] = useState(false);
+
   const handleRenewalChange = (text) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     const num = parseInt(cleaned, 10) || 0;
@@ -94,8 +99,6 @@ export default function EditServicePage() {
       if (errors.renewalDays) setErrors((p) => ({ ...p, renewalDays: '' }));
     }
   };
-  const [errors, setErrors] = useState({});
-  const [priceGuideVisible, setPriceGuideVisible] = useState(false);
 
   // محاسبات
   const originalNum = parseNumber(originalPrice);
@@ -109,7 +112,7 @@ export default function EditServicePage() {
 
   const handleCategoryChange = (val) => {
     setCategoryId(val);
-    setTypeId(null); // ریست نوع خدمت وقتی دسته عوض شد
+    setTypeId(null);
     if (errors.categoryId) setErrors((p) => ({ ...p, categoryId: '' }));
     if (errors.typeId) setErrors((p) => ({ ...p, typeId: '' }));
   };
@@ -131,7 +134,6 @@ export default function EditServicePage() {
     if (renewalDays > 365) {
       newErrors.renewalDays = 'حداکثر ۳۶۵ روز مجاز است';
     }
-
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -171,6 +173,7 @@ export default function EditServicePage() {
         title={isEditMode ? 'ویرایش خدمت' : 'افزودن خدمت جدید'}
         onBackPress={() => router.back()}
       />
+
       <div className="overflow-y-auto pb-32 px-5 pt-3 space-y-5">
         {/* هدر با آیکون */}
         <div className="flex flex-col items-center gap-2 py-3">
@@ -180,12 +183,13 @@ export default function EditServicePage() {
           </h3>
         </div>
 
-        {/* اطلاعات پایه - Dropdown دو سطحی */}
+        {/* اطلاعات پایه */}
         <SectionHeader
           icon={<FiInfo size={18} />}
           iconColor={colors.primary}
           title="اطلاعات پایه"
         />
+
         <Card variant="elevated" padding={16} radius={18}>
           <Input
             label="نام خدمت *"
@@ -197,7 +201,7 @@ export default function EditServicePage() {
             }}
             error={errors.name}
           />
-          {/* Dropdown سطح ۱: دسته‌بندی */}
+
           <Dropdown
             label="دسته‌بندی خدمت *"
             placeholder="دسته‌بندی را انتخاب کنید"
@@ -206,11 +210,9 @@ export default function EditServicePage() {
             onSelect={handleCategoryChange}
           />
           {errors.categoryId && (
-            <p className="text-xs mt-1 mb-3" style={{ color: '#E53935' }}>
-              {errors.categoryId}
-            </p>
+            <p className="text-xs text-[#E53935] mt-1 mb-3">{errors.categoryId}</p>
           )}
-          {/* Dropdown سطح ۲: نوع خدمت */}
+
           <Dropdown
             label="نوع خدمت *"
             placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
@@ -222,16 +224,13 @@ export default function EditServicePage() {
             }}
             disabled={!categoryId}
           />
-          {errors.typeId && (
-            <p className="text-xs mt-1" style={{ color: '#E53935' }}>
-              {errors.typeId}
-            </p>
-          )}
+          {errors.typeId && <p className="text-xs text-[#E53935] mt-1">{errors.typeId}</p>}
         </Card>
 
         {/* قیمت‌گذاری */}
         <SectionHeader icon={<FiDollarSign size={18} />} iconColor="#43A047" title="قیمت‌گذاری" />
-        {/* ✅ دکمه راهنمای قیمت‌گذاری - طراحی جدید (شبیه دکمه واقعی) */}
+
+        {/* دکمه راهنمای قیمت‌گذاری */}
         <button
           onClick={() => setPriceGuideVisible(true)}
           className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl border-2 mb-4 transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] shadow-sm"
@@ -240,15 +239,12 @@ export default function EditServicePage() {
             borderColor: '#4CAF5060',
           }}
         >
-          {/* آیکون در باکس رنگی */}
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: '#4CAF5018' }}
           >
             <FiDollarSign size={22} color="#4CAF50" />
           </div>
-
-          {/* متن‌ها */}
           <div className="flex-1 text-right">
             <p className="text-sm font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
               قیمت‌گذاری و کمیسیون
@@ -257,8 +253,6 @@ export default function EditServicePage() {
               هزینه خدمات‌رسانی زیبانو چقدر است؟
             </p>
           </div>
-
-          {/* فلش کلیک */}
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: '#4CAF5018' }}
@@ -266,6 +260,7 @@ export default function EditServicePage() {
             <FiChevronLeft size={18} color="#4CAF50" />
           </div>
         </button>
+
         <Card variant="elevated" padding={16} radius={18}>
           <Input
             label="قیمت اصلی (تومان) *"
@@ -277,6 +272,7 @@ export default function EditServicePage() {
             }}
             error={errors.originalPrice}
           />
+
           <Input
             label="درصد تخفیف (اختیاری)"
             placeholder="مثال: ۲۰"
@@ -290,7 +286,7 @@ export default function EditServicePage() {
             }}
             error={errors.discountPercent}
           />
-          {/* خلاصه قیمت */}
+
           {originalNum > 0 && (
             <div className="mt-3">
               <PriceBreakdown
@@ -312,6 +308,7 @@ export default function EditServicePage() {
 
         {/* بیعانه */}
         <SectionHeader icon={<FiShield size={18} />} iconColor="#FF9800" title="بیعانه رزرو" />
+
         <Card variant="elevated" padding={16} radius={18}>
           <Input
             label="مبلغ بیعانه (تومان)"
@@ -326,14 +323,14 @@ export default function EditServicePage() {
           />
         </Card>
 
-        {/* ═══════ یادآوری تمدید مجدد ═══════ */}
+        {/* یادآوری تمدید */}
         <SectionHeader
           icon={<FiRefreshCw size={18} />}
           iconColor="#FF9800"
           title="یادآوری تمدید مجدد"
         />
+
         <Card variant="elevated" padding={16} radius={18}>
-          {/* راهنما */}
           <div
             className="flex items-start gap-2.5 mb-4 p-3 rounded-xl border"
             style={{
@@ -346,13 +343,11 @@ export default function EditServicePage() {
               className="text-xs font-[Vazir] leading-5 flex-1"
               style={{ color: colors.textSecondary }}
             >
-              پس از انجام این خدمت، بعد از تعداد روزهای مشخص‌شده در بخش، يادآوری رزرو می‌توانید به
-              مشتری پیام یادآوری تمدید رزرو خدمت ارسال کنید. اگر نیازی به یادآوری نیست، صفر وارد
-              کنید.
+              پس از انجام این خدمت، بعد از تعداد روزهای مشخص‌شده، پیام یادآوری تمدید رزرو برای مشتری
+              ارسال می‌شود. اگر نیازی به یادآوری نیست، صفر وارد کنید.
             </p>
           </div>
 
-          {/* فیلد ورودی دستی */}
           <label
             className="block text-sm mb-2 text-right font-[Vazir-Medium]"
             style={{ color: colors.textMain }}
@@ -388,7 +383,7 @@ export default function EditServicePage() {
                 روز
               </span>
             </div>
-            {/* دکمه پاک کردن */}
+
             {renewalDays > 0 && (
               <button
                 onClick={() => {
@@ -403,14 +398,12 @@ export default function EditServicePage() {
             )}
           </div>
 
-          {/* خطا */}
           {errors.renewalDays && (
             <p className="text-xs mt-2 font-[Vazir]" style={{ color: '#E53935' }}>
               {errors.renewalDays}
             </p>
           )}
 
-          {/* پیش‌نمایش زنده */}
           {renewalDays > 0 && (
             <div
               className="flex items-center gap-2 mt-4 py-2.5 px-3 rounded-lg border"
@@ -432,6 +425,7 @@ export default function EditServicePage() {
 
         {/* تنظیمات */}
         <SectionHeader icon={<FiInfo size={18} />} iconColor="#2196F3" title="تنظیمات" />
+
         <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center justify-between gap-3 mb-4">
             <div className="flex-1">
@@ -456,7 +450,9 @@ export default function EditServicePage() {
               />
             </button>
           </div>
+
           <Divider spacing={12} />
+
           <Input
             label="توضیحات (اختیاری)"
             placeholder="توضیحاتی درباره این خدمت..."
@@ -479,6 +475,7 @@ export default function EditServicePage() {
           iconPosition="right"
         />
       </div>
+
       {/* مدال راهنمای قیمت‌گذاری */}
       <PriceGuideModal
         visible={priceGuideVisible}
@@ -486,5 +483,20 @@ export default function EditServicePage() {
         currentPrice={finalPrice}
       />
     </ScreenWrapper>
+  );
+}
+
+// ═══════════ کامپوننت اصلی با Suspense ═══════════
+export default function EditServicePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-app">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <EditServicePageContent />
+    </Suspense>
   );
 }

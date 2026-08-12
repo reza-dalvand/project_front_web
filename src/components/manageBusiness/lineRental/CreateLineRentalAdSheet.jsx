@@ -1,6 +1,7 @@
+// src/components/manageBusiness/lineRental/CreateLineRentalAdSheet.jsx
 'use client';
 import { useState, useEffect } from 'react';
-import { FiPlus, FiCheck, FiTrash2 } from 'react-icons/fi';
+import { FiCheck, FiTrash2 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import BottomSheet from '@/components/common/BottomSheet';
 import Input from '@/components/common/Input';
@@ -9,18 +10,28 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import CharCounter from '@/components/common/CharCounter';
 import { toPersianDigit, parseNumber, formatPriceInput } from '@/utils/numberUtils';
-import { SERVICE_TYPES, COLLAB_TYPES, LIMITS } from '@/constants';
+import { COLLAB_TYPES } from '@/constants/collabTypes';
+import { SERVICE_CATEGORIES, getSubServicesByCategory } from '@/constants/serviceTypes';
 
-const MAX_DESC = LIMITS.MAX_DESCRIPTION_LENGTH;
+// ═══════ محدودیت‌های بک‌اند ═══════
+// title: max 100
+// description: max 500
+// contact_phone: max 11
+// collab_type: percent/fixed/hourly
+// percent_salon + percent_partner = 100 (برای percent)
+const MAX_TITLE = 100;
+const MAX_DESCRIPTION = 500;
+const MAX_PHONE = 11;
 
 export default function CreateLineRentalAdSheet({ visible, onClose, onSave, editingAd }) {
   const { colors } = useTheme();
   const isEditMode = !!editingAd;
-
   const [title, setTitle] = useState('');
-  const [serviceTypeId, setServiceTypeId] = useState(null);
+  const [categoryId, setCategoryId] = useState(null);
+  const [subServiceId, setSubServiceId] = useState(null);
   const [collabType, setCollabType] = useState(null);
   const [description, setDescription] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   const [errors, setErrors] = useState({});
   const [percentSalon, setPercentSalon] = useState('');
   const [percentPartner, setPercentPartner] = useState('');
@@ -28,13 +39,17 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
   const [fixedDeposit, setFixedDeposit] = useState('');
   const [hourlyRate, setHourlyRate] = useState('');
 
+  const availableSubServices = categoryId ? getSubServicesByCategory(categoryId) : [];
+
   useEffect(() => {
     if (visible) {
       if (editingAd) {
         setTitle(editingAd.title || '');
-        setServiceTypeId(editingAd.serviceTypeId || null);
+        setCategoryId(editingAd.categoryId || null);
+        setSubServiceId(editingAd.subServiceId || null);
         setCollabType(editingAd.collabType || null);
-        setDescription((editingAd.description || '').slice(0, MAX_DESC));
+        setDescription((editingAd.description || '').slice(0, MAX_DESCRIPTION));
+        setContactPhone(editingAd.contactPhone || '');
         setPercentSalon(editingAd.percentSalon ? String(editingAd.percentSalon) : '');
         setPercentPartner(editingAd.percentPartner ? String(editingAd.percentPartner) : '');
         setFixedAmount(
@@ -46,9 +61,11 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
         setHourlyRate(editingAd.hourlyRate ? formatPriceInput(String(editingAd.hourlyRate)) : '');
       } else {
         setTitle('');
-        setServiceTypeId(null);
+        setCategoryId(null);
+        setSubServiceId(null);
         setCollabType(null);
         setDescription('');
+        setContactPhone('');
         setPercentSalon('');
         setPercentPartner('');
         setFixedAmount('');
@@ -85,62 +102,99 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     setErrors((p) => ({ ...p, price: '' }));
   };
 
-  const handleSave = () => {
+  // ═══════ اعتبارسنجی مطابق بک‌اند ═══════
+  const validate = () => {
     const newErrors = {};
-    if (!title.trim()) newErrors.title = 'عنوان آگهی الزامی است';
-    if (title.trim().length > 0 && title.trim().length < 5)
-      newErrors.title = 'عنوان باید حداقل ۵ کاراکتر باشد';
-    if (!serviceTypeId) newErrors.serviceTypeId = 'نوع خدمت را انتخاب کنید';
-    if (!collabType) newErrors.collabType = 'نوع همکاری را انتخاب کنید';
-    if (!description.trim()) newErrors.description = 'توضیحات الزامی است';
-    if (description.trim().length > 0 && description.trim().length < 20)
-      newErrors.description = 'توضیحات باید حداقل ۲۰ کاراکتر باشد';
 
-    let priceData = {};
-    let priceDisplay = '';
+    // title: الزامی، max 100
+    if (!title.trim()) {
+      newErrors.title = 'عنوان آگهی الزامی است';
+    } else if (title.trim().length > MAX_TITLE) {
+      newErrors.title = `عنوان نمی‌تواند بیشتر از ${toPersianDigit(MAX_TITLE)} کاراکتر باشد`;
+    }
+
+    // categoryId: الزامی
+    if (!categoryId) newErrors.categoryId = 'دسته‌بندی خدمات را انتخاب کنید';
+
+    // subServiceId: الزامی
+    if (!subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
+
+    // collabType: الزامی
+    if (!collabType) newErrors.collabType = 'نوع همکاری را انتخاب کنید';
+
+    // description: الزامی، max 500
+    if (!description.trim()) {
+      newErrors.description = 'توضیحات الزامی است';
+    } else if (description.trim().length > MAX_DESCRIPTION) {
+      newErrors.description = `توضیحات نمی‌تواند بیشتر از ${toPersianDigit(MAX_DESCRIPTION)} کاراکتر باشد`;
+    }
+
+    // contactPhone: الزامی، ۱۱ رقم
+    if (!contactPhone.trim()) {
+      newErrors.contactPhone = 'شماره تماس الزامی است';
+    } else if (contactPhone.trim().length !== MAX_PHONE) {
+      newErrors.contactPhone = `شماره تماس باید دقیقاً ${toPersianDigit(MAX_PHONE)} رقم باشد`;
+    }
+
+    // اعتبارسنجی قیمت بر اساس نوع همکاری
     if (collabType === 'percent') {
       const s = parseNumber(percentSalon),
         p = parseNumber(percentPartner);
       if (!s || !p) newErrors.price = 'درصد سالن و همکار را وارد کنید';
       else if (s + p !== 100) newErrors.price = 'مجموع درصدها باید ۱۰۰٪ باشد';
-      else {
-        priceData = { percentSalon: s, percentPartner: p };
-        priceDisplay = `${toPersianDigit(s)}-${toPersianDigit(p)}`;
-      }
     } else if (collabType === 'fixed') {
       const f = parseNumber(fixedAmount);
       if (!f) newErrors.price = 'مبلغ اجاره ماهانه را وارد کنید';
-      else {
-        priceData = { fixedAmount: f, fixedDeposit: parseNumber(fixedDeposit) };
-        priceDisplay =
-          parseNumber(fixedDeposit) > 0
-            ? `${toPersianDigit(f.toLocaleString('en-US'))} + ${toPersianDigit(parseNumber(fixedDeposit).toLocaleString('en-US'))} رهن`
-            : `${toPersianDigit(f.toLocaleString('en-US'))} تومان`;
-      }
     } else if (collabType === 'hourly') {
       const h = parseNumber(hourlyRate);
       if (!h) newErrors.price = 'نرخ ساعتی را وارد کنید';
-      else {
-        priceData = { hourlyRate: h };
-        priceDisplay = `${toPersianDigit(h.toLocaleString('en-US'))} / ساعت`;
-      }
     }
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = () => {
+    if (!validate()) return;
 
     const collab = COLLAB_TYPES.find((c) => c.id === collabType);
-    const svc = SERVICE_TYPES.find((s) => s.id === serviceTypeId);
+    const svc = availableSubServices.find((s) => s.id === subServiceId);
+
+    let priceData = {};
+    let priceDisplay = '';
+
+    if (collabType === 'percent') {
+      priceData = {
+        percentSalon: parseNumber(percentSalon),
+        percentPartner: parseNumber(percentPartner),
+      };
+      priceDisplay = `${toPersianDigit(priceData.percentSalon)}-${toPersianDigit(priceData.percentPartner)}`;
+    } else if (collabType === 'fixed') {
+      priceData = {
+        fixedAmount: parseNumber(fixedAmount),
+        fixedDeposit: parseNumber(fixedDeposit),
+      };
+      priceDisplay =
+        priceData.fixedDeposit > 0
+          ? `${toPersianDigit(priceData.fixedAmount.toLocaleString('en-US'))} + ${toPersianDigit(priceData.fixedDeposit.toLocaleString('en-US'))} رهن`
+          : `${toPersianDigit(priceData.fixedAmount.toLocaleString('en-US'))} تومان`;
+    } else if (collabType === 'hourly') {
+      priceData = { hourlyRate: parseNumber(hourlyRate) };
+      priceDisplay = `${toPersianDigit(priceData.hourlyRate.toLocaleString('en-US'))} / ساعت`;
+    }
+
     onSave({
       id: editingAd?.id || `lr_${Date.now()}`,
       title: title.trim(),
-      serviceTypeId,
-      serviceTypeName: svc?.label || '',
+      categoryId,
+      subServiceId,
+      subServiceLabel: svc?.label || '',
       collabType,
       collabLabel: collab?.label,
       ...priceData,
       priceDisplay,
       description: description.trim(),
+      contactPhone,
       status: 'active',
     });
     onClose();
@@ -162,27 +216,43 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           placeholder="مثال: لاین ناخن با تجهیزات کامل"
           value={title}
           onChangeText={(t) => {
-            setTitle(t);
+            if (t.length <= MAX_TITLE) setTitle(t);
             setErrors((p) => ({ ...p, title: '' }));
           }}
           error={errors.title}
+          hint={`${toPersianDigit(title.length)} از ${toPersianDigit(MAX_TITLE)} کاراکتر`}
         />
+
+        {/* دسته‌بندی خدمات */}
+        <Dropdown
+          label="دسته‌بندی خدمات *"
+          placeholder="دسته‌بندی را انتخاب کنید"
+          value={categoryId}
+          options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
+          onSelect={(val) => {
+            setCategoryId(val);
+            setSubServiceId(null);
+            setErrors((p) => ({ ...p, categoryId: '' }));
+          }}
+        />
+        {errors.categoryId && (
+          <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.categoryId}</p>
+        )}
 
         {/* نوع خدمت */}
         <Dropdown
           label="نوع خدمت لاین *"
-          placeholder="نوع خدمت را انتخاب کنید"
-          value={serviceTypeId}
-          options={SERVICE_TYPES.map((s) => ({ id: s.id, label: s.label }))}
-          onSelect={(v) => {
-            setServiceTypeId(v);
-            setErrors((p) => ({ ...p, serviceTypeId: '' }));
+          placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
+          value={subServiceId}
+          options={availableSubServices}
+          onSelect={(val) => {
+            setSubServiceId(val);
+            setErrors((p) => ({ ...p, subServiceId: '' }));
           }}
+          disabled={!categoryId}
         />
-        {errors.serviceTypeId && (
-          <p className="text-xs" style={{ color: '#E53935' }}>
-            {errors.serviceTypeId}
-          </p>
+        {errors.subServiceId && (
+          <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.subServiceId}</p>
         )}
 
         {/* نوع همکاری */}
@@ -216,11 +286,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
               );
             })}
           </div>
-          {errors.collabType && (
-            <p className="text-xs mt-2" style={{ color: '#E53935' }}>
-              {errors.collabType}
-            </p>
-          )}
+          {errors.collabType && <p className="text-xs text-[#E53935] mt-2">{errors.collabType}</p>}
         </div>
 
         {/* فیلدهای قیمت بر اساس نوع همکاری */}
@@ -293,10 +359,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
               label="مبلغ رهن (اختیاری)"
               placeholder="مثال: ۲۰,۰۰۰,۰۰۰ یا خالی"
               value={fixedDeposit}
-              onChangeText={(t) => {
-                setFixedDeposit(formatPriceInput(t));
-                setErrors((p) => ({ ...p, price: '' }));
-              }}
+              onChangeText={(t) => setFixedDeposit(formatPriceInput(t))}
             />
           </Card>
         )}
@@ -313,11 +376,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
             />
           </Card>
         )}
-        {errors.price && (
-          <p className="text-xs" style={{ color: '#E53935' }}>
-            {errors.price}
-          </p>
-        )}
+        {errors.price && <p className="text-xs text-[#E53935]">{errors.price}</p>}
 
         {/* توضیحات */}
         <Input
@@ -325,7 +384,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           placeholder="درباره لاین، تجهیزات، شرایط همکاری و مزایا بنویسید..."
           value={description}
           onChangeText={(t) => {
-            if (t.length <= MAX_DESC) {
+            if (t.length <= MAX_DESCRIPTION) {
               setDescription(t);
               setErrors((p) => ({ ...p, description: '' }));
             }
@@ -333,7 +392,24 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           multiline
           error={errors.description}
         />
-        <CharCounter current={descLen} max={MAX_DESC} />
+        <CharCounter current={descLen} max={MAX_DESCRIPTION} />
+
+        {/* شماره تماس */}
+        <Input
+          label="شماره تماس *"
+          placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹"
+          value={contactPhone}
+          onChangeText={(t) => {
+            const cleaned = t.replace(/[^0-9]/g, '');
+            if (cleaned.length <= MAX_PHONE) {
+              setContactPhone(cleaned);
+              setErrors((p) => ({ ...p, contactPhone: '' }));
+            }
+          }}
+          type="tel"
+          maxLength={MAX_PHONE}
+          error={errors.contactPhone}
+        />
 
         {/* دکمه ثبت */}
         <Button

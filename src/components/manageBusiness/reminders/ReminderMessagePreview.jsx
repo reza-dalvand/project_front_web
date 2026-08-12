@@ -1,35 +1,16 @@
+// src/components/manageBusiness/reminders/ReminderMessagePreview.jsx
 'use client';
 import { FiMessageSquare, FiEye } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 
-/**
- * پیش‌نمایش متن پیام یادآوری
- *
- * @param {string} businessName - نام کسب‌وکار
- * @param {string} bookingLink  - لینک رزرو
- * @param {number} selectedCount - تعداد مشتریان انتخاب شده
- */
 export default function ReminderMessagePreview({ businessName, bookingLink, selectedCount }) {
   const { colors } = useTheme();
 
-  // متن پیام با placeholder ها
-  const messageTemplate = `سلام {نام مشتری} عزیز 🌸
-
-خدمت «{نام خدمت}» شما که در تاریخ {تاریخ انجام} انجام شده، در تاریخ {تاریخ موعد} نیاز به تمدید دارد.
-
-برای رزرو نوبت تمدید، روی لینک زیر کلیک کنید:
-${bookingLink}
-
-با احترام، ${businessName} 🌹`;
-
   // یک نمونه پرشده برای نمایش
   const sampleMessage = `سلام نازنین کریمی عزیز 🌸
-
 خدمت «فیشیال تخصصی پوست» شما که در تاریخ ۱۴۰۵/۰۳/۲۰ انجام شده، در تاریخ ۱۴۰۵/۰۴/۲۰ نیاز به تمدید دارد.
-
 برای رزرو نوبت تمدید، روی لینک زیر کلیک کنید:
 ${bookingLink}
-
 با احترام، ${businessName} 🌹`;
 
   return (

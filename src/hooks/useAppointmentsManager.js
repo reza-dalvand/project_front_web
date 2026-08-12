@@ -1,8 +1,10 @@
 // src/hooks/useAppointmentsManager.js
 'use client';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useToast } from '@/hooks/useToast';
+import { appointmentsService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 import {
   todayJalaali,
   jalaaliToNumber,
@@ -13,15 +15,15 @@ import {
 
 export const useAppointmentsManager = () => {
   const { showToast } = useToast();
-
   const appointments = useBusinessStore((s) => s.businessData?.appointments) || [];
   const verifyAppointment = useBusinessStore((s) => s.verifyAppointment);
   const confirmTrustAppointment = useBusinessStore((s) => s.confirmTrustAppointment);
   const cancelAppointment = useBusinessStore((s) => s.cancelAppointment);
-
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const today = useMemo(() => todayJalaali(), []);
   const todayNumber = jalaaliToNumber(today);
@@ -35,6 +37,28 @@ export const useAppointmentsManager = () => {
     () => jalaaliToNumber(subtractJalaaliMonths(today, 3)),
     [today]
   );
+
+  // ═══════ دریافت نوبت‌ها از API (در آینده) ═══════
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (USE_MOCK) return; // فعلاً از store محلی استفاده می‌کنیم
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await appointmentsService.getBusinessAppointments();
+        // در آینده: آپدیت store با داده‌های API
+        // useBusinessStore.setState({ ... });
+      } catch (err) {
+        setError(err.message);
+        showToast('خطا در دریافت نوبت‌ها', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
 
   // ═══════ فیلتر + جستجو ═══════
   const filteredAppointments = useMemo(() => {
@@ -90,6 +114,7 @@ export const useAppointmentsManager = () => {
       if (!apt.date) return false;
       return jalaaliToNumber(apt.date) >= threeMonthsAgoNumber;
     });
+
     return {
       all: base.length,
       reserved: base.filter((a) => a.status === 'reserved').length,
@@ -104,27 +129,55 @@ export const useAppointmentsManager = () => {
 
   // تایید با کد (نوبت معمولی)
   const handleVerify = useCallback(
-    (appointmentId) => {
+    async (appointmentId, code) => {
+      if (!USE_MOCK) {
+        try {
+          await appointmentsService.verifyServiceCode(appointmentId, code);
+        } catch (err) {
+          showToast(err.message || 'خطا در تایید کد', 'error');
+          return false;
+        }
+      }
       verifyAppointment(appointmentId);
       showToast('✓ کد تایید شد • بیعانه به حساب شما واریز می‌شود', 'success');
+      return true;
     },
     [verifyAppointment, showToast]
   );
 
   // تایید بدون کد (نوبت اعتمادی)
   const handleTrustConfirm = useCallback(
-    (appointmentId) => {
+    async (appointmentId) => {
+      if (!USE_MOCK) {
+        try {
+          // در آینده: API برای تایید بدون کد
+          await appointmentsService.verifyServiceCode(appointmentId, '0000');
+        } catch (err) {
+          showToast(err.message || 'خطا در تایید', 'error');
+          return false;
+        }
+      }
       confirmTrustAppointment(appointmentId);
       showToast('✓ خدمت تایید شد (بدون نیاز به کد) • بیعانه آزاد شد', 'success');
+      return true;
     },
     [confirmTrustAppointment, showToast]
   );
 
-  // لغو نوبت
+  // لغو نوبت توسط سالن
   const handleCancel = useCallback(
-    (appointmentId, reason) => {
+    async (appointmentId, reason) => {
+      if (!USE_MOCK) {
+        try {
+          await appointmentsService.cancelByBusiness(appointmentId, reason);
+        } catch (err) {
+          showToast(err.message || 'خطا در لغو نوبت', 'error');
+          return false;
+        }
+      }
       cancelAppointment(appointmentId, reason);
       showToast('نوبت لغو شد • بیعانه به مشتری مسترد می‌شود', 'info');
+      return true;
     },
     [cancelAppointment, showToast]
   );
@@ -141,5 +194,7 @@ export const useAppointmentsManager = () => {
     handleVerify,
     handleTrustConfirm,
     handleCancel,
+    isLoading,
+    error,
   };
 };

@@ -1,3 +1,4 @@
+// src/components/manageBusiness/reminders/ReminderCustomerCard.jsx
 'use client';
 import {
   FiCheckSquare,
@@ -13,14 +14,6 @@ import { useTheme } from '@/stores/useThemeStore';
 import Avatar from '@/components/common/Avatar';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-/**
- * کارت مشتری در لیست یادآوری
- *
- * @param {object}  customer      - داده مشتری
- * @param {boolean} selected      - آیا انتخاب شده
- * @param {boolean} canSend       - آیا می‌توان پیام ارسال کرد
- * @param {function} onToggle     - تغییر وضعیت انتخاب
- */
 export default function ReminderCustomerCard({ customer, selected, canSend, onToggle }) {
   const { colors } = useTheme();
 
@@ -80,8 +73,8 @@ export default function ReminderCustomerCard({ customer, selected, canSend, onTo
       onClick={() => canSend && onToggle(customer.id)}
       disabled={!canSend}
       className="w-full flex items-start gap-3 p-3.5 rounded-2xl border-[1.5px]
-        text-right transition-all duration-200
-        disabled:cursor-not-allowed disabled:opacity-60"
+text-right transition-all duration-200
+disabled:cursor-not-allowed disabled:opacity-60"
       style={{
         backgroundColor: selected ? colors.primary + '08' : colors.cardBackground,
         borderColor: selected ? colors.primary : canSend ? colors.border : colors.border + '60',
@@ -149,7 +142,6 @@ export default function ReminderCustomerCard({ customer, selected, canSend, onTo
               {status.label}
             </span>
           </div>
-
           {/* اگر قبلاً ارسال شده */}
           {isSent && (
             <div className="flex items-center gap-1">

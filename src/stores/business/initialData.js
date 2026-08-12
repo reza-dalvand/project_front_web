@@ -1,10 +1,11 @@
 // src/stores/business/initialData.js
-import { todayJalaali } from '@/utils/dateUtils';
+import { todayJalaali, toJalaaliKey } from '@/utils/dateUtils';
 
 // ✅ تاریخ امروز به صورت داینامیک (هر بار که اپ لود شود)
 const today = todayJalaali();
+const todayKey = toJalaaliKey(today.jy, today.jm, today.jd);
 
-export const STORAGE_VERSION = 3;
+export const STORAGE_VERSION = 4; // ✅ افزایش نسخه به دلیل تغییرات API
 
 export const INITIAL_BUSINESS_DATA = {
   id: 'biz_1',
@@ -22,13 +23,13 @@ export const INITIAL_BUSINESS_DATA = {
   coverUrl: 'https://picsum.photos/800/400?random=10',
   ownerName: 'مریم حسینی',
   verifiedName: 'مریم حسینی',
-
   // ✅ فیلد جدید: وضعیت حساب بانکی
   bankInfo: {
     isRegistered: false,
     isVerified: false,
   },
-
+  // ✅ فیلد جدید: booking_slug برای لینک رزرو
+  bookingSlug: 'nilaram-salon',
   services: [
     {
       id: 'svc_1',
@@ -70,11 +71,9 @@ export const INITIAL_BUSINESS_DATA = {
       isActive: true,
     },
   ],
-
   team: [],
   schedules: {},
   portfolios: [],
-
   appointments: [
     {
       id: 'apt_1',
@@ -83,6 +82,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'فیشیال تخصصی پوست',
       employeeName: 'سارا احمدی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید: date_key برای API
       time: '۰۸:۳۰',
       status: 'done',
       price: 675000,
@@ -96,6 +96,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'کاشت ناخن ژلیش',
       employeeName: 'مریم رضایی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید
       time: '۰۹:۳۰',
       status: 'done',
       price: 450000,
@@ -109,6 +110,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'لیزر فول بادی',
       employeeName: 'دکتر رضایی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید
       time: '۱۰:۳۰',
       status: 'reserved',
       price: 2125000,
@@ -123,6 +125,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'فیشیال تخصصی پوست',
       employeeName: 'سارا احمدی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید
       time: '۱۱:۳۰',
       status: 'reserved',
       price: 675000,
@@ -136,6 +139,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'کاشت ناخن ژلیش',
       employeeName: 'مریم رضایی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید
       time: '۱۲:۳۰',
       status: 'cancelled_by_salon',
       price: 450000,
@@ -150,6 +154,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'لیزر فول بادی',
       employeeName: 'دکتر رضایی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید
       time: '۱۴:۰۰',
       status: 'reserved',
       price: 2125000,
@@ -164,6 +169,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'فیشیال تخصصی پوست',
       employeeName: 'سارا احمدی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید
       time: '۱۵:۳۰',
       status: 'reserved',
       price: 675000,
@@ -177,6 +183,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'کاشت ناخن ژلیش',
       employeeName: 'مریم رضایی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید
       time: '۱۶:۳۰',
       status: 'reserved',
       price: 450000,
@@ -190,6 +197,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'لیزر فول بادی',
       employeeName: 'دکتر رضایی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید
       time: '۱۷:۳۰',
       status: 'cancelled_by_salon',
       price: 2125000,
@@ -204,6 +212,7 @@ export const INITIAL_BUSINESS_DATA = {
       serviceName: 'فیشیال تخصصی پوست',
       employeeName: 'سارا احمدی',
       date: today,
+      dateKey: todayKey, // ✅ فیلد جدید
       time: '۱۹:۰۰',
       status: 'reserved',
       price: 675000,

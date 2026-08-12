@@ -1,3 +1,4 @@
+// src/components/profile/appointments/CancelAppointmentModal.jsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -9,13 +10,25 @@ import {
   FiCreditCard,
   FiAlertTriangle,
   FiInfo,
+  FiClock,
+  FiShield,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useToast } from '@/hooks/useToast';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import { formatPrice, toEnglishDigits, toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+// ═══════ فاز ۲: لایه API ═══════
+import { appointmentsService } from '@/api';
+import { USE_MOCK } from '@/api/config';
+// ═══════ فاز ۷: منطق لغو ۱۲ ساعت ═══════
+import {
+  getCancellationPolicy,
+  formatHoursLeft,
+  CANCELLATION_THRESHOLD_HOURS,
+} from '@/utils/cancellation-utils';
 
 const BANKS = [
   { id: 'meli', label: 'بانک ملی ایران' },
@@ -47,6 +60,10 @@ const formatCard = (text) => {
 
 /**
  * مدال لغو نوبت
+ *
+ * قوانین نهایی (تایید شده):
+ * - زیر ۱۲ ساعت تا نوبت: امکان لغو وجود ندارد
+ * - ۱۲ ساعت به بالا: لغو با استرداد کامل بیعانه (بدون جریمه)
  * - اگر اطلاعات بانکی کامل ثبت شده → پیام ساده واریز
  * - اگر ثبت نشده → فرم اطلاعات بانکی
  */
@@ -54,8 +71,8 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
   const { colors } = useTheme();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
+  const { showToast } = useToast();
   const instanceId = useRef('cancel-appointment-modal');
-
   const [bankId, setBankId] = useState(null);
   const [sheba, setSheba] = useState('IR');
   const [cardNumber, setCardNumber] = useState('');
@@ -67,6 +84,9 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
   const hasCompleteBankInfo = Boolean(
     bankInfo?.bankName && bankInfo?.sheba?.length >= 24 && bankInfo?.cardNumber?.length === 16
   );
+
+  // ═══ سیاست لغو ۱۲ ساعت (فاز ۷) ═══
+  const policy = appointment ? getCancellationPolicy(appointment.date, appointment.time) : null;
 
   useEffect(() => {
     if (visible) {
@@ -93,8 +113,14 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
 
   if (!visible || !appointment) return null;
 
-  // ═══ تایید لغو ═══
+  // ═══ تایید لغو — هماهنگ با بک‌اند ═══
   const handleConfirm = async () => {
+    // بررسی مجدد سیاست لغو
+    if (!policy?.canCancel) {
+      showToast('امکان لغو این نوبت وجود ندارد', 'error');
+      return;
+    }
+
     if (!hasCompleteBankInfo) {
       // اعتبارسنجی فرم
       if (!bankId) {
@@ -125,9 +151,25 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
 
     setLoading(true);
     setError('');
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    onConfirmCancel?.(appointment.id);
+
+    try {
+      if (!USE_MOCK) {
+        // در آینده: فراخوانی واقعی API
+        // POST /appointments/{pk}/cancel/
+        await appointmentsService.cancelAppointment(appointment.id, '');
+      } else {
+        // حالت Mock — شبیه‌سازی
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+
+      setLoading(false);
+      onConfirmCancel?.(appointment.id);
+      showToast('نوبت لغو شد. بیعانه ظرف ۴۸ ساعت واریز می‌شود.', 'success');
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || 'خطا در لغو نوبت');
+      showToast(err.message || 'خطا در لغو نوبت', 'error');
+    }
   };
 
   const refundAmount =
@@ -141,7 +183,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
     >
       <div
         className="w-full max-w-md max-h-[90vh] rounded-t-3xl md:rounded-3xl
-          flex flex-col overflow-hidden shadow-2xl"
+flex flex-col overflow-hidden shadow-2xl"
         style={{
           backgroundColor: colors.cardBackground,
           borderTop: `1px solid ${colors.border}`,
@@ -164,11 +206,14 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
           >
             <FiXCircle size={22} color="#E53935" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               لغو نوبت
             </h3>
-            <p className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+            <p
+              className="text-[11px] font-[Vazir] truncate"
+              style={{ color: colors.textSecondary }}
+            >
               {appointment.businessName} • {appointment.serviceName}
             </p>
           </div>
@@ -183,7 +228,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
 
         {/* محتوا */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {/* خلاصه مبلغ استرداد */}
+          {/* ═══ خلاصه مبلغ استرداد ═══ */}
           <div
             className="flex items-center gap-3 p-4 rounded-2xl border"
             style={{
@@ -207,161 +252,211 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
             </div>
           </div>
 
-          {hasCompleteBankInfo ? (
-            /* ═══════ حالت ۱: اطلاعات بانکی ثبت شده ═══════ */
-            <>
-              {/* نمایش اطلاعات بانکی ثبت‌شده */}
-              <div
-                className="rounded-2xl border p-4 space-y-3"
-                style={{ borderColor: colors.border, backgroundColor: colors.background }}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <FiCheckCircle size={16} color="#4CAF50" />
-                  <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                    اطلاعات بانکی ثبت‌شده
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-                    بانک
-                  </span>
-                  <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                    {bankInfo.bankName}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-                    شماره شبا
-                  </span>
-                  <span
-                    className="text-xs font-[Vazir-Bold]"
-                    style={{ color: colors.textMain, direction: 'ltr' }}
-                  >
-                    {bankInfo.sheba}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-                    شماره کارت
-                  </span>
-                  <span
-                    className="text-xs font-[Vazir-Bold]"
-                    style={{ color: colors.textMain, direction: 'ltr' }}
-                  >
-                    {bankInfo.cardNumber}
-                  </span>
-                </div>
-              </div>
-
-              {/* پیام واریز */}
-              <div
-                className="flex items-start gap-3 p-4 rounded-2xl border"
-                style={{ backgroundColor: '#4CAF5008', borderColor: '#4CAF5030' }}
-              >
-                <FiCheckCircle size={18} color="#4CAF50" className="flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-[Vazir] leading-6" style={{ color: colors.textMain }}>
-                    بازگشت وجه به حساب شما انجام خواهد شد.
-                  </p>
-                  <a
-                    href="https://zibano.app/rules/refund"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-[Vazir] underline mt-1 inline-block"
-                    style={{ color: colors.primary }}
-                  >
-                    برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
-                  </a>
-                </div>
-              </div>
-            </>
-          ) : (
-            /* ═══════ حالت ۲: اطلاعات بانکی ثبت نشده → فرم ═══════ */
-            <>
-              {/* پیام راهنما */}
-              <div
-                className="flex items-start gap-3 p-4 rounded-2xl border"
-                style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
-              >
-                <FiAlertTriangle size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p
-                    className="text-xs font-[Vazir] leading-5"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    برای استرداد وجه، اطلاعات حساب بانکی خود را وارد کنید.
-                  </p>
-                  <a
-                    href="https://zibano.app/rules/refund"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-[Vazir] underline mt-1 inline-block"
-                    style={{ color: colors.primary }}
-                  >
-                    برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
-                  </a>
-                </div>
-              </div>
-
-              {/* فرم اطلاعات بانکی */}
-              <Dropdown
-                label="نام بانک *"
-                placeholder="بانک خود را انتخاب کنید"
-                value={bankId}
-                options={BANKS}
-                onSelect={(val) => {
-                  setBankId(val);
-                  setError('');
-                }}
-              />
-              <Input
-                label="شماره شبا *"
-                placeholder="IR000000000000000000000000"
-                value={sheba}
-                onChangeText={(t) => {
-                  setSheba(formatSheba(t));
-                  setError('');
-                }}
-                maxLength={26}
-                hint="شماره شبا باید با IR شروع شده و ۲۶ کاراکتر باشد"
-              />
-              <Input
-                label="شماره کارت *"
-                placeholder="۶۰۳۷۹۹۱۸۱۲۳۴۵۶۷۸"
-                value={toPersianDigit(cardNumber)}
-                onChangeText={(t) => {
-                  setCardNumber(formatCard(t));
-                  setError('');
-                }}
-                type="tel"
-                maxLength={16}
-                rightIcon={<FiCreditCard size={18} style={{ color: colors.textSecondary }} />}
-              />
-
-              {/* راهنمای مالکیت حساب */}
-              <div
-                className="flex items-start gap-2 p-3 rounded-xl border"
-                style={{
-                  backgroundColor: colors.primary + '08',
-                  borderColor: colors.primary + '25',
-                }}
-              >
-                <FiInfo size={14} style={{ color: colors.primary, flexShrink: 0, marginTop: 2 }} />
-                <p
-                  className="text-[11px] font-[Vazir] leading-4 flex-1"
-                  style={{ color: colors.textSecondary }}
-                >
-                  حساب بانکی باید به نام{' '}
-                  <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                    {user?.name || 'صاحب حساب'}
-                  </span>{' '}
-                  باشد.
+          {/* ═══ باکس سیاست لغو ۱۲ ساعت ═══ */}
+          {policy?.canCancel ? (
+            <div
+              className="flex items-start gap-3 p-4 rounded-2xl border"
+              style={{ backgroundColor: '#43A04708', borderColor: '#43A04730' }}
+            >
+              <FiCheckCircle size={18} color="#43A047" className="flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-[Vazir] leading-6" style={{ color: colors.textMain }}>
+                  امکان لغو این نوبت وجود دارد ({formatHoursLeft(policy.hoursLeft)} تا نوبت). بیعانه
+                  به صورت کامل به شما مسترد می‌شود.
                 </p>
+                <a
+                  href="https://zibano.app/rules/cancellation"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-[Vazir] underline mt-1 inline-block"
+                  style={{ color: colors.primary }}
+                >
+                  برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
+                </a>
               </div>
+            </div>
+          ) : (
+            <div
+              className="flex items-start gap-3 p-4 rounded-2xl border"
+              style={{ backgroundColor: '#E5393508', borderColor: '#E5393530' }}
+            >
+              <FiAlertTriangle size={18} color="#E53935" className="flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-[Vazir] leading-6" style={{ color: colors.textMain }}>
+                  امکان لغو این نوبت وجود ندارد ({formatHoursLeft(policy?.hoursLeft ?? 0)} تا نوبت).
+                  طبق قوانین، لغو فقط تا {toPersianDigit(CANCELLATION_THRESHOLD_HOURS)} ساعت قبل
+                  امکان‌پذیر است.
+                </p>
+                <a
+                  href="https://zibano.app/rules/cancellation"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-[Vazir] underline mt-1 inline-block"
+                  style={{ color: colors.primary }}
+                >
+                  برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* ═══ بخش اطلاعات بانکی — فقط اگر لغو مجاز باشد ═══ */}
+          {policy?.canCancel && (
+            <>
+              {hasCompleteBankInfo ? (
+                /* ─── حالت ۱: اطلاعات بانکی ثبت شده ─── */
+                <>
+                  <div
+                    className="rounded-2xl border p-4 space-y-3"
+                    style={{ borderColor: colors.border, backgroundColor: colors.background }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <FiCheckCircle size={16} color="#4CAF50" />
+                      <span
+                        className="text-sm font-[Vazir-Bold]"
+                        style={{ color: colors.textMain }}
+                      >
+                        اطلاعات بانکی ثبت‌شده
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span
+                        className="text-xs font-[Vazir]"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        بانک
+                      </span>
+                      <span
+                        className="text-sm font-[Vazir-Bold]"
+                        style={{ color: colors.textMain }}
+                      >
+                        {bankInfo.bankName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span
+                        className="text-xs font-[Vazir]"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        شماره شبا
+                      </span>
+                      <span
+                        className="text-xs font-[Vazir-Bold]"
+                        style={{ color: colors.textMain, direction: 'ltr' }}
+                      >
+                        {bankInfo.sheba}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span
+                        className="text-xs font-[Vazir]"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        شماره کارت
+                      </span>
+                      <span
+                        className="text-xs font-[Vazir-Bold]"
+                        style={{ color: colors.textMain, direction: 'ltr' }}
+                      >
+                        {bankInfo.cardNumber}
+                      </span>
+                    </div>
+                  </div>
+                  {/* پیام واریز */}
+                  <div
+                    className="flex items-start gap-3 p-4 rounded-2xl border"
+                    style={{ backgroundColor: '#4CAF5008', borderColor: '#4CAF5030' }}
+                  >
+                    <FiShield size={18} color="#4CAF50" className="flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p
+                        className="text-sm font-[Vazir] leading-6"
+                        style={{ color: colors.textMain }}
+                      >
+                        بازگشت وجه به حساب شما انجام خواهد شد.
+                      </p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* ─── حالت ۲: اطلاعات بانکی ثبت نشده → فرم ─── */
+                <>
+                  <div
+                    className="flex items-start gap-3 p-4 rounded-2xl border"
+                    style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
+                  >
+                    <FiAlertTriangle size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p
+                        className="text-xs font-[Vazir] leading-5"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        برای استرداد وجه، اطلاعات حساب بانکی خود را وارد کنید.
+                      </p>
+                    </div>
+                  </div>
+                  <Dropdown
+                    label="نام بانک *"
+                    placeholder="بانک خود را انتخاب کنید"
+                    value={bankId}
+                    options={BANKS}
+                    onSelect={(val) => {
+                      setBankId(val);
+                      setError('');
+                    }}
+                  />
+                  <Input
+                    label="شماره شبا *"
+                    placeholder="IR000000000000000000000000"
+                    value={sheba}
+                    onChangeText={(t) => {
+                      setSheba(formatSheba(t));
+                      setError('');
+                    }}
+                    maxLength={26}
+                    hint="شماره شبا باید با IR شروع شده و ۲۶ کاراکتر باشد"
+                  />
+                  <Input
+                    label="شماره کارت *"
+                    placeholder="۶۰۳۷۹۹۱۸۱۲۳۴۵۶۷۸"
+                    value={toPersianDigit(cardNumber)}
+                    onChangeText={(t) => {
+                      setCardNumber(formatCard(t));
+                      setError('');
+                    }}
+                    type="tel"
+                    maxLength={16}
+                    rightIcon={<FiCreditCard size={18} style={{ color: colors.textSecondary }} />}
+                  />
+                  {/* راهنمای مالکیت حساب */}
+                  <div
+                    className="flex items-start gap-2 p-3 rounded-xl border"
+                    style={{
+                      backgroundColor: colors.primary + '08',
+                      borderColor: colors.primary + '25',
+                    }}
+                  >
+                    <FiInfo
+                      size={14}
+                      style={{ color: colors.primary, flexShrink: 0, marginTop: 2 }}
+                    />
+                    <p
+                      className="text-[11px] font-[Vazir] leading-4 flex-1"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      حساب بانکی باید به نام{' '}
+                      <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                        {user?.name || 'صاحب حساب'}
+                      </span>{' '}
+                      باشد.
+                    </p>
+                  </div>
+                </>
+              )}
             </>
           )}
 
-          {/* پیام خطا */}
+          {/* ═══ پیام خطا ═══ */}
           {error && (
             <div
               className="flex items-center gap-2 p-3 rounded-xl border"
@@ -383,35 +478,37 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
             paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
           }}
         >
-          <button
-            onClick={onClose}
-            className="flex-1 py-3.5 rounded-2xl border-2 text-sm font-[Vazir-Bold]
-              transition-all hover:scale-[1.01] active:scale-[0.99]"
-            style={{ borderColor: colors.border, color: colors.textMain }}
-          >
-            انصراف
-          </button>
-          <button
-            onClick={handleConfirm}
-            disabled={loading}
-            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl
-              text-sm font-[Vazir-Bold] transition-all hover:scale-[1.01] active:scale-[0.99]
-              disabled:opacity-60"
-            style={{ backgroundColor: '#E53935', color: '#fff' }}
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <FiXCircle size={16} color="#fff" />
-                <span>تایید و لغو نوبت</span>
-              </>
-            )}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3.5 rounded-2xl border-2 text-sm font-[Vazir-Bold]
+transition-all hover:scale-[1.01] active:scale-[0.99]"
+              style={{ borderColor: colors.border, color: colors.textMain }}
+            >
+              انصراف
+            </button>
+            {/* ✅ دکمه لغو — فقط اگر لغو مجاز باشد فعال است */}
+            <button
+              onClick={handleConfirm}
+              disabled={loading || !policy?.canCancel}
+              className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl
+text-sm font-[Vazir-Bold] transition-all hover:scale-[1.01] active:scale-[0.99]
+disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{ backgroundColor: '#E53935', color: '#fff' }}
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <FiXCircle size={16} color="#fff" />
+                  <span>تایید و لغو نوبت</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
-
   return createPortal(content, document.body);
 }

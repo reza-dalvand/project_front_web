@@ -63,9 +63,7 @@ export default function Providers({ children }) {
         <ToastProvider />
         <OfflineBanner />
         <BackButtonHandler>
-          <AuthProvider>
-            <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </BackButtonHandler>
         <UpdateModal />
         <MaintenanceModal />

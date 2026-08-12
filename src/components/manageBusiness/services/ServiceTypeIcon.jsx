@@ -10,7 +10,6 @@ import { getServiceTypeInfo } from '@/constants/serviceTypes';
 export default function ServiceTypeIcon({ typeId, size = 56 }) {
   const info = getServiceTypeInfo(typeId);
   const IconComponent = info.icon;
-
   const iconSize = size * 0.5;
   const innerSize = size * 0.78;
 

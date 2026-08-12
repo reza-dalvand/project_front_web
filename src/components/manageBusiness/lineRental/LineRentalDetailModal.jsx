@@ -11,12 +11,14 @@ import InfoRow from '@/components/common/InfoRow';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { useToast } from '@/hooks/useToast';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 
 export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, onDelete }) {
   const { colors } = useTheme();
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef('lr-detail-modal');
   const { showToast } = useToast();
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -57,8 +59,14 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
     }
   };
 
-  const handleDelete = () => {
-    if (confirm(`آیا از حذف "${ad.title}" مطمئن هستید؟`)) onDelete?.(ad);
+  const handleDeleteRequest = () => {
+    setDeleteDialogVisible(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    setDeleteDialogVisible(false);
+    onClose();
+    onDelete?.(ad);
   };
 
   const getPriceInfo = () => {
@@ -241,7 +249,7 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
             />
             <Button
               title="حذف"
-              onPress={handleDelete}
+              onPress={handleDeleteRequest}
               variant="primary"
               size="lg"
               className="flex-1"
@@ -252,6 +260,16 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        visible={deleteDialogVisible}
+        title="حذف آگهی لاین"
+        message={`آیا از حذف "${ad.title}" مطمئن هستید؟ این عمل قابل بازگشت نیست.`}
+        confirmText="حذف"
+        cancelText="انصراف"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteDialogVisible(false)}
+      />
     </div>,
     document.body
   );

@@ -1,13 +1,22 @@
+// src/components/home/search/SearchBusinessCard.jsx
 'use client';
-
 import Image from 'next/image';
-import { FiMapPin, FiStar, FiChevronLeft } from 'react-icons/fi';
+import { FiMapPin, FiStar, FiChevronLeft, FiNavigation } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { Card } from '@/components/common';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-export default function SearchBusinessCard({ business, onPress }) {
+/**
+ * کارت کسب‌وکار در نتایج جستجو
+ * با پشتیبانی از نمایش فاصله
+ *
+ * @param {object} business - داده کسب‌وکار
+ * @param {function} onPress - کلیک روی کارت
+ * @param {object} userLocation - موقعیت کاربر (اختیاری)
+ */
+export default function SearchBusinessCard({ business, onPress, userLocation }) {
   const { colors } = useTheme();
+  const hasDistance = business.distance !== null && business.distance !== undefined;
 
   return (
     <Card variant="elevated" padding={14} radius={18}>
@@ -26,11 +35,11 @@ export default function SearchBusinessCard({ business, onPress }) {
               <div
                 className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2"
                 style={{
-                  backgroundColor: colors.primary,
+                  backgroundColor: '#FFD700',
                   borderColor: colors.cardBackground,
                 }}
               >
-                <span className="text-[9px]">👑</span>
+                <span className="text-[8px]">👑</span>
               </div>
             )}
           </div>
@@ -49,15 +58,35 @@ export default function SearchBusinessCard({ business, onPress }) {
             >
               {business.category}
             </p>
-            <div className="flex items-center gap-2 mt-1">
-              <FiMapPin size={11} color={colors.textSecondary} />
-              <span
-                className="text-[11px] font-[Vazir] line-clamp-1"
-                style={{ color: colors.textSecondary }}
-              >
-                {business.city}
-              </span>
-              <div className="w-1 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
+
+            {/* ردیف فاصله و شهر */}
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              {/* فاصله - اگر موجود باشد */}
+              {hasDistance && (
+                <div
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg"
+                  style={{ backgroundColor: '#2196F318' }}
+                >
+                  <FiNavigation size={10} color="#2196F3" />
+                  <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
+                    {business.distanceText}
+                  </span>
+                </div>
+              )}
+              {/* شهر */}
+              <div className="flex items-center gap-1">
+                <FiMapPin size={11} color={colors.textSecondary} />
+                <span
+                  className="text-[11px] font-[Vazir] line-clamp-1"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {business.city}
+                </span>
+              </div>
+            </div>
+
+            {/* امتیاز */}
+            <div className="flex items-center gap-1.5 mt-1">
               <FiStar size={11} color="#FFC107" fill="#FFC107" />
               <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                 {toPersianDigit(business.rating)}
@@ -65,16 +94,19 @@ export default function SearchBusinessCard({ business, onPress }) {
               <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
                 ({toPersianDigit(business.reviewsCount)})
               </span>
+              {business.discount > 0 && (
+                <span
+                  className="text-[10px] font-[Vazir-Bold] px-2 py-0.5 rounded-md"
+                  style={{ backgroundColor: '#E5393515', color: '#E53935' }}
+                >
+                  {toPersianDigit(business.discount)}٪ تخفیف
+                </span>
+              )}
             </div>
           </div>
 
           {/* فلش */}
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: colors.primary + '15' }}
-          >
-            <FiChevronLeft size={18} color={colors.primary} />
-          </div>
+          <FiChevronLeft size={18} color={colors.textSecondary} />
         </div>
       </button>
     </Card>

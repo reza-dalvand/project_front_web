@@ -7,6 +7,7 @@ import { MOCK_BUSINESSES_LIST } from '@/data/businesses';
 import { MOCK_MODEL_REQUESTS as _MODEL_REQUESTS } from '@/data/modelRequests';
 import { MOCK_LINE_RENTALS as _LINE_RENTALS } from '@/data/lineRentals';
 import { MOCK_POSTS } from '@/data/posts';
+import { calculateDistance, formatDistance } from '@/utils/geo-utils';
 
 // ═══════ تبدیل داده‌ها به فرمت جستجو ═══════
 // کسب‌وکارها: اضافه کردن فیلد logo اگر ندارد
@@ -14,6 +15,9 @@ export const SEARCH_BUSINESSES = MOCK_BUSINESSES_LIST.map((b) => ({
   ...b,
   logo: b.logo || `https://picsum.photos/150?random=${b.id}`,
   ratingNum: b.rating,
+  // ✅ افزودن مختصات برای فیلتر فاصله (در production از API می‌آید)
+  latitude: b.latitude || null,
+  longitude: b.longitude || null,
 }));
 
 // مدلینگ: تبدیل به فرمت جستجو
@@ -52,13 +56,10 @@ export const searchAll = (query) => {
   const businesses = SEARCH_BUSINESSES.filter(
     (b) => matches(b.name) || matches(b.serviceType) || matches(b.category) || matches(b.address)
   );
-
   const posts = SEARCH_POSTS.filter((p) => matches(p.businessName) || matches(p.caption));
-
   const modelRequests = SEARCH_MODEL_REQUESTS.filter(
     (m) => matches(m.title) || matches(m.serviceName) || matches(m.businessName) || matches(m.city)
   );
-
   const lineRentals = SEARCH_LINE_RENTALS.filter(
     (l) =>
       matches(l.title) || matches(l.serviceTypeName) || matches(l.businessName) || matches(l.city)
@@ -79,3 +80,51 @@ export const getResultCounts = (results) => ({
   modelRequests: results.modelRequests.length,
   lineRentals: results.lineRentals.length,
 });
+
+// ═══════════ 📍 جستجو با فیلتر فاصله ═══════════
+/**
+ * جستجوی کسب‌وکارها با فیلتر فاصله
+ * @param {string} query - عبارت جستجو
+ * @param {object} userLocation - { latitude, longitude }
+ * @param {number} maxDistanceKm - حداکثر فاصله (کیلومتر)
+ * @returns {Array} - لیست کسب‌وکارها با فاصله محاسبه‌شده
+ */
+export const searchBusinessesWithDistance = (query, userLocation, maxDistanceKm = null) => {
+  const { calculateDistance, formatDistance } = require('@/utils/geo-utils');
+  const results = searchAll(query);
+  let businesses = results.businesses || [];
+
+  if (!userLocation) return businesses;
+
+  // محاسبه فاصله
+  businesses = businesses.map((business) => {
+    const businessLat = business.latitude || business.location?.latitude;
+    const businessLng = business.longitude || business.location?.longitude;
+
+    if (businessLat && businessLng) {
+      const distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        businessLat,
+        businessLng
+      );
+      return { ...business, distance, distanceText: formatDistance(distance) };
+    }
+    return { ...business, distance: null, distanceText: null };
+  });
+
+  // مرتب‌سازی بر اساس فاصله
+  businesses = [...businesses].sort((a, b) => {
+    if (a.distance === null && b.distance === null) return 0;
+    if (a.distance === null) return 1;
+    if (b.distance === null) return -1;
+    return a.distance - b.distance;
+  });
+
+  // اعمال فیلتر فاصله
+  if (maxDistanceKm) {
+    businesses = businesses.filter((b) => b.distance !== null && b.distance <= maxDistanceKm);
+  }
+
+  return businesses;
+};
