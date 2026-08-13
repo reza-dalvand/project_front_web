@@ -20,6 +20,8 @@ import Card from '@/components/common/Card';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
 import { useToast } from '@/hooks/useToast';
+import { MOCK_BUSINESSES_MAP } from '@/data/businesses';
+
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 // ═══════════════════════════════════════════════════════

@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import { FiMapPin, FiStar, FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { Card } from '@/components/common';
@@ -55,6 +54,18 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
 
         {/* ردیف میانی: آدرس + تخفیف */}
         <div className="flex items-center gap-2 mt-3">
+          {/* 🆕 Badge فاصله */}
+          {business.distanceText && (
+            <div
+              className="flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0"
+              style={{ backgroundColor: '#2196F318' }}
+            >
+              <FiMapPin size={10} color="#2196F3" />
+              <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
+                {business.distanceText}
+              </span>
+            </div>
+          )}
           {hasDiscount && (
             <div
               className="flex items-center gap-1 px-2 py-1 rounded-lg"

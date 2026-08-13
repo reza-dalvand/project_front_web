@@ -2,18 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import {
-  FiZap,
-  FiGrid,
-  FiUser,
-  FiUserPlus,
-  FiArrowLeft,
-  FiStar,
-  FiCalendar,
-  FiTrendingUp,
-  FiAward,
-  FiCreditCard,
-} from 'react-icons/fi';
+import { FiZap, FiGrid, FiUser, FiArrowLeft, FiStar, FiMapPin, FiAward } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import { useReviewStore } from '@/stores/useReviewStore';
@@ -236,6 +225,38 @@ export default function HomePage() {
             }
           />
           <AdSlider ads={MOCK_ADS} onPress={handleAdPress} />
+        </section>
+        {/* ─── 🆕 دکمه نزدیک‌ترین کسب‌وکارها ─── */}
+        <section>
+          <button
+            onClick={() => router.push('/nearby')}
+            className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
+            style={{
+              backgroundColor: colors.cardBackground,
+              borderColor: '#2196F340',
+            }}
+          >
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: '#2196F318' }}
+            >
+              <FiMapPin size={24} color="#2196F3" />
+            </div>
+            <div className="flex-1 text-right">
+              <span className="text-sm font-[Vazir-Bold] block" style={{ color: colors.textMain }}>
+                نزدیک‌ترین کسب‌وکارها به من
+              </span>
+              <span
+                className="text-[11px] font-[Vazir] block mt-0.5"
+                style={{ color: colors.textSecondary }}
+              >
+                سالن‌ها، کلینیک‌ها و مراکز اطراف شما
+              </span>
+            </div>
+            <span className="text-lg" style={{ color: '#2196F3' }}>
+              ←
+            </span>
+          </button>
         </section>
 
         {/* ─── ۲. دسته‌بندی خدمات ─── */}
