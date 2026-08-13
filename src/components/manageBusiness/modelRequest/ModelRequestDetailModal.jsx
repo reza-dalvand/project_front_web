@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import {
@@ -8,9 +8,7 @@ import {
   FiTrash2,
   FiPhone,
   FiCalendar,
-  FiClock,
   FiInfo,
-  FiChevronLeft,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
@@ -18,7 +16,6 @@ import Card from '@/components/common/Card';
 import Badge from '@/components/common/Badge';
 import CostTypeBadge from '@/components/common/CostTypeBadge';
 import InfoRow from '@/components/common/InfoRow';
-import { toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 

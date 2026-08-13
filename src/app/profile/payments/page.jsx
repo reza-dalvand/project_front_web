@@ -8,7 +8,7 @@ import PaymentCompactCard from '@/components/profile/paymentHistory/PaymentCompa
 import PaymentStatsCard from '@/components/profile/paymentHistory/PaymentStatsCard';
 import { MOCK_PAYMENTS } from '@/data/payments';
 import dynamic from 'next/dynamic';
-
+import { formatPrice } from '@/utils/numberUtils';
 const PaymentDetailModal = dynamic(
   () => import('@/components/profile/paymentHistory/PaymentDetailModal'),
   { ssr: false, loading: () => null }
@@ -37,6 +37,30 @@ export default function PaymentsPage() {
   // ═══ فیلتر پرداخت‌ها بر اساس بازه زمانی ═══
   const filteredPayments = useMemo(() => {
     if (activeFilter === 'all') return MOCK_PAYMENTS;
+
+    const now = new Date();
+    let cutoff;
+
+    switch (activeFilter) {
+      case 'yesterday':
+        cutoff = new Date(now);
+        cutoff.setDate(cutoff.getDate() - 1);
+        break;
+      case 'last_week':
+        cutoff = new Date(now);
+        cutoff.setDate(cutoff.getDate() - 7);
+        break;
+      case 'last_month':
+        cutoff = new Date(now);
+        cutoff.setMonth(cutoff.getMonth() - 1);
+        break;
+      case 'last_3months':
+        cutoff = new Date(now);
+        cutoff.setMonth(cutoff.getMonth() - 3);
+        break;
+      default:
+        return MOCK_PAYMENTS;
+    }
 
     const handleShareInvoice = async () => {
       if (!selectedPayment) return;
@@ -97,30 +121,6 @@ export default function PaymentsPage() {
         showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
       }
     };
-
-    const now = new Date();
-    let cutoff;
-
-    switch (activeFilter) {
-      case 'yesterday':
-        cutoff = new Date(now);
-        cutoff.setDate(cutoff.getDate() - 1);
-        break;
-      case 'last_week':
-        cutoff = new Date(now);
-        cutoff.setDate(cutoff.getDate() - 7);
-        break;
-      case 'last_month':
-        cutoff = new Date(now);
-        cutoff.setMonth(cutoff.getMonth() - 1);
-        break;
-      case 'last_3months':
-        cutoff = new Date(now);
-        cutoff.setMonth(cutoff.getMonth() - 3);
-        break;
-      default:
-        return MOCK_PAYMENTS;
-    }
 
     // فیلتر بر اساس ماه و سال (ساده‌شده برای MOCK)
     return MOCK_PAYMENTS.filter((p) => {

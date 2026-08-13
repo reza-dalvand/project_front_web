@@ -10,5 +10,4 @@ export { default as BusinessAbout } from './BusinessAbout';
 export { default as ServiceBookingCard } from './ServiceBookingCard';
 export { default as PortfolioGrid } from './PortfolioGrid';
 export { default as PortfolioModal } from './PortfolioModal';
-export { default as ActionButtons } from '@/components/common/ActionButtons';
 export * from './search';

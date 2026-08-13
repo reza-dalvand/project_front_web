@@ -84,7 +84,7 @@ export default function PortfolioDetailModal({
               <FiEdit2 size={16} style={{ color: colors.primary }} />
             </button>
             <button
-              onClick={handleDelete}
+              onClick={handleDeleteRequest}
               className="w-9 h-9 rounded-full flex items-center justify-center"
               style={{ backgroundColor: '#E5393515' }}
             >
