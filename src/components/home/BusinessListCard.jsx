@@ -1,5 +1,7 @@
+// src/components/home/BusinessListCard.jsx
 'use client';
-import { FiMapPin, FiStar, FiChevronLeft } from 'react-icons/fi';
+import Image from 'next/image';
+import { FiMapPin, FiStar, FiChevronLeft, FiNavigation } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { Card } from '@/components/common';
 import { toPersianDigit } from '@/utils/numberUtils';
@@ -52,20 +54,21 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
           </div>
         </div>
 
-        {/* ردیف میانی: آدرس + تخفیف */}
+        {/* ردیف میانی: فاصله + آدرس + تخفیف */}
         <div className="flex items-center gap-2 mt-3">
-          {/* 🆕 Badge فاصله */}
+          {/* فاصله — فقط اگر nearby فعال باشد و فاصله موجود باشد */}
           {business.distanceText && (
             <div
-              className="flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-lg flex-shrink-0"
               style={{ backgroundColor: '#2196F318' }}
             >
-              <FiMapPin size={10} color="#2196F3" />
+              <FiNavigation size={10} color="#2196F3" />
               <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
                 {business.distanceText}
               </span>
             </div>
           )}
+
           {hasDiscount && (
             <div
               className="flex items-center gap-1 px-2 py-1 rounded-lg"
@@ -76,6 +79,7 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
               </span>
             </div>
           )}
+
           <div className="flex items-center gap-1 flex-1 min-w-0">
             <FiMapPin size={12} color={colors.textSecondary} />
             <span
@@ -90,8 +94,7 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
         {/* فوتر: دکمه رزرو */}
         <div className="mt-3 pt-3 border-t" style={{ borderColor: colors.border }}>
           <div
-            className="flex items-center justify-center gap-2 py-2.5 rounded-xl
-              transition-all"
+            className="flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all"
             style={{ backgroundColor: '#43A047' }}
           >
             <span className="text-sm">📅</span>

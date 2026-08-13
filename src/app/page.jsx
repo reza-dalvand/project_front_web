@@ -2,10 +2,23 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { FiZap, FiGrid, FiUser, FiArrowLeft, FiStar, FiMapPin, FiAward } from 'react-icons/fi';
+import {
+  FiZap,
+  FiGrid,
+  FiUser,
+  FiUserPlus,
+  FiArrowLeft,
+  FiStar,
+  FiCalendar,
+  FiTrendingUp,
+  FiAward,
+  FiCreditCard,
+  FiMapPin,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import { useReviewStore } from '@/stores/useReviewStore';
+import { useNearbyStore } from '@/stores/useNearbyStore';
 import { SectionHeader, BottomTabBar } from '@/components/common';
 import HomeHeader from '@/components/home/HomeHeader';
 import AdSlider from '@/components/home/AdSlider';
@@ -13,24 +26,23 @@ import CategoryGrid from '@/components/home/CategoryGrid';
 import SeeAllButton from '@/components/home/SeeAllButton';
 import ActiveFiltersBar from '@/components/home/ActiveFiltersBar';
 import { useToast } from '@/hooks/useToast';
-
+import { getCurrentLocation, calculateDistance } from '@/utils/geo-utils';
+import { toPersianDigit } from '@/utils/numberUtils';
 import { MOCK_CATEGORIES } from '@/data/businesses';
 import { MOCK_ADS } from '@/data/ads';
 import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 import { MOCK_DONE_APPOINTMENTS } from '@/data/appointments';
 
-// ✅ Lazy Load — مودال‌های سنگین
+// ✅ Lazy Load
 const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), {
   ssr: false,
   loading: () => null,
 });
-
 const HomeFilterModal = dynamic(() => import('@/components/home/HomeFilterModal'), {
   ssr: false,
   loading: () => null,
 });
-
 const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), {
   ssr: false,
   loading: () => null,
@@ -39,11 +51,21 @@ const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), {
 export default function HomePage() {
   const router = useRouter();
   const { colors, resolvedTheme, setTheme } = useTheme();
-  const { isAuthenticated, user } = useAuth();
-  const { requireAuth } = useAuth();
+  const { isAuthenticated, user, requireAuth } = useAuth();
   const { showToast } = useToast();
   const { pendingReviews, addPendingReview } = useReviewStore();
   const isDark = resolvedTheme === 'dark';
+
+  // ═══════ Nearby States ═══════
+  const nearbyEnabled = useNearbyStore((s) => s.enabled);
+  const nearbyLoading = useNearbyStore((s) => s.loading);
+  const nearbyDenied = useNearbyStore((s) => s.denied);
+  const userLocation = useNearbyStore((s) => s.userLocation);
+  const maxDistanceKm = useNearbyStore((s) => s.maxDistanceKm);
+  const enableNearby = useNearbyStore((s) => s.enable);
+  const disableNearby = useNearbyStore((s) => s.disable);
+  const setNearbyLoading = useNearbyStore((s) => s.setLoading);
+  const setNearbyDenied = useNearbyStore((s) => s.setDenied);
 
   // ─── State‌ها ───
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,7 +76,67 @@ export default function HomePage() {
   const [reviewVisible, setReviewVisible] = useState(false);
   const [currentReviewAppointment, setCurrentReviewAppointment] = useState(null);
 
-  // ✅ useMemo به جای محاسبه در هر render
+  // ═══════ Nearby Toggle Handler ═══════
+  const handleNearbyToggle = useCallback(async () => {
+    if (nearbyEnabled) {
+      disableNearby();
+      showToast('نمایش نزدیک‌ترین‌ها غیرفعال شد', 'info');
+      return;
+    }
+    if (nearbyDenied) {
+      showToast('دسترسی به موقعیت مکانی رد شده است', 'error');
+      return;
+    }
+    setNearbyLoading(true);
+    try {
+      const location = await getCurrentLocation();
+      enableNearby(location);
+      showToast('نمایش نزدیک‌ترین‌ها فعال شد', 'success');
+    } catch {
+      setNearbyDenied(true);
+      showToast('دسترسی به موقعیت مکانی رد شد', 'error');
+    }
+  }, [
+    nearbyEnabled,
+    nearbyDenied,
+    showToast,
+    enableNearby,
+    disableNearby,
+    setNearbyLoading,
+    setNearbyDenied,
+  ]);
+
+  // ═══════ فیلتر مدلینگ بر اساس فاصله ═══════
+  const filteredModelRequests = useMemo(() => {
+    if (!nearbyEnabled || !userLocation) return MOCK_MODEL_REQUESTS;
+    return MOCK_MODEL_REQUESTS.filter((req) => {
+      if (!req.latitude || !req.longitude) return false;
+      const dist = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        req.latitude,
+        req.longitude
+      );
+      return dist <= maxDistanceKm;
+    });
+  }, [nearbyEnabled, userLocation, maxDistanceKm]);
+
+  // ═══════ فیلتر اجاره لاین بر اساس فاصله ═══════
+  const filteredLineRentals = useMemo(() => {
+    if (!nearbyEnabled || !userLocation) return MOCK_LINE_RENTALS;
+    return MOCK_LINE_RENTALS.filter((ad) => {
+      if (!ad.latitude || !ad.longitude) return false;
+      const dist = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        ad.latitude,
+        ad.longitude
+      );
+      return dist <= maxDistanceKm;
+    });
+  }, [nearbyEnabled, userLocation, maxDistanceKm]);
+
+  // ═══════ hasActiveFilter ═══════
   const hasActiveFilter = useMemo(
     () => Object.values(filters).some((v) => v && v !== 'all' && v !== 'recommended'),
     [filters]
@@ -78,7 +160,7 @@ export default function HomePage() {
     }
   }, [pendingReviews, reviewVisible]);
 
-  // ─── Handlers (useCallback) ───
+  // ─── Handlers ───
   const handleThemeToggle = useCallback(
     () => setTheme(isDark ? 'light' : 'dark'),
     [isDark, setTheme]
@@ -86,9 +168,7 @@ export default function HomePage() {
 
   const handleAdPress = useCallback(
     (ad) => {
-      if (ad.businessId) {
-        router.push(`/business/${ad.businessId}`);
-      }
+      if (ad.businessId) router.push(`/business/${ad.businessId}`);
     },
     [router]
   );
@@ -226,36 +306,59 @@ export default function HomePage() {
           />
           <AdSlider ads={MOCK_ADS} onPress={handleAdPress} />
         </section>
-        {/* ─── 🆕 دکمه نزدیک‌ترین کسب‌وکارها ─── */}
+
+        {/* ─── 📍 دکمه نزدیک‌ترین‌ها ─── */}
         <section>
           <button
-            onClick={() => router.push('/nearby')}
-            className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
+            onClick={handleNearbyToggle}
+            disabled={nearbyLoading}
+            className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
             style={{
-              backgroundColor: colors.cardBackground,
-              borderColor: '#2196F340',
+              backgroundColor: nearbyEnabled ? '#2196F315' : colors.cardBackground,
+              borderColor: nearbyEnabled ? '#2196F3' : colors.border,
             }}
           >
             <div
               className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: '#2196F318' }}
+              style={{ backgroundColor: nearbyEnabled ? '#2196F320' : colors.primary + '15' }}
             >
-              <FiMapPin size={24} color="#2196F3" />
+              {nearbyLoading ? (
+                <div
+                  className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"
+                  style={{ color: '#2196F3' }}
+                />
+              ) : (
+                <FiMapPin size={24} color={nearbyEnabled ? '#2196F3' : colors.primary} />
+              )}
             </div>
             <div className="flex-1 text-right">
-              <span className="text-sm font-[Vazir-Bold] block" style={{ color: colors.textMain }}>
-                نزدیک‌ترین کسب‌وکارها به من
+              <span
+                className="text-sm font-[Vazir-Bold] block"
+                style={{ color: nearbyEnabled ? '#2196F3' : colors.textMain }}
+              >
+                {nearbyEnabled ? 'نزدیک‌ترین‌ها فعال است' : 'نزدیک‌ترین‌ها به من'}
               </span>
               <span
                 className="text-[11px] font-[Vazir] block mt-0.5"
                 style={{ color: colors.textSecondary }}
               >
-                سالن‌ها، کلینیک‌ها و مراکز اطراف شما
+                {nearbyEnabled
+                  ? `تا ${toPersianDigit(maxDistanceKm)} کیلومتری شما`
+                  : 'سالن‌ها، کلینیک‌ها و مراکز اطراف شما'}
               </span>
             </div>
-            <span className="text-lg" style={{ color: '#2196F3' }}>
-              ←
-            </span>
+            <div
+              className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
+              style={{ backgroundColor: nearbyEnabled ? '#2196F3' : colors.border }}
+            >
+              <div
+                className="absolute top-0.5 w-5 h-5 rounded-full shadow-md transition-all"
+                style={{
+                  backgroundColor: '#fff',
+                  [nearbyEnabled ? 'right' : 'left']: '2px',
+                }}
+              />
+            </div>
           </button>
         </section>
 
@@ -279,79 +382,95 @@ export default function HomePage() {
             rightElement={
               <SeeAllButton
                 onPress={() => router.push('/model-requests')}
-                count={MOCK_MODEL_REQUESTS.length}
+                count={filteredModelRequests.length}
               />
             }
           />
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-            {MOCK_MODEL_REQUESTS.map((request) => (
-              <button
-                key={request.id}
-                onClick={() => handleModelRequestPress(request)}
-                className="flex-shrink-0 w-[220px] rounded-[18px] border overflow-hidden text-right"
-                style={{
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                }}
-              >
-                <div className="relative h-[140px] w-full">
-                  <img
-                    src={request.serviceImage}
-                    alt={request.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div
-                    className="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
-                    style={{
-                      backgroundColor:
-                        request.costType === 'free'
-                          ? '#4CAF50'
-                          : request.costType === 'paid'
-                            ? '#2196F3'
-                            : '#FF9800',
-                    }}
-                  >
-                    {request.costType === 'free'
-                      ? 'رایگان'
-                      : request.costType === 'paid'
-                        ? 'با هزینه'
-                        : 'هزینه مواد'}
-                  </div>
-                  {request.isUrgent && (
+          {filteredModelRequests.length > 0 ? (
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+              {filteredModelRequests.map((request) => (
+                <button
+                  key={request.id}
+                  onClick={() => handleModelRequestPress(request)}
+                  className="flex-shrink-0 w-[220px] rounded-[18px] border overflow-hidden text-right"
+                  style={{
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <div className="relative h-[140px] w-full">
+                    <img
+                      src={request.serviceImage}
+                      alt={request.title}
+                      className="w-full h-full object-cover"
+                    />
                     <div
-                      className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-[Vazir-Bold] text-white"
-                      style={{ backgroundColor: 'rgba(255,152,0,0.9)' }}
+                      className="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
+                      style={{
+                        backgroundColor:
+                          request.costType === 'free'
+                            ? '#4CAF50'
+                            : request.costType === 'paid'
+                              ? '#2196F3'
+                              : '#FF9800',
+                      }}
                     >
-                      فوری
+                      {request.costType === 'free'
+                        ? 'رایگان'
+                        : request.costType === 'paid'
+                          ? 'با هزینه'
+                          : 'هزینه مواد'}
                     </div>
-                  )}
-                </div>
-                <div className="p-3 flex flex-col gap-2">
-                  <h4
-                    className="text-[14px] font-[Vazir-Bold] line-clamp-2 min-h-[40px]"
-                    style={{ color: colors.textMain }}
-                  >
-                    {request.title}
-                  </h4>
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm">🏪</span>
-                    <span
-                      className="text-[11px] font-[Vazir-Medium]"
-                      style={{ color: colors.primary }}
+                    {request.isUrgent && (
+                      <div
+                        className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-[Vazir-Bold] text-white"
+                        style={{ backgroundColor: 'rgba(255,152,0,0.9)' }}
+                      >
+                        فوری
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 flex flex-col gap-2">
+                    <h4
+                      className="text-[14px] font-[Vazir-Bold] line-clamp-2 min-h-[40px]"
+                      style={{ color: colors.textMain }}
                     >
-                      {request.businessName}
-                    </span>
+                      {request.title}
+                    </h4>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm">🏪</span>
+                      <span
+                        className="text-[11px] font-[Vazir-Medium]"
+                        style={{ color: colors.primary }}
+                      >
+                        {request.businessName}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm">📍</span>
+                      <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                        {request.city}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm">📍</span>
-                    <span className="text-[10px]" style={{ color: colors.textSecondary }}>
-                      {request.city}
-                    </span>
-                  </div>
-                </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center py-8 gap-2">
+              <span className="text-3xl">📍</span>
+              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                فرصت مدلینگی در این فاصله پیدا نشد
+              </p>
+              <button
+                onClick={disableNearby}
+                className="text-xs font-[Vazir-Bold] underline"
+                style={{ color: colors.primary }}
+              >
+                نمایش همه
               </button>
-            ))}
-          </div>
+            </div>
+          )}
         </section>
 
         {/* ─── ۴. فرصت‌های همکاری / اجاره لاین ─── */}
@@ -364,82 +483,94 @@ export default function HomePage() {
             rightElement={
               <SeeAllButton
                 onPress={() => router.push('/line-rentals')}
-                count={MOCK_LINE_RENTALS.length}
+                count={filteredLineRentals.length}
               />
             }
           />
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-            {MOCK_LINE_RENTALS.map((ad) => (
+          {filteredLineRentals.length > 0 ? (
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+              {filteredLineRentals.map((ad) => (
+                <button
+                  key={ad.id}
+                  onClick={() => handleLineRentalPress(ad)}
+                  className="flex-shrink-0 w-[220px] rounded-[18px] border overflow-hidden text-right"
+                  style={{
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <div className="relative h-[130px] w-full">
+                    <img src={ad.lineImage} alt={ad.title} className="w-full h-full object-cover" />
+                    <div
+                      className="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
+                      style={{ backgroundColor: '#667eea' }}
+                    >
+                      {ad.serviceTypeName}
+                    </div>
+                  </div>
+                  <div className="p-3 flex flex-col gap-2">
+                    <h4
+                      className="text-[14px] font-[Vazir-Bold] line-clamp-2 min-h-[40px]"
+                      style={{ color: colors.textMain }}
+                    >
+                      {ad.title}
+                    </h4>
+                    <div
+                      className="inline-flex items-center gap-1 self-start px-2 py-1 rounded-lg text-[10px] font-[Vazir-Bold]"
+                      style={{
+                        backgroundColor: '#9C27B022',
+                        color: '#9C27B0',
+                      }}
+                    >
+                      {ad.collabType === 'percent'
+                        ? 'درصدی'
+                        : ad.collabType === 'hourly'
+                          ? 'ساعتی'
+                          : 'اجاره ثابت'}
+                      {ad.priceDisplay && ` • ${ad.priceDisplay}`}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm">📍</span>
+                      <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                        {ad.city}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center py-8 gap-2">
+              <span className="text-3xl">📍</span>
+              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                فرصت همکاری در این فاصله پیدا نشد
+              </p>
               <button
-                key={ad.id}
-                onClick={() => handleLineRentalPress(ad)}
-                className="flex-shrink-0 w-[220px] rounded-[18px] border overflow-hidden text-right"
-                style={{
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                }}
+                onClick={disableNearby}
+                className="text-xs font-[Vazir-Bold] underline"
+                style={{ color: colors.primary }}
               >
-                <div className="relative h-[130px] w-full">
-                  <img src={ad.lineImage} alt={ad.title} className="w-full h-full object-cover" />
-                  <div
-                    className="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold] text-white"
-                    style={{ backgroundColor: '#667eea' }}
-                  >
-                    {ad.serviceTypeName}
-                  </div>
-                </div>
-                <div className="p-3 flex flex-col gap-2">
-                  <h4
-                    className="text-[14px] font-[Vazir-Bold] line-clamp-2 min-h-[40px]"
-                    style={{ color: colors.textMain }}
-                  >
-                    {ad.title}
-                  </h4>
-                  <div
-                    className="inline-flex items-center gap-1 self-start px-2 py-1 rounded-lg text-[10px] font-[Vazir-Bold]"
-                    style={{
-                      backgroundColor: '#9C27B022',
-                      color: '#9C27B0',
-                    }}
-                  >
-                    {ad.collabType === 'percent'
-                      ? 'درصدی'
-                      : ad.collabType === 'hourly'
-                        ? 'ساعتی'
-                        : 'اجاره ثابت'}
-                    {ad.priceDisplay && ` • ${ad.priceDisplay}`}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm">📍</span>
-                    <span className="text-[10px]" style={{ color: colors.textSecondary }}>
-                      {ad.city}
-                    </span>
-                  </div>
-                </div>
+                نمایش همه
               </button>
-            ))}
-          </div>
+            </div>
+          )}
         </section>
       </div>
 
       {/* ═══════════ Bottom Tab Bar ═══════════ */}
       <BottomTabBar />
 
-      {/* ═══════════ مدال اعلان‌ها (Lazy) ═══════════ */}
+      {/* ═══════════ مدال‌ها ═══════════ */}
       <NotificationModal
         visible={notificationVisible}
         onClose={() => setNotificationVisible(false)}
       />
-
-      {/* ═══════════ مدال فیلتر خانه (Lazy) ═══════════ */}
       <HomeFilterModal
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onApply={setFilters}
         currentFilters={filters}
       />
-
-      {/* ═══════════ مدال نظردهی (Lazy) ═══════════ */}
       <ReviewModal
         visible={reviewVisible}
         appointment={currentReviewAppointment}

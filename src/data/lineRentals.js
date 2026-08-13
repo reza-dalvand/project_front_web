@@ -18,6 +18,8 @@ export const MOCK_LINE_RENTALS = [
     lineImage: 'https://picsum.photos/400/300?random=70',
     businessName: 'سالن زیبایی نیلارام',
     city: 'تهران، سعادت‌آباد',
+    latitude: 35.7898,
+    longitude: 51.3768,
     contactPhone: '09121234567',
     status: 'active',
     description:
@@ -38,6 +40,8 @@ export const MOCK_LINE_RENTALS = [
     lineImage: 'https://picsum.photos/400/300?random=71',
     businessName: 'استودیو لاویا',
     city: 'تهران، نیاوران',
+    latitude: 35.8069,
+    longitude: 51.4744,
     contactPhone: '09129876543',
     status: 'active',
     description:
@@ -59,6 +63,8 @@ export const MOCK_LINE_RENTALS = [
     lineImage: 'https://picsum.photos/400/300?random=72',
     businessName: 'مرکز پوست صدف',
     city: 'تهران، ونک',
+    latitude: 35.7807,
+    longitude: 51.3735,
     contactPhone: '09124445566',
     status: 'active',
     description:
@@ -80,6 +86,8 @@ export const MOCK_LINE_RENTALS = [
     lineImage: 'https://picsum.photos/400/300?random=73',
     businessName: 'کلینیک رویال',
     city: 'تهران، شهرک غرب',
+    latitude: 35.7622,
+    longitude: 51.3642,
     contactPhone: '09121112233',
     status: 'inactive',
     description:
@@ -101,6 +109,8 @@ export const MOCK_LINE_RENTALS = [
     lineImage: 'https://picsum.photos/400/300?random=74',
     businessName: 'سالن زیبایی افرا',
     city: 'تهران، شهرک غرب',
+    latitude: 35.7622,
+    longitude: 51.3642,
     contactPhone: '09127778899',
     status: 'active',
     description:
@@ -121,6 +131,8 @@ export const MOCK_LINE_RENTALS = [
     lineImage: 'https://picsum.photos/400/300?random=75',
     businessName: 'سالن زیبایی ماهرو',
     city: 'کرج، فردیس',
+    latitude: 35.7236,
+    longitude: 50.9486,
     contactPhone: '09125556677',
     status: 'active',
     description:

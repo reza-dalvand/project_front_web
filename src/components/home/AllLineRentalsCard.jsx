@@ -28,7 +28,12 @@ export default function AllLineRentalsCard({ ad, onPress }) {
 
   return (
     <Card variant="elevated" padding={0} radius={20} className="mb-3.5 overflow-hidden">
-      <button onClick={() => onPress?.(ad)} className="w-full text-right">
+      <div
+        onClick={() => onPress(ad)}
+        className="w-full text-right cursor-pointer ..."
+        role="button" // برای حفظ دسترسی‌پذیری (Accessibility)
+        tabIndex={0}
+      >
         {/* تصویر */}
         <div className="relative w-full h-[180px]">
           <Image
@@ -98,7 +103,7 @@ export default function AllLineRentalsCard({ ad, onPress }) {
             <span className="text-sm text-white">←</span>
           </button>
         </div>
-      </button>
+      </div>
     </Card>
   );
 }
