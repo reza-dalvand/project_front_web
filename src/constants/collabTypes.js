@@ -97,8 +97,8 @@ export const SLOT_DURATIONS = [
 //    محدودیت‌های اعتبارسنجی
 // ═══════════════════════════════════════
 export const LIMITS = {
-  MIN_FINAL_PRICE: 100000, // حداقل قیمت نهایی خدمت
-  MIN_DEPOSIT: 100000, // حداقل مبلغ بیعانه
+  MIN_FINAL_PRICE: 50000, // حداقل قیمت نهایی خدمت
+  MIN_DEPOSIT: 50000, // حداقل مبلغ بیعانه
   MAX_DESCRIPTION_LENGTH: 300, // حداکثر طول توضیحات
   MAX_TITLE_LENGTH: 100, // حداکثر طول عنوان
   OTP_LENGTH: 5, // طول کد تایید

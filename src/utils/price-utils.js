@@ -19,12 +19,12 @@ export const MAX_APP_FEE = 50000;
 /**
  * حداقل قیمت نهایی خدمت
  */
-export const MIN_FINAL_PRICE = 100000;
+export const MIN_FINAL_PRICE = 50000;
 
 /**
  * حداقل مبلغ بیعانه
  */
-export const MIN_DEPOSIT = 100000;
+export const MIN_DEPOSIT = 50000;
 
 /**
  * محاسبه کمیسیون اپلیکیشن بر اساس قیمت اصلی خدمت

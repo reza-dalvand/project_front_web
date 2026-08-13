@@ -49,8 +49,8 @@ const PriceGuideModal = dynamic(() => import('@/components/common/PriceGuideModa
   loading: () => null,
 });
 
-const MIN_FINAL_PRICE = 100000;
-const MIN_DEPOSIT = 100000;
+const MIN_FINAL_PRICE = 50000;
+const MIN_DEPOSIT = 50000;
 const MAX_DESCRIPTION_LENGTH = 300;
 
 // ═══════════ کامپوننت داخلی با useSearchParams ═══════════
