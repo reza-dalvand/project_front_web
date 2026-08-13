@@ -92,12 +92,7 @@ export default function BusinessDetailsPage() {
         );
       case 'prices':
         return showPrices ? (
-          <PriceListMenu
-            businessName={biz.name}
-            businessLogo={biz.logo}
-            services={biz.services}
-            settings={priceList}
-          />
+          <PriceListMenu businessName={biz.name} businessLogo={biz.logo} settings={priceList} />
         ) : null;
       case 'honors':
         return <HonorMedalsSection businessId={biz.id} />;

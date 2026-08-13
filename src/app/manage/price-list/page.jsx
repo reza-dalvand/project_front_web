@@ -1,8 +1,8 @@
 // src/app/manage/price-list/page.jsx
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiTag, FiEye, FiEyeOff, FiPlus, FiTrash2, FiInfo, FiEdit2 } from 'react-icons/fi';
+import { FiTag, FiEye, FiEyeOff, FiEdit2 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { usePriceListStore } from '@/stores/usePriceListStore';
@@ -11,12 +11,9 @@ import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
-import Input from '@/components/common/Input';
-import Button from '@/components/common/Button';
 import SectionHeader from '@/components/common/SectionHeader';
 import PriceListMenu from '@/components/priceList/PriceListMenu';
 import { PRICE_LIST_THEMES } from '@/data/priceList';
-import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 
 export default function ManagePriceListPage() {
   const { colors } = useTheme();
@@ -25,24 +22,16 @@ export default function ManagePriceListPage() {
   const { showToast } = useToast();
   const businessData = useBusinessStore((s) => s.businessData);
   const businessId = businessData?.id || 'biz_1';
-
   const list = usePriceListStore((s) => s.lists[businessId]);
   const ensureList = usePriceListStore((s) => s.ensureList);
   const setTheme = usePriceListStore((s) => s.setTheme);
   const togglePublish = usePriceListStore((s) => s.togglePublish);
-  const addNote = usePriceListStore((s) => s.addNote);
-  const deleteNote = usePriceListStore((s) => s.deleteNote);
 
   useEffect(() => {
     ensureList(businessId);
   }, [businessId, ensureList]);
 
-  const [noteLabel, setNoteLabel] = useState('');
-  const [noteMin, setNoteMin] = useState('');
-  const [noteMax, setNoteMax] = useState('');
-
-  const settings = list || { themeId: 'classic', isPublished: false, notes: [] };
-  const services = businessData?.services || [];
+  const settings = list || { themeId: 'classic', isPublished: false };
 
   const handleTogglePublish = () => {
     const next = togglePublish(businessId);
@@ -52,24 +41,6 @@ export default function ManagePriceListPage() {
         : 'لیست قیمت از صفحه کسب‌وکار مخفی شد',
       next ? 'success' : 'info'
     );
-  };
-
-  const handleAddNote = () => {
-    const min = parseInt(toEnglishDigits(noteMin).replace(/[^0-9]/g, ''), 10) || 0;
-    const max = parseInt(toEnglishDigits(noteMax).replace(/[^0-9]/g, ''), 10) || 0;
-    if (!noteLabel.trim()) {
-      showToast('عنوان یادداشت را وارد کنید', 'warning');
-      return;
-    }
-    if (!max || max < min) {
-      showToast('بازه قیمتی معتبر وارد کنید (از ≤ تا)', 'warning');
-      return;
-    }
-    addNote(businessId, { label: noteLabel.trim(), min, max });
-    setNoteLabel('');
-    setNoteMin('');
-    setNoteMax('');
-    showToast('یادداشت اضافه شد', 'success');
   };
 
   if (!isAuthenticated) {
@@ -174,74 +145,6 @@ export default function ManagePriceListPage() {
           </div>
         </div>
 
-        {/* ═══ یادداشت‌های بازه قیمتی ═══ */}
-        <div>
-          <SectionHeader
-            icon={<FiInfo size={18} />}
-            iconColor="#FF9800"
-            title="یادداشت‌های قیمتی"
-            subtitle="موارد با بازه قیمت (مثل ناخن شکسته، تغییر فرم و...)"
-          />
-          {settings.notes.length > 0 && (
-            <Card variant="elevated" padding={12} radius={14} className="mb-3">
-              <div className="flex flex-col gap-2">
-                {settings.notes.map((n) => (
-                  <div key={n.id} className="flex items-center gap-2">
-                    <span className="text-xs flex-1" style={{ color: colors.textMain }}>
-                      {n.label}
-                    </span>
-                    <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                      {toPersianDigit(n.min)} تا {toPersianDigit(n.max)}
-                    </span>
-                    <button
-                      onClick={() => deleteNote(businessId, n.id)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: '#E5393515' }}
-                    >
-                      <FiTrash2 size={14} color="#E53935" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-          <Card variant="elevated" padding={14} radius={16}>
-            <Input
-              label="عنوان یادداشت"
-              placeholder="مثال: ناخن شکسته"
-              value={noteLabel}
-              onChangeText={setNoteLabel}
-            />
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <Input
-                  label="از (هزار تومان)"
-                  placeholder="۲۵"
-                  value={noteMin}
-                  onChangeText={setNoteMin}
-                />
-              </div>
-              <div className="flex-1">
-                <Input
-                  label="تا (هزار تومان)"
-                  placeholder="۳۵"
-                  value={noteMax}
-                  onChangeText={setNoteMax}
-                />
-              </div>
-            </div>
-            <Button
-              title="افزودن یادداشت"
-              onPress={handleAddNote}
-              variant="outline"
-              size="md"
-              fullWidth
-              icon={<FiPlus size={16} style={{ color: colors.primary }} />}
-              iconPosition="right"
-            />
-          </Card>
-        </div>
-
         {/* ═══ پیش‌نمایش زنده ═══ */}
         <div>
           <SectionHeader
@@ -253,7 +156,6 @@ export default function ManagePriceListPage() {
           <PriceListMenu
             businessName={businessData?.name}
             businessLogo={businessData?.logo}
-            services={services}
             settings={settings}
           />
         </div>
@@ -270,7 +172,7 @@ export default function ManagePriceListPage() {
             <FiEdit2 size={16} style={{ color: colors.primary }} className="flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-xs font-[Vazir-Bold] mb-1" style={{ color: colors.textMain }}>
-                قیمت آیتم‌ها از بخش «خدمات» خوانده می‌شود
+                قیمت‌ها خودکار از بخش «خدمات» خوانده می‌شوند
               </p>
               <p className="text-[11px] leading-5 mb-2" style={{ color: colors.textSecondary }}>
                 برای تغییر قیمت هر خدمت، به مدیریت خدمات مراجعه کنید. قیمت‌ها در منو به صورت هزار

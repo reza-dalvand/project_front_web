@@ -1,13 +1,13 @@
 // src/components/priceList/PriceListMenu.jsx
 'use client';
+import { useMemo } from 'react';
 import Image from 'next/image';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { PRICE_LIST_THEMES } from '@/data/priceList';
+import { useBusinessStore } from '@/stores/useBusinessStore';
 
-// تبدیل تومان به هزار تومان (۶۵۰,۰۰۰ → ۶۵۰)
 const toThousands = (price) => Math.round((price || 0) / 1000);
 
-// ایموجی هر سکشن بر اساس نام دسته
 const getSectionEmoji = (label = '') => {
   if (label.includes('ناخن')) return '💅';
   if (label.includes('میکاپ') || label.includes('گریم')) return '💄';
@@ -19,17 +19,18 @@ const getSectionEmoji = (label = '') => {
   return '💆♀️';
 };
 
-/**
- * 📋 منوی قیمت خدمات (طرح مشابه کارت چاپی)
- * استفاده در: تب «قیمت‌ها» صفحه کسب‌وکار + پیش‌نمایش صفحه مدیریت
- */
-export default function PriceListMenu({ businessName, businessLogo, services = [], settings }) {
-  const theme = PRICE_LIST_THEMES.find((t) => t.id === settings?.themeId) || PRICE_LIST_THEMES[0];
-  const notes = settings?.notes || [];
+export default function PriceListMenu({ businessName, businessLogo, settings }) {
+  const allServices = useBusinessStore((s) => s.businessData?.services);
 
-  // گروه‌بندی خدمات بر اساس typeName (سکشن‌ها)
+  const services = useMemo(
+    () => (allServices || []).filter((svc) => svc.isActive !== false),
+    [allServices]
+  );
+
+  const theme = PRICE_LIST_THEMES.find((t) => t.id === settings?.themeId) || PRICE_LIST_THEMES[0];
+
   const sections = [];
-  (services || []).forEach((s) => {
+  services.forEach((s) => {
     const key = s.typeName || 'سایر خدمات';
     let sec = sections.find((x) => x.label === key);
     if (!sec) {
@@ -48,7 +49,7 @@ export default function PriceListMenu({ businessName, businessLogo, services = [
         className="rounded-[22px] px-4 py-5"
         style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
       >
-        {/* ═══ هدر: لوگو + نام کسب‌وکار + نام اپ ═══ */}
+        {/* ═══ هدر ═══ */}
         <div className="flex flex-col items-center gap-1.5 mb-5 text-center">
           {businessLogo && (
             <div
@@ -85,11 +86,10 @@ export default function PriceListMenu({ businessName, businessLogo, services = [
         {/* ═══ سکشن‌ها + آیتم‌ها ═══ */}
         {sections.map((sec) => (
           <div key={sec.label} className="mb-4">
-            {/* عنوان سکشن با خط تزئینی */}
-            <div className="flex items-center gap-2 mb-2.5">
+            <div className="flex items-center gap-2 mb-3">
               <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
               <span
-                className="text-[11px] font-[Vazir-Bold] flex items-center gap-1"
+                className="text-[12px] font-[Vazir-Bold] flex items-center gap-1"
                 style={{ color: theme.accent }}
               >
                 <span>{getSectionEmoji(sec.label)}</span>
@@ -97,59 +97,47 @@ export default function PriceListMenu({ businessName, businessLogo, services = [
               </span>
               <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
             </div>
-            {/* آیتم‌ها در دو ستون */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-              {sec.items.map((item) => (
-                <div key={item.id} className="flex items-center gap-1">
-                  <span
-                    className="text-[11px] font-[Vazir-Medium] truncate"
-                    style={{ color: theme.text }}
-                  >
-                    {item.name}
-                  </span>
-                  <div
-                    className="flex-1 border-b border-dotted mx-1 mb-1"
-                    style={{ borderColor: theme.dot }}
-                  />
-                  <span
-                    className="text-[11px] font-[Vazir-Bold] flex-shrink-0"
-                    style={{ color: theme.accent }}
-                  >
-                    {toPersianDigit(
-                      toThousands(item.finalPrice ?? item.price ?? item.originalPrice)
-                    )}
-                  </span>
-                </div>
-              ))}
+
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              {sec.items.map((item) => {
+                const price = toThousands(item.finalPrice ?? item.price ?? item.originalPrice);
+                const hasDeposit = item.hasDeposit && item.depositAmount > 0;
+                const depositPrice = hasDeposit ? toThousands(item.depositAmount) : 0;
+
+                return (
+                  <div key={item.id} className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1">
+                      <span
+                        className="text-[13px] font-[Vazir-Medium] truncate"
+                        style={{ color: theme.text }}
+                      >
+                        {item.name}
+                      </span>
+                      <div
+                        className="flex-1 border-b border-dotted mx-0.5 mb-1 min-w-[8px]"
+                        style={{ borderColor: theme.dot }}
+                      />
+                      <span
+                        className="text-[13px] font-[Vazir-Bold] flex-shrink-0"
+                        style={{ color: theme.accent }}
+                      >
+                        {toPersianDigit(price)}
+                      </span>
+                      <span
+                        className="text-[10px] font-[Vazir] flex-shrink-0 mr-1"
+                        style={{ color: theme.textSecondary }}
+                      >
+                        ({hasDeposit ? `بیعانه: ${toPersianDigit(depositPrice)}` : 'مبلغ کامل'})
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
 
-        {/* ═══ یادداشت‌های بازه قیمتی ═══ */}
-        {notes.length > 0 && (
-          <div
-            className="rounded-2xl px-3.5 py-3 mt-2"
-            style={{ backgroundColor: theme.accentSoft, border: `1px solid ${theme.border}` }}
-          >
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-              {notes.map((n) => (
-                <div key={n.id} className="flex items-center justify-between gap-1">
-                  <span className="text-[10px] truncate" style={{ color: theme.text }}>
-                    ♥ {n.label}
-                  </span>
-                  <span
-                    className="text-[10px] font-[Vazir-Bold] flex-shrink-0"
-                    style={{ color: theme.accent }}
-                  >
-                    {toPersianDigit(n.min)} تا {toPersianDigit(n.max)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ═══ فوتر: لوگوی اپ (به جای اینستاگرام) ═══ */}
+        {/* ═══ فوتر ═══ */}
         <div className="flex flex-col items-center gap-1.5 mt-5">
           <div
             className="flex items-center gap-2 px-6 py-2 rounded-full"
@@ -160,8 +148,8 @@ export default function PriceListMenu({ businessName, businessLogo, services = [
               زیبانو
             </span>
           </div>
-          <span className="text-[9px]" style={{ color: theme.textSecondary }}>
-            تمام قیمت‌ها به هزار تومان می‌باشد
+          <span className="text-[10px]" style={{ color: theme.textSecondary }}>
+            تمام قیمت‌ها به تومان می‌باشد
           </span>
         </div>
       </div>
