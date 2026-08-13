@@ -20,7 +20,6 @@ import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import InfoRow from '@/components/common/InfoRow';
 import { toPersianDigit } from '@/utils/numberUtils';
-import ConfirmDialog from '@/components/common/ConfirmDialog'; // ✅ این خط را اضافه کنید
 import { MOCK_DEVICES } from '@/data/devices';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 
