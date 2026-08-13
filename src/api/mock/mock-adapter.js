@@ -680,16 +680,14 @@ const routeHandlers = {
 //    Matcher: پیدا کردن handler مناسب
 // ═══════════════════════════════════════════════
 const normalizeUrl = (url) => {
-  // حذف leading slash
   let normalized = url.startsWith('/') ? url.slice(1) : url;
 
-  // تبدیل پارامترهای dynamic به :param
+  // ✅ FIX: حذف trailing slash
+  normalized = normalized.replace(/\/+$/, '');
+
   normalized = normalized.replace(/\/\d+\//g, '/:id/');
   normalized = normalized.replace(/\/\d+$/g, '/:id');
-
-  // تبدیل slug‌ها به :slug
   normalized = normalized.replace(/\/public\/[^/]+/, '/public/:slug');
-
   return normalized;
 };
 

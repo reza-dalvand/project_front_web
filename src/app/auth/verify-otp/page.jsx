@@ -63,13 +63,15 @@ function VerifyOtpPageContent() {
     setError('');
     try {
       const result = await authService.verifyOTP(pendingPhone, code);
+
+      // ✅ FIX: بررسی null بودن data
+      if (!result?.data?.user) {
+        throw new Error('خطا در ورود. لطفاً دوباره تلاش کنید.');
+      }
+
       const { user, access_token, refresh_token, expires_in } = result.data;
       isLoggingIn.current = true;
-      login(user, {
-        access_token,
-        refresh_token,
-        expires_in,
-      });
+      login(user, { access_token, refresh_token, expires_in });
       router.replace(redirectUrl);
     } catch (err) {
       setLoading(false);

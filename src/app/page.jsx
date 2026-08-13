@@ -83,18 +83,33 @@ export default function HomePage() {
       showToast('نمایش نزدیک‌ترین‌ها غیرفعال شد', 'info');
       return;
     }
+
     if (nearbyDenied) {
-      showToast('دسترسی به موقعیت مکانی رد شده است', 'error');
+      showToast('دسترسی به موقعیت مکانی رد شده است. از تنظیمات گوشی اجازه دهید.', 'error');
       return;
     }
+
     setNearbyLoading(true);
     try {
       const location = await getCurrentLocation();
       enableNearby(location);
       showToast('نمایش نزدیک‌ترین‌ها فعال شد', 'success');
-    } catch {
-      setNearbyDenied(true);
-      showToast('دسترسی به موقعیت مکانی رد شد', 'error');
+    } catch (err) {
+      setNearbyLoading(false);
+
+      if (err.code === 1) {
+        // ✅ فقط در صورت رد دسترسی، denied شود
+        setNearbyDenied(true);
+        showToast('دسترسی به موقعیت مکانی رد شد. از تنظیمات اجازه دهید.', 'error');
+      } else if (err.code === 2) {
+        // ✅ GPS خاموش — راهنمایی
+        showToast('موقعیت مکانی در دسترس نیست. GPS را روشن کنید.', 'warning');
+      } else if (err.code === 3) {
+        // ✅ Timeout — نباید denied شود! کاربر دوباره تلاش کند
+        showToast('دریافت موقعیت طول کشید. دوباره تلاش کنید.', 'warning');
+      } else {
+        showToast('خطا در دریافت موقعیت مکانی', 'error');
+      }
     }
   }, [
     nearbyEnabled,
@@ -105,7 +120,6 @@ export default function HomePage() {
     setNearbyLoading,
     setNearbyDenied,
   ]);
-
   // ═══════ فیلتر مدلینگ بر اساس فاصله ═══════
   const filteredModelRequests = useMemo(() => {
     if (!nearbyEnabled || !userLocation) return MOCK_MODEL_REQUESTS;

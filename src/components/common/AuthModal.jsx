@@ -155,14 +155,17 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       setError(`کد ${toPersianDigit(OTP_LENGTH)} رقمی کامل نیست`);
       return;
     }
-
     setLoading(true);
     setError('');
-
     try {
       const result = await authService.verifyOTP(cleanPhone(phone), code);
-      const { user, access_token, refresh_token, expires_in } = result.data;
 
+      // ✅ FIX: بررسی null بودن data
+      if (!result?.data?.user) {
+        throw new Error('خطا در ورود. لطفاً دوباره تلاش کنید.');
+      }
+
+      const { user, access_token, refresh_token, expires_in } = result.data;
       login(user, { access_token, refresh_token, expires_in });
       setStage('success');
       setTimeout(() => closeAuthModal(), 1500);

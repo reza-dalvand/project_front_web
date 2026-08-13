@@ -54,10 +54,12 @@ export default function NearbyPage() {
   // ═══ Helper: پیام خطای موقعیت مکانی ═══
   const getLocationErrorMessage = (err) => {
     if (!err) return 'خطای ناشناخته در دریافت موقعیت';
+
     const code = err.code;
+
     switch (code) {
       case 1:
-        return 'دسترسی به موقعیت مکانی توسط شما رد شد. لطفاً از تنظیمات گوشی اجازه دهید.';
+        return 'دسترسی به موقعیت مکانی رد شد. لطفاً از تنظیمات گوشی اجازه دهید.';
       case 2:
         return 'موقعیت مکانی در دسترس نیست. لطفاً GPS گوشی را روشن کنید.';
       case 3:
