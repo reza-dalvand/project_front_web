@@ -1,160 +1,162 @@
+// src/components/booking/BookingDateSelector.jsx
 'use client';
-
-import { useMemo } from 'react';
-import { FiCalendar, FiCheck } from 'react-icons/fi';
+import { useState, useEffect, useMemo } from 'react';
+import { FiChevronRight, FiChevronLeft, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import SectionHeader from '@/components/common/SectionHeader';
-import { toJalaali, PERSIAN_MONTHS, PERSIAN_WEEKDAYS } from '@/utils/dateUtils';
 import { toPersianDigit } from '@/utils/numberUtils';
+import {
+  toJalaali,
+  PERSIAN_MONTHS,
+  PERSIAN_WEEKDAYS,
+  jalaaliMonthLength,
+  getFirstDayOfWeekJalaali,
+} from '@/utils/dateUtils';
 
-// تولید روزهای قابل رزرو (۳۰ روز آینده، بدون جمعه‌ها)
-const generateAvailableDates = () => {
-  const dates = [];
-  const now = new Date();
-  for (let i = 0; i < 30; i++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() + i);
-    const dayOfWeek = d.getDay();
-    const isFriday = dayOfWeek === 5;
-    const j = toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-    dates.push({
-      ...j,
-      dayOfWeek,
-      isFriday, // ← علامت‌گذاری جمعه
-      disabled: isFriday, // ← جمعه‌ها غیرقابل انتخاب
-      weekdayName: PERSIAN_WEEKDAYS[(dayOfWeek + 1) % 7],
-      key: `${j.jy}-${j.jm}-${j.jd}`,
-    });
-  }
-  return dates;
-};
-
-export default function BookingDateSelector({ selectedDate, onDateSelect }) {
+export default function BookingDateSelector({ selectedDate, onDateSelect, availableDates = [] }) {
   const { colors } = useTheme();
-  const availableDates = useMemo(() => generateAvailableDates(), []);
-
-  // گروه‌بندی بر اساس ماه
-  const groupedByMonth = useMemo(() => {
-    const groups = {};
-    availableDates.forEach((date) => {
-      const monthKey = `${date.jy}-${date.jm}`;
-      if (!groups[monthKey]) {
-        groups[monthKey] = {
-          jy: date.jy,
-          jm: date.jm,
-          label: `${PERSIAN_MONTHS[date.jm - 1]} ${toPersianDigit(date.jy)}`,
-          dates: [],
-        };
-      }
-      groups[monthKey].dates.push(date);
-    });
-    return Object.values(groups);
-  }, [availableDates]);
-
-  const isSameDate = (d1, d2) => d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
 
   const today = useMemo(() => {
     const now = new Date();
     return toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
   }, []);
 
+  const [viewMonth, setViewMonth] = useMemo(() => {
+    if (availableDates && availableDates.length > 0) {
+      const first = availableDates[0];
+      return [{ jy: first.jy, jm: first.jm }, () => {}];
+    }
+    return [{ jy: today.jy, jm: today.jm }, () => {}];
+  }, [availableDates, today]);
+
+  const [currentView, setCurrentView] = useState({ jy: today.jy, jm: today.jm });
+
+  const goToPrev = () => {
+    setCurrentView((prev) =>
+      prev.jm === 1 ? { jy: prev.jy - 1, jm: 12 } : { ...prev, jm: prev.jm - 1 }
+    );
+  };
+
+  const goToNext = () => {
+    setCurrentView((prev) =>
+      prev.jm === 12 ? { jy: prev.jy + 1, jm: 1 } : { ...prev, jm: prev.jm + 1 }
+    );
+  };
+
+  const monthLength = jalaaliMonthLength(currentView.jy, currentView.jm);
+  const firstDayOfWeek = getFirstDayOfWeekJalaali(currentView.jy, currentView.jm);
+
+  const isSameDate = (d1, d2) => d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
+
+  const isSelected = (day) =>
+    selectedDate && isSameDate(selectedDate, { jy: currentView.jy, jm: currentView.jm, jd: day });
+
+  const isPast = (jy, jm, jd) => {
+    const val = jy * 10000 + jm * 100 + jd;
+    const todayVal = today.jy * 10000 + today.jm * 100 + today.jd;
+    return val < todayVal;
+  };
+
+  const isAvailable = (day) => {
+    if (availableDates.length === 0) return !isPast(currentView.jy, currentView.jm, day);
+    return availableDates.some(
+      (d) => d.jy === currentView.jy && d.jm === currentView.jm && d.jd === day
+    );
+  };
+
+  const toggleDay = (day) => {
+    if (isPast(currentView.jy, currentView.jm, day)) return;
+    if (!isAvailable(day)) return;
+    onDateSelect({ jy: currentView.jy, jm: currentView.jm, jd: day });
+  };
+
+  const days = [];
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    days.push({ empty: true, key: `e-${i}` });
+  }
+  for (let d = 1; d <= monthLength; d++) {
+    days.push({ jd: d, jy: currentView.jy, jm: currentView.jm, key: `d-${d}` });
+  }
+
   return (
-    <div className="flex flex-col gap-2.5">
-      <SectionHeader
-        icon={<FiCalendar size={18} />}
-        iconColor={colors.primary}
-        title="روز مورد نظر را انتخاب کنید"
-        subtitle={`${toPersianDigit(availableDates.length)} روز فعال برای رزرو`}
-      />
+    <div className="flex flex-col gap-3 px-1">
+      {/* هدر ماه */}
+      <div
+        className="flex items-center justify-between p-3.5 rounded-2xl border"
+        style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+      >
+        <button onClick={goToPrev} className="p-2 rounded-lg hover:bg-black/5">
+          <FiChevronRight size={22} style={{ color: colors.textMain }} />
+        </button>
+        <div className="text-center">
+          <span className="text-base font-[Vazir-Bold] block" style={{ color: colors.textMain }}>
+            {PERSIAN_MONTHS[currentView.jm - 1]}
+          </span>
+          <span className="text-xs" style={{ color: colors.textSecondary }}>
+            {toPersianDigit(currentView.jy)}
+          </span>
+        </div>
+        <button onClick={goToNext} className="p-2 rounded-lg hover:bg-black/5">
+          <FiChevronLeft size={22} style={{ color: colors.textMain }} />
+        </button>
+      </div>
 
-      {/* لیست ماه‌ها */}
-      <div className="flex flex-col gap-3.5 max-h-[400px] overflow-y-auto px-1">
-        {groupedByMonth.map((group) => (
-          <div key={group.label} className="flex flex-col gap-2">
-            <span className="text-[13px] font-[Vazir-Bold] mr-1" style={{ color: colors.textMain }}>
-              {group.label}
+      {/* نام روزهای هفته */}
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {PERSIAN_WEEKDAYS.map((d) => (
+          <div key={d} className="text-center">
+            <span
+              className="text-[12px] font-[Vazir-Medium]"
+              style={{ color: colors.textSecondary }}
+            >
+              {d}
             </span>
-
-            {/* شبکه روزها */}
-            <div className="flex flex-wrap gap-2">
-              {group.dates.map((date) => {
-                const isSelected = isSameDate(date, selectedDate);
-                const isToday = isSameDate(date, today);
-
-                return (
-                  <button
-                    key={date.key}
-                    onClick={() => !date.disabled && onDateSelect(date)}
-                    disabled={date.disabled}
-                    className="relative w-[52px] flex flex-col items-center justify-center py-2 rounded-xl border-[1.5px] transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
-                    style={{
-                      backgroundColor: isSelected ? colors.primary : colors.cardBackground,
-                      borderColor: isSelected
-                        ? colors.primary
-                        : isToday
-                          ? colors.primary + '60'
-                          : colors.border,
-                    }}
-                  >
-                    <span
-                      className="text-[9px] font-[Vazir]"
-                      style={{
-                        color: isSelected
-                          ? '#ffffffcc'
-                          : date.isFriday
-                            ? '#E57373'
-                            : colors.textSecondary,
-                      }}
-                    >
-                      {date.weekdayName}
-                    </span>
-                    <span
-                      className="text-[15px] font-[Vazir-Bold]"
-                      style={{
-                        color: isSelected ? '#fff' : colors.textMain,
-                      }}
-                    >
-                      {toPersianDigit(date.jd)}
-                    </span>
-
-                    {/* نقطه امروز */}
-                    {isToday && !isSelected && (
-                      <div
-                        className="absolute bottom-[3px] w-1 h-1 rounded-full"
-                        style={{ backgroundColor: colors.primary }}
-                      />
-                    )}
-
-                    {/* آیکون چک برای انتخاب شده */}
-                    {isSelected && (
-                      <div className="absolute top-1 left-1">
-                        <FiCheck size={10} color="#fff" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
           </div>
         ))}
       </div>
 
-      {/* باکس تاریخ انتخاب شده */}
-      {selectedDate && (
-        <div
-          className="flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl border"
-          style={{
-            backgroundColor: colors.primary + '10',
-            borderColor: colors.primary + '40',
-          }}
-        >
-          <FiCalendar size={16} style={{ color: colors.primary }} />
-          <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-            {PERSIAN_WEEKDAYS[(selectedDate.dayOfWeek + 1) % 7]} {toPersianDigit(selectedDate.jd)}{' '}
-            {PERSIAN_MONTHS[selectedDate.jm - 1]} {toPersianDigit(selectedDate.jy)}
-          </span>
-        </div>
-      )}
+      {/* شبکه روزها */}
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day) => {
+          if (day.empty) return <div key={day.key} />;
+          const disabled = isPast(day.jy, day.jm, day.jd);
+          const available = isAvailable(day.jd);
+          const selected = isSelected(day.jd);
+          const isToday = isSameDate(day, today);
+
+          return (
+            <button
+              key={day.key}
+              disabled={disabled || !available}
+              onClick={() => toggleDay(day.jd)}
+              className="relative aspect-square rounded-xl flex items-center justify-center text-sm font-[Vazir-Medium] transition-all"
+              style={{
+                backgroundColor: selected
+                  ? colors.primary
+                  : isToday
+                    ? colors.primary + '15'
+                    : 'transparent',
+                color: selected ? '#fff' : colors.textMain,
+                border: isToday && !selected ? `2px solid ${colors.primary}` : 'none',
+                opacity: disabled || !available ? 0.3 : 1,
+                cursor: disabled || !available ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {toPersianDigit(day.jd)}
+              {selected && (
+                <div className="absolute top-1 right-1">
+                  <FiCheck size={10} color="#fff" />
+                </div>
+              )}
+              {isToday && !selected && (
+                <div
+                  className="absolute bottom-1 w-1 h-1 rounded-full"
+                  style={{ backgroundColor: colors.primary }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

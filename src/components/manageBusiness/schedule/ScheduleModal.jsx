@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX, FiArrowRight, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useToast } from '@/hooks/useToast';
 import Button from '@/components/common/Button';
 import StepIndicator from './StepIndicator';
 import ServiceSelectionStep from './ServiceSelectionStep';
@@ -12,6 +13,8 @@ import WorkingHoursStep from './WorkingHoursStep';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { timeToMinutes } from '@/utils/dateUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { schedulesService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 
 export default function ScheduleModal({
   visible,
@@ -23,6 +26,7 @@ export default function ScheduleModal({
   onSave,
 }) {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedServiceId, setSelectedServiceId] = useState(initialServiceId);
   const [selectedDates, setSelectedDates] = useState([]);
@@ -31,6 +35,7 @@ export default function ScheduleModal({
   const [slotDuration, setSlotDuration] = useState(0);
   const [breaks, setBreaks] = useState([]);
   const [mounted, setMounted] = useState(false);
+  const [saving, setSaving] = useState(false);
   const instanceId = useRef('schedule-modal');
 
   useEffect(() => {
@@ -54,6 +59,7 @@ export default function ScheduleModal({
       setWorkEnd('21:00');
       setSlotDuration(0);
       setBreaks([]);
+      setSaving(false);
       acquireScrollLock(instanceId.current);
     } else {
       releaseScrollLock(instanceId.current);
@@ -70,6 +76,7 @@ export default function ScheduleModal({
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
 
+  // ═══ محاسبه تعداد اسلات‌ها ═══
   const computedSlotCount = useMemo(() => {
     const startMin = timeToMinutes(workStart);
     const endMin = timeToMinutes(workEnd);
@@ -94,6 +101,7 @@ export default function ScheduleModal({
     return count;
   }, [workStart, workEnd, slotDuration, breaks]);
 
+  // ═══ اعتبارسنجی هر مرحله ═══
   const canGoNext = useMemo(() => {
     if (currentStep === 1) return !!selectedServiceId;
     if (currentStep === 2) {
@@ -129,20 +137,35 @@ export default function ScheduleModal({
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSave = () => {
+  // ═══ ذخیره — هماهنگ با API ═══
+  const handleSave = async () => {
     if (!selectedServiceId || selectedDates.length === 0) return;
-    selectedDates.forEach((date) => {
-      onSave({
-        serviceId: selectedServiceId,
-        date,
-        workStart,
-        workEnd,
-        slotDuration,
-        breaks: breaks.map(({ id, ...rest }) => rest),
-        slotCount: computedSlotCount,
-      });
-    });
-    onClose();
+
+    setSaving(true);
+    try {
+      for (const date of selectedDates) {
+        const scheduleData = {
+          serviceId: selectedServiceId,
+          jy: date.jy,
+          jm: date.jm,
+          jd: date.jd,
+          workStart,
+          workEnd,
+          slotDuration,
+          breaks: breaks.map(({ id, ...rest }) => rest),
+          slotCount: computedSlotCount,
+        };
+
+        await onSave(scheduleData);
+      }
+
+      showToast(`✓ ${toPersianDigit(selectedDates.length)} روز تنظیم شد`, 'success');
+      onClose();
+    } catch (error) {
+      showToast(error.message || 'خطا در ذخیره زمان‌بندی', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const isEditMode = existingDates && existingDates.length > 0;
@@ -159,13 +182,14 @@ export default function ScheduleModal({
             className="flex-1"
           />
           <Button
-            title={isEditMode ? 'ذخیره تغییرات' : 'ذخیره'}
+            title={saving ? 'در حال ذخیره...' : isEditMode ? 'ذخیره تغییرات' : 'ذخیره'}
             onPress={handleSave}
             variant="primary"
             size="lg"
-            disabled={!canGoNext}
+            disabled={!canGoNext || saving}
+            loading={saving}
             className="flex-1"
-            // icon={<FiCheck size={18} color="#fff" />}
+            icon={<FiCheck size={18} color="#fff" />}
             iconPosition="right"
           />
         </div>
@@ -189,7 +213,7 @@ export default function ScheduleModal({
           size="lg"
           disabled={!canGoNext}
           className="flex-1"
-          // icon={<FiArrowRight size={18} color="#fff" />}
+          icon={<FiArrowRight size={18} color="#fff" />}
           iconPosition="right"
         />
       </div>
@@ -206,10 +230,7 @@ export default function ScheduleModal({
     >
       <div
         className="relative w-full max-w-lg max-h-[95vh] rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderTop: `1px solid ${colors.border}`,
-        }}
+        style={{ backgroundColor: colors.cardBackground, borderTop: `1px solid ${colors.border}` }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* هدر */}
@@ -237,7 +258,7 @@ export default function ScheduleModal({
           <StepIndicator currentStep={currentStep} />
         </div>
 
-        {/* ✅ محتوای اسکرولی با overflow کنترل شده */}
+        {/* محتوای اسکرولی */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden pb-4 w-full">
           {currentStep === 1 && (
             <ServiceSelectionStep

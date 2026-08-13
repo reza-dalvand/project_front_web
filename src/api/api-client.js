@@ -4,10 +4,10 @@
  *
  * تمام درخواست‌ها از این لایه عبور می‌کنند.
  * مسئولیت‌ها:
- * - انتخاب بین Mock و Real API
- * - نرمال‌سازی Response
- * - مدیریت خطا
- * - افزودن delay شبیه‌سازی برای Mock
+ *   - انتخاب بین Mock و Real API
+ *   - نرمال‌سازی Response (شامل fieldMapper و pagination)
+ *   - مدیریت خطا
+ *   - افزودن delay شبیه‌سازی برای Mock
  */
 import api from './axios-instance';
 import { USE_MOCK } from './config';
@@ -28,7 +28,7 @@ const simulateDelay = (min = 300, max = 800) => {
 const apiClient = {
   /**
    * GET Request
-   * @param {string} url - آدرس endpoint
+   * @param {string} url
    * @param {object} config - Axios config (params, headers, ...)
    * @returns {Promise<{data, meta, message}>}
    */
@@ -38,7 +38,6 @@ const apiClient = {
       const mockHandler = getMockHandler('GET', url, config.params);
       return mockHandler;
     }
-
     try {
       const response = await api.get(url, config);
       return normalizeSuccessResponse(response);
@@ -59,7 +58,6 @@ const apiClient = {
       const mockHandler = getMockHandler('POST', url, data);
       return mockHandler;
     }
-
     try {
       const response = await api.post(url, data, config);
       return normalizeSuccessResponse(response);
@@ -77,7 +75,6 @@ const apiClient = {
       const mockHandler = getMockHandler('PUT', url, data);
       return mockHandler;
     }
-
     try {
       const response = await api.put(url, data, config);
       return normalizeSuccessResponse(response);
@@ -95,7 +92,6 @@ const apiClient = {
       const mockHandler = getMockHandler('PATCH', url, data);
       return mockHandler;
     }
-
     try {
       const response = await api.patch(url, data, config);
       return normalizeSuccessResponse(response);
@@ -113,7 +109,6 @@ const apiClient = {
       const mockHandler = getMockHandler('DELETE', url, config.params);
       return mockHandler;
     }
-
     try {
       const response = await api.delete(url, config);
       return normalizeSuccessResponse(response);
@@ -131,7 +126,6 @@ const apiClient = {
       const mockHandler = getMockHandler('UPLOAD', url, formData);
       return mockHandler;
     }
-
     try {
       const response = await api.post(url, formData, {
         ...config,

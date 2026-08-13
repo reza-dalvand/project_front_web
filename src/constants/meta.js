@@ -1,63 +1,17 @@
 // src/constants/meta.js
+import { FiCalendar, FiClock, FiInfo, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 
-// وضعیت‌های نوبت
 export const APPOINTMENT_STATUS_META = {
-  reserved: {
-    label: 'رزرو شده',
-    color: '#2196F3',
-    icon: 'calendar-check',
-    bg: '#2196F320',
-  },
-  upcoming: {
-    label: 'نوبت آینده',
-    color: '#2196F3',
-    icon: 'calendar',
-  },
-  done: {
-    label: 'انجام شده',
-    color: '#43A047',
-    icon: 'check-circle',
-    bg: '#43A04720',
-  },
-  cancelled: {
-    label: 'لغو شده',
-    color: '#E53935',
-    icon: 'x-circle',
-  },
-  cancelled_by_salon: {
-    label: 'لغو توسط سالن',
-    color: '#E53935',
-    icon: 'x-circle',
-    bg: '#E5393520',
-  },
+    reserved: { label: 'رزرو شده', color: '#2196F3', icon: FiCheckCircle, bg: '#2196F320' },
+    upcoming: { label: 'نوبت آینده', color: '#2196F3', icon: FiCalendar }, // ✅ اصلاح شد
+    done: { label: 'انجام شده', color: '#43A047', icon: FiCheckCircle, bg: '#43A04720' },
+    cancelled: { label: 'لغو شده', color: '#E53935', icon: FiXCircle },
+    // ...
 };
 
-// وضعیت‌های پرداخت
 export const STATUS_META = {
-  success: {
-    label: 'موفق',
-    color: '#43A047',
-    icon: 'check-circle',
-    bg: '#43A04715',
-  },
-  failed: {
-    label: 'ناموفق',
-    color: '#E53935',
-    icon: 'x-circle',
-    bg: '#E5393515',
-  },
-  pending: {
-    label: 'در انتظار',
-    color: '#FFA000',
-    icon: 'clock',
-    bg: '#FFA00015',
-  },
-  refunded: {
-    label: 'مسترد شده',
-    color: '#1E88E5',
-    icon: 'rotate-ccw',
-    bg: '#1E88E515',
-  },
+    pending: { label: 'در انتظار', color: '#FFA000', icon: FiClock, bg: '#FFA00015' }, // ✅ اصلاح شد
+    // ...
 };
 
 // روش‌های پرداخت

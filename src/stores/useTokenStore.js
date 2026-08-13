@@ -1,11 +1,9 @@
 // src/stores/useTokenStore.js
 /**
  * مدیریت توکن‌های JWT
- * Access Token + Refresh Token با persist در localStorage
- *
  * هماهنگ با بک‌اند:
- * - Access Token: ۱ ساعت اعتبار
- * - Refresh Token: ۳۰ روز اعتبار با Rotation
+ *   - Access Token: ۱ ساعت اعتبار
+ *   - Refresh Token: ۳۰ روز اعتبار با Rotation
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -18,83 +16,61 @@ export const useTokenStore = create(
       // ─── State ───
       accessToken: null,
       refreshToken: null,
-      tokenType: JWT_CONFIG.TOKEN_TYPE, // 'Bearer'
-      accessTokenExpiry: null, // timestamp (اختیاری، از decode خود توکن هم می‌شود استفاده کرد)
+      tokenType: JWT_CONFIG.TOKEN_TYPE,
 
       // ─── Actions ───
+
       /**
-       * ذخیره توکن‌های جدید پس از لاگین یا refresh
+       * ذخیره توکن‌های جدید
        * @param {object} tokens - { access, refresh, expiresIn }
        */
-      setTokens: ({ access, refresh, expiresIn }) => {
+      setTokens: ({ access, refresh }) => {
         set({
           accessToken: access,
           refreshToken: refresh,
           tokenType: JWT_CONFIG.TOKEN_TYPE,
-          accessTokenExpiry: expiresIn ? Date.now() + expiresIn * 1000 : null,
         });
       },
 
       /**
-       * بروزرسانی فقط Access Token (پس از refresh)
-       * @param {string} newAccessToken
+       * بروزرسانی فقط Access Token
        */
       updateAccessToken: (newAccessToken) => {
-        set({
-          accessToken: newAccessToken,
-          accessTokenExpiry: null, // از decode خود توکن استفاده می‌شود
-        });
+        set({ accessToken: newAccessToken });
       },
 
       /**
-       * پاک کردن همه توکن‌ها (خروج از حساب)
+       * بروزرسانی Refresh Token (در صورت rotation)
+       */
+      updateRefreshToken: (newRefreshToken) => {
+        set({ refreshToken: newRefreshToken });
+      },
+
+      /**
+       * پاک کردن همه توکن‌ها
        */
       clearTokens: () => {
-        set({
-          accessToken: null,
-          refreshToken: null,
-          accessTokenExpiry: null,
-        });
+        set({ accessToken: null, refreshToken: null });
       },
 
       // ─── Getters ───
-      /**
-       * دریافت Access Token فعلی
-       * @returns {string|null}
-       */
-      getAccessToken: () => get().accessToken,
 
-      /**
-       * دریافت Refresh Token فعلی
-       * @returns {string|null}
-       */
+      getAccessToken: () => get().accessToken,
       getRefreshToken: () => get().refreshToken,
 
-      /**
-       * بررسی اعتبار Access Token
-       * @returns {boolean} - true اگر توکن معتبر باشد
-       */
       hasValidAccessToken: () => {
         const { accessToken } = get();
         if (!accessToken) return false;
         return !isTokenExpired(accessToken);
       },
 
-      /**
-       * بررسی اینکه توکن به زودی منقضی می‌شود (کمتر از ۵ دقیقه)
-       * @returns {boolean}
-       */
       isTokenExpiringSoon: () => {
         const { accessToken } = get();
         if (!accessToken) return false;
         const remaining = getTokenRemainingTime(accessToken);
-        return remaining > 0 && remaining < 5 * 60 * 1000; // ۵ دقیقه
+        return remaining > 0 && remaining < 5 * 60 * 1000;
       },
 
-      /**
-       * دریافت user_id از توکن
-       * @returns {number|null}
-       */
       getUserIdFromToken: () => {
         const { accessToken } = get();
         if (!accessToken) return null;
@@ -112,7 +88,6 @@ export const useTokenStore = create(
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
-        accessTokenExpiry: state.accessTokenExpiry,
       }),
     }
   )

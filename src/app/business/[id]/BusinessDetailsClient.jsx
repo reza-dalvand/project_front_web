@@ -1,9 +1,10 @@
 // src/app/business/[id]/BusinessDetailsClient.jsx
 'use client';
-import { useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useTheme } from '@/stores/useThemeStore';
+import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import BusinessHero from '@/components/home/BusinessHero';
 import BusinessInfoCard from '@/components/home/BusinessInfoCard';
@@ -12,29 +13,23 @@ import ServiceBookingCard from '@/components/home/ServiceBookingCard';
 import PortfolioGrid from '@/components/home/PortfolioGrid';
 import BusinessAbout from '@/components/home/BusinessAbout';
 import HonorMedalsSection from './HonorMedalsSection';
-import PriceListMenu from '@/components/priceList/PriceListMenu';
-import { usePriceListStore } from '@/stores/usePriceListStore';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { businessesService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 import { MOCK_BUSINESS } from '@/data/businesses';
 
-// ✅ Lazy Load
-const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), {
-  ssr: false,
-  loading: () => null,
-});
-const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'), {
-  ssr: false,
-  loading: () => null,
-});
+const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), { ssr: false });
+const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'), { ssr: false });
+const PriceListMenu = dynamic(() => import('@/components/priceList/PriceListMenu'), { ssr: false });
 
 export default function BusinessDetailsPage() {
   const { colors } = useTheme();
   const router = useRouter();
-  const biz = MOCK_BUSINESS;
+  const params = useParams();
+  const { showToast } = useToast();
 
-  // ✅ لیست قیمت (فقط اگر منتشر شده)
-  const priceList = usePriceListStore((s) => s.lists[biz.id]);
-  const showPrices = Boolean(priceList?.isPublished);
-
+  const [business, setBusiness] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('services');
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -42,10 +37,26 @@ export default function BusinessDetailsPage() {
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
   const [activePortfolio, setActivePortfolio] = useState(null);
 
-  const minServicePrice = useMemo(() => {
-    if (!biz.services?.length) return 0;
-    return Math.min(...biz.services.map((s) => s.price));
-  }, [biz.services]);
+  // ═══════ دریافت جزئیات از API ═══════
+  useEffect(() => {
+    const fetchBusiness = async () => {
+      setIsLoading(true);
+      try {
+        if (!USE_MOCK) {
+          const response = await businessesService.getPublicBusiness(params.id);
+          setBusiness(response.data);
+        } else {
+          setBusiness(MOCK_BUSINESS);
+        }
+      } catch (error) {
+        console.error('Failed to fetch business:', error);
+        showToast('خطا در بارگذاری اطلاعات کسب‌وکار', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchBusiness();
+  }, [params.id, showToast]);
 
   const openBooking = useCallback((service) => {
     setSelectedService(service);
@@ -57,7 +68,7 @@ export default function BusinessDetailsPage() {
     setSelectedService(null);
   }, []);
 
-  const openPortfolio = useCallback((portfolio, index = 0) => {
+  const openPortfolio = useCallback((portfolio) => {
     setActivePortfolio(portfolio);
     setPortfolioModalVisible(true);
   }, []);
@@ -67,63 +78,62 @@ export default function BusinessDetailsPage() {
     setActivePortfolio(null);
   }, []);
 
-  const toggleFavorite = useCallback(() => {
-    setIsFavorite((prev) => !prev);
-  }, []);
+  const toggleFavorite = useCallback(() => setIsFavorite((prev) => !prev), []);
+  const goBack = useCallback(() => router.back(), [router]);
+  const openMap = useCallback(() => router.push(`/business/${params.id}/map`), [router, params.id]);
 
-  const goBack = useCallback(() => {
-    router.back();
-  }, [router]);
+  if (isLoading) {
+    return (
+      <ScreenWrapper>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner label="در حال بارگذاری..." />
+        </div>
+      </ScreenWrapper>
+    );
+  }
 
-  const openMap = useCallback(() => {
-    router.push(`/business/${biz.id}/map`);
-  }, [router, biz.id]);
+  if (!business) {
+    return (
+      <ScreenWrapper>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <p style={{ color: colors.textMain }}>کسب‌وکار یافت نشد</p>
+        </div>
+      </ScreenWrapper>
+    );
+  }
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'services':
-        // ✅ هر خدمت یک کارت جدا با دکمه رزرو تمام‌عرض چسبیده
-        return (
-          <div className="flex flex-col gap-3 pb-2">
-            {biz.services.map((service) => (
-              <ServiceBookingCard key={service.id} service={service} onBook={openBooking} />
-            ))}
-          </div>
-        );
-      case 'prices':
-        return showPrices ? (
-          <PriceListMenu businessName={biz.name} businessLogo={biz.logo} settings={priceList} />
-        ) : null;
-      case 'honors':
-        return <HonorMedalsSection businessId={biz.id} />;
-      case 'portfolio':
-        return <PortfolioGrid portfolios={biz.portfolios} onPortfolioPress={openPortfolio} />;
-      case 'about':
-        return <BusinessAbout business={biz} />;
-      default:
-        return null;
-    }
-  };
+  // تبدیل گالری از فرمت API به فرمت کامپوننت
+  const gallery = (business.gallery || []).map((img) => img.image_url || img.image || img);
+  const services = business.services || [];
+  const portfolios = business.portfolios || [];
 
   return (
     <ScreenWrapper padding={0}>
       <div className="overflow-y-auto pb-[220px]">
         <BusinessHero
-          gallery={biz.gallery}
-          businessId={biz.id}
-          businessName={biz.name}
+          gallery={gallery}
+          businessId={business.id}
+          businessName={business.name}
           onBackPress={goBack}
           isFavorite={isFavorite}
           onFavoritePress={toggleFavorite}
         />
-        <BusinessInfoCard business={biz} onMapPress={openMap} />
-        <BusinessTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          colors={colors}
-          showPrices={showPrices}
-        />
-        <div className="px-5 pt-1">{renderTabContent()}</div>
+        <BusinessInfoCard business={business} onMapPress={openMap} />
+        <BusinessTabs activeTab={activeTab} onTabChange={setActiveTab} colors={colors} />
+        <div className="px-5 pt-1">
+          {activeTab === 'services' && (
+            <div className="flex flex-col gap-3 pb-2">
+              {services.map((service) => (
+                <ServiceBookingCard key={service.id} service={service} onBook={openBooking} />
+              ))}
+            </div>
+          )}
+          {activeTab === 'honors' && <HonorMedalsSection businessId={business.id} />}
+          {activeTab === 'portfolio' && (
+            <PortfolioGrid portfolios={portfolios} onPortfolioPress={openPortfolio} />
+          )}
+          {activeTab === 'about' && <BusinessAbout business={business} />}
+        </div>
       </div>
 
       <BookingModal

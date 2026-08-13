@@ -19,6 +19,7 @@ export const useAppointmentsManager = () => {
   const verifyAppointment = useBusinessStore((s) => s.verifyAppointment);
   const confirmTrustAppointment = useBusinessStore((s) => s.confirmTrustAppointment);
   const cancelAppointment = useBusinessStore((s) => s.cancelAppointment);
+
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState(null);
@@ -27,28 +28,24 @@ export const useAppointmentsManager = () => {
 
   const today = useMemo(() => todayJalaali(), []);
   const todayNumber = jalaaliToNumber(today);
-  const todayDate = useMemo(() => {
-    const d = jalaaliToDate(today);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, [today]);
-
   const threeMonthsAgoNumber = useMemo(
     () => jalaaliToNumber(subtractJalaaliMonths(today, 3)),
     [today]
   );
 
-  // ═══════ دریافت نوبت‌ها از API (در آینده) ═══════
+  // ═══════ دریافت نوبت‌ها از API ═══════
   useEffect(() => {
     const fetchAppointments = async () => {
-      if (USE_MOCK) return; // فعلاً از store محلی استفاده می‌کنیم
-
+      if (USE_MOCK) return;
       setIsLoading(true);
       setError(null);
       try {
-        const result = await appointmentsService.getBusinessAppointments();
+        const result = await appointmentsService.getBusinessAppointments({
+          status: activeFilter !== 'all' ? activeFilter : undefined,
+          search: searchQuery || undefined,
+          date_filter: dateFilter || undefined,
+        });
         // در آینده: آپدیت store با داده‌های API
-        // useBusinessStore.setState({ ... });
       } catch (err) {
         setError(err.message);
         showToast('خطا در دریافت نوبت‌ها', 'error');
@@ -56,9 +53,8 @@ export const useAppointmentsManager = () => {
         setIsLoading(false);
       }
     };
-
     fetchAppointments();
-  }, []);
+  }, [activeFilter, searchQuery, dateFilter]);
 
   // ═══════ فیلتر + جستجو ═══════
   const filteredAppointments = useMemo(() => {
@@ -67,7 +63,6 @@ export const useAppointmentsManager = () => {
       return jalaaliToNumber(apt.date) >= threeMonthsAgoNumber;
     });
 
-    // فیلتر وضعیت
     if (activeFilter !== 'all') {
       if (activeFilter === 'cancelled') {
         result = result.filter((a) => a.status === 'cancelled_by_salon');
@@ -80,7 +75,6 @@ export const useAppointmentsManager = () => {
       }
     }
 
-    // جستجو
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       result = result.filter(
@@ -91,10 +85,10 @@ export const useAppointmentsManager = () => {
       );
     }
 
-    // فیلتر تاریخ
     if (dateFilter === 'today') {
       result = result.filter((a) => isSameJalaaliDay(a.date, today));
     } else if (dateFilter === 'week') {
+      const todayDate = jalaaliToDate(today);
       const weekEnd = new Date(todayDate);
       weekEnd.setDate(weekEnd.getDate() + 7);
       result = result.filter((a) => {
@@ -106,7 +100,7 @@ export const useAppointmentsManager = () => {
     }
 
     return result;
-  }, [appointments, activeFilter, searchQuery, dateFilter, today, todayDate, threeMonthsAgoNumber]);
+  }, [appointments, activeFilter, searchQuery, dateFilter, today, threeMonthsAgoNumber]);
 
   // ═══════ آمار ═══════
   const counts = useMemo(() => {
@@ -114,7 +108,6 @@ export const useAppointmentsManager = () => {
       if (!apt.date) return false;
       return jalaaliToNumber(apt.date) >= threeMonthsAgoNumber;
     });
-
     return {
       all: base.length,
       reserved: base.filter((a) => a.status === 'reserved').length,
@@ -126,8 +119,6 @@ export const useAppointmentsManager = () => {
   }, [appointments, threeMonthsAgoNumber]);
 
   // ═══════ اکشن‌ها ═══════
-
-  // تایید با کد (نوبت معمولی)
   const handleVerify = useCallback(
     async (appointmentId, code) => {
       if (!USE_MOCK) {
@@ -145,12 +136,10 @@ export const useAppointmentsManager = () => {
     [verifyAppointment, showToast]
   );
 
-  // تایید بدون کد (نوبت اعتمادی)
   const handleTrustConfirm = useCallback(
     async (appointmentId) => {
       if (!USE_MOCK) {
         try {
-          // در آینده: API برای تایید بدون کد
           await appointmentsService.verifyServiceCode(appointmentId, '0000');
         } catch (err) {
           showToast(err.message || 'خطا در تایید', 'error');
@@ -164,7 +153,6 @@ export const useAppointmentsManager = () => {
     [confirmTrustAppointment, showToast]
   );
 
-  // لغو نوبت توسط سالن
   const handleCancel = useCallback(
     async (appointmentId, reason) => {
       if (!USE_MOCK) {

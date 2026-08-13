@@ -1,9 +1,11 @@
+// src/app/profile/edit/page.jsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiUser, FiTag, FiSmartphone, FiShield, FiTrash2 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Input from '@/components/common/Input';
@@ -11,7 +13,8 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { maskPhone } from '@/utils/phoneUtils';
-import { useToast } from '@/hooks/useToast';
+import { profileService, authService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -21,61 +24,84 @@ export default function EditProfilePage() {
   const updateUser = useAuthStore((s) => s.updateUser);
   const { showToast } = useToast();
 
-  const parseName = (fullName) => {
-    if (!fullName) return { firstName: '', lastName: '' };
-    const parts = fullName.trim().split(' ');
-    if (parts.length === 1) return { firstName: parts[0], lastName: '' };
-    return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
-  };
-
-  const parsedUser = parseName(user?.name || 'مریم حسینی');
-
   const [formData, setFormData] = useState({
-    firstName: parsedUser.firstName,
-    lastName: parsedUser.lastName,
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
   });
-  const [firstNameError, setFirstNameError] = useState('');
-  const [lastNameError, setLastNameError] = useState('');
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const displayName = `${formData.firstName} ${formData.lastName}`.trim() || 'کاربر زیبانو';
 
-  const handleSave = () => {
-    let hasError = false;
+  const handleSave = async () => {
+    const newErrors = {};
 
     if (!formData.firstName.trim()) {
-      setFirstNameError('نام الزامی است');
-      hasError = true;
+      newErrors.firstName = 'نام الزامی است';
     } else if (formData.firstName.trim().length < 2) {
-      setFirstNameError('نام باید حداقل ۲ کاراکتر باشد');
-      hasError = true;
+      newErrors.firstName = 'نام باید حداقل ۲ کاراکتر باشد';
     }
 
     if (!formData.lastName.trim()) {
-      setLastNameError('نام خانوادگی الزامی است');
-      hasError = true;
+      newErrors.lastName = 'نام خانوادگی الزامی است';
     } else if (formData.lastName.trim().length < 2) {
-      setLastNameError('نام خانوادگی باید حداقل ۲ کاراکتر باشد');
-      hasError = true;
+      newErrors.lastName = 'نام خانوادگی باید حداقل ۲ کاراکتر باشد';
     }
 
-    if (hasError) return;
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
     setLoading(true);
-    setTimeout(() => {
-      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
-      updateUser({ name: fullName });
+
+    try {
+      if (!USE_MOCK) {
+        const result = await profileService.updateProfile({
+          first_name: formData.firstName.trim(),
+          last_name: formData.lastName.trim(),
+        });
+
+        const data = result.data;
+        updateUser({
+          name: data.full_name || `${data.first_name} ${data.last_name}`.trim(),
+          firstName: data.first_name,
+          lastName: data.last_name,
+          avatar: data.avatar,
+        });
+      } else {
+        // حالت Mock
+        updateUser({
+          name: displayName,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+        });
+      }
+
       setLoading(false);
       showToast('اطلاعات پروفایل با موفقیت ذخیره شد', 'success');
       setTimeout(() => router.back(), 1200);
-    }, 1000);
+    } catch (err) {
+      setLoading(false);
+      showToast(err.message || 'خطا در ذخیره اطلاعات', 'error');
+    }
   };
 
-  const handleDeleteAccount = () => {
-    logout();
-    showToast('حساب کاربری با موفقیت حذف شد', 'success');
-    router.push('/');
+  const handleDeleteAccount = async () => {
+    setLoading(true);
+    try {
+      if (!USE_MOCK) {
+        // در production باید OTP ارسال و تایید شود
+        // فعلاً فقط logout
+        await logout();
+      } else {
+        await logout();
+      }
+      setLoading(false);
+      showToast('حساب کاربری با موفقیت حذف شد', 'success');
+      router.push('/');
+    } catch {
+      setLoading(false);
+    }
   };
 
   return (
@@ -121,9 +147,9 @@ export default function EditProfilePage() {
             value={formData.firstName}
             onChangeText={(t) => {
               setFormData((prev) => ({ ...prev, firstName: t }));
-              if (firstNameError) setFirstNameError('');
+              if (errors.firstName) setErrors((prev) => ({ ...prev, firstName: '' }));
             }}
-            error={firstNameError}
+            error={errors.firstName}
             rightIcon={<FiUser size={18} style={{ color: colors.textSecondary }} />}
           />
 
@@ -133,14 +159,14 @@ export default function EditProfilePage() {
             value={formData.lastName}
             onChangeText={(t) => {
               setFormData((prev) => ({ ...prev, lastName: t }));
-              if (lastNameError) setLastNameError('');
+              if (errors.lastName) setErrors((prev) => ({ ...prev, lastName: '' }));
             }}
-            error={lastNameError}
+            error={errors.lastName}
             rightIcon={<FiTag size={18} style={{ color: colors.textSecondary }} />}
           />
         </Card>
 
-        {/* شماره موبایل - فقط نمایشی */}
+        {/* شماره موبایل */}
         <Card variant="elevated" padding={20} radius={18}>
           <div className="flex items-center gap-2 mb-5">
             <div
@@ -261,6 +287,7 @@ export default function EditProfilePage() {
           <div
             className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-4"
             style={{ backgroundColor: colors.cardBackground }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center"
@@ -268,18 +295,15 @@ export default function EditProfilePage() {
             >
               <FiShield size={40} color="#E53935" />
             </div>
-
             <h3
               className="text-lg font-[Vazir-Bold] text-center"
               style={{ color: colors.textMain }}
             >
               حذف حساب کاربری
             </h3>
-
             <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
               آیا از حذف دائمی حساب کاربری خود مطمئن هستید؟ این عمل قابل بازگشت نیست.
             </p>
-
             <div className="flex gap-3 w-full mt-2">
               <Button
                 title="انصراف"

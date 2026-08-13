@@ -1,17 +1,8 @@
 // src/app/profile/devices/page.jsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  FiSmartphone,
-  FiMonitor,
-  FiGlobe,
-  FiShield,
-  FiLogOut,
-  FiWifi,
-  FiMapPin,
-  FiClock,
-} from 'react-icons/fi';
+import { FiSmartphone, FiMonitor, FiGlobe, FiShield, FiLogOut } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -19,25 +10,49 @@ import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import InfoRow from '@/components/common/InfoRow';
-import { toPersianDigit } from '@/utils/numberUtils';
-import { MOCK_DEVICES } from '@/data/devices';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { toPersianDigit } from '@/utils/numberUtils';
+import { authService } from '@/api';
+import { USE_MOCK } from '@/api/config';
+import { MOCK_DEVICES } from '@/data/devices';
 
 export default function ActiveDevicesPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { showToast } = useToast();
-  const [devices, setDevices] = useState(MOCK_DEVICES);
+
+  const [devices, setDevices] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [removeDeviceTarget, setRemoveDeviceTarget] = useState(null);
   const [removeDeviceDialogVisible, setRemoveDeviceDialogVisible] = useState(false);
-  const [logoutAllDialogVisible, setLogoutAllDialogVisible] = useState(false);
 
-  const currentDevice = devices.find((d) => d.isCurrent);
-  const otherDevices = devices.filter((d) => !d.isCurrent);
+  // دریافت دستگاه‌ها از API
+  useEffect(() => {
+    const fetchDevices = async () => {
+      setIsLoading(true);
+      try {
+        if (USE_MOCK) {
+          setDevices(MOCK_DEVICES);
+        } else {
+          const result = await authService.getDevices();
+          setDevices(result.data || []);
+        }
+      } catch (error) {
+        showToast('خطا در دریافت دستگاه‌ها', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDevices();
+  }, []);
+
+  const currentDevice = devices.find((d) => d.is_current || d.isCurrent);
+  const otherDevices = devices.filter((d) => !d.is_current && !d.isCurrent);
+
   const stats = {
     total: devices.length,
     trusted: devices.filter((d) => d.trusted).length,
-    suspicious: devices.filter((d) => !d.trusted && !d.isCurrent).length,
   };
 
   const getDeviceIcon = (type) => {
@@ -52,24 +67,41 @@ export default function ActiveDevicesPage() {
     }
   };
 
-  const handleRemoveDevice = (device) => {
-    setRemoveDeviceTarget(device);
-    setRemoveDeviceDialogVisible(true);
+  const handleRemoveDevice = async () => {
+    if (!removeDeviceTarget) return;
+
+    try {
+      if (!USE_MOCK) {
+        await authService.revokeDevice(removeDeviceTarget.id);
+      }
+      setDevices((prev) => prev.filter((d) => d.id !== removeDeviceTarget.id));
+      showToast(
+        `نشست "${removeDeviceTarget.device_name || removeDeviceTarget.name}" بسته شد`,
+        'success'
+      );
+    } catch (err) {
+      showToast(err.message || 'خطا در بستن نشست', 'error');
+    }
+
+    setRemoveDeviceDialogVisible(false);
+    setRemoveDeviceTarget(null);
   };
 
-  const handleLogoutAllRequest = () => {
-    setLogoutAllDialogVisible(true);
-  };
-
-  const handleLogoutAllConfirm = () => {
-    setDevices((prev) => prev.filter((d) => d.isCurrent));
-    showToast('از همه دستگاه‌ها خارج شدید', 'success');
-    setLogoutAllDialogVisible(false);
-  };
+  if (isLoading) {
+    return (
+      <ScreenWrapper>
+        <Header title="دستگاه‌های فعال" onBackPress={() => router.back()} />
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner label="در حال بارگذاری..." />
+        </div>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper padding={0}>
       <Header title="دستگاه‌های فعال" onBackPress={() => router.back()} />
+
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-5">
         {/* آمار */}
         <Card variant="elevated" padding={16} radius={18}>
@@ -87,12 +119,6 @@ export default function ActiveDevicesPage() {
                 value: stats.trusted,
                 color: '#43A047',
               },
-              {
-                icon: <FiWifi size={18} />,
-                label: 'مشکوک',
-                value: stats.suspicious,
-                color: '#FF9800',
-              },
             ].map((stat, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1 relative">
                 <div
@@ -107,7 +133,7 @@ export default function ActiveDevicesPage() {
                 <span className="text-[10px]" style={{ color: colors.textSecondary }}>
                   {stat.label}
                 </span>
-                {i < 2 && (
+                {i < 1 && (
                   <div
                     className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-[50px]"
                     style={{ backgroundColor: colors.border }}
@@ -136,33 +162,18 @@ export default function ActiveDevicesPage() {
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center flex-shrink-0"
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: '#2196F318' }}
                 >
-                  {getDeviceIcon(currentDevice.type)}
+                  {getDeviceIcon(currentDevice.device_type || currentDevice.type)}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <span
-                    className="text-sm font-[Vazir-Bold] block"
-                    style={{ color: colors.textMain }}
-                  >
-                    {currentDevice.name}
-                  </span>
-                  <span className="text-xs" style={{ color: colors.textSecondary }}>
-                    {currentDevice.os}
-                  </span>
-                </div>
-                <div
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
-                  style={{ backgroundColor: colors.primary + '20' }}
-                >
-                  <div
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: colors.primary }}
-                  />
-                  <span className="text-[10px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                    فعلی
-                  </span>
+                <div>
+                  <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                    {currentDevice.device_name || currentDevice.name}
+                  </p>
+                  <p className="text-xs" style={{ color: colors.textSecondary }}>
+                    {currentDevice.os_info || currentDevice.os}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -189,24 +200,27 @@ export default function ActiveDevicesPage() {
                 <Card key={device.id} variant="elevated" padding={14} radius={16}>
                   <div className="flex items-center gap-3 mb-3">
                     <div
-                      className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center flex-shrink-0"
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: '#607D8B18' }}
                     >
-                      {getDeviceIcon(device.type)}
+                      {getDeviceIcon(device.device_type || device.type)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <span
-                        className="text-sm font-[Vazir-Bold] block"
+                        className="text-sm font-[Vazir-Bold] block truncate"
                         style={{ color: colors.textMain }}
                       >
-                        {device.name}
+                        {device.device_name || device.name}
                       </span>
                       <span className="text-xs" style={{ color: colors.textSecondary }}>
-                        {device.os}
+                        {device.os_info || device.os}
                       </span>
                     </div>
                     <button
-                      onClick={() => handleRemoveDevice(device)}
+                      onClick={() => {
+                        setRemoveDeviceTarget(device);
+                        setRemoveDeviceDialogVisible(true);
+                      }}
                       className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: '#E5393515' }}
                     >
@@ -217,8 +231,17 @@ export default function ActiveDevicesPage() {
                     className="flex flex-col gap-1 pt-3 border-t"
                     style={{ borderColor: colors.border }}
                   >
-                    <InfoRow icon="🌐" label="آی‌پی:" value={device.ip} monospace />
-                    <InfoRow icon="🕐" label="آخرین فعالیت:" value={device.lastActive} />
+                    <InfoRow
+                      icon="🌐"
+                      label="آی‌پی:"
+                      value={device.ip_address || device.ip}
+                      monospace
+                    />
+                    <InfoRow
+                      icon="🕐"
+                      label="آخرین فعالیت:"
+                      value={device.last_active || device.lastActive}
+                    />
                     <InfoRow icon="📍" label="مکان:" value={device.location} />
                   </div>
                 </Card>
@@ -236,50 +259,20 @@ export default function ActiveDevicesPage() {
             </div>
           )}
         </div>
-
-        {/* دکمه خروج از همه */}
-        {otherDevices.length > 0 && (
-          <Button
-            title="خروج از همه دستگاه‌ها"
-            onPress={handleLogoutAllRequest} // ✅ تغییر
-            variant="outline"
-            size="lg"
-            fullWidth
-            icon={<FiLogOut size={18} color="#E53935" />}
-            iconPosition="right"
-            className="!border-[#E53935] !border-[1.5px]"
-            style={{ color: '#E53935' }}
-          />
-        )}
       </div>
+
       <ConfirmDialog
         visible={removeDeviceDialogVisible}
         title="بستن نشست"
-        message={`آیا مطمئن هستید که می‌خواهید از "${removeDeviceTarget?.name}" خارج شوید؟`}
+        message={`آیا مطمئن هستید که می‌خواهید از "${removeDeviceTarget?.device_name || removeDeviceTarget?.name || ''}" خارج شوید؟`}
         confirmText="خروج"
         cancelText="انصراف"
         variant="warning"
-        onConfirm={() => {
-          setDevices((prev) => prev.filter((d) => d.id !== removeDeviceTarget.id));
-          showToast(`نشست "${removeDeviceTarget.name}" بسته شد`, 'success');
-          setRemoveDeviceDialogVisible(false);
-          setRemoveDeviceTarget(null);
-        }}
+        onConfirm={handleRemoveDevice}
         onCancel={() => {
           setRemoveDeviceDialogVisible(false);
           setRemoveDeviceTarget(null);
         }}
-      />
-
-      <ConfirmDialog
-        visible={logoutAllDialogVisible}
-        title="خروج از همه دستگاه‌ها"
-        message="از تمام دستگاه‌های متصل خارج می‌شوید (به جز دستگاه فعلی). آیا مطمئن هستید؟"
-        confirmText="خروج از همه"
-        cancelText="انصراف"
-        variant="warning"
-        onConfirm={handleLogoutAllConfirm}
-        onCancel={() => setLogoutAllDialogVisible(false)}
       />
     </ScreenWrapper>
   );

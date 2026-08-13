@@ -1,9 +1,6 @@
 // src/api/index.js
 /**
  * 📦 Export مرکزی لایه API
- *
- * استفاده در کامپوننت‌ها:
- * import { authService, businessesService } from '@/api';
  */
 
 // ═══════════ Config ═══════════
@@ -33,3 +30,4 @@ export { remindersService } from './services/reminders.service';
 export { supportService } from './services/support.service';
 export { categoriesService } from './services/categories.service';
 export { locationsService } from './services/locations.service';
+export { priceListService } from './services/price-list.service'; // ✅ جدید

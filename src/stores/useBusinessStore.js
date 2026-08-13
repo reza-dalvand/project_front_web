@@ -7,31 +7,24 @@ import { createServicesSlice } from './business/slices/servicesSlice';
 import { createAppointmentsSlice } from './business/slices/appointmentsSlice';
 import { createTeamSlice } from './business/slices/teamSlice';
 import { createPortfoliosSlice } from './business/slices/portfoliosSlice';
-import { createSchedulesSlice } from './business/slices/schedulesSlice'; // ✅ اضافه شد
+import { createSchedulesSlice } from './business/slices/schedulesSlice';
 
 export const useBusinessStore = create(
   persist(
     (set, get) => ({
       // ─── State اصلی ───
       businessData: INITIAL_BUSINESS_DATA,
+      gallery: [], // 🆕 تصاویر گالری
       _version: STORAGE_VERSION,
 
-      // ─── Slice: خدمات ───
+      // ─── Slice‌ها ───
       ...createServicesSlice(set),
-
-      // ─── Slice: نوبت‌ها ───
       ...createAppointmentsSlice(set),
-
-      // ─── Slice: تیم ───
       ...createTeamSlice(set),
-
-      // ─── Slice: نمونه‌کارها ───
       ...createPortfoliosSlice(set),
-
-      // ─── Slice: زمان‌بندی ───
       ...createSchedulesSlice(set),
 
-      // ─── اطلاعات پایه کسب‌وکار ───
+      // ─── اطلاعات پایه ───
       updateBusinessInfo: (updates) =>
         set((state) => ({
           businessData: { ...state.businessData, ...updates },
@@ -47,49 +40,55 @@ export const useBusinessStore = create(
       // ─── Selectors ───
       getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
 
-      // ─── ریست دستی ───
       resetToDefaults: () => {
-        set({ businessData: INITIAL_BUSINESS_DATA, _version: STORAGE_VERSION });
+        set({ businessData: INITIAL_BUSINESS_DATA, gallery: [], _version: STORAGE_VERSION });
       },
 
-      // ═══════════════════════════════════════════════
-      //    🆕 API Sync Methods
-      // ═══════════════════════════════════════════════
+      // ═══════════════════════════════════════════
+      //    🆕 API Sync — Businesses
+      // ═══════════════════════════════════════════
 
       /**
-       * دریافت اطلاعات کسب‌وکار از API
+       * دریافت جزئیات کسب‌وکار از API و sync با store
        */
       fetchBusinessDetail: async () => {
         try {
           const response = await businessesService.getBusinessDetail();
-          const business = response.data;
-
+          const b = response.data;
           set((state) => ({
             businessData: {
               ...state.businessData,
-              id: business.id,
-              name: business.name,
-              category: business.category?.name || '',
-              categoryId: business.category?.id || '',
-              address: business.address,
-              city: business.city?.name || '',
-              cityId: business.city?.id || '',
-              phone: business.phone,
-              rating: business.rating,
-              reviewsCount: business.reviews_count,
-              VIP: business.is_vip,
-              logo: business.logo,
-              coverUrl: business.cover_image,
-              ownerName: business.owner_name,
-              verifiedName: business.verified_name,
+              id: b.id,
+              name: b.name,
+              category: b.category?.name || '',
+              categoryId: b.category?.id || '',
+              address: b.address,
+              city: b.city?.name || '',
+              cityId: b.city?.id || '',
+              provinceId: b.province?.id || '',
+              phone: b.phone,
+              workingHours: b.working_hours,
+              about: b.about,
+              rating: b.rating,
+              reviewsCount: b.reviews_count,
+              VIP: b.is_vip,
+              logo: b.logo,
+              coverUrl: b.cover_image,
+              ownerPhoto: b.owner_photo,
+              ownerName: b.owner_name,
+              verifiedName: b.verified_name,
               bankInfo: {
-                isRegistered: business.bank_info_registered,
-                isVerified: business.bank_info_verified,
+                isRegistered: b.bank_info_registered,
+                isVerified: b.bank_info_verified,
               },
-              isActive: business.status === 'approved',
+              bookingSlug: b.booking_slug,
+              isActive: b.status === 'approved',
+              latitude: b.latitude,
+              longitude: b.longitude,
+              gallery: b.gallery || [],
             },
+            gallery: b.gallery || [],
           }));
-
           return response.data;
         } catch (error) {
           console.error('fetchBusinessDetail failed:', error);
@@ -98,7 +97,7 @@ export const useBusinessStore = create(
       },
 
       /**
-       * دریافت وضعیت کسب‌وکار از API
+       * دریافت وضعیت کسب‌وکار
        */
       fetchBusinessStatus: async () => {
         try {
@@ -111,45 +110,208 @@ export const useBusinessStore = create(
       },
 
       /**
-       * دریافت لیست خدمات از API
+       * ثبت کسب‌وکار جدید در API
+       * @param {FormData} formData
        */
-      fetchServices: async () => {
+      createBusinessApi: async (formData) => {
         try {
-          const response = await servicesService.getServices();
-          const services = response.data;
-
-          // تبدیل به فرمت store
-          const formattedServices = services.map((service) => ({
-            id: service.id,
-            name: service.name,
-            typeId: service.sub_service?.type_id || '',
-            typeName: service.sub_service?.name || '',
-            originalPrice: service.original_price,
-            discountPercent: service.discount_percent,
-            finalPrice: service.final_price,
-            duration: service.duration,
-            hasDeposit: service.has_deposit,
-            depositAmount: service.deposit_amount,
-            isActive: service.is_active,
-          }));
-
+          const response = await businessesService.createBusiness(formData);
+          const b = response.data;
           set((state) => ({
             businessData: {
               ...state.businessData,
-              services: formattedServices,
+              id: b.id,
+              name: b.name,
+              category: b.category?.name || '',
+              address: b.address,
+              bookingSlug: b.booking_slug,
+              isActive: b.status === 'approved',
             },
           }));
+          return response.data;
+        } catch (error) {
+          console.error('createBusinessApi failed:', error);
+          throw error;
+        }
+      },
 
-          return formattedServices;
+      /**
+       * بروزرسانی کسب‌وکار در API
+       */
+      updateBusinessApi: async (data) => {
+        try {
+          const response = await businessesService.updateBusiness(data);
+          const b = response.data;
+          set((state) => ({
+            businessData: {
+              ...state.businessData,
+              name: b.name,
+              address: b.address,
+              phone: b.phone,
+              workingHours: b.working_hours,
+              about: b.about,
+            },
+          }));
+          return response.data;
+        } catch (error) {
+          console.error('updateBusinessApi failed:', error);
+          throw error;
+        }
+      },
+
+      /**
+       * دریافت اطلاعات بانکی از API
+       */
+      fetchBankInfo: async () => {
+        try {
+          const response = await businessesService.getBankInfo();
+          return response.data;
+        } catch (error) {
+          console.error('fetchBankInfo failed:', error);
+          throw error;
+        }
+      },
+
+      /**
+       * بروزرسانی اطلاعات بانکی در API
+       */
+      updateBankInfoApi: async (bankData) => {
+        try {
+          const response = await businessesService.updateBankInfo({
+            bank_owner_name: bankData.ownerName,
+            bank_national_id: bankData.nationalId,
+            bank_name: bankData.bankName,
+            bank_id: bankData.bankId,
+            bank_sheba: bankData.sheba,
+            bank_card_number: bankData.cardNumber,
+            bank_account_number: bankData.accountNumber,
+          });
+          set((state) => ({
+            businessData: {
+              ...state.businessData,
+              bankInfo: { isRegistered: true, isVerified: false },
+            },
+          }));
+          return response.data;
+        } catch (error) {
+          console.error('updateBankInfoApi failed:', error);
+          throw error;
+        }
+      },
+
+      /**
+       * حذف کسب‌وکار در API
+       */
+      deleteBusinessApi: async () => {
+        try {
+          await businessesService.deleteBusiness();
+          set((state) => ({
+            businessData: { ...state.businessData, isActive: false },
+          }));
+        } catch (error) {
+          console.error('deleteBusinessApi failed:', error);
+          throw error;
+        }
+      },
+
+      // ═══════════════════════════════════════════
+      //    🆕 API Sync — Gallery
+      // ═══════════════════════════════════════════
+
+      /**
+       * دریافت گالری از API
+       */
+      fetchGallery: async () => {
+        try {
+          const response = await businessesService.getGallery();
+          set({ gallery: response.data || [] });
+          return response.data;
+        } catch (error) {
+          console.error('fetchGallery failed:', error);
+          throw error;
+        }
+      },
+
+      /**
+       * آپلود تصویر گالری در API
+       */
+      uploadGalleryImageApi: async (imageFile, sortOrder = 0) => {
+        try {
+          const response = await businessesService.uploadGalleryImage(imageFile, sortOrder);
+          const newImage = response.data;
+          set((state) => ({ gallery: [...state.gallery, newImage] }));
+          return response.data;
+        } catch (error) {
+          console.error('uploadGalleryImageApi failed:', error);
+          throw error;
+        }
+      },
+
+      /**
+       * حذف تصویر گالری در API
+       */
+      deleteGalleryImageApi: async (imageId) => {
+        try {
+          await businessesService.deleteGalleryImage(imageId);
+          set((state) => ({
+            gallery: state.gallery.filter((img) => img.id !== imageId),
+          }));
+        } catch (error) {
+          console.error('deleteGalleryImageApi failed:', error);
+          throw error;
+        }
+      },
+
+      /**
+       * تغییر ترتیب گالری در API
+       */
+      reorderGalleryApi: async (order) => {
+        try {
+          await businessesService.reorderGallery(order);
+          set((state) => {
+            const sorted = [...state.gallery].sort((a, b) => {
+              const idxA = order.indexOf(a.id);
+              const idxB = order.indexOf(b.id);
+              return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+            });
+            return { gallery: sorted };
+          });
+        } catch (error) {
+          console.error('reorderGalleryApi failed:', error);
+          throw error;
+        }
+      },
+
+      // ═══════════════════════════════════════════
+      //    🆕 API Sync — Services (از فاز ۲)
+      // ═══════════════════════════════════════════
+
+      fetchServices: async () => {
+        try {
+          const response = await servicesService.getServices();
+          const services = (response.data || []).map((s) => ({
+            id: s.id,
+            name: s.name,
+            typeId: s.sub_service?.type_id || '',
+            typeName: s.sub_service?.name || '',
+            originalPrice: s.original_price,
+            discountPercent: s.discount_percent,
+            finalPrice: s.final_price,
+            duration: s.duration,
+            hasDeposit: s.has_deposit,
+            depositAmount: s.deposit_amount,
+            isActive: s.is_active,
+          }));
+          set((state) => ({
+            businessData: { ...state.businessData, services },
+          }));
+          return services;
         } catch (error) {
           console.error('fetchServices failed:', error);
           throw error;
         }
       },
 
-      /**
-       * ایجاد خدمت جدید در API
-       */
       createService: async (serviceData) => {
         try {
           const response = await servicesService.createService({
@@ -164,13 +326,7 @@ export const useBusinessStore = create(
             duration: serviceData.duration,
             is_active: true,
           });
-
-          // به‌روزرسانی store محلی
-          get().addService({
-            ...serviceData,
-            id: response.data.id,
-          });
-
+          get().addService({ ...serviceData, id: response.data.id });
           return response.data;
         } catch (error) {
           console.error('createService failed:', error);
@@ -178,9 +334,6 @@ export const useBusinessStore = create(
         }
       },
 
-      /**
-       * بروزرسانی خدمت در API
-       */
       updateServiceApi: async (serviceId, serviceData) => {
         try {
           const response = await servicesService.updateService(serviceId, {
@@ -192,10 +345,7 @@ export const useBusinessStore = create(
             duration: serviceData.duration,
             description: serviceData.description,
           });
-
-          // به‌روزرسانی store محلی
           get().updateService(serviceId, serviceData);
-
           return response.data;
         } catch (error) {
           console.error('updateServiceApi failed:', error);
@@ -203,9 +353,6 @@ export const useBusinessStore = create(
         }
       },
 
-      /**
-       * حذف خدمت در API
-       */
       deleteServiceApi: async (serviceId) => {
         try {
           await servicesService.deleteService(serviceId);
@@ -216,107 +363,12 @@ export const useBusinessStore = create(
         }
       },
 
-      /**
-       * فعال/غیرفعال کردن خدمت در API
-       */
       toggleServiceActiveApi: async (serviceId) => {
         try {
-          const response = await servicesService.toggleServiceActive(serviceId);
+          await servicesService.toggleServiceActive(serviceId);
           get().toggleServiceActive(serviceId);
-          return response;
         } catch (error) {
           console.error('toggleServiceActiveApi failed:', error);
-          throw error;
-        }
-      },
-
-      /**
-       * دریافت زمان‌بندی‌ها از API
-       */
-      fetchSchedules: async () => {
-        try {
-          const response = await schedulesService.getSchedules();
-          return response.data;
-        } catch (error) {
-          console.error('fetchSchedules failed:', error);
-          throw error;
-        }
-      },
-
-      /**
-       * دریافت زمان‌بندی بر اساس تاریخ از API
-       */
-      fetchSchedulesByDate: async (jy, jm, jd, serviceId = null) => {
-        try {
-          const response = await schedulesService.getSchedulesByDate(jy, jm, jd, serviceId);
-          return response.data;
-        } catch (error) {
-          console.error('fetchSchedulesByDate failed:', error);
-          throw error;
-        }
-      },
-
-      /**
-       * ایجاد زمان‌بندی جدید در API
-       */
-      createSchedule: async (scheduleData) => {
-        try {
-          const response = await schedulesService.createSchedule({
-            service: scheduleData.serviceId,
-            jy: scheduleData.jy,
-            jm: scheduleData.jm,
-            jd: scheduleData.jd,
-            work_start: scheduleData.workStart,
-            work_end: scheduleData.workEnd,
-            slot_duration: scheduleData.slotDuration,
-            breaks: scheduleData.breaks || [],
-          });
-
-          // به‌روزرسانی store محلی
-          const dateKey = `${scheduleData.jy}/${String(scheduleData.jm).padStart(2, '0')}/${String(scheduleData.jd).padStart(2, '0')}`;
-          get().saveSchedule(
-            scheduleData.ownerId || 'owner',
-            scheduleData.serviceId,
-            dateKey,
-            scheduleData
-          );
-
-          return response.data;
-        } catch (error) {
-          console.error('createSchedule failed:', error);
-          throw error;
-        }
-      },
-
-      /**
-       * به‌روزرسانی اطلاعات بانکی در API
-       */
-      updateBankInfoApi: async (bankData) => {
-        try {
-          const response = await businessesService.updateBankInfo({
-            bank_owner_name: bankData.ownerName,
-            bank_national_id: bankData.nationalId,
-            bank_name: bankData.bankName,
-            bank_id: bankData.bankId,
-            bank_sheba: bankData.sheba,
-            bank_card_number: bankData.cardNumber,
-            bank_account_number: bankData.accountNumber,
-          });
-
-          // به‌روزرسانی store محلی
-          set((state) => ({
-            businessData: {
-              ...state.businessData,
-              bankInfo: {
-                isRegistered: true,
-                isVerified: false,
-              },
-            },
-          }));
-
-          return response.data;
-        } catch (error) {
-          console.error('updateBankInfoApi failed:', error);
           throw error;
         }
       },
@@ -331,28 +383,14 @@ export const useBusinessStore = create(
       ),
       partialize: (state) => ({
         businessData: state.businessData,
+        gallery: state.gallery,
         _version: STORAGE_VERSION,
       }),
       migrate: (persistedState, version) => {
         if (version < STORAGE_VERSION) {
-          return { businessData: INITIAL_BUSINESS_DATA, _version: STORAGE_VERSION };
+          return { businessData: INITIAL_BUSINESS_DATA, gallery: [], _version: STORAGE_VERSION };
         }
         return persistedState;
-      },
-      merge: (persistedState, currentState) => {
-        if (
-          !persistedState ||
-          !persistedState.businessData ||
-          !persistedState.businessData.appointments ||
-          persistedState.businessData.appointments.length === 0
-        ) {
-          return currentState;
-        }
-        const firstApt = persistedState.businessData.appointments[0];
-        if (!firstApt.date || !firstApt.date.jy || !firstApt.date.jm || !firstApt.date.jd) {
-          return currentState;
-        }
-        return { ...currentState, ...persistedState };
       },
     }
   )

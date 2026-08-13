@@ -2,7 +2,7 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { FiUser, FiInfo, FiCalendar, FiClock, FiX } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
@@ -14,54 +14,18 @@ import BookingReviewStep from './BookingReviewStep';
 import BookingSuccessStep from './BookingSuccessStep';
 import BookingModalFooter from './BookingModalFooter';
 import TrustToggle from './TrustToggle';
-import { PERSIAN_MONTHS } from '@/utils/dateUtils';
-import { toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
-// ═══════ فاز ۲: لایه API ═══════
-import { appointmentsService } from '@/api';
+import { appointmentsService, schedulesService } from '@/api';
 import { USE_MOCK } from '@/api/config';
-// ═══════ فاز ۴: Utils جدید ═══════
-import { buildPriceSummary } from '@/utils/price-utils';
 import { toJalaaliKey } from '@/utils/date-converter';
-
-// ═══════════ MOCK TIME SLOTS ═══════════
-const MOCK_TIME_SLOTS = [
-  { id: 't1', time: '09:00', isAvailable: true },
-  { id: 't2', time: '09:30', isAvailable: true },
-  { id: 't3', time: '10:00', isAvailable: false },
-  { id: 't4', time: '10:30', isAvailable: true },
-  { id: 't5', time: '11:00', isAvailable: true },
-  { id: 't6', time: '11:30', isAvailable: false },
-  { id: 't7', time: '12:00', isAvailable: true },
-  { id: 't8', time: '14:00', isAvailable: true },
-  { id: 't9', time: '14:30', isAvailable: true },
-  { id: 't10', time: '15:00', isAvailable: false },
-  { id: 't11', time: '15:30', isAvailable: true },
-  { id: 't12', time: '16:00', isAvailable: true },
-];
-
-// ═══════════ MOCK SERVICE ═══════════
-const MOCK_SERVICE = {
-  id: 's1',
-  name: 'فیشیال تخصصی پوست VIP',
-  businessName: 'سالن زیبایی نیلارام',
-  originalPrice: 850000,
-  discount: 12,
-  hasDeposit: true,
-  depositAmount: 200000, // ✅ بیعانه مستقیم از سرویس
-  depositPercent: 30,
-  duration: 60,
-};
-
-// ═══════════ نام پیش‌فرض ═══════════
-const DEFAULT_NAME = 'کاربر زیبانو';
+import { buildPriceSummary } from '@/utils/price-utils';
 
 export default function BookingModal({
   visible,
   onClose,
   service,
   businessName,
-  businessLogo,
+  businessId,
   onConfirm,
 }) {
   const { colors } = useTheme();
@@ -69,81 +33,49 @@ export default function BookingModal({
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
-  const currentService = service || MOCK_SERVICE;
 
-  // ═══════ تشخیص نیاز به استپ نام ═══════
+  const currentService = service || {};
+  const instanceId = useRef('booking-modal');
+
+  // ─── State‌ها ───
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [trustEnabled, setTrustEnabled] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingResult, setBookingResult] = useState(null);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [availableDates, setAvailableDates] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // ─── تشخیص نیاز به استپ نام ───
   const needsNameStep = useMemo(() => {
     const name = user?.name?.trim();
-    return !name || name === DEFAULT_NAME || name.length < 3;
+    return !name || name === 'کاربر زیبانو' || name.length < 3;
   }, [user?.name]);
 
-  // ═══════ ساخت داینامیک استپ‌ها ═══════
+  // ─── ساخت داینامیک استپ‌ها ───
   const STEPS = useMemo(() => {
     if (needsNameStep) {
       return [
-        { id: 1, label: 'مشخصات', icon: FiUser },
-        { id: 2, label: 'بررسی', icon: FiInfo },
-        { id: 3, label: 'تاریخ', icon: FiCalendar },
-        { id: 4, label: 'ساعت', icon: FiClock },
+        { id: 1, label: 'مشخصات', icon: 'user' },
+        { id: 2, label: 'بررسی', icon: 'info' },
+        { id: 3, label: 'تاریخ', icon: 'calendar' },
+        { id: 4, label: 'ساعت', icon: 'clock' },
       ];
     }
     return [
-      { id: 1, label: 'بررسی', icon: FiInfo },
-      { id: 2, label: 'تاریخ', icon: FiCalendar },
-      { id: 3, label: 'ساعت', icon: FiClock },
+      { id: 1, label: 'بررسی', icon: 'info' },
+      { id: 2, label: 'تاریخ', icon: 'calendar' },
+      { id: 3, label: 'ساعت', icon: 'clock' },
     ];
   }, [needsNameStep]);
 
-  // شناسه هر استپ
   const nameStepId = needsNameStep ? 1 : 0;
   const reviewStepId = needsNameStep ? 2 : 1;
   const dateStepId = needsNameStep ? 3 : 2;
   const timeStepId = needsNameStep ? 4 : 3;
-
-  // ─── State ───
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [trustEnabled, setTrustEnabled] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bookingResult, setBookingResult] = useState(null); // ✅ نتیجه رزرو برای SuccessStep
-  const instanceId = useRef('booking-modal');
-
-  // ─── State‌های استپ نام ───
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [nameErrors, setNameErrors] = useState({ firstName: '', lastName: '', confirm: '' });
-  const [nameConfirmed, setNameConfirmed] = useState(false);
-
-  // ✅ تشخیص اینکه مشتری قبلاً حداقل یک نوبت ثبت کرده
-  const hasPreviousBookings = isAuthenticated;
-
-  // ═══════ محاسبات قیمت با price-utils (فاز ۴) ═══════
-  const priceSummary = useMemo(() => {
-    const originalPrice = currentService.originalPrice ?? currentService.price ?? 0;
-    const discountPercent = currentService.discount ?? currentService.discountPercent ?? 0;
-    // ✅ بیعانه مستقیم از depositAmount سرویس (هماهنگ با بک‌اند: Service.deposit_amount)
-    const depositAmount = currentService.hasDeposit ? (currentService.depositAmount ?? 0) : 0;
-    return buildPriceSummary(
-      originalPrice,
-      discountPercent,
-      currentService.hasDeposit,
-      currentService.depositPercent ?? 30
-    );
-  }, [currentService]);
-
-  // مقادیر نهایی برای استفاده در کامپوننت‌ها
-  const originalPrice = priceSummary.originalPrice;
-  const discountPercent = priceSummary.discountPercent;
-  const discountAmount = priceSummary.discountAmount;
-  const finalPrice = priceSummary.finalPrice;
-  const hasDeposit = currentService.hasDeposit || false;
-  const depositPercent = currentService.depositPercent ?? 30;
-  // ✅ بیعانه: اگر depositAmount در سرویس بود، همون؛ وگرنه محاسبه‌شده
-  const depositAmount = currentService.depositAmount ?? priceSummary.depositAmount;
-  const remainingAmount = Math.max(0, finalPrice - depositAmount);
 
   // ─── Effects ───
   useEffect(() => {
@@ -159,15 +91,15 @@ export default function BookingModal({
       setCurrentStep(1);
       setSelectedDate(null);
       setSelectedTime(null);
-      setShowSuccess(false);
       setTrustEnabled(false);
       setIsSubmitting(false);
       setBookingResult(null);
-      setFirstName('');
-      setLastName('');
-      setNameErrors({ firstName: '', lastName: '', confirm: '' });
-      setNameConfirmed(false);
+      setAvailableSlots([]);
       acquireScrollLock(instanceId.current);
+      // دریافت روزهای آزاد
+      if (businessId && currentService.id && !USE_MOCK) {
+        fetchAvailableDates();
+      }
     } else {
       releaseScrollLock(instanceId.current);
     }
@@ -177,32 +109,87 @@ export default function BookingModal({
   useEffect(() => {
     if (!visible) return;
     const handleEsc = (e) => {
-      if (e.key === 'Escape') onClose?.();
+      if (e.key === 'Escape') handleClose();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [visible, onClose]);
+  }, [visible]);
+
+  // ─── دریافت روزهای آزاد ───
+  const fetchAvailableDates = async () => {
+    if (USE_MOCK) return;
+    try {
+      const result = await schedulesService.getAvailableDates(businessId, currentService.id, 30);
+      setAvailableDates(result.data || []);
+    } catch (err) {
+      console.error('Failed to fetch available dates:', err);
+    }
+  };
+
+  // ─── دریافت اسلات‌های آزاد برای تاریخ انتخابی ───
+  const fetchAvailableSlots = async (date) => {
+    if (USE_MOCK) {
+      // Mock: تولید اسلات‌های نمونه
+      const mockSlots = [];
+      for (let h = 9; h < 21; h++) {
+        for (let m = 0; m < 60; m += 30) {
+          const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+          mockSlots.push({
+            id: `${date.jy}${String(date.jm).padStart(2, '0')}${String(date.jd).padStart(2, '0')}_${time.replace(':', '')}`,
+            jy: date.jy,
+            jm: date.jm,
+            jd: date.jd,
+            date_key: toJalaaliKey(date.jy, date.jm, date.jd),
+            start_time: time,
+            end_time: `${String(h).padStart(2, '0')}:${String((m + 30) % 60).padStart(2, '0')}`,
+            is_available: Math.random() > 0.3,
+            display_time: time,
+          });
+        }
+      }
+      setAvailableSlots(mockSlots.filter((s) => s.is_available));
+      return;
+    }
+
+    setSlotsLoading(true);
+    try {
+      const result = await schedulesService.getAvailableSlots(
+        businessId,
+        currentService.id,
+        date.jy,
+        date.jm,
+        date.jd
+      );
+      setAvailableSlots(result.data || []);
+    } catch (err) {
+      console.error('Failed to fetch slots:', err);
+      showToast('خطا در دریافت ساعات آزاد', 'error');
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  // ─── محاسبات قیمت ───
+  const priceSummary = useMemo(() => {
+    const originalPrice = currentService.originalPrice ?? currentService.price ?? 0;
+    const discountPercent = currentService.discountPercent ?? currentService.discount ?? 0;
+    const depositAmount = currentService.hasDeposit ? (currentService.depositAmount ?? 0) : 0;
+    return buildPriceSummary(
+      originalPrice,
+      discountPercent,
+      currentService.hasDeposit,
+      currentService.depositPercent ?? 30
+    );
+  }, [currentService]);
 
   // ─── Handlers ───
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    setSelectedTime(null);
+    fetchAvailableSlots(date);
+  };
+
   const handleNext = () => {
-    // اگر در استپ نام هستیم، اعتبارسنجی کن
-    if (needsNameStep && currentStep === nameStepId) {
-      const errors = {};
-      if (!firstName.trim() || firstName.trim().length < 2) {
-        errors.firstName = 'نام باید حداقل ۲ کاراکتر باشد';
-      }
-      if (!lastName.trim() || lastName.trim().length < 2) {
-        errors.lastName = 'نام خانوادگی باید حداقل ۲ کاراکتر باشد';
-      }
-      if (!nameConfirmed) {
-        errors.confirm = 'لطفاً تایید کنید که مسئولیت صحت اطلاعات را می‌پذیرید';
-      }
-      setNameErrors(errors);
-      if (Object.keys(errors).length > 0) return;
-      // ذخیره نام در پروفایل کاربر
-      const fullName = `${firstName.trim()} ${lastName.trim()}`;
-      updateUser({ name: fullName });
-    }
     if (currentStep < timeStepId) setCurrentStep((p) => p + 1);
   };
 
@@ -210,26 +197,34 @@ export default function BookingModal({
     if (currentStep > 1) setCurrentStep((p) => p - 1);
   };
 
-  // ═══════ تایید رزرو — هماهنگ با بک‌اند ═══════
+  const handleClose = () => {
+    setCurrentStep(1);
+    setSelectedDate(null);
+    setSelectedTime(null);
+    setBookingResult(null);
+    onClose?.();
+  };
+
+  // ─── تایید رزرو ───
   const handleConfirm = async () => {
+    if (!selectedDate || !selectedTime) return;
+
     setIsSubmitting(true);
     try {
-      // ✅ ساخت payload مطابق بک‌اند (appointments/serializers)
-      // { service_id, jy, jm, jd, time_slot }
-      const payload = {
-        service_id: currentService.id,
-        jy: selectedDate.jy,
-        jm: selectedDate.jm,
-        jd: selectedDate.jd,
-        time_slot: selectedTime.time, // "HH:MM" — هماهنگ با TimeField بک‌اند
-      };
-
       let result;
+
       if (!USE_MOCK) {
-        // در آینده: فراخوانی واقعی API
-        result = await appointmentsService.createAppointment(payload);
+        // فراخوانی واقعی API
+        // Payload هماهنگ با AppointmentCreateSerializer
+        result = await appointmentsService.createAppointment({
+          service_id: currentService.id,
+          jy: selectedDate.jy,
+          jm: selectedDate.jm,
+          jd: selectedDate.jd,
+          time_slot: selectedTime.start_time, // "HH:MM"
+        });
       } else {
-        // حالت Mock — شبیه‌سازی پاسخ بک‌اند
+        // حالت Mock
         await new Promise((r) => setTimeout(r, 1200));
         result = {
           data: {
@@ -237,119 +232,85 @@ export default function BookingModal({
             status: 'reserved',
             verification_code: trustEnabled ? null : '5892',
             date_key: toJalaaliKey(selectedDate.jy, selectedDate.jm, selectedDate.jd),
-            time_slot: selectedTime.time,
-            total_price: finalPrice,
-            deposit_amount: depositAmount,
-            remaining_amount: remainingAmount,
+            time_slot: selectedTime.start_time,
+            total_price: priceSummary.finalPrice,
+            deposit_amount: priceSummary.depositAmount,
+            remaining_amount: priceSummary.remaining,
           },
         };
       }
 
       setBookingResult(result.data);
       setIsSubmitting(false);
-      setShowSuccess(true);
-
-      // اجرای callback پس از ۳ ثانیه (نمایش موفقیت)
-      setTimeout(() => {
-        onConfirm?.({
-          service: currentService,
-          date: selectedDate,
-          time: selectedTime,
-          trustBased: trustEnabled,
-          verificationCode: trustEnabled ? null : result.data.verification_code,
-          appointmentId: result.data.id,
-          dateKey: result.data.date_key,
-        });
-      }, 3000);
+      onConfirm?.({
+        ...result.data,
+        service: currentService,
+        date: selectedDate,
+        time: selectedTime,
+        trustBased: trustEnabled,
+      });
     } catch (err) {
       setIsSubmitting(false);
-      showToast(err.message || 'خطا در رزرو نوبت. لطفاً دوباره تلاش کنید.', 'error');
+      showToast(err.message || 'خطا در رزرو نوبت', 'error');
     }
-  };
-
-  const handleClose = () => {
-    setCurrentStep(1);
-    setSelectedDate(null);
-    setSelectedTime(null);
-    setShowSuccess(false);
-    setBookingResult(null);
-    onClose?.();
   };
 
   // ─── canProceed ───
   const canProceed = useMemo(() => {
-    if (needsNameStep && currentStep === nameStepId) {
-      return firstName.trim().length >= 2 && lastName.trim().length >= 2 && nameConfirmed;
-    }
-    switch (currentStep) {
-      case reviewStepId:
-        return true;
-      case dateStepId:
-        return !!selectedDate;
-      case timeStepId:
-        return !!selectedTime;
-      default:
-        return false;
-    }
-  }, [currentStep, selectedDate, selectedTime, firstName, lastName, nameConfirmed, needsNameStep]);
+    if (needsNameStep && currentStep === nameStepId) return true; // اعتبارسنجی در خود استپ
+    if (currentStep === reviewStepId) return true;
+    if (currentStep === dateStepId) return !!selectedDate;
+    if (currentStep === timeStepId) return !!selectedTime;
+    return false;
+  }, [currentStep, selectedDate, selectedTime, needsNameStep]);
 
-  // ─── رندر محتوای استپ فعلی ───
+  // ─── رندر استپ فعلی ───
   const renderStepContent = () => {
-    if (showSuccess) {
+    if (bookingResult) {
       return (
         <BookingSuccessStep
           trustEnabled={trustEnabled}
           service={currentService}
           selectedDate={selectedDate}
           selectedTime={selectedTime}
-          depositAmount={depositAmount}
-          verificationCode={bookingResult?.verification_code}
+          depositAmount={priceSummary.depositAmount}
+          verificationCode={bookingResult.verification_code}
           onClose={handleClose}
         />
       );
     }
+
     if (needsNameStep && currentStep === nameStepId) {
-      return (
-        <BookingNameStep
-          firstName={firstName}
-          lastName={lastName}
-          nameConfirmed={nameConfirmed}
-          nameErrors={nameErrors}
-          onFirstNameChange={(t) => {
-            setFirstName(t);
-            if (nameErrors.firstName) setNameErrors((p) => ({ ...p, firstName: '' }));
-          }}
-          onLastNameChange={(t) => {
-            setLastName(t);
-            if (nameErrors.lastName) setNameErrors((p) => ({ ...p, lastName: '' }));
-          }}
-          onNameConfirmedChange={(v) => {
-            setNameConfirmed(v);
-            if (nameErrors.confirm) setNameErrors((p) => ({ ...p, confirm: '' }));
-          }}
-        />
-      );
+      return <BookingNameStep />;
     }
+
     if (currentStep === reviewStepId) {
       return (
         <BookingReviewStep
-          originalPrice={originalPrice}
-          discountPercent={discountPercent}
-          discountAmount={discountAmount}
-          finalPrice={finalPrice}
-          depositPercent={depositPercent}
-          depositAmount={depositAmount}
-          remainingAmount={remainingAmount}
+          originalPrice={priceSummary.originalPrice}
+          discountPercent={priceSummary.discountPercent}
+          discountAmount={priceSummary.discountAmount}
+          finalPrice={priceSummary.finalPrice}
+          depositPercent={priceSummary.depositPercent}
+          depositAmount={priceSummary.depositAmount}
+          remainingAmount={priceSummary.remaining}
         />
       );
     }
+
     if (currentStep === dateStepId) {
-      return <BookingDateSelector selectedDate={selectedDate} onDateSelect={setSelectedDate} />;
+      return (
+        <BookingDateSelector
+          selectedDate={selectedDate}
+          onDateSelect={handleDateSelect}
+          availableDates={availableDates}
+        />
+      );
     }
+
     if (currentStep === timeStepId) {
       return (
         <div className="flex flex-col gap-3.5">
-          {/* Chip تاریخ انتخاب شده */}
           {selectedDate && (
             <button
               onClick={handlePrev}
@@ -361,34 +322,48 @@ export default function BookingModal({
             >
               <FiCalendar size={16} style={{ color: colors.primary }} />
               <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                {toPersianDigit(selectedDate.jd)} {PERSIAN_MONTHS[selectedDate.jm - 1]}{' '}
-                {toPersianDigit(selectedDate.jy)}
+                {selectedDate.jd} {selectedDate.jm}/{selectedDate.jy}
               </span>
             </button>
           )}
-          {/* یادآوری پرداخت بیعانه */}
-          <div
-            className="flex items-center gap-2 p-2.5 rounded-[12px] border"
-            style={{ backgroundColor: '#43A04710', borderColor: '#43A04735' }}
-          >
-            <span className="text-base flex-shrink-0">✅</span>
-            <span
-              className="text-[11px] font-[Vazir] leading-[18px] flex-1"
-              style={{ color: colors.textSecondary }}
-            >
-              با انتخاب ساعت و تپ روی دکمه پرداخت، بیعانه پرداخت و نوبت شما ثبت می‌شود
-            </span>
-          </div>
-          <BookingTimeSelector
-            slots={MOCK_TIME_SLOTS}
-            selectedId={selectedTime?.id}
-            onSelect={(slot) => setSelectedTime(slot)}
-          />
-          {/* سوئیچ اعتماد */}
-          {hasPreviousBookings && <TrustToggle enabled={trustEnabled} onToggle={setTrustEnabled} />}
+
+          {slotsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div
+                className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+                style={{ color: colors.primary }}
+              />
+            </div>
+          ) : (
+            <>
+              {/* یادآوری بیعانه */}
+              <div
+                className="flex items-center gap-2 p-2.5 rounded-[12px] border"
+                style={{ backgroundColor: '#43A04710', borderColor: '#43A04735' }}
+              >
+                <span className="text-base flex-shrink-0">✅</span>
+                <span
+                  className="text-[11px] font-[Vazir] leading-[18px] flex-1"
+                  style={{ color: colors.textSecondary }}
+                >
+                  با انتخاب ساعت و تپ روی دکمه پرداخت، بیعانه پرداخت و نوبت شما ثبت می‌شود
+                </span>
+              </div>
+
+              <BookingTimeSelector
+                slots={availableSlots}
+                selectedId={selectedTime?.id}
+                onSelect={(slot) => setSelectedTime(slot)}
+              />
+
+              {/* سوئیچ اعتماد — فقط برای کاربرانی که قبلاً نوبت داشته‌اند */}
+              {isAuthenticated && <TrustToggle enabled={trustEnabled} onToggle={setTrustEnabled} />}
+            </>
+          )}
         </div>
       );
     }
+
     return null;
   };
 
@@ -401,57 +376,60 @@ export default function BookingModal({
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div
-        className="relative w-full max-w-lg max-h-[92vh] rounded-t-[24px] md:rounded-[24px] flex flex-col overflow-hidden"
-        style={{ backgroundColor: colors.cardBackground, borderTop: `1px solid ${colors.border}` }}
+        className="relative w-full max-w-lg max-h-[92vh] rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden"
+        style={{
+          backgroundColor: colors.cardBackground,
+          borderTop: `1px solid ${colors.border}`,
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* ═══ هدر ═══ */}
+        {/* هدر */}
         <div
-          className="flex items-center gap-3 py-3 px-4 border-b"
+          className="flex items-center gap-3 px-4 sm:px-5 py-4 border-b flex-shrink-0"
           style={{ borderColor: colors.border }}
         >
           <div
-            className="w-11 h-11 rounded-[14px] flex items-center justify-center"
+            className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: colors.primary + '15' }}
           >
             <FiCalendar size={22} style={{ color: colors.primary }} />
           </div>
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <span className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               رزرو نوبت
-            </span>
-            <span className="text-xs font-[Vazir] truncate" style={{ color: colors.textSecondary }}>
-              {currentService?.name || 'خدمت'}
-            </span>
+            </h3>
+            <p className="text-xs truncate" style={{ color: colors.textSecondary }}>
+              {currentService.name || 'خدمت'}
+            </p>
           </div>
           <button
             onClick={handleClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center"
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: colors.background }}
           >
             <FiX size={20} style={{ color: colors.textMain }} />
           </button>
         </div>
 
-        {/* ═══ Step Indicator ═══ */}
-        {!showSuccess && <BookingStepIndicator steps={STEPS} currentStep={currentStep} />}
+        {/* Step Indicator */}
+        {!bookingResult && <BookingStepIndicator steps={STEPS} currentStep={currentStep} />}
 
-        {/* ═══ محتوای اسکرولی ═══ */}
-        <div className="flex-1 overflow-y-auto px-4 pt-2 pb-10">
+        {/* محتوای اسکرولی */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-2 pb-10 w-full">
           {renderStepContent()}
-          <div className="h-16" />
         </div>
 
-        {/* ═══ فوتر دکمه‌ها ═══ */}
-        {!showSuccess && (
+        {/* فوتر */}
+        {!bookingResult && (
           <div
-            className="pt-2.5 pb-1.5 border-t px-4"
-            style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+            className="px-4 sm:px-5 py-4 border-t flex-shrink-0"
+            style={{ borderColor: colors.border }}
           >
             <BookingModalFooter
               currentStep={currentStep}
               needsNameStep={needsNameStep}
               canProceed={canProceed}
-              depositAmount={depositAmount}
+              depositAmount={priceSummary.depositAmount}
               isSubmitting={isSubmitting}
               onNext={handleNext}
               onPrev={handlePrev}
@@ -462,5 +440,6 @@ export default function BookingModal({
       </div>
     </div>
   );
+
   return createPortal(content, document.body);
 }

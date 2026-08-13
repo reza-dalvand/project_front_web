@@ -1,107 +1,77 @@
+// src/app/profile/appointments/page.jsx
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
-import { toPersianDigit } from '@/utils/numberUtils';
+import EmptyState from '@/components/common/EmptyState';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { AppointmentCompactCard } from '@/components/profile/appointments';
 import dynamic from 'next/dynamic';
+import { appointmentsService } from '@/api';
+import { USE_MOCK } from '@/api/config';
+import { MOCK_PROFILE_APPOINTMENTS } from '@/data/appointments';
 
-// ✅ Lazy Load
 const AppointmentDetailModal = dynamic(
   () => import('@/components/profile/appointments/AppointmentDetailModal'),
   { ssr: false, loading: () => null }
 );
-
 const CancelAppointmentModal = dynamic(
   () => import('@/components/profile/appointments/CancelAppointmentModal'),
   { ssr: false, loading: () => null }
 );
-// ═══════ داده‌های موقت ═══════
-const MOCK_APPOINTMENTS = [
-  {
-    id: 'apt_1',
-    businessName: 'سالن زیبایی نیلارام',
-    businessLogo: 'https://picsum.photos/100/100?random=21',
-    serviceName: 'فیشیال تخصصی پوست',
-    employeeName: 'سارا احمدی',
-    date: '۱۴۰۳/۰۴/۱۵',
-    time: '۱۰:۳۰',
-    status: 'reserved',
-    totalPrice: 675000,
-    depositPaid: 200000,
-    isUpcoming: true,
-    hoursLeft: 28,
-    verificationCode: '۵۸۹۲',
-  },
-  {
-    id: 'apt_2',
-    businessName: 'مرکز لیزر رویال',
-    businessLogo: 'https://picsum.photos/100/100?random=25',
-    serviceName: 'لیزر فول بادی',
-    employeeName: 'دکتر رضایی',
-    date: '۱۴۰۳/۰۴/۲۰',
-    time: '۱۶:۰۰',
-    status: 'reserved',
-    totalPrice: 2125000,
-    depositPaid: 500000,
-    isUpcoming: true,
-    hoursLeft: 6,
-    verificationCode: '۲۵۷۱',
-  },
-  {
-    id: 'apt_3',
-    businessName: 'ناخن گالری پریا',
-    businessLogo: 'https://picsum.photos/100/100?random=26',
-    serviceName: 'کاشت ناخن ژلیش',
-    employeeName: 'مریم',
-    date: '۱۴۰۳/۰۳/۱۰',
-    time: '۱۴:۰۰',
-    status: 'done',
-    totalPrice: 450000,
-    depositPaid: 0,
-    isUpcoming: false,
-  },
-];
 
 export default function AppointmentsPage() {
   const { colors } = useTheme();
   const { showToast } = useToast();
-
   const [activeTab, setActiveTab] = useState('upcoming');
-  const [appointments, setAppointments] = useState(MOCK_APPOINTMENTS);
+  const [appointments, setAppointments] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelVisible, setCancelVisible] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
 
-  // ═══ فیلتر بر اساس تب ═══
-  const filteredAppointments = useMemo(() => {
-    if (activeTab === 'upcoming') {
-      return appointments.filter((a) => a.isUpcoming);
-    }
-    return appointments.filter((a) => !a.isUpcoming);
-  }, [activeTab, appointments]);
+  // ═══════ دریافت نوبت‌ها از API ═══════
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      setIsLoading(true);
+      try {
+        if (USE_MOCK) {
+          setAppointments(MOCK_PROFILE_APPOINTMENTS);
+        } else {
+          const result = await appointmentsService.getMyAppointments(activeTab);
+          setAppointments(result.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch appointments:', err);
+        showToast('خطا در دریافت نوبت‌ها', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAppointments();
+  }, [activeTab]);
 
   const stats = {
     upcoming: appointments.filter((a) => a.isUpcoming).length,
     past: appointments.filter((a) => !a.isUpcoming).length,
   };
 
-  // ═══ کپی کد تایید ═══
   const handleCopyCode = async (code) => {
     try {
-      if (navigator.clipboard?.writeText) {
+      if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(code);
       } else {
-        const ta = document.createElement('textarea');
-        ta.value = code;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
         document.execCommand('copy');
-        document.body.removeChild(ta);
+        document.body.removeChild(textarea);
       }
       setCopiedCode(code);
       showToast('کد تایید کپی شد', 'success');
@@ -111,33 +81,38 @@ export default function AppointmentsPage() {
     }
   };
 
-  // ═══ باز کردن جزئیات ═══
   const handleOpenDetail = (apt) => {
     setSelectedAppointment(apt);
     setDetailVisible(true);
   };
 
-  // ═══ درخواست لغو (از مدال جزئیات) ═══
   const handleCancelRequest = (apt) => {
     setDetailVisible(false);
     setCancelTarget(apt);
     setTimeout(() => setCancelVisible(true), 200);
   };
 
-  // ═══ تایید لغو ═══
-  const handleConfirmCancel = (aptId) => {
+  const handleConfirmCancel = async (aptId) => {
+    if (!USE_MOCK) {
+      try {
+        await appointmentsService.cancelAppointment(aptId);
+      } catch (err) {
+        showToast(err.message || 'خطا در لغو نوبت', 'error');
+        return;
+      }
+    }
     setAppointments((prev) =>
       prev.map((a) => (a.id === aptId ? { ...a, status: 'cancelled', isUpcoming: false } : a))
     );
     setCancelVisible(false);
     setCancelTarget(null);
     setSelectedAppointment(null);
-    showToast('نوبت شما با موفقیت لغو شد. وجه ظرف ۴۸ ساعت واریز می‌شود.', 'success');
+    showToast('نوبت لغو شد. بیعانه ظرف ۴۸ ساعت واریز می‌شود.', 'success');
   };
 
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: colors.background }}>
-      {/* ═══ Tabs ═══ */}
+      {/* Tabs */}
       <div className="px-4 pt-3 pb-2">
         <div
           className="flex p-1 rounded-xl border gap-1"
@@ -159,26 +134,19 @@ export default function AppointmentsPage() {
               >
                 {tab.label}
               </span>
-              <span
-                className="min-w-[22px] h-5 px-1.5 rounded-full flex items-center justify-center
-                  text-[11px] font-[Vazir-Bold]"
-                style={{
-                  backgroundColor:
-                    activeTab === tab.id ? 'rgba(255,255,255,0.3)' : colors.primary + '20',
-                  color: activeTab === tab.id ? '#fff' : colors.primary,
-                }}
-              >
-                {toPersianDigit(tab.count)}
-              </span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* ═══ لیست نوبت‌ها ═══ */}
+      {/* لیست */}
       <div className="p-4 flex flex-col gap-3">
-        {filteredAppointments.length > 0 ? (
-          filteredAppointments.map((apt) => (
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner label="در حال بارگذاری نوبت‌ها..." />
+          </div>
+        ) : appointments.length > 0 ? (
+          appointments.map((apt) => (
             <AppointmentCompactCard
               key={apt.id}
               appointment={apt}
@@ -188,16 +156,19 @@ export default function AppointmentsPage() {
             />
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <span className="text-5xl">{activeTab === 'upcoming' ? '📅' : '📜'}</span>
-            <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              {activeTab === 'upcoming' ? 'نوبت آینده‌ای ندارید' : 'سابقه‌ای ثبت نشده'}
-            </h3>
-          </div>
+          <EmptyState
+            icon={activeTab === 'upcoming' ? '📅' : '📜'}
+            title={activeTab === 'upcoming' ? 'نوبت آینده‌ای ندارید' : 'سابقه‌ای ثبت نشده'}
+            description={
+              activeTab === 'upcoming'
+                ? 'از صفحه کسب‌وکارها نوبت رزرو کنید'
+                : 'پس از اولین رزرو، سابقه شما اینجا نمایش داده می‌شود'
+            }
+          />
         )}
       </div>
 
-      {/* ═══ مدال جزئیات ═══ */}
+      {/* مدال‌ها */}
       <AppointmentDetailModal
         visible={detailVisible}
         appointment={selectedAppointment}
@@ -207,8 +178,6 @@ export default function AppointmentsPage() {
         }}
         onCancelRequest={handleCancelRequest}
       />
-
-      {/* ═══ مدال لغو ═══ */}
       <CancelAppointmentModal
         visible={cancelVisible}
         appointment={cancelTarget}

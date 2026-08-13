@@ -1,8 +1,8 @@
 // src/app/manage/price-list/page.jsx
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiTag, FiEye, FiEyeOff, FiEdit2 } from 'react-icons/fi';
+import { FiTag, FiEye, FiEyeOff, FiEdit2, FiPlus, FiTrash2, FiInfo } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { usePriceListStore } from '@/stores/usePriceListStore';
@@ -11,28 +11,45 @@ import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
 import SectionHeader from '@/components/common/SectionHeader';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import Input from '@/components/common/Input';
 import PriceListMenu from '@/components/priceList/PriceListMenu';
 import { PRICE_LIST_THEMES } from '@/data/priceList';
+import { toPersianDigit } from '@/utils/numberUtils';
 
 export default function ManagePriceListPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
+
   const businessData = useBusinessStore((s) => s.businessData);
   const businessId = businessData?.id || 'biz_1';
+
   const list = usePriceListStore((s) => s.lists[businessId]);
+  const isLoading = usePriceListStore((s) => s.isLoading);
+  const fetchPriceList = usePriceListStore((s) => s.fetchPriceList);
   const ensureList = usePriceListStore((s) => s.ensureList);
   const setTheme = usePriceListStore((s) => s.setTheme);
   const togglePublish = usePriceListStore((s) => s.togglePublish);
+  const addNote = usePriceListStore((s) => s.addNote);
+  const deleteNote = usePriceListStore((s) => s.deleteNote);
+
+  // State فرم note جدید
+  const [newNote, setNewNote] = useState({ label: '', min: '', max: '' });
+
+  // ═══════ بارگذاری اولیه ═══════
+  useEffect(() => {
+    fetchPriceList(businessId);
+  }, [businessId, fetchPriceList]);
 
   useEffect(() => {
     ensureList(businessId);
   }, [businessId, ensureList]);
 
-  const settings = list || { themeId: 'classic', isPublished: false };
-
+  // ═══════ Handlerها ═══════
   const handleTogglePublish = () => {
     const next = togglePublish(businessId);
     showToast(
@@ -42,6 +59,34 @@ export default function ManagePriceListPage() {
       next ? 'success' : 'info'
     );
   };
+
+  const handleThemeChange = (themeId) => {
+    setTheme(businessId, themeId);
+    showToast('تم ظاهری تغییر کرد', 'success');
+  };
+
+  const handleAddNote = () => {
+    if (!newNote.label.trim()) {
+      showToast('عنوان یادداشت الزامی است', 'warning');
+      return;
+    }
+    const min = parseInt(newNote.min, 10) || 0;
+    const max = parseInt(newNote.max, 10) || 0;
+    if (max > 0 && max < min) {
+      showToast('حداکثر نمی‌تواند کمتر از حداقل باشد', 'warning');
+      return;
+    }
+    addNote(businessId, { label: newNote.label.trim(), min, max });
+    setNewNote({ label: '', min: '', max: '' });
+    showToast('یادداشت اضافه شد', 'success');
+  };
+
+  const handleDeleteNote = (noteId) => {
+    deleteNote(businessId, noteId);
+    showToast('یادداشت حذف شد', 'info');
+  };
+
+  const settings = list || { themeId: 'classic', isPublished: false, notes: [], services: [] };
 
   if (!isAuthenticated) {
     return (
@@ -56,7 +101,15 @@ export default function ManagePriceListPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="لیست قیمت خدمات" onBackPress={() => router.push('/manage')} />
+
       <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-5">
+        {/* ═══ لودینگ ═══ */}
+        {isLoading && (
+          <div className="flex justify-center py-8">
+            <LoadingSpinner label="در حال بارگذاری لیست قیمت..." />
+          </div>
+        )}
+
         {/* ═══ انتشار / مخفی ═══ */}
         <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center gap-3">
@@ -112,7 +165,7 @@ export default function ManagePriceListPage() {
               return (
                 <button
                   key={t.id}
-                  onClick={() => setTheme(businessId, t.id)}
+                  onClick={() => handleThemeChange(t.id)}
                   className="flex items-center gap-2.5 p-3 rounded-2xl border-2 transition-all"
                   style={{
                     borderColor: selected ? t.accent : colors.border,
@@ -143,6 +196,87 @@ export default function ManagePriceListPage() {
               );
             })}
           </div>
+        </div>
+
+        {/* ═══ یادداشت‌ها ═══ */}
+        <div>
+          <SectionHeader
+            icon={<FiInfo size={18} />}
+            iconColor="#FF9800"
+            title="یادداشت‌های لیست قیمت"
+            subtitle="مثلاً: افزانه مواد، تغییر فرم، ترمیم"
+          />
+
+          {/* لیست notes موجود */}
+          {settings.notes?.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {settings.notes.map((note) => (
+                <div
+                  key={note.id}
+                  className="flex items-center gap-3 p-3.5 rounded-xl border"
+                  style={{
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                      {note.label}
+                    </p>
+                    {(note.min > 0 || note.max > 0) && (
+                      <p className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }}>
+                        {note.min > 0 && `از ${toPersianDigit(note.min)}`}
+                        {note.min > 0 && note.max > 0 && ' تا '}
+                        {note.max > 0 && `${toPersianDigit(note.max)} هزار تومان`}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteNote(note.id)}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: '#E5393515' }}
+                  >
+                    <FiTrash2 size={16} color="#E53935" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* فرم افزودن note جدید */}
+          <Card variant="default" padding={16} radius={16}>
+            <Input
+              label="عنوان یادداشت *"
+              placeholder="مثال: افزانه مواد"
+              value={newNote.label}
+              onChangeText={(t) => setNewNote((p) => ({ ...p, label: t }))}
+            />
+            <div className="flex gap-3">
+              <Input
+                label="حداقل (هزار تومان)"
+                placeholder="مثال: ۵۰"
+                value={newNote.min}
+                onChangeText={(t) => setNewNote((p) => ({ ...p, min: t }))}
+                type="tel"
+              />
+              <Input
+                label="حداکثر (هزار تومان)"
+                placeholder="مثال: ۱۰۰"
+                value={newNote.max}
+                onChangeText={(t) => setNewNote((p) => ({ ...p, max: t }))}
+                type="tel"
+              />
+            </div>
+            <Button
+              title="افزودن یادداشت"
+              onPress={handleAddNote}
+              variant="outline"
+              size="md"
+              fullWidth
+              icon={<FiPlus size={16} style={{ color: colors.primary }} />}
+              iconPosition="right"
+            />
+          </Card>
         </div>
 
         {/* ═══ پیش‌نمایش زنده ═══ */}

@@ -1,30 +1,32 @@
 // src/stores/useFavoriteStore.js
 /**
- * Store علاقه‌مندی‌ها
+ * Store علاقه‌مندی‌ها — هماهنگ با بک‌اند
  *
- * هماهنگ با بک‌اند:
- * - FavoriteBusiness (کسب‌وکار)
- * - FavoritePost (پست ویترین)
- * - Toggle با API
+ * مدل‌ها:
+ *   FavoriteBusiness: user + business (unique_together)
+ *   FavoritePost: user + post (unique_together)
+ *
+ * API:
+ *   POST /favorites/toggle/ → { favorite_type, object_id }
+ *   GET  /favorites/count/  → { business, post, total }
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { favoritesService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 
 export const useFavoriteStore = create(
   persist(
     (set, get) => ({
       // ─── State ───
-      favoriteBusinesses: [], // [{ id, name, ... }]
-      favoritePosts: [], // [{ id, caption, ... }]
+      favoriteBusinesses: [],
+      favoritePosts: [],
       isLoading: false,
       error: null,
 
-      // ─── Actions ───
-      /**
-       * دریافت لیست علاقه‌مندی‌ها از API
-       */
+      // ─── دریافت لیست از API ───
       fetchFavorites: async () => {
+        if (USE_MOCK) return;
         set({ isLoading: true, error: null });
         try {
           const result = await favoritesService.getFavorites();
@@ -34,21 +36,17 @@ export const useFavoriteStore = create(
             isLoading: false,
           });
         } catch (error) {
-          console.error('Fetch favorites failed:', error);
+          console.error('fetchFavorites failed:', error);
           set({ error: error.message, isLoading: false });
         }
       },
 
-      /**
-       * Toggle علاقه‌مندی به کسب‌وکار
-       * @param {number} businessId
-       * @param {object} businessData - داده‌های کسب‌وکار برای ذخیره محلی
-       */
+      // ─── Toggle علاقه‌مندی به کسب‌وکار ───
       toggleBusinessFavorite: async (businessId, businessData = null) => {
         const { favoriteBusinesses } = get();
         const isFavorited = favoriteBusinesses.some((b) => b.id === businessId);
 
-        // خوش‌بینانه (Optimistic) — اول UI آپدیت شود
+        // Optimistic update
         if (isFavorited) {
           set({
             favoriteBusinesses: favoriteBusinesses.filter((b) => b.id !== businessId),
@@ -60,25 +58,26 @@ export const useFavoriteStore = create(
         }
 
         try {
-          await favoritesService.toggleFavorite('business', businessId);
+          if (!USE_MOCK) {
+            await favoritesService.toggleFavorite('business', businessId);
+          } else {
+            await new Promise((r) => setTimeout(r, 300));
+          }
+          return !isFavorited;
         } catch (error) {
-          console.error('Toggle business favorite failed:', error);
-          // Rollback در صورت خطا
+          console.error('toggleBusinessFavorite failed:', error);
+          // Rollback
           set({ favoriteBusinesses });
           throw error;
         }
       },
 
-      /**
-       * Toggle علاقه‌مندی به پست
-       * @param {number} postId
-       * @param {object} postData - داده‌های پست برای ذخیره محلی
-       */
+      // ─── Toggle علاقه‌مندی به پست ───
       togglePostFavorite: async (postId, postData = null) => {
         const { favoritePosts } = get();
         const isFavorited = favoritePosts.some((p) => p.id === postId);
 
-        // خوش‌بینانه (Optimistic)
+        // Optimistic update
         if (isFavorited) {
           set({
             favoritePosts: favoritePosts.filter((p) => p.id !== postId),
@@ -90,37 +89,26 @@ export const useFavoriteStore = create(
         }
 
         try {
-          await favoritesService.toggleFavorite('post', postId);
+          if (!USE_MOCK) {
+            await favoritesService.toggleFavorite('post', postId);
+          } else {
+            await new Promise((r) => setTimeout(r, 300));
+          }
+          return !isFavorited;
         } catch (error) {
-          console.error('Toggle post favorite failed:', error);
-          // Rollback
+          console.error('togglePostFavorite failed:', error);
           set({ favoritePosts });
           throw error;
         }
       },
 
-      /**
-       * بررسی علاقه‌مندی به کسب‌وکار
-       * @param {number} businessId
-       * @returns {boolean}
-       */
-      isBusinessFavorited: (businessId) => {
-        return get().favoriteBusinesses.some((b) => b.id === businessId);
-      },
+      // ─── بررسی علاقه‌مندی ───
+      isBusinessFavorited: (businessId) =>
+        get().favoriteBusinesses.some((b) => b.id === businessId),
 
-      /**
-       * بررسی علاقه‌مندی به پست
-       * @param {number} postId
-       * @returns {boolean}
-       */
-      isPostFavorited: (postId) => {
-        return get().favoritePosts.some((p) => p.id === postId);
-      },
+      isPostFavorited: (postId) => get().favoritePosts.some((p) => p.id === postId),
 
-      /**
-       * دریافت تعداد علاقه‌مندی‌ها
-       * @returns {{ business: number, post: number, total: number }}
-       */
+      // ─── تعداد علاقه‌مندی‌ها ───
       getFavoriteCounts: () => {
         const { favoriteBusinesses, favoritePosts } = get();
         return {
@@ -130,9 +118,19 @@ export const useFavoriteStore = create(
         };
       },
 
-      /**
-       * پاک کردن همه علاقه‌مندی‌ها (خروج از حساب)
-       */
+      // ─── دریافت تعداد از API ───
+      fetchFavoriteCounts: async () => {
+        if (USE_MOCK) return get().getFavoriteCounts();
+        try {
+          const result = await favoritesService.getFavoritesCount();
+          return result.data;
+        } catch (error) {
+          console.error('fetchFavoriteCounts failed:', error);
+          return get().getFavoriteCounts();
+        }
+      },
+
+      // ─── پاک کردن (خروج از حساب) ───
       clearFavorites: () => {
         set({
           favoriteBusinesses: [],

@@ -1,21 +1,19 @@
 // src/app/manage/reviews/page.jsx
 'use client';
 import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { FiStar, FiMessageSquare, FiThumbsUp, FiFilter } from 'react-icons/fi';
+import { FiStar, FiMessageSquare, FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
-import Avatar from '@/components/common/Avatar';
-import StarRating from '@/components/common/StarRating';
-import StatsCard from '@/components/common/StatsCard';
 import EmptyState from '@/components/common/EmptyState';
-import { toPersianDigit } from '@/utils/numberUtils';
+import ReviewCard from '@/components/customer/ReviewCard';
 import { reviewsService } from '@/api';
 import { USE_MOCK } from '@/api/config';
 import { MOCK_REVIEWS } from '@/data/reviews';
+import { toPersianDigit } from '@/utils/numberUtils';
 
 const FILTER_OPTIONS = [
   { id: 'all', label: 'همه' },
@@ -27,49 +25,48 @@ const FILTER_OPTIONS = [
 ];
 
 export default function ReviewsPage() {
-  const router = useRouter();
   const { colors } = useTheme();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
+  const { showToast } = useToast();
+
   const [activeFilter, setActiveFilter] = useState('all');
-  const [reviews, setReviews] = useState(MOCK_REVIEWS);
+  const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ═══ دریافت نظرات از API ═══
+  // ─── دریافت نظرات از API ───
   useEffect(() => {
     const fetchReviews = async () => {
-      if (USE_MOCK) return; // در حالت mock از داده‌های محلی استفاده می‌شود
-
       setIsLoading(true);
       try {
-        // در production، business_id باید از store گرفته شود
-        const response = await reviewsService.getBusinessReviews(1); // business_id = 1
-        setReviews(response.data || []);
+        if (USE_MOCK) {
+          setReviews(MOCK_REVIEWS);
+        } else {
+          // در آینده: business_id از store گرفته شود
+          const result = await reviewsService.getBusinessReviews(1);
+          setReviews(result.data?.reviews || []);
+        }
       } catch (error) {
         console.error('Failed to fetch reviews:', error);
+        showToast('خطا در بارگذاری نظرات', 'error');
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchReviews();
-  }, []);
-
-  // آمار کلی
-  const stats = useMemo(() => {
-    const total = reviews.length;
-    const avg = total > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0;
-    const dist = [5, 4, 3, 2, 1].map((star) => ({
-      star,
-      count: reviews.filter((r) => Math.round(r.rating) === star).length,
-    }));
-    return { total, avg, dist };
-  }, [reviews]);
+  }, [showToast]);
 
   // فیلتر نظرات
   const filteredReviews = useMemo(() => {
     if (activeFilter === 'all') return reviews;
     return reviews.filter((r) => Math.round(r.rating) === parseInt(activeFilter));
   }, [reviews, activeFilter]);
+
+  // آمار
+  const stats = useMemo(() => {
+    const total = reviews.length;
+    const avg = total > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0;
+    return { total, avg };
+  }, [reviews]);
 
   if (!isAuthenticated) {
     return (
@@ -82,70 +79,49 @@ export default function ReviewsPage() {
   }
 
   return (
-    <ScreenWrapper scrollable padding={0}>
-      <Header title="نظرات و امتیازات" onBackPress={() => router.push('/manage')} />
+    <ScreenWrapper padding={0}>
+      <Header title="نظرات و امتیازات" onBackPress={() => router.back()} />
 
-      <div className="p-4 pb-32 space-y-5">
-        {/* ═══ کارت خلاصه امتیاز ═══ */}
-        <Card variant="elevated" padding={20} radius={20}>
-          <div className="flex items-center gap-6">
-            {/* امتیاز کلی */}
-            <div className="flex flex-col items-center gap-2 min-w-[100px]">
-              <span className="text-5xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                {toPersianDigit(stats.avg.toFixed(1))}
-              </span>
-              <StarRating value={stats.avg} size="md" />
-              <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-                {toPersianDigit(stats.total)} نظر
-              </span>
+      <div className="p-4 pb-32 space-y-4">
+        {/* آمار کلی */}
+        <Card variant="elevated" padding={16} radius={18}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: '#FFC10720' }}
+              >
+                <FiStar size={24} color="#FFC107" fill="#FFC107" />
+              </div>
+              <div>
+                <span className="text-2xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                  {toPersianDigit(stats.avg.toFixed(1))}
+                </span>
+                <span className="text-xs block" style={{ color: colors.textSecondary }}>
+                  از ۵
+                </span>
+              </div>
             </div>
-            {/* نوارهای توزیع */}
-            <div className="flex-1 space-y-1.5">
-              {stats.dist.map((item) => {
-                const percentage = stats.total > 0 ? (item.count / stats.total) * 100 : 0;
-                return (
-                  <div key={item.star} className="flex items-center gap-2">
-                    <span
-                      className="text-xs font-[Vazir-Bold] w-4 text-right"
-                      style={{ color: colors.textMain }}
-                    >
-                      {toPersianDigit(item.star)}
-                    </span>
-                    <FiStar size={12} color="#FFC107" fill="#FFC107" />
-                    <div
-                      className="flex-1 h-2 rounded-full overflow-hidden"
-                      style={{ backgroundColor: colors.border }}
-                    >
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${percentage}%`,
-                          backgroundColor: '#FFC107',
-                        }}
-                      />
-                    </div>
-                    <span
-                      className="text-xs font-[Vazir] w-6"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {toPersianDigit(item.count)}
-                    </span>
-                  </div>
-                );
-              })}
+            <div className="text-left">
+              <span className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                {toPersianDigit(stats.total)}
+              </span>
+              <span className="text-xs block" style={{ color: colors.textSecondary }}>
+                نظر
+              </span>
             </div>
           </div>
         </Card>
 
-        {/* ═══ فیلتر امتیاز ═══ */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {/* فیلتر امتیاز */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {FILTER_OPTIONS.map((opt) => {
             const isActive = activeFilter === opt.id;
             return (
               <button
                 key={opt.id}
                 onClick={() => setActiveFilter(opt.id)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full border whitespace-nowrap transition-all"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border-[1.5px] whitespace-nowrap transition-all flex-shrink-0"
                 style={{
                   backgroundColor: isActive ? colors.primary : colors.cardBackground,
                   borderColor: isActive ? colors.primary : colors.border,
@@ -169,63 +145,18 @@ export default function ReviewsPage() {
           })}
         </div>
 
-        {/* ═══ لیست نظرات ═══ */}
-        {filteredReviews.length > 0 ? (
+        {/* لیست نظرات */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div
+              className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+              style={{ color: colors.primary }}
+            />
+          </div>
+        ) : filteredReviews.length > 0 ? (
           <div className="space-y-3">
             {filteredReviews.map((review) => (
-              <Card key={review.id} variant="elevated" padding={16} radius={18}>
-                {/* هدر نظر */}
-                <div className="flex items-start gap-3 mb-3">
-                  <Avatar uri={review.userAvatar} name={review.userName} size="md" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span
-                        className="text-sm font-[Vazir-Bold] truncate"
-                        style={{ color: colors.textMain }}
-                      >
-                        {review.userName}
-                      </span>
-                      <span
-                        className="text-[11px] font-[Vazir]"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        {review.date}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <StarRating value={review.rating} size="sm" />
-                      {review.serviceName && (
-                        <span
-                          className="text-[10px] font-[Vazir-Bold] px-2 py-0.5 rounded-md"
-                          style={{
-                            backgroundColor: colors.primary + '10',
-                            color: colors.primary,
-                          }}
-                        >
-                          {review.serviceName}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {/* متن نظر */}
-                <p
-                  className="text-sm font-[Vazir] leading-6 text-justify"
-                  style={{ color: colors.textSecondary }}
-                >
-                  {review.comment}
-                </p>
-                {/* دکمه پاسخ */}
-                <div className="mt-3 pt-3 border-t" style={{ borderColor: colors.border }}>
-                  <button
-                    className="flex items-center gap-1.5 text-xs font-[Vazir-Bold] transition-colors"
-                    style={{ color: colors.primary }}
-                  >
-                    <FiMessageSquare size={14} />
-                    <span>پاسخ به نظر</span>
-                  </button>
-                </div>
-              </Card>
+              <ReviewCard key={review.id} review={review} />
             ))}
           </div>
         ) : (

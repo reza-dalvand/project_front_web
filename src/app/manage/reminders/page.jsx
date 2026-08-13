@@ -1,237 +1,339 @@
+// src/app/manage/reminders/page.jsx
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiSend, FiBell } from 'react-icons/fi';
+import { FiSend, FiBell, FiCheckSquare, FiSquare } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { useBusinessStore } from '@/stores/useBusinessStore';
-import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
-import { ReminderStats, ReminderTabs, ReminderList } from '@/components/manageBusiness/reminders';
+import EmptyState from '@/components/common/EmptyState';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
-import dynamic from 'next/dynamic';
+import { remindersService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 import { MOCK_REMINDER_CUSTOMERS } from '@/data/reminders';
-
-const SendReminderModal = dynamic(
-  () => import('@/components/manageBusiness/reminders/SendReminderModal'),
-  { ssr: false, loading: () => null }
-);
 
 const REMINDER_THRESHOLD_DAYS = 2;
 
 export default function RemindersPage() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
-  const businessData = useBusinessStore((s) => s.businessData);
 
-  const [customers, setCustomers] = useState(MOCK_REMINDER_CUSTOMERS);
-  const [activeTab, setActiveTab] = useState('all');
+  const [customers, setCustomers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [sendModalVisible, setSendModalVisible] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  const businessName = businessData?.name || 'سالن زیبایی نیلارام';
-  const bookingLink = `https://zibano.app/book/${businessData?.id || 'biz_1'}`;
-
-  // ═══════ منطق قابلیت ارسال ═══════
-  const canSendCustomer = (customer) => {
-    if (!customer.reminderSent) return true;
-    if (customer.hasNewBookingAfterSend) return true;
-    return false;
-  };
-
-  // ═══════ منطق نمایش: حذف کسانی که ارسال شده و خدمت جدید ندارند ═══════
-  const shouldShowCustomer = (customer) => {
-    if (!customer.reminderSent) return true; // هنوز ارسال نشده → نمایش بده
-    if (customer.hasNewBookingAfterSend) return true; // خدمت جدید انجام داده → نمایش بده
-    return false; // ارسال شده و خدمت جدید نداده → حذف کن
-  };
-
-  // ═══════ مشتریان فیلترشده بر اساس آستانه و تب و وضعیت ارسال ═══════
-  const filteredCustomers = useMemo(() => {
-    const dueCustomers = customers.filter((c) => c.daysRemaining <= REMINDER_THRESHOLD_DAYS);
-
-    // ✅ حذف کسانی که پیام دریافت کرده‌اند و خدمت جدید انجام نداده‌اند
-    const visibleCustomers = dueCustomers.filter(shouldShowCustomer);
-
-    if (activeTab === 'all') return visibleCustomers;
-    return visibleCustomers.filter((c) => c.serviceId === activeTab);
-  }, [customers, activeTab]);
-
-  // ═══════ ساخت تب‌ها از خدمات ═══════
-  const tabs = useMemo(() => {
-    const dueCustomers = customers.filter((c) => c.daysRemaining <= REMINDER_THRESHOLD_DAYS);
-    // ✅ فقط مشتریانی که باید نمایش داده شوند
-    const visibleCustomers = dueCustomers.filter(shouldShowCustomer);
-
-    const allTab = {
-      id: 'all',
-      label: 'همه',
-      count: visibleCustomers.length,
+  // ═══ دریافت لیست یادآوری‌ها از API ═══
+  useEffect(() => {
+    const fetchReminders = async () => {
+      setIsLoading(true);
+      try {
+        if (USE_MOCK) {
+          setCustomers(MOCK_REMINDER_CUSTOMERS);
+        } else {
+          const result = await remindersService.getBusinessReminders();
+          setCustomers(result.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch reminders:', error);
+        showToast('خطا در بارگذاری یادآوری‌ها', 'error');
+      } finally {
+        setIsLoading(false);
+      }
     };
+    fetchReminders();
+  }, [showToast]);
 
-    const serviceIds = [...new Set(visibleCustomers.map((c) => c.serviceId))];
-    const serviceTabs = serviceIds.map((serviceId) => {
-      const service = (businessData?.services || []).find((s) => s.id === serviceId);
-      const count = visibleCustomers.filter((c) => c.serviceId === serviceId).length;
-      return {
-        id: serviceId,
-        label: service?.name || 'خدمت',
-        count,
-      };
-    });
-
-    return [allTab, ...serviceTabs];
-  }, [customers, businessData]);
-
-  // ═══════ آمار ═══════
-  const stats = useMemo(() => {
-    const dueCustomers = customers.filter((c) => c.daysRemaining <= REMINDER_THRESHOLD_DAYS);
-    // ✅ فقط مشتریانی که نمایش داده می‌شوند
-    const visibleCustomers = dueCustomers.filter(shouldShowCustomer);
-    return {
-      totalDue: visibleCustomers.length,
-      overdue: visibleCustomers.filter((c) => c.daysRemaining < 0).length,
-      sentToday: customers.filter((c) => c.reminderSent && c.sentDate === '۱۴۰۵/۰۴/۱۸').length,
-    };
+  // ═══ مشتریان نیازمند یادآوری ═══
+  const dueCustomers = useMemo(() => {
+    return customers.filter((c) => c.days_remaining <= REMINDER_THRESHOLD_DAYS);
   }, [customers]);
 
-  // ═══════ هندلرها ═══════
-  const handleToggleCustomer = (customerId) => {
+  // ═══ مشتریان قابل ارسال ═══
+  const sendableCustomers = useMemo(() => {
+    return dueCustomers.filter((c) => {
+      if (!c.reminder_sent) return true;
+      if (c.has_new_booking_after_send) return true;
+      return false;
+    });
+  }, [dueCustomers]);
+
+  // ═══ آمار ═══
+  const stats = useMemo(() => {
+    return {
+      totalDue: dueCustomers.length,
+      overdue: dueCustomers.filter((c) => c.days_remaining < 0).length,
+      sentToday: customers.filter((c) => c.reminder_sent && c.sent_date).length,
+    };
+  }, [dueCustomers, customers]);
+
+  // ═══ انتخاب/لغو انتخاب ═══
+  const toggleCustomer = useCallback((customerId) => {
     setSelectedIds((prev) =>
       prev.includes(customerId) ? prev.filter((id) => id !== customerId) : [...prev, customerId]
     );
-  };
+  }, []);
 
-  const handleSelectAll = (ids) => {
-    setSelectedIds(ids);
-  };
+  const selectAll = useCallback(() => {
+    if (selectedIds.length === sendableCustomers.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(sendableCustomers.map((c) => c.id));
+    }
+  }, [selectedIds.length, sendableCustomers]);
 
-  const handleOpenSendModal = () => {
+  // ═══ ارسال یادآوری ═══
+  const handleSendReminders = useCallback(async () => {
     if (selectedIds.length === 0) {
       showToast('لطفاً حداقل یک مشتری را انتخاب کنید', 'warning');
       return;
     }
-    setSendModalVisible(true);
-  };
 
-  const handleConfirmSend = (sentCustomerIds) => {
-    // به‌روزرسانی وضعیت مشتریان: ارسال شده
-    setCustomers((prev) =>
-      prev.map((c) =>
-        sentCustomerIds.includes(c.id)
-          ? {
-              ...c,
-              reminderSent: true,
-              sentDate: '۱۴۰۵/۰۴/۱۸',
-              hasNewBookingAfterSend: false, // ← هنوز خدمت جدید انجام نداده
-            }
-          : c
-      )
-    );
+    setSending(true);
+    try {
+      if (USE_MOCK) {
+        await new Promise((r) => setTimeout(r, 1500));
+      } else {
+        await remindersService.sendReminders(selectedIds);
+      }
 
-    // ✅ پاک کردن انتخاب‌ها
-    setSelectedIds([]);
-    setSendModalVisible(false);
-    showToast(
-      `پیام یادآوری برای ${toPersianDigit(sentCustomerIds.length)} مشتری ارسال شد`,
-      'success'
-    );
-  };
-
-  // ═══════ رندر ═══════
-  if (!isAuthenticated) {
-    return (
-      <ScreenWrapper>
-        <div className="flex items-center justify-center min-h-screen">
-          <p style={{ color: colors.textMain }}>در حال بارگذاری...</p>
-        </div>
-      </ScreenWrapper>
-    );
-  }
-
-  const selectedCustomers = filteredCustomers.filter((c) => selectedIds.includes(c.id));
+      // بروزرسانی محلی
+      setCustomers((prev) =>
+        prev.map((c) =>
+          selectedIds.includes(c.id)
+            ? { ...c, reminder_sent: true, sent_date: 'امروز', has_new_booking_after_send: false }
+            : c
+        )
+      );
+      setSelectedIds([]);
+      showToast(
+        `پیام یادآوری برای ${toPersianDigit(selectedIds.length)} مشتری ارسال شد`,
+        'success'
+      );
+    } catch (error) {
+      console.error('Failed to send reminders:', error);
+      showToast(error.message || 'خطا در ارسال یادآوری', 'error');
+    } finally {
+      setSending(false);
+    }
+  }, [selectedIds, showToast]);
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="یادآوری خدمت" onBackPress={() => router.push('/manage')} />
+      <Header title="یادآوری تمدید خدمت" onBackPress={() => router.push('/manage')} />
 
-      {/* توضیح */}
-      <div className="px-4 pt-3 pb-1">
+      {/* آمار */}
+      <div className="flex gap-3 px-5 py-4">
         <div
-          className="flex items-start gap-2.5 p-3.5 rounded-2xl border"
-          style={{
-            backgroundColor: '#FF980008',
-            borderColor: '#FF980025',
-          }}
+          className="flex-1 p-3 rounded-xl border text-center"
+          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
         >
-          <span className="text-base flex-shrink-0">🔔</span>
-          <p
-            className="text-[12px] font-[Vazir] leading-5 flex-1"
-            style={{ color: colors.textSecondary }}
-          >
-            مشتریانی که حداکثر {toPersianDigit(REMINDER_THRESHOLD_DAYS)} روز دیگر موعد تمدید خدمتشان
-            فرا می‌رسد. پس از ارسال پیام، تا انجام خدمت جدید در لیست نمایش داده نمی‌شوند.
+          <p className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+            {toPersianDigit(stats.totalDue)}
+          </p>
+          <p className="text-[10px]" style={{ color: colors.textSecondary }}>
+            نیازمند یادآوری
+          </p>
+        </div>
+        <div
+          className="flex-1 p-3 rounded-xl border text-center"
+          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+        >
+          <p className="text-lg font-[Vazir-Bold]" style={{ color: '#E53935' }}>
+            {toPersianDigit(stats.overdue)}
+          </p>
+          <p className="text-[10px]" style={{ color: colors.textSecondary }}>
+            گذشته از موعد
+          </p>
+        </div>
+        <div
+          className="flex-1 p-3 rounded-xl border text-center"
+          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+        >
+          <p className="text-lg font-[Vazir-Bold]" style={{ color: '#43A047' }}>
+            {toPersianDigit(stats.sentToday)}
+          </p>
+          <p className="text-[10px]" style={{ color: colors.textSecondary }}>
+            ارسال شده
           </p>
         </div>
       </div>
 
-      {/* آمار */}
-      <ReminderStats
-        totalDue={stats.totalDue}
-        sentToday={stats.sentToday}
-        overdue={stats.overdue}
-      />
-
-      {/* تب‌های خدمات */}
-      <ReminderTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
-
-      {/* لیست مشتریان */}
-      <div className="flex-1 overflow-y-auto pt-4">
-        <ReminderList
-          customers={filteredCustomers}
-          selectedIds={selectedIds}
-          onToggle={handleToggleCustomer}
-          onSelectAll={handleSelectAll}
-          canSendCustomer={canSendCustomer}
-        />
-      </div>
-
-      {/* نوار پایین ارسال */}
-      {selectedIds.length > 0 && (
-        <div
-          className="fixed bottom-0 left-0 right-0 px-4 pt-3 pb-5 border-t z-30"
-          style={{
-            backgroundColor: colors.cardBackground,
-            borderTopColor: colors.border,
-            boxShadow: '0 -4px 10px rgba(0,0,0,0.08)',
-          }}
-        >
-          <button
-            onClick={handleOpenSendModal}
-            className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl
-              transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg"
-            style={{ backgroundColor: '#FF9800' }}
-          >
-            <FiSend size={18} color="#fff" />
-            <span className="text-[15px] font-[Vazir-Bold] text-white">
-              ارسال پیام یادآوری به {toPersianDigit(selectedIds.length)} مشتری
+      {/* نوار انتخاب همه */}
+      {sendableCustomers.length > 0 && (
+        <div className="flex items-center justify-between px-5 pb-3">
+          <button onClick={selectAll} className="flex items-center gap-2">
+            {selectedIds.length === sendableCustomers.length ? (
+              <FiCheckSquare size={20} style={{ color: colors.primary }} />
+            ) : (
+              <FiSquare size={20} style={{ color: colors.textSecondary }} />
+            )}
+            <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+              {selectedIds.length === sendableCustomers.length ? 'لغو انتخاب همه' : 'انتخاب همه'}
             </span>
           </button>
+          <span className="text-[11px]" style={{ color: colors.textSecondary }}>
+            {toPersianDigit(sendableCustomers.length)} مشتری قابل ارسال
+          </span>
         </div>
       )}
 
-      {/* مدال ارسال */}
-      <SendReminderModal
-        visible={sendModalVisible}
-        customers={selectedCustomers}
-        businessName={businessName}
-        bookingLink={bookingLink}
-        onClose={() => setSendModalVisible(false)}
-        onConfirm={handleConfirmSend}
-      />
+      {/* لیست مشتریان */}
+      <div className="px-5 pb-32 space-y-3">
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner label="در حال بارگذاری..." />
+          </div>
+        ) : dueCustomers.length > 0 ? (
+          dueCustomers.map((customer) => {
+            const isSendable = sendableCustomers.some((c) => c.id === customer.id);
+            const isSelected = selectedIds.includes(customer.id);
+            const isOverdue = customer.days_remaining < 0;
+            const isToday = customer.days_remaining === 0;
+            const customerName = customer.customer_name || customer.customerName;
+            const customerPhone = customer.customer_phone || customer.customerPhone;
+            const serviceName = customer.service_name || customer.serviceName;
+            const lastServiceDate = customer.last_service_date || customer.lastServiceDate;
+            const dueDate = customer.due_date || customer.dueDate;
+            const daysRemaining = customer.days_remaining;
+            const reminderSent = customer.reminder_sent;
+            const sentDate = customer.sent_date || customer.sentDate;
+
+            return (
+              <button
+                key={customer.id}
+                onClick={() => isSendable && toggleCustomer(customer.id)}
+                disabled={!isSendable}
+                className="w-full flex items-start gap-3 p-3.5 rounded-2xl border-[1.5px] text-right transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                style={{
+                  backgroundColor: isSelected ? colors.primary + '08' : colors.cardBackground,
+                  borderColor: isSelected
+                    ? colors.primary
+                    : isSendable
+                      ? colors.border
+                      : colors.border + '60',
+                }}
+              >
+                {/* چک‌باکس */}
+                <div className="flex-shrink-0 mt-1">
+                  {isSelected ? (
+                    <FiCheckSquare size={22} style={{ color: colors.primary }} />
+                  ) : (
+                    <FiSquare
+                      size={22}
+                      style={{ color: isSendable ? colors.textSecondary : colors.border }}
+                    />
+                  )}
+                </div>
+
+                {/* اطلاعات */}
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className="text-sm font-[Vazir-Bold] truncate"
+                      style={{ color: colors.textMain }}
+                    >
+                      {customerName}
+                    </span>
+                    <span className="text-[11px]" style={{ color: colors.textSecondary }}>
+                      {toPersianDigit(customerPhone)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px]" style={{ color: colors.textSecondary }}>
+                      💆‍♀️
+                    </span>
+                    <span
+                      className="text-[11px] font-[Vazir-Medium] truncate"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {serviceName}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                      انجام: {lastServiceDate}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                      موعد: {dueDate}
+                    </span>
+                  </div>
+
+                  {/* Badge وضعیت */}
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    {reminderSent && (
+                      <span
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-[Vazir-Bold]"
+                        style={{ backgroundColor: '#9E9E9E15', color: '#9E9E9E' }}
+                      >
+                        ارسال شده {sentDate ? `(${sentDate})` : ''}
+                      </span>
+                    )}
+                    {isOverdue && !reminderSent && (
+                      <span
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-[Vazir-Bold]"
+                        style={{ backgroundColor: '#E5393515', color: '#E53935' }}
+                      >
+                        {toPersianDigit(Math.abs(daysRemaining))} روز گذشته
+                      </span>
+                    )}
+                    {isToday && !reminderSent && (
+                      <span
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-[Vazir-Bold]"
+                        style={{ backgroundColor: '#FF980015', color: '#FF9800' }}
+                      >
+                        امروز موعد تمدید
+                      </span>
+                    )}
+                    {!isOverdue && !isToday && !reminderSent && (
+                      <span
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-[Vazir-Bold]"
+                        style={{ backgroundColor: '#FF980015', color: '#FF9800' }}
+                      >
+                        {toPersianDigit(daysRemaining)} روز تا موعد
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })
+        ) : (
+          <EmptyState
+            icon="🔔"
+            title="مشتری برای یادآوری وجود ندارد"
+            description="در حال حاضر هیچ مشتری‌ای نیاز به یادآوری تمدید ندارد"
+          />
+        )}
+      </div>
+
+      {/* دکمه ارسال */}
+      {selectedIds.length > 0 && (
+        <div
+          className="fixed bottom-0 left-0 right-0 px-5 pt-3 pb-5 border-t z-30"
+          style={{ backgroundColor: colors.cardBackground, borderTopColor: colors.border }}
+        >
+          <Button
+            title={
+              sending ? 'در حال ارسال...' : `ارسال به ${toPersianDigit(selectedIds.length)} مشتری`
+            }
+            onPress={handleSendReminders}
+            loading={sending}
+            disabled={sending}
+            variant="primary"
+            size="lg"
+            fullWidth
+            icon={<FiSend size={16} color="#fff" />}
+            iconPosition="right"
+            style={{ backgroundColor: '#FF9800' }}
+          />
+        </div>
+      )}
     </ScreenWrapper>
   );
 }

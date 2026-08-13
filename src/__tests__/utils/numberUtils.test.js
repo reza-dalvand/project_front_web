@@ -110,34 +110,47 @@ describe('numberUtils', () => {
       expect(calculateAppFee(200000)).toBe(7000);
       expect(calculateAppFee(249999)).toBe(7000);
     });
-
-    it('۲۵۰ تا ۵۰۰ هزار → ۴٪', () => {
-      expect(calculateAppFee(250000)).toBe(10000); // ۴٪ × ۲۵۰,۰۰۰
-      expect(calculateAppFee(500000)).toBe(20000); // ۴٪ × ۵۰۰,۰۰۰
+    it('۲۵۰ تا ۵۰۰ هزار → ۳٪', () => {
+      expect(calculateAppFee(250000)).toBe(7500); // ۳٪ × ۲۵۰,۰۰۰
+      expect(calculateAppFee(500000)).toBe(15000); // ۳٪ × ۵۰۰,۰۰۰
     });
-
-    it('بالای ۵۰۰ هزار → ۵٪', () => {
-      expect(calculateAppFee(600000)).toBe(30000); // ۵٪ × ۶۰۰,۰۰۰
-      expect(calculateAppFee(1000000)).toBe(50000); // ۵٪ × ۱,۰۰۰,۰۰۰
+    it('بالای ۵۰۰ هزار → ۴٪', () => {
+      expect(calculateAppFee(600000)).toBe(24000); // ۴٪ × ۶۰۰,۰۰۰
+      expect(calculateAppFee(1000000)).toBe(40000); // ۴٪ × ۱,۰۰۰,۰۰۰
     });
-
     it('سقف ۵۰ هزار', () => {
-      expect(calculateAppFee(2000000)).toBe(50000); // ۵٪ × ۲M = 100K > 50K → سقف
+      expect(calculateAppFee(2000000)).toBe(50000); // ۴٪ × ۲M = 80K > 50K → سقف
       expect(calculateAppFee(5000000)).toBe(50000);
     });
-
     it('ورودی صفر یا منفی', () => {
       expect(calculateAppFee(0)).toBe(0);
       expect(calculateAppFee(-100)).toBe(0);
       expect(calculateAppFee(null)).toBe(0);
     });
-
     it('مقدار دقیق در مرز ۲۵۰ هزار', () => {
       expect(calculateAppFee(249999)).toBe(7000);
-      expect(calculateAppFee(250000)).toBe(10000);
+      expect(calculateAppFee(250000)).toBe(7500);
     });
   });
-
+  // ═══════ APP_FEE_TIERS — نسخه نهایی ═══════
+  describe('APP_FEE_TIERS', () => {
+    it('سه ردیف تعریف شده', () => {
+      expect(APP_FEE_TIERS).toHaveLength(3);
+    });
+    it('ردیف اول: ثابت ۷ هزار', () => {
+      expect(APP_FEE_TIERS[0].type).toBe('fixed');
+      expect(APP_FEE_TIERS[0].fee).toBe(7000);
+      expect(APP_FEE_TIERS[0].max).toBe(250000);
+    });
+    it('ردیف دوم: ۳٪', () => {
+      expect(APP_FEE_TIERS[1].type).toBe('percent');
+      expect(APP_FEE_TIERS[1].fee).toBe(3); // ✅ ۳٪
+    });
+    it('ردیف سوم: ۴٪', () => {
+      expect(APP_FEE_TIERS[2].type).toBe('percent');
+      expect(APP_FEE_TIERS[2].fee).toBe(4); // ✅ ۴٪
+    });
+  });
   // ═══════ APP_FEE_TIERS ═══════
   describe('APP_FEE_TIERS', () => {
     it('سه ردیف تعریف شده', () => {

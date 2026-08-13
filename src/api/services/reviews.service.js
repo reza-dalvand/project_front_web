@@ -1,13 +1,20 @@
 // src/api/services/reviews.service.js
 /**
- * ⭐ Reviews Service
+ * ⭐ Reviews Service — هماهنگ با بک‌اند
  *
- * مدیریت نظرات و امتیازات:
- * - ثبت نظر
- * - لیست نظرات کسب‌وکار
- * - نظرات من
- * - بررسی امکان ثبت نظر
- * - پاسخ کسب‌وکار به نظر
+ * Endpoints:
+ *   POST /reviews/create/                      → ثبت نظر
+ *   GET  /reviews/business/{business_id}/      → نظرات کسب‌وکار
+ *   GET  /reviews/my-reviews/                  → نظرات من
+ *   GET  /reviews/can-review/{appointment_id}/ → بررسی امکان نظردهی
+ *   POST /reviews/reply/                       → پاسخ کسب‌وکار
+ *
+ * مدل Review بک‌اند:
+ *   rating: 1-5
+ *   comment: max 300
+ *   tags: JSON array ['clean', 'punctual', ...]
+ *   reply: پاسخ سالن
+ *   replied_at: زمان پاسخ
  */
 import apiClient from '../api-client';
 
@@ -16,22 +23,32 @@ export const reviewsService = {
    * ثبت نظر جدید
    * POST /reviews/create/
    *
-   * @param {object} data - { appointment_id, rating, comment, tags }
+   * Payload:
+   * {
+   *   appointment_id: number,
+   *   rating: number (1-5),
+   *   comment: string (max 300),
+   *   tags: string[]
+   * }
+   *
+   * Response: ReviewDetailSerializer
    */
   createReview: (data) => {
     return apiClient.post('/reviews/create/', data);
   },
 
   /**
-   * لیست نظرات یک کسب‌وکار
+   * نظرات یک کسب‌وکار
    * GET /reviews/business/{business_id}/
+   *
+   * Response: { reviews: [...], avg_rating, rating_distribution }
    */
   getBusinessReviews: (businessId, params = {}) => {
     return apiClient.get(`/reviews/business/${businessId}/`, { params });
   },
 
   /**
-   * لیست نظرات ثبت‌شده توسط کاربر
+   * نظرات ثبت‌شده توسط کاربر
    * GET /reviews/my-reviews/
    */
   getMyReviews: () => {
@@ -41,6 +58,8 @@ export const reviewsService = {
   /**
    * بررسی امکان ثبت نظر برای نوبت
    * GET /reviews/can-review/{appointment_id}/
+   *
+   * Response: { can_review: boolean, reason?: string }
    */
   canReview: (appointmentId) => {
     return apiClient.get(`/reviews/can-review/${appointmentId}/`);
@@ -49,8 +68,13 @@ export const reviewsService = {
   /**
    * ثبت پاسخ کسب‌وکار به نظر
    * POST /reviews/reply/
+   *
+   * Payload: { review_id: number, reply: string }
    */
   createReply: (reviewId, reply) => {
-    return apiClient.post('/reviews/reply/', { review_id: reviewId, reply });
+    return apiClient.post('/reviews/reply/', {
+      review_id: reviewId,
+      reply,
+    });
   },
 };

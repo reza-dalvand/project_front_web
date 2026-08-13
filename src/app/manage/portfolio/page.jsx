@@ -1,140 +1,134 @@
 // src/app/manage/portfolio/page.jsx
 'use client';
-import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import { FiPlus, FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import EmptyState from '@/components/common/EmptyState';
-import { PortfolioCard } from '@/components/manageBusiness/portfolio';
-import dynamic from 'next/dynamic';
+import {
+  PortfolioCard,
+  PortfolioFormSheet,
+  PortfolioDetailModal,
+} from '@/components/manageBusiness/portfolio';
 import { portfoliosService } from '@/api';
 import { USE_MOCK } from '@/api/config';
-
-const PortfolioFormSheet = dynamic(
-  () => import('@/components/manageBusiness/portfolio/PortfolioFormSheet'),
-  { ssr: false, loading: () => null }
-);
-const PortfolioDetailModal = dynamic(
-  () => import('@/components/manageBusiness/portfolio/PortfolioDetailModal'),
-  { ssr: false, loading: () => null }
-);
+import { useBusinessStore } from '@/stores/useBusinessStore';
+import { toPersianDigit } from '@/utils/numberUtils';
+import { useRouter } from 'next/navigation';
 
 export default function ManagePortfolioPage() {
-  const router = useRouter();
   const { colors } = useTheme();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
+  const router = useRouter();
   const businessData = useBusinessStore((s) => s.businessData);
-  const addPortfolio = useBusinessStore((s) => s.addPortfolio);
-  const updatePortfolio = useBusinessStore((s) => s.updatePortfolio);
-  const deletePortfolio = useBusinessStore((s) => s.deletePortfolio);
+  const services = businessData?.services || [];
 
+  const [portfolios, setPortfolios] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [formVisible, setFormVisible] = useState(false);
   const [editingPortfolio, setEditingPortfolio] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [activePortfolio, setActivePortfolio] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const portfolios = businessData?.portfolios || [];
-  const services = businessData?.services || [];
-
-  // ═══ دریافت نمونه‌کارها از API ═══
+  // ─── دریافت نمونه‌کارها از API ───
   useEffect(() => {
     const fetchPortfolios = async () => {
-      if (USE_MOCK) return;
-
       setIsLoading(true);
       try {
-        const response = await portfoliosService.getMyPortfolios();
-        // در production، باید store آپدیت شود
+        if (USE_MOCK) {
+          setPortfolios(businessData?.portfolios || []);
+        } else {
+          const result = await portfoliosService.getMyPortfolios();
+          setPortfolios(result.data || []);
+        }
       } catch (error) {
         console.error('Failed to fetch portfolios:', error);
+        showToast('خطا در بارگذاری نمونه‌کارها', 'error');
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchPortfolios();
+  }, [showToast, businessData?.portfolios]);
+
+  // ─── ایجاد/ویرایش نمونه‌کار ───
+  const handleSave = useCallback(
+    async (portfolioData, editingId) => {
+      try {
+        if (!USE_MOCK) {
+          if (editingId) {
+            await portfoliosService.updatePortfolio(editingId, portfolioData);
+          } else {
+            await portfoliosService.createPortfolio(portfolioData);
+          }
+          // بروزرسانی لیست
+          const result = await portfoliosService.getMyPortfolios();
+          setPortfolios(result.data || []);
+        } else {
+          if (editingId) {
+            setPortfolios((prev) =>
+              prev.map((p) => (p.id === editingId ? { ...p, ...portfolioData } : p))
+            );
+          } else {
+            setPortfolios((prev) => [{ ...portfolioData, id: `pf_${Date.now()}` }, ...prev]);
+          }
+        }
+        showToast(editingId ? '✓ نمونه‌کار ویرایش شد' : '✓ نمونه‌کار جدید اضافه شد', 'success');
+        setFormVisible(false);
+        setEditingPortfolio(null);
+      } catch (error) {
+        console.error('Save portfolio failed:', error);
+        showToast(error.message || 'خطا در ذخیره نمونه‌کار', 'error');
+      }
+    },
+    [showToast]
+  );
+
+  // ─── حذف نمونه‌کار ───
+  const handleDelete = useCallback(
+    async (portfolio) => {
+      try {
+        if (!USE_MOCK) {
+          await portfoliosService.deletePortfolio(portfolio.id);
+          const result = await portfoliosService.getMyPortfolios();
+          setPortfolios(result.data || []);
+        } else {
+          setPortfolios((prev) => prev.filter((p) => p.id !== portfolio.id));
+        }
+        showToast('✓ نمونه‌کار حذف شد', 'success');
+        setDetailVisible(false);
+        setActivePortfolio(null);
+      } catch (error) {
+        console.error('Delete portfolio failed:', error);
+        showToast(error.message || 'خطا در حذف نمونه‌کار', 'error');
+      }
+    },
+    [showToast]
+  );
+
+  const openAddForm = useCallback(() => {
+    setEditingPortfolio(null);
+    setFormVisible(true);
   }, []);
 
-  const openAddForm = () => {
-    setEditingPortfolio(null);
-    setFormVisible(true);
-  };
-
-  const openEditForm = (portfolio) => {
+  const openEditForm = useCallback((portfolio) => {
     setEditingPortfolio(portfolio);
     setFormVisible(true);
-  };
+  }, []);
 
-  const openDetail = (portfolio) => {
+  const openDetail = useCallback((portfolio) => {
     setActivePortfolio(portfolio);
     setDetailVisible(true);
-  };
+  }, []);
 
-  const closeDetail = () => {
+  const closeDetail = useCallback(() => {
     setDetailVisible(false);
     setActivePortfolio(null);
-  };
-
-  const closeForm = () => {
-    setFormVisible(false);
-    setEditingPortfolio(null);
-  };
-
-  const handleSave = async (portfolioData, editingId) => {
-    if (editingId) {
-      // ویرایش
-      if (!USE_MOCK) {
-        try {
-          await portfoliosService.updatePortfolio(editingId, portfolioData);
-        } catch (error) {
-          showToast(error.message || 'خطا در ویرایش نمونه‌کار', 'error');
-          return;
-        }
-      }
-      updatePortfolio(editingId, portfolioData);
-      showToast('✓ نمونه‌کار با موفقیت ویرایش شد', 'success');
-    } else {
-      // افزودن
-      if (!USE_MOCK) {
-        try {
-          const response = await portfoliosService.createPortfolio(portfolioData);
-          portfolioData.id = response.data?.id;
-        } catch (error) {
-          showToast(error.message || 'خطا در افزودن نمونه‌کار', 'error');
-          return;
-        }
-      }
-      addPortfolio(portfolioData);
-      showToast('✓ نمونه‌کار جدید اضافه شد', 'success');
-    }
-    closeForm();
-  };
-
-  const handleDelete = async (portfolio) => {
-    if (!USE_MOCK) {
-      try {
-        await portfoliosService.deletePortfolio(portfolio.id);
-      } catch (error) {
-        showToast(error.message || 'خطا در حذف نمونه‌کار', 'error');
-        return;
-      }
-    }
-    deletePortfolio(portfolio.id);
-    showToast('✓ نمونه‌کار حذف شد', 'info');
-    closeDetail();
-  };
-
-  const handleEditFromDetail = (p) => {
-    closeDetail();
-    setTimeout(() => openEditForm(p), 300);
-  };
+  }, []);
 
   if (!isAuthenticated) {
     return (
@@ -147,8 +141,8 @@ export default function ManagePortfolioPage() {
   }
 
   return (
-    <ScreenWrapper scrollable padding={0}>
-      <Header title="نمونه‌کارها" onBackPress={() => router.push('/manage')} />
+    <ScreenWrapper padding={0}>
+      <Header title="نمونه‌کارها" onBackPress={() => router.back()} />
 
       <div className="p-4 pb-32">
         {/* هدر + دکمه افزودن */}
@@ -159,18 +153,32 @@ export default function ManagePortfolioPage() {
               گالری نمونه‌کارها
             </span>
           </div>
-          <button
-            onClick={openAddForm}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
-            style={{ backgroundColor: '#43A047' }}
-          >
-            <FiPlus size={16} color="#fff" />
-            <span className="text-sm font-[Vazir-Bold] text-white">افزودن</span>
-          </button>
+          <span className="text-xs" style={{ color: colors.textSecondary }}>
+            {toPersianDigit(portfolios.length)} نمونه‌کار
+          </span>
         </div>
 
+        {/* دکمه افزودن */}
+        <button
+          onClick={openAddForm}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-dashed mb-4 transition-all hover:scale-[1.01] active:scale-[0.99]"
+          style={{ borderColor: colors.primary + '50', backgroundColor: colors.primary + '05' }}
+        >
+          <FiPlus size={18} style={{ color: colors.primary }} />
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
+            افزودن نمونه‌کار جدید
+          </span>
+        </button>
+
         {/* لیست نمونه‌کارها */}
-        {portfolios.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div
+              className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+              style={{ color: colors.primary }}
+            />
+          </div>
+        ) : portfolios.length > 0 ? (
           <div className="flex flex-wrap gap-3 justify-between">
             {portfolios.map((portfolio) => (
               <PortfolioCard
@@ -193,21 +201,26 @@ export default function ManagePortfolioPage() {
         )}
       </div>
 
-      {/* مدال‌ها */}
+      {/* مدال فرم */}
+      <PortfolioFormSheet
+        visible={formVisible}
+        onClose={() => {
+          setFormVisible(false);
+          setEditingPortfolio(null);
+        }}
+        onSave={handleSave}
+        editingPortfolio={editingPortfolio}
+        services={services}
+      />
+
+      {/* مدال جزئیات */}
       <PortfolioDetailModal
         visible={detailVisible}
         portfolio={activePortfolio}
         services={services}
         onClose={closeDetail}
-        onEdit={handleEditFromDetail}
+        onEdit={openEditForm}
         onDelete={handleDelete}
-      />
-      <PortfolioFormSheet
-        visible={formVisible}
-        onClose={closeForm}
-        onSave={handleSave}
-        editingPortfolio={editingPortfolio}
-        services={services}
       />
     </ScreenWrapper>
   );

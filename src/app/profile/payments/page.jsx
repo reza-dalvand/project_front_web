@@ -1,14 +1,19 @@
+// src/app/profile/payments/page.jsx
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useToast } from '@/hooks/useToast';
 import EmptyState from '@/components/common/EmptyState';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import PaymentCompactCard from '@/components/profile/paymentHistory/PaymentCompactCard';
 import PaymentStatsCard from '@/components/profile/paymentHistory/PaymentStatsCard';
-import { MOCK_PAYMENTS } from '@/data/payments';
+import { paymentsService } from '@/api';
+import { USE_MOCK } from '@/api/config';
+import { usePaymentStore, TX_STATUS_MAP } from '@/stores/usePaymentStore';
 import dynamic from 'next/dynamic';
-import { formatPrice } from '@/utils/numberUtils';
+
 const PaymentDetailModal = dynamic(
   () => import('@/components/profile/paymentHistory/PaymentDetailModal'),
   { ssr: false, loading: () => null }
@@ -18,29 +23,39 @@ const PaymentFilterSheet = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const FILTER_LABELS = {
-  all: 'همه پرداخت‌ها',
-  yesterday: 'دیروز',
-  last_week: 'هفته قبل',
-  last_month: 'ماه قبل',
-  last_3months: 'سه ماه قبل',
-};
+const FILTER_OPTIONS = [
+  { id: 'all', label: 'همه پرداخت‌ها' },
+  { id: 'yesterday', label: 'دیروز' },
+  { id: 'last_week', label: 'هفته قبل' },
+  { id: 'last_month', label: 'ماه قبل' },
+  { id: 'last_3months', label: 'سه ماه قبل' },
+];
 
 export default function PaymentsPage() {
   const { colors } = useTheme();
+  const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
+  const { customerPayments, isLoading, fetchCustomerPayments } = usePaymentStore();
+
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  // ═══ فیلتر پرداخت‌ها بر اساس بازه زمانی ═══
-  const filteredPayments = useMemo(() => {
-    if (activeFilter === 'all') return MOCK_PAYMENTS;
+  // ═══════ بارگذاری اولیه ═══════
+  useEffect(() => {
+    fetchCustomerPayments().catch((error) => {
+      console.error('Failed to load payments:', error);
+      showToast('خطا در بارگذاری تاریخچه پرداخت‌ها', 'error');
+    });
+  }, []);
 
+  // ═══════ فیلتر ═══════
+  const filteredPayments = useMemo(() => {
+    if (activeFilter === 'all') return customerPayments;
+    // فیلتر زمانی ساده بر اساس created_at
     const now = new Date();
     let cutoff;
-
     switch (activeFilter) {
       case 'yesterday':
         cutoff = new Date(now);
@@ -59,101 +74,39 @@ export default function PaymentsPage() {
         cutoff.setMonth(cutoff.getMonth() - 3);
         break;
       default:
-        return MOCK_PAYMENTS;
+        return customerPayments;
     }
+    return customerPayments.filter((p) => new Date(p.created_at) >= cutoff);
+  }, [customerPayments, activeFilter]);
 
-    const handleShareInvoice = async () => {
-      if (!selectedPayment) return;
-
-      const msg = [
-        '🧾 فاکتور زیبانو',
-        `📋 ${selectedPayment.title}`,
-        `🏪 ${selectedPayment.businessName}`,
-        `📅 ${selectedPayment.dayName} ${selectedPayment.date} - ساعت ${selectedPayment.time}`,
-        `💰 مبلغ پرداختی: ${formatPrice(selectedPayment.paidAmount)}`,
-        `🔖 کد پیگیری: ${selectedPayment.trackingCode}`,
-        '✅ زیبانو - رزرو آنلاین خدمات زیبایی',
-      ].join('\n');
-
-      // روش ۱: Web Share API (موبایل و مرورگرهای مدرن)
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'فاکتور زیبانو',
-            text: msg,
-          });
-          return;
-        } catch (err) {
-          // اگر کاربر خودش لغو کرد، خروج
-          if (err.name === 'AbortError') return;
-          // در غیر این صورت به fallback ادامه می‌دهیم
-        }
-      }
-
-      // روش ۲: Clipboard API مدرن (فقط HTTPS/localhost)
-      try {
-        await navigator.clipboard.writeText(msg);
-        showToast('فاکتور کپی شد', 'success');
-        return;
-      } catch (err) {
-        // fallback به روش ۳
-      }
-
-      // روش ۳: execCommand fallback (برای HTTP و WebView)
-      try {
-        const textArea = document.createElement('textarea');
-        textArea.value = msg;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
-        textArea.style.top = '-9999px';
-        textArea.style.opacity = '0';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const success = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        if (success) {
-          showToast('فاکتور کپی شد', 'success');
-        } else {
-          showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
-        }
-      } catch {
-        showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
-      }
-    };
-
-    // فیلتر بر اساس ماه و سال (ساده‌شده برای MOCK)
-    return MOCK_PAYMENTS.filter((p) => {
-      if (activeFilter === 'yesterday') return p.id === 'pay_1';
-      if (activeFilter === 'last_week') return ['pay_1', 'pay_2'].includes(p.id);
-      if (activeFilter === 'last_month') return ['pay_1', 'pay_2', 'pay_3'].includes(p.id);
-      if (activeFilter === 'last_3months') return true;
-      return true;
-    });
-  }, [activeFilter]);
-
-  // ═══ آمار ═══
+  // ═══════ آمار ═══════
   const stats = useMemo(() => {
-    const successful = filteredPayments.filter(
-      (p) => p.status === 'success' || p.status === 'refunded'
+    const successful = customerPayments.filter(
+      (p) => p.status === 'settled' || p.status === 'blocked' || p.status === 'settling'
     );
     return {
-      totalPaid: successful.reduce((s, p) => s + p.paidAmount, 0),
-      totalDiscount: filteredPayments.reduce((s, p) => s + (p.discountAmount || 0), 0),
+      totalPaid: successful.reduce((s, p) => s + (p.amount || 0), 0),
+      totalDiscount: 0, // در بک‌اند تخفیف جداگانه نیست
       successCount: successful.length,
     };
-  }, [filteredPayments]);
+  }, [customerPayments]);
 
   const handleOpenDetail = (payment) => {
     setSelectedPayment(payment);
     setDetailVisible(true);
   };
 
-  const hasActiveFilter = activeFilter !== 'all';
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p style={{ color: colors.textMain }}>در حال بارگذاری...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: colors.background }}>
-      {/* ═══ هدر + فیلتر ═══ */}
+      {/* هدر + فیلتر */}
       <div className="px-4 pt-3 pb-2 border-b" style={{ borderBottomColor: colors.border }}>
         <div className="flex items-center justify-between">
           <h2 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
@@ -163,35 +116,37 @@ export default function PaymentsPage() {
             onClick={() => setFilterVisible(true)}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border-[1.5px] transition-all"
             style={{
-              backgroundColor: hasActiveFilter ? colors.primary + '15' : colors.cardBackground,
-              borderColor: hasActiveFilter ? colors.primary : colors.border,
+              backgroundColor:
+                activeFilter !== 'all' ? colors.primary + '15' : colors.cardBackground,
+              borderColor: activeFilter !== 'all' ? colors.primary : colors.border,
             }}
           >
             <FiFilter
               size={16}
-              style={{ color: hasActiveFilter ? colors.primary : colors.textMain }}
+              style={{ color: activeFilter !== 'all' ? colors.primary : colors.textMain }}
             />
             <span
               className="text-xs font-[Vazir-Bold]"
-              style={{ color: hasActiveFilter ? colors.primary : colors.textMain }}
+              style={{ color: activeFilter !== 'all' ? colors.primary : colors.textMain }}
             >
-              {FILTER_LABELS[activeFilter]}
+              {FILTER_OPTIONS.find((f) => f.id === activeFilter)?.label}
             </span>
-            {hasActiveFilter && (
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.primary }} />
-            )}
           </button>
         </div>
       </div>
 
-      {/* ═══ آمار ═══ */}
+      {/* آمار */}
       <div className="px-4 pt-3">
         <PaymentStatsCard stats={stats} />
       </div>
 
-      {/* ═══ لیست پرداخت‌ها ═══ */}
+      {/* لیست پرداخت‌ها */}
       <div className="px-4 pb-32 space-y-3">
-        {filteredPayments.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner label="در حال بارگذاری..." />
+          </div>
+        ) : filteredPayments.length > 0 ? (
           filteredPayments.map((payment) => (
             <PaymentCompactCard key={payment.id} payment={payment} onPress={handleOpenDetail} />
           ))
@@ -199,18 +154,12 @@ export default function PaymentsPage() {
           <EmptyState
             icon="💳"
             title="پرداختی ثبت نشده"
-            description={
-              hasActiveFilter
-                ? 'در این بازه زمانی هیچ پرداختی ثبت نشده است.'
-                : 'پس از اولین پرداخت، سوابق مالی شما اینجا نمایش داده می‌شود.'
-            }
-            actionLabel={hasActiveFilter ? 'حذف فیلتر' : undefined}
-            onAction={hasActiveFilter ? () => setActiveFilter('all') : undefined}
+            description="پس از اولین پرداخت، سوابق مالی شما اینجا نمایش داده می‌شود"
           />
         )}
       </div>
 
-      {/* ═══ مدال جزئیات ═══ */}
+      {/* مدال‌ها */}
       <PaymentDetailModal
         visible={detailVisible}
         payment={selectedPayment}
@@ -219,8 +168,6 @@ export default function PaymentsPage() {
           setSelectedPayment(null);
         }}
       />
-
-      {/* ═══ باتم‌شیت فیلتر ═══ */}
       <PaymentFilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}

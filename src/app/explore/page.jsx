@@ -1,26 +1,24 @@
 // src/app/explore/page.jsx
 'use client';
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { FiFilter, FiGrid } from 'react-icons/fi';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useAuth } from '@/stores/useAuthStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import SectionHeader from '@/components/common/SectionHeader';
-import { PostGrid, ActiveFilterChips } from '@/components/explore';
-import { MOCK_POSTS } from '@/data/posts';
+import { PostGrid, ActiveFilterChips, FilterModal, PostModal } from '@/components/explore';
 import { exploreService } from '@/api';
 import { USE_MOCK } from '@/api/config';
-
-// ✅ Lazy Load — مودال‌های سنگین
-const FilterModal = dynamic(() => import('@/components/explore/FilterModal'), {
-  ssr: false,
-  loading: () => null,
-});
-const PostModal = dynamic(() => import('@/components/explore/PostModal'), {
-  ssr: false,
-  loading: () => null,
-});
+import { MOCK_POSTS } from '@/data/posts';
+import { useFavoriteStore } from '@/stores/useFavoriteStore';
+import {
+  PROVINCES,
+  CITIES,
+  BUSINESS_TYPES,
+  MAIN_CATEGORIES,
+  SUB_CATEGORIES,
+  SOURCE_FILTERS,
+} from '@/constants/exploreFilters';
 
 const INITIAL_FILTERS = {
   province: null,
@@ -31,62 +29,38 @@ const INITIAL_FILTERS = {
   source: 'all',
 };
 
-const PAGE_SIZE = 12;
-const MAX_PAGES = 10;
-
-const generateMorePosts = (page, size) => {
-  if (page > MAX_PAGES) return [];
-  const samplePosts = MOCK_POSTS.filter((p) => p.source === 'business');
-  const newPosts = [];
-  for (let i = 0; i < size; i++) {
-    const sample = samplePosts[Math.floor(Math.random() * samplePosts.length)];
-    const randomId = Math.random().toString(36).substring(7);
-    const randomImageId = Math.floor(Math.random() * 1000) + page * 100;
-    newPosts.push({
-      ...sample,
-      id: `p_${page}_${i}_${randomId}`,
-      businessLogo: `https://picsum.photos/100/100?random=${randomImageId}`,
-      gallery: sample.gallery?.map(
-        (_, idx) => `https://picsum.photos/800/800?random=${randomImageId + idx}`
-      ) || [`https://picsum.photos/800/800?random=${randomImageId}`],
-      saved: false,
-    });
-  }
-  return newPosts;
-};
-
 export default function ExplorePage() {
-  const router = useRouter();
   const { colors } = useTheme();
-  const [allPosts, setAllPosts] = useState(MOCK_POSTS.slice(0, PAGE_SIZE));
-  const [page, setPage] = useState(1);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const { isAuthenticated, requireAuth } = useAuth();
+  const togglePostFavorite = useFavoriteStore((s) => s.togglePostFavorite);
+
+  const [allPosts, setAllPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [activePost, setActivePost] = useState(null);
   const [filterVisible, setFilterVisible] = useState(false);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // ═══ دریافت پست‌ها از API ═══
+  // ─── دریافت پست‌ها از API ───
   useEffect(() => {
     const fetchPosts = async () => {
-      if (USE_MOCK) return;
-
       setIsLoading(true);
       try {
-        const response = await exploreService.getPosts({ page: 1, page_size: PAGE_SIZE });
-        setAllPosts(response.data || []);
+        if (USE_MOCK) {
+          setAllPosts(MOCK_POSTS);
+        } else {
+          const result = await exploreService.getPosts();
+          setAllPosts(result.data || []);
+        }
       } catch (error) {
         console.error('Failed to fetch posts:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchPosts();
   }, []);
 
-  // ✅ useMemo برای فیلتر
+  // فیلتر پست‌ها
   const filteredPosts = useMemo(() => {
     return allPosts.filter((post) => {
       if (filters.province && post.provinceId !== filters.province) return false;
@@ -106,129 +80,55 @@ export default function ExplorePage() {
     });
   }, [allPosts, filters]);
 
-  // ✅ useMemo برای hasActiveFilter
-  const hasActiveFilter = useMemo(
-    () =>
-      filters.province ||
-      filters.city ||
-      filters.businessType ||
-      filters.mainCategory !== 'all' ||
-      filters.subCategory !== 'all' ||
-      filters.source !== 'all',
-    [filters]
-  );
-
-  // ✅ useCallback برای loadMore
-  const loadMorePosts = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return;
-
-    setIsLoadingMore(true);
-
-    // در production، از API استفاده می‌شود
-    if (!USE_MOCK) {
-      try {
-        const nextPage = page + 1;
-        const response = await exploreService.getPosts({ page: nextPage, page_size: PAGE_SIZE });
-        const newPosts = response.data || [];
-        if (newPosts.length === 0 || nextPage >= MAX_PAGES) {
-          setHasMore(false);
-        }
-        if (newPosts.length > 0) {
-          setAllPosts((prev) => [...prev, ...newPosts]);
-          setPage(nextPage);
-        }
-      } catch (error) {
-        console.error('Failed to load more posts:', error);
-      } finally {
-        setIsLoadingMore(false);
-      }
-      return;
-    }
-
-    // در حالت mock، شبیه‌سازی
-    await new Promise((r) => setTimeout(r, 800 + Math.random() * 700));
-    const nextPage = page + 1;
-    const newPosts = generateMorePosts(nextPage, PAGE_SIZE);
-    if (newPosts.length === 0 || nextPage >= MAX_PAGES) {
-      setHasMore(false);
-    }
-    if (newPosts.length > 0) {
-      setAllPosts((prev) => [...prev, ...newPosts]);
-      setPage(nextPage);
-    }
-    setIsLoadingMore(false);
-  }, [isLoadingMore, hasMore, page]);
-
+  // ─── Toggle علاقه‌مندی ───
   const handleSave = useCallback(
-    (postId) => {
-      setAllPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, saved: !p.saved } : p)));
-      if (activePost?.id === postId) {
-        setActivePost((prev) => ({ ...prev, saved: !prev.saved }));
+    async (postId) => {
+      if (!isAuthenticated) {
+        requireAuth(() => {});
+        return;
+      }
+      const post = allPosts.find((p) => p.id === postId);
+      try {
+        await togglePostFavorite(postId, post);
+      } catch (error) {
+        console.error('Toggle favorite failed:', error);
       }
     },
-    [activePost]
+    [isAuthenticated, requireAuth, togglePostFavorite, allPosts]
   );
 
-  const handleNavigateToProfile = useCallback(
-    (businessId) => {
-      if (businessId && businessId !== 'magazine') {
-        router.push(`/business/${businessId}`);
-      }
-    },
-    [router]
-  );
-
-  const handleClearFilters = useCallback(() => setFilters(INITIAL_FILTERS), []);
-  const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
   const handlePostPress = useCallback((post) => setActivePost(post), []);
   const handlePostClose = useCallback(() => setActivePost(null), []);
   const handleFilterOpen = useCallback(() => setFilterVisible(true), []);
   const handleFilterClose = useCallback(() => setFilterVisible(false), []);
+  const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
+  const handleClearFilters = useCallback(() => setFilters(INITIAL_FILTERS), []);
 
   return (
     <ScreenWrapper scrollable={false} padding={0}>
       {/* هدر */}
       <div
         className="px-5 py-3.5 border-b"
-        style={{
-          backgroundColor: colors.background,
-          borderBottomColor: colors.border,
-        }}
+        style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}
       >
-        <SectionHeader
-          icon={<FiGrid size={18} />}
-          iconColor={colors.primary}
-          title="ویترین"
-          subtitle="نمونه‌کار کسب‌وکارها در زیبانو"
-          centered
-          rightElement={
-            <button
-              onClick={handleFilterOpen}
-              className="w-10 h-10 rounded-xl border flex items-center justify-center
-relative transition-colors hover:opacity-80"
-              style={{
-                backgroundColor: hasActiveFilter ? colors.primary + '15' : colors.cardBackground,
-                borderColor: hasActiveFilter ? colors.primary : colors.border,
-              }}
-            >
-              <FiFilter
-                size={18}
-                style={{
-                  color: hasActiveFilter ? colors.primary : colors.textMain,
-                }}
-              />
-              {hasActiveFilter && (
-                <div
-                  className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-[1.5px]"
-                  style={{
-                    backgroundColor: '#FFD700',
-                    borderColor: 'rgba(0,0,0,0.15)',
-                  }}
-                />
-              )}
-            </button>
-          }
-        />
+        <div className="flex items-center justify-between">
+          <SectionHeader
+            icon={<span className="text-lg">🖼️</span>}
+            title="ویترین"
+            subtitle="نمونه‌کار کسب‌وکارها"
+            centered
+          />
+          <button
+            onClick={handleFilterOpen}
+            className="w-10 h-10 rounded-xl border flex items-center justify-center relative"
+            style={{
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            }}
+          >
+            <FiFilter size={18} style={{ color: colors.textMain }} />
+          </button>
+        </div>
       </div>
 
       {/* چیپ‌های فیلتر فعال */}
@@ -239,29 +139,25 @@ relative transition-colors hover:opacity-80"
         <PostGrid
           posts={filteredPosts}
           onPostPress={handlePostPress}
-          onClearFilters={hasActiveFilter ? handleClearFilters : null}
-          onLoadMore={loadMorePosts}
-          isLoadingMore={isLoadingMore}
-          hasMore={hasMore}
-          totalLoaded={allPosts.length}
+          onClearFilters={handleClearFilters}
+          isLoading={isLoading}
         />
       </div>
 
-      {/* مدال فیلتر (Lazy) */}
+      {/* مدال فیلتر */}
       <FilterModal
         visible={filterVisible}
         onClose={handleFilterClose}
-        onApply={setFilters}
+        onApply={handleFilterChange}
         currentFilters={filters}
       />
 
-      {/* مدال پست (Lazy) */}
+      {/* مدال پست */}
       <PostModal
         post={activePost}
         visible={!!activePost}
         onClose={handlePostClose}
         onSave={handleSave}
-        onNavigateToProfile={handleNavigateToProfile}
       />
     </ScreenWrapper>
   );

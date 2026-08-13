@@ -8,72 +8,112 @@ import {
   FiInfo,
   FiCheckCircle,
   FiAlertCircle,
+  FiSave,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Card from '@/components/common/Card';
 import Dropdown from '@/components/common/Dropdown';
+import Button from '@/components/common/Button';
 import ImageUploader from '@/components/common/ImageUploader';
 import SectionHeader from '@/components/common/SectionHeader';
+import MapPicker from '@/components/common/MapPicker';
+import { locationsService, categoriesService } from '@/api';
+import { USE_MOCK } from '@/api/config';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
-import dynamic from 'next/dynamic';
 
-// لود کردن نقشه فقط در سمت کلاینت (مرورگر)
-const MapPicker = dynamic(() => import('@/components/common/MapPicker'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-48 rounded-2xl border-2 border-dashed flex items-center justify-center">
-      <p className="text-sm text-gray-500">در حال بارگذاری نقشه...</p>
-    </div>
-  ),
-});
 const BUSINESS_CATEGORIES = [
-  { id: 'salon', label: 'سالن زیبایی (چند منظوره)' },
-  { id: 'clinic', label: 'کلینیک پوست و مو' },
-  { id: 'laser', label: 'مرکز لیزر' },
-  { id: 'nail', label: 'مرکز تخصصی ناخن' },
-  { id: 'keratin', label: 'مرکز کراتین و رنگ مو' },
-  { id: 'makeup', label: 'استودیو میکاپ و گریم' },
-  { id: 'barbershop', label: 'آرایشگاه مردانه' },
-  { id: 'spa', label: 'اسپا و ماساژ' },
-  { id: 'eyelash', label: 'مرکز تخصصی مژه و ابرو' },
-  { id: 'tattoo', label: 'استودیو تتو و هاشور' },
+  { id: '1', label: 'سالن زیبایی (چند منظوره)' },
+  { id: '2', label: 'کلینیک پوست و مو' },
+  { id: '3', label: 'مرکز لیزر' },
+  { id: '4', label: 'مرکز تخصصی ناخن' },
+  { id: '5', label: 'مرکز کراتین و رنگ مو' },
+  { id: '6', label: 'استودیو میکاپ و گریم' },
+  { id: '7', label: 'آرایشگاه مردانه' },
+  { id: '8', label: 'اسپا و ماساژ' },
+  { id: '9', label: 'مرکز تخصصی مژه و ابرو' },
+  { id: '10', label: 'استودیو تتو و هاشور' },
 ];
 
-export default function BasicInfoStep({ formData, onUpdate, onValidationChange }) {
+export default function BasicInfoStep({
+  formData,
+  onUpdate,
+  onValidationChange,
+  onSubmit,
+  submitting = false,
+  isFinalStep = false,
+}) {
   const { colors } = useTheme();
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isValid, setIsValid] = useState(false);
+
+  // دریافت دسته‌بندی‌ها و استان‌ها از API
+  const [categories, setCategories] = useState(BUSINESS_CATEGORIES);
+  const [provinces, setProvinces] = useState(PROVINCES);
+  const [cities, setCities] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (USE_MOCK) return;
+      try {
+        const [catRes, provRes] = await Promise.all([
+          categoriesService.getBusinessCategories(),
+          locationsService.getProvinces(),
+        ]);
+        if (catRes.data?.length) {
+          setCategories(catRes.data.map((c) => ({ id: String(c.id), label: c.name })));
+        }
+        if (provRes.data?.length) {
+          setProvinces(provRes.data.map((p) => ({ id: String(p.id), label: p.name })));
+        }
+      } catch (e) {
+        console.error('Failed to fetch categories/provinces:', e);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // دریافت شهرها بر اساس استان
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (!formData.provinceId) {
+        setCities([]);
+        return;
+      }
+      if (USE_MOCK) {
+        setCities(CITIES[formData.provinceId] || []);
+        return;
+      }
+      try {
+        const res = await locationsService.getCities(formData.provinceId);
+        setCities((res.data || []).map((c) => ({ id: String(c.id), label: c.name })));
+      } catch (e) {
+        setCities(CITIES[formData.provinceId] || []);
+      }
+    };
+    fetchCities();
+  }, [formData.provinceId]);
 
   const validateField = useCallback((field, value) => {
     switch (field) {
       case 'name':
         if (!value || !value.trim()) return 'نام کسب‌وکار الزامی است';
         if (value.trim().length < 3) return 'نام باید حداقل ۳ کاراکتر باشد';
-        if (value.trim().length > 50) return 'نام نمی‌تواند بیشتر از ۵۰ کاراکتر باشد';
-        return '';
-      case 'coverUrl':
-        if (!value) return 'آپلود تصویر کاور الزامی است';
-        return '';
-      case 'ownerPhoto':
-        if (!value) return 'آپلود تصویر صاحب کسب‌وکار الزامی است';
+        if (value.trim().length > 100) return 'نام نمی‌تواند بیشتر از ۱۰۰ کاراکتر باشد';
         return '';
       case 'categoryId':
-        if (!value) return 'انتخاب نوع کسب‌وکار الزامی است';
+        if (!value) return 'نوع کسب‌وکار را انتخاب کنید';
         return '';
       case 'provinceId':
-        if (!value) return 'انتخاب استان الزامی است';
+        if (!value) return 'استان را انتخاب کنید';
         return '';
       case 'cityId':
-        if (!value) return 'انتخاب شهر الزامی است';
+        if (!value) return 'شهر را انتخاب کنید';
         return '';
       case 'address':
         if (!value || !value.trim()) return 'آدرس دقیق الزامی است';
         if (value.trim().length < 10) return 'آدرس باید حداقل ۱۰ کاراکتر باشد';
-        return '';
-      case 'location':
-        if (!value || !value.latitude) return 'تعیین موقعیت روی نقشه الزامی است';
         return '';
       default:
         return '';
@@ -81,16 +121,7 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
   }, []);
 
   const validateAll = useCallback(() => {
-    const fields = [
-      'name',
-      'coverUrl',
-      'ownerPhoto',
-      'categoryId',
-      'provinceId',
-      'cityId',
-      'address',
-      'location',
-    ];
+    const fields = ['name', 'categoryId', 'provinceId', 'cityId', 'address'];
     const newErrors = {};
     let hasError = false;
     fields.forEach((field) => {
@@ -108,39 +139,32 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
     setIsValid(currentValid);
     const filteredErrors = {};
     Object.keys(newErrors).forEach((field) => {
-      if (touched[field]) {
-        filteredErrors[field] = newErrors[field];
-      }
+      if (touched[field]) filteredErrors[field] = newErrors[field];
     });
     setErrors(filteredErrors);
-    if (onValidationChange) {
-      onValidationChange(currentValid);
-    }
+    onValidationChange?.(currentValid);
   }, [
     formData.name,
-    formData.coverUrl,
-    formData.ownerPhoto,
     formData.categoryId,
     formData.provinceId,
     formData.cityId,
     formData.address,
-    formData.location,
     touched,
     validateAll,
     onValidationChange,
   ]);
 
-  const handleFieldChange = (field, value) => {
-    onUpdate(field, value);
-    const error = validateField(field, value);
+  const handleFieldChange = (key, value) => {
+    onUpdate(key, value);
+    const error = validateField(key, value);
     if (!error) {
       setErrors((prev) => {
         const newErrors = { ...prev };
-        delete newErrors[field];
+        delete newErrors[key];
         return newErrors;
       });
-    } else if (touched[field]) {
-      setErrors((prev) => ({ ...prev, [field]: error }));
+    } else if (touched[key]) {
+      setErrors((prev) => ({ ...prev, [key]: error }));
     }
   };
 
@@ -148,20 +172,12 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  const showError = (field) => touched[field] && errors[field];
-
   const handleProvinceChange = (provinceId) => {
     handleFieldChange('provinceId', provinceId);
     onUpdate('cityId', null);
     onUpdate('location', null);
     onUpdate('mapAddress', '');
     markTouched('provinceId');
-  };
-
-  const handleLocationSelect = (location, mapAddress) => {
-    handleFieldChange('location', location);
-    onUpdate('mapAddress', mapAddress);
-    markTouched('location');
   };
 
   return (
@@ -172,10 +188,7 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
         <Card variant="default" padding={16} radius={20}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              تصویر کاور سالن<span style={{ color: '#E53935' }}> *</span>
-            </span>
-            <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-              ۱۲۰۰×۴۰۰ پیکسل
+              تصویر کاور سالن
             </span>
           </div>
           <ImageUploader
@@ -183,37 +196,20 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
             onChange={(url) => handleFieldChange('coverUrl', url)}
             variant="cover"
             hint="تصویر با کیفیت از محیط سالن آپلود کنید"
-            error={showError('coverUrl') ? errors.coverUrl : ''}
           />
         </Card>
-
         <Card variant="default" padding={16} radius={20}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              تصویر صاحب کسب‌وکار<span style={{ color: '#E53935' }}> *</span>
+              تصویر صاحب کسب‌وکار <span style={{ color: '#E53935' }}>*</span>
             </span>
-            <div
-              className="flex items-center gap-1 px-2 py-1 rounded-lg"
-              style={{ backgroundColor: '#4CAF5015' }}
-            >
-              <FiCheckCircle size={10} color="#4CAF50" />
-              <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
-                احراز هویت
-              </span>
-            </div>
           </div>
           <div className="flex flex-col items-center gap-3">
             <ImageUploader
               value={formData.ownerPhoto}
               onChange={(url) => handleFieldChange('ownerPhoto', url)}
               variant="avatar"
-              error={showError('ownerPhoto') ? errors.ownerPhoto : ''}
             />
-            <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-              {formData.ownerPhoto
-                ? 'برای تغییر عکس، روی آن ضربه بزنید'
-                : 'عکس واقعی خود را آپلود کنید'}
-            </p>
             <div
               className="flex items-start gap-2 p-3 rounded-xl border w-full"
               style={{
@@ -247,28 +243,23 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
           label="نام کسب‌وکار *"
           placeholder="مثال: سالن زیبایی نیلارام"
           value={formData.name}
-          onChangeText={(txt) => handleFieldChange('name', txt)}
+          onChangeText={(t) => handleFieldChange('name', t)}
           onBlur={() => markTouched('name')}
-          error={showError('name') ? errors.name : ''}
+          error={errors.name}
           rightIcon={<FiBriefcase size={18} style={{ color: colors.textSecondary }} />}
         />
         <Dropdown
           label="نوع کسب‌وکار *"
           placeholder="نوع کسب‌وکار خود را انتخاب کنید"
           value={formData.categoryId}
-          options={BUSINESS_CATEGORIES}
+          options={categories}
           onSelect={(val) => {
             handleFieldChange('categoryId', val);
             markTouched('categoryId');
           }}
         />
-        {showError('categoryId') && (
-          <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
-            <FiAlertCircle size={14} color="#E53935" />
-            <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
-              {errors.categoryId}
-            </span>
-          </div>
+        {errors.categoryId && (
+          <p className="text-xs text-[#E53935] mt-[-8px] mb-2">{errors.categoryId}</p>
         )}
       </div>
 
@@ -279,113 +270,88 @@ export default function BasicInfoStep({ formData, onUpdate, onValidationChange }
           label="استان *"
           placeholder="انتخاب استان"
           value={formData.provinceId}
-          options={PROVINCES}
+          options={provinces}
           onSelect={handleProvinceChange}
         />
-        {showError('provinceId') && (
-          <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
-            <FiAlertCircle size={14} color="#E53935" />
-            <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
-              {errors.provinceId}
-            </span>
-          </div>
+        {errors.provinceId && (
+          <p className="text-xs text-[#E53935] mt-[-8px] mb-2">{errors.provinceId}</p>
         )}
         <Dropdown
           label="شهر *"
           placeholder={formData.provinceId ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
           value={formData.cityId}
-          options={formData.provinceId ? CITIES[formData.provinceId] || [] : []}
+          options={cities}
           onSelect={(val) => {
             handleFieldChange('cityId', val);
             markTouched('cityId');
           }}
         />
-        {showError('cityId') && (
-          <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
-            <FiAlertCircle size={14} color="#E53935" />
-            <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
-              {errors.cityId}
-            </span>
-          </div>
-        )}
+        {errors.cityId && <p className="text-xs text-[#E53935] mt-[-8px] mb-2">{errors.cityId}</p>}
         <Input
           label="آدرس دقیق سالن *"
           placeholder="خیابان، کوچه، پلاک، واحد..."
           value={formData.address}
-          onChangeText={(txt) => handleFieldChange('address', txt)}
+          onChangeText={(t) => handleFieldChange('address', t)}
           onBlur={() => markTouched('address')}
-          error={showError('address') ? errors.address : ''}
+          error={errors.address}
           multiline
           rightIcon={<FiMapPin size={18} style={{ color: '#E53935' }} />}
         />
-
         <Card variant="default" padding={0} radius={16}>
-          <div
-            className="flex items-center gap-3 p-4 border-b"
-            style={{ borderColor: colors.border }}
-          >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: colors.primary + '20' }}
-            >
-              <FiMapPin size={20} style={{ color: colors.primary }} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                موقعیت روی نقشه <span style={{ color: '#E53935' }}>*</span>
-              </p>
-              <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-                با کلیک روی نقشه، مکان دقیق را مشخص کنید
-              </p>
-            </div>
-          </div>
           <div className="p-4">
             <MapPicker
               initialLocation={formData.location}
-              onLocationSelect={handleLocationSelect}
+              onLocationSelect={(location, address) => {
+                handleFieldChange('location', location);
+                onUpdate('mapAddress', address || '');
+              }}
             />
           </div>
         </Card>
-
-        {showError('location') && (
-          <div className="flex items-center gap-1 mt-2 px-1">
-            <FiAlertCircle size={14} color="#E53935" />
-            <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
-              {errors.location}
-            </span>
-          </div>
-        )}
-        {formData.location && !showError('location') && (
-          <div
-            className="flex items-center gap-2 py-2.5 px-4 rounded-xl border"
-            style={{
-              backgroundColor: colors.primary + '10',
-              borderColor: colors.primary + '30',
-            }}
-          >
-            <FiMapPin size={14} style={{ color: colors.primary }} />
-            <span className="text-xs font-[Vazir-Medium] flex-1" style={{ color: colors.primary }}>
-              مختصات: {formData.location.latitude.toFixed(6)},{' '}
-              {formData.location.longitude.toFixed(6)}
-            </span>
-            <FiCheckCircle size={16} color="#4CAF50" />
-          </div>
-        )}
       </div>
 
-      {/* راهنما */}
-      <Card variant="default" padding={14} radius={14}>
-        <div className="flex items-center gap-2 mb-2">
-          <FiInfo size={18} style={{ color: colors.primary }} />
-          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-            راهنمای تکمیل
-          </span>
-        </div>
-        <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
-          فیلدهای ستاره‌دار (<span style={{ color: '#E53935' }}>*</span>) الزامی هستند. پس از تکمیل
-          همه فیلدها، دکمه «مرحله بعد» فعال می‌شود.
-        </p>
-      </Card>
+      {/* فیلدهای اختیاری */}
+      <div className="space-y-3">
+        <SectionHeader
+          icon={<FiInfo size={18} />}
+          iconColor="#2196F3"
+          title="اطلاعات تکمیلی (اختیاری)"
+        />
+        <Input
+          label="شماره تماس سالن"
+          placeholder="مثال: ۰۲۱-۲۲۳۳۴۴۵۵"
+          value={formData.phone}
+          onChangeText={(t) => onUpdate('phone', t)}
+        />
+        <Input
+          label="ساعات کاری"
+          placeholder="مثال: شنبه تا پنج‌شنبه ۹ الی ۲۰"
+          value={formData.workingHours}
+          onChangeText={(t) => onUpdate('workingHours', t)}
+        />
+        <Input
+          label="درباره کسب‌وکار"
+          placeholder="توضیحاتی درباره خدمات و تجربه سالن..."
+          value={formData.about}
+          onChangeText={(t) => onUpdate('about', t)}
+          multiline
+        />
+      </div>
+
+      {/* دکمه ثبت نهایی */}
+      {isFinalStep && (
+        <Button
+          title={submitting ? 'در حال ثبت...' : 'ثبت نهایی کسب‌وکار'}
+          onPress={onSubmit}
+          loading={submitting}
+          disabled={!isValid || submitting}
+          variant="primary"
+          size="lg"
+          fullWidth
+          icon={<FiSave size={18} color="#fff" />}
+          iconPosition="right"
+        />
+      )}
     </div>
   );
 }

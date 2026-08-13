@@ -1,11 +1,15 @@
 // src/api/services/favorites.service.js
 /**
- * ❤️ Favorites Service
+ * ❤️ Favorites Service — هماهنگ با بک‌اند
  *
- * مدیریت علاقه‌مندی‌ها:
- * - لیست علاقه‌مندی‌ها
- * - افزودن/حذف علاقه‌مندی
- * - تعداد علاقه‌مندی‌ها
+ * Endpoints:
+ *   GET  /favorites/        → لیست علاقه‌مندی‌ها
+ *   POST /favorites/toggle/ → افزودن/حذف علاقه‌مندی
+ *   GET  /favorites/count/  → تعداد علاقه‌مندی‌ها
+ *
+ * مدل‌ها:
+ *   FavoriteBusiness: user + business (unique_together)
+ *   FavoritePost: user + post (unique_together)
  */
 import apiClient from '../api-client';
 
@@ -13,6 +17,8 @@ export const favoritesService = {
   /**
    * لیست علاقه‌مندی‌ها
    * GET /favorites/?type=business|post
+   *
+   * Response: { businesses: [...], posts: [...] }
    */
   getFavorites: (type = null) => {
     const params = type ? { type } : {};
@@ -20,11 +26,11 @@ export const favoritesService = {
   },
 
   /**
-   * افزودن/حذف علاقه‌مندی
+   * افزودن/حذف علاقه‌مندی (Toggle)
    * POST /favorites/toggle/
    *
-   * @param {string} favoriteType - 'business' یا 'post'
-   * @param {number} objectId - شناسه کسب‌وکار یا پست
+   * Payload: { favorite_type: 'business'|'post', object_id: number }
+   * Response: { is_favorited: boolean, message: string }
    */
   toggleFavorite: (favoriteType, objectId) => {
     return apiClient.post('/favorites/toggle/', {
@@ -36,6 +42,8 @@ export const favoritesService = {
   /**
    * تعداد علاقه‌مندی‌ها
    * GET /favorites/count/
+   *
+   * Response: { business: number, post: number, total: number }
    */
   getFavoritesCount: () => {
     return apiClient.get('/favorites/count/');

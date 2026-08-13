@@ -2,23 +2,30 @@
 /**
  * ⚙️ پیکربندی لایه API
  *
- * ⚠️ نکته مهم:
- * فعلاً USE_MOCK = true است و هیچ درخواست واقعی به بک‌اند نمی‌رود.
- * هنگام اتصال به بک‌اند، فقط همین یک خط را به false تغییر دهید.
+ * USE_MOCK:
+ *   - true  → تمام درخواست‌ها از Mock Adapter پاسخ می‌گیرند
+ *   - false → درخواست‌های واقعی به بک‌اند Django ارسال می‌شوند
+ *
+ * ⚠️ برای اتصال به بک‌اند، فقط USE_MOCK را false کنید
+ *    یا متغیر محیطی NEXT_PUBLIC_USE_MOCK=false تنظیم کنید
  */
 import env from '@/config/env';
 
 // ═══════════════════════════════════════════════
 //    سوئیچ اصلی: Mock یا Real API
 // ═══════════════════════════════════════════════
-export const USE_MOCK = true; // ← بعداً: false
+// از متغیر محیطی خوانده می‌شود؛ پیش‌فرض: true (حالت توسعه)
+export const USE_MOCK =
+  typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_USE_MOCK !== undefined
+    ? process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+    : true; // ← برای اتصال به بک‌اند: false
 
 // ═══════════════════════════════════════════════
 //    تنظیمات Axios
 // ═══════════════════════════════════════════════
 export const API_CONFIG = {
-  baseURL: env.API_BASE_URL,
-  timeout: 15000, // 15 ثانیه
+  baseURL: env.API_BASE_URL, // http://localhost:8000/api/v1
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -32,10 +39,8 @@ export const JWT_CONFIG = {
   ACCESS_TOKEN_KEY: 'zibano_access_token',
   REFRESH_TOKEN_KEY: 'zibano_refresh_token',
   TOKEN_TYPE: 'Bearer',
-  // بک‌اند: ACCESS_TOKEN_LIFETIME = 1 ساعت
-  ACCESS_TOKEN_LIFETIME_SECONDS: 3600,
-  // بک‌اند: REFRESH_TOKEN_LIFETIME = 30 روز
-  REFRESH_TOKEN_LIFETIME_DAYS: 30,
+  ACCESS_TOKEN_LIFETIME_SECONDS: 3600, // ۱ ساعت
+  REFRESH_TOKEN_LIFETIME_DAYS: 30, // ۳۰ روز
 };
 
 // ═══════════════════════════════════════════════
@@ -51,8 +56,8 @@ export const PAGINATION_CONFIG = {
 // ═══════════════════════════════════════════════
 export const OTP_CONFIG = {
   CODE_LENGTH: 5,
-  EXPIRY_SECONDS: 300, // 5 دقیقه
-  RESEND_COOLDOWN_SECONDS: 60, // 60 ثانیه
+  EXPIRY_SECONDS: 300,
+  RESEND_COOLDOWN_SECONDS: 60,
 };
 
 // ═══════════════════════════════════════════════
@@ -61,4 +66,14 @@ export const OTP_CONFIG = {
 export const UPLOAD_CONFIG = {
   MAX_FILE_SIZE_MB: 10,
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
+};
+
+// ═══════════════════════════════════════════════
+//    تنظیمات Media (برای ساخت URL تصاویر)
+// ═══════════════════════════════════════════════
+export const MEDIA_CONFIG = {
+  // در development: http://localhost:8000
+  // در production: https://api.zibano.app یا CDN
+  MEDIA_BASE_URL: env.MEDIA_BASE_URL || env.API_BASE_URL?.replace('/api/v1', '') || '',
+  CDN_URL: env.ARVAN_CDN_URL || '',
 };

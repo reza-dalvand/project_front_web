@@ -1,119 +1,62 @@
+// src/app/manage/financial/page.jsx
 'use client';
-import { useState, useMemo, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { FiCreditCard } from 'react-icons/fi';
+import { FiCreditCard, FiRefreshCw, FiAlertTriangle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
-import Card from '@/components/common/Card';
-import EmptyState from '@/components/common/EmptyState';
+import Button from '@/components/common/Button';
 import FinancialStatsCards from '@/components/manageBusiness/financial/FinancialStatsCards';
 import BankInfoCard from '@/components/manageBusiness/financial/BankInfoCard';
 import FinancialTabs from '@/components/manageBusiness/financial/FinancialTabs';
 import TransactionItem from '@/components/manageBusiness/financial/TransactionItem';
-import {
-  MOCK_TRANSACTIONS,
-  MOCK_BANK_INFO,
-  toPersianDigit,
-} from '@/components/manageBusiness/financial/constants';
-
-// ✅ Lazy Load
-const BankEditModal = dynamic(() => import('@/components/manageBusiness/financial/BankEditModal'), {
-  ssr: false,
-  loading: () => null,
-});
+import { usePaymentManager } from '@/hooks/usePaymentManager';
+import { TX_STATUS_MAP } from '@/stores/usePaymentStore';
+import dynamic from 'next/dynamic';
 
 const TransactionDetailModal = dynamic(
   () => import('@/components/manageBusiness/financial/TransactionDetailModal'),
   { ssr: false, loading: () => null }
 );
+const BankEditModal = dynamic(() => import('@/components/manageBusiness/financial/BankEditModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function FinancialManagementPage() {
   const { colors } = useTheme();
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const businessData = useBusinessStore((s) => s.businessData);
-  const updateBusinessInfo = useBusinessStore((s) => s.updateBusinessInfo); // ✅ این خط را اضافه کنید
-
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
+  const businessData = useBusinessStore((s) => s.businessData);
   const { showToast } = useToast();
 
-  const [transactions] = useState(MOCK_TRANSACTIONS);
-  const [activeTab, setActiveTab] = useState('all');
-  const [bankInfo, setBankInfo] = useState(MOCK_BANK_INFO);
+  const {
+    businessStats,
+    transactions,
+    isLoading,
+    isLoadingStats,
+    activeTab,
+    setActiveTab,
+    tabCounts,
+    selectedTx,
+    detailVisible,
+    handleOpenDetail,
+    handleCloseDetail,
+    handleRequestSettlement,
+  } = usePaymentManager();
+
   const [bankEditVisible, setBankEditVisible] = useState(false);
-  const [selectedTx, setSelectedTx] = useState(null);
-  const [txDetailVisible, setTxDetailVisible] = useState(false);
+  const bankInfo = businessData?.bankInfo || { isRegistered: false, isVerified: false };
+  const hasPendingMoney = (businessStats?.blocked || 0) > 0 || (businessStats?.settling || 0) > 0;
 
-  const businessOwnerName = businessData?.verifiedName || user?.name || '';
-
-  // ✅ useMemo برای محاسبات
-  const stats = useMemo(() => {
-    const sumBy = (status) =>
-      transactions.filter((t) => t.status === status).reduce((s, t) => s + (t.amount || 0), 0);
-    return {
-      blockedAmount: sumBy('blocked'),
-      settlingAmount: sumBy('settling'),
-      settledAmount: sumBy('settled'),
-      refundedAmount: sumBy('refunded'),
-      totalAmount: transactions.reduce((s, t) => s + (t.amount || 0), 0),
-    };
-  }, [transactions]);
-
-  const tabCounts = useMemo(() => {
-    const c = (status) => transactions.filter((t) => t.status === status).length;
-    return {
-      all: transactions.length,
-      blocked: c('blocked'),
-      settling: c('settling'),
-      settled: c('settled'),
-      refunded: c('refunded'),
-    };
-  }, [transactions]);
-
-  const filteredTransactions = useMemo(() => {
-    if (activeTab === 'all') return transactions;
-    return transactions.filter((t) => t.status === activeTab);
-  }, [transactions, activeTab]);
-
-  const hasPendingMoney = stats.blockedAmount > 0 || stats.settlingAmount > 0;
-
-  // ✅ useCallback
-  const handleOpenBankEdit = useCallback(() => setBankEditVisible(true), []);
-  const handleCloseBankEdit = useCallback(() => setBankEditVisible(false), []);
-
-  const handleTxPress = useCallback((tx) => {
-    setSelectedTx(tx);
-    setTxDetailVisible(true);
-  }, []);
-
-  const handleCloseTxDetail = useCallback(() => {
-    setTxDetailVisible(false);
-    setSelectedTx(null);
-  }, []);
-
-  const handleSaveBankInfo = useCallback(
-    (data) => {
-      setBankInfo((prev) => ({ ...prev, ...data, isRegistered: true, isVerified: false }));
-      setBankEditVisible(false);
-      showToast('✓ اطلاعات حساب بانکی ثبت شد و وارد چرخه تایید شد', 'success');
-
-      updateBusinessInfo({
-        bankInfo: {
-          isRegistered: true,
-          isVerified: false,
-        },
-      });
-    },
-    [showToast, updateBusinessInfo]
-  );
-
-  const goBack = useCallback(() => router.push('/manage'), [router]);
+  const handleSaveBankInfo = (data) => {
+    setBankEditVisible(false);
+    showToast('اطلاعات حساب بانکی ثبت شد و وارد مرحله تایید شد', 'success');
+  };
 
   if (!isAuthenticated) {
     return (
@@ -127,56 +70,84 @@ export default function FinancialManagementPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="مدیریت مالی" onBackPress={goBack} />
+      <Header title="مدیریت مالی" onBackPress={() => router.push('/manage')} />
+
       <div className="flex-1 overflow-y-auto p-4 pb-32">
-        <FinancialStatsCards stats={stats} />
+        {/* آمار مالی */}
+        {isLoadingStats ? (
+          <div className="flex justify-center py-8">
+            <div
+              className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+              style={{ color: colors.primary }}
+            />
+          </div>
+        ) : (
+          <FinancialStatsCards stats={businessStats} />
+        )}
+
+        {/* اطلاعات بانکی */}
         <BankInfoCard
           bankInfo={bankInfo}
-          onEdit={handleOpenBankEdit}
-          businessOwnerName={businessOwnerName}
+          onEdit={() => setBankEditVisible(true)}
+          businessOwnerName={businessData?.ownerName || ''}
           hasActiveAppointments={hasPendingMoney}
         />
 
-        <div className="flex items-center gap-2 mb-3 mt-2 px-0.5">
+        {/* دکمه درخواست تسویه */}
+        {(businessStats?.settling || 0) > 0 && (
+          <div className="mb-4">
+            <Button
+              title="درخواست تسویه"
+              onPress={handleRequestSettlement}
+              variant="primary"
+              size="lg"
+              fullWidth
+              icon={<FiRefreshCw size={18} color="#fff" />}
+              iconPosition="right"
+            />
+          </div>
+        )}
+
+        {/* تب‌ها */}
+        <div className="flex items-center gap-2 mb-3 px-0.5">
           <FiCreditCard size={20} style={{ color: colors.primary }} />
           <h3 className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-            تاریخچه تراکنش‌ها
+            تراکنش‌های مالی
           </h3>
-          <div className="flex-1" />
-          <span className="text-xs" style={{ color: colors.textSecondary }}>
-            {toPersianDigit(filteredTransactions.length)} تراکنش
-          </span>
         </div>
 
         <FinancialTabs active={activeTab} counts={tabCounts} onChange={setActiveTab} />
 
-        {filteredTransactions.length > 0 ? (
-          filteredTransactions.map((tx) => (
-            <TransactionItem key={tx.id} tx={tx} onPress={handleTxPress} />
+        {/* لیست تراکنش‌ها */}
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div
+              className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+              style={{ color: colors.primary }}
+            />
+          </div>
+        ) : transactions.length > 0 ? (
+          transactions.map((tx) => (
+            <TransactionItem key={tx.id} tx={tx} onPress={handleOpenDetail} />
           ))
         ) : (
-          <Card variant="elevated" padding={0} radius={16}>
-            <EmptyState
-              icon="🧾"
-              title="تراکنشی یافت نشد"
-              description="در این دسته‌بندی هنوز تراکنشی ثبت نشده است"
-            />
-          </Card>
+          <div className="flex flex-col items-center py-12 gap-3">
+            <span className="text-4xl">💳</span>
+            <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+              تراکنشی یافت نشد
+            </p>
+          </div>
         )}
       </div>
 
-      {/* مدال‌ها (Lazy) */}
+      {/* مدال‌ها */}
+      <TransactionDetailModal visible={detailVisible} tx={selectedTx} onClose={handleCloseDetail} />
       <BankEditModal
         visible={bankEditVisible}
-        onClose={handleCloseBankEdit}
+        onClose={() => setBankEditVisible(false)}
         onSave={handleSaveBankInfo}
         bankInfo={bankInfo}
-        businessOwnerName={businessOwnerName}
-      />
-      <TransactionDetailModal
-        visible={txDetailVisible}
-        tx={selectedTx}
-        onClose={handleCloseTxDetail}
+        businessOwnerName={businessData?.ownerName || ''}
       />
     </ScreenWrapper>
   );

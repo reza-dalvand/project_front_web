@@ -1,25 +1,25 @@
 // src/config/env.js
 /**
  * پیکربندی محیط‌های مختلف
- * در production از متغیرهای Next.js خوانده می‌شود
- * در development مقادیر پیش‌فرض استفاده می‌شود
  */
-
 const ENV = {
   development: {
     API_BASE_URL: 'http://localhost:8000/api/v1',
     SITE_DOMAIN: 'http://localhost:3000',
     ARVAN_CDN_URL: '',
+    MEDIA_BASE_URL: 'http://localhost:8000', // ← جدید
   },
   staging: {
     API_BASE_URL: 'https://staging-api.zibano.app/api/v1',
     SITE_DOMAIN: 'https://staging.zibano.app',
     ARVAN_CDN_URL: 'https://cdn.staging.zibano.app',
+    MEDIA_BASE_URL: 'https://staging-api.zibano.app',
   },
   production: {
     API_BASE_URL: 'https://api.zibano.app/api/v1',
     SITE_DOMAIN: 'https://zibano.app',
     ARVAN_CDN_URL: 'https://cdn.zibano.app',
+    MEDIA_BASE_URL: 'https://api.zibano.app',
   },
 };
 
@@ -33,7 +33,6 @@ const getNodeEnv = () => {
 const env = getNodeEnv();
 const config = ENV[env] || ENV.development;
 
-// Override با متغیرهای محیطی Next.js (اگر تنظیم شده باشند)
 const finalConfig = {
   API_BASE_URL:
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_BASE_URL) ||
@@ -43,6 +42,9 @@ const finalConfig = {
   ARVAN_CDN_URL:
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ARVAN_CDN_URL) ||
     config.ARVAN_CDN_URL,
+  MEDIA_BASE_URL:
+    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MEDIA_BASE_URL) ||
+    config.MEDIA_BASE_URL,
   NODE_ENV: env,
 };
 

@@ -1,150 +1,105 @@
 // src/app/search/page.jsx
 'use client';
-
-import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { FiArrowRight, FiSearch, FiMapPin, FiFilter } from 'react-icons/fi';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { FiArrowRight, FiSearch, FiX, FiMapPin, FiStar } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { SearchBar, SectionHeader, ScreenWrapper, Card } from '@/components/common';
-import SearchTabs from '@/components/home/search/SearchTabs';
-import SearchBusinessCard from '@/components/home/search/SearchBusinessCard';
-import SearchModelCard from '@/components/home/search/SearchModelCard';
-import SearchLineCard from '@/components/home/search/SearchLineCard';
-import SearchEmptyState from '@/components/home/search/SearchEmptyState';
-import CategoryGrid from '@/components/home/CategoryGrid';
-import DistanceFilterSheet from '@/components/home/search/DistanceFilterSheet';
-import { MOCK_CATEGORIES } from '@/data/businesses';
-import { searchAll, getResultCounts } from '@/components/home/search/searchData';
+import ScreenWrapper from '@/components/common/ScreenWrapper';
+import EmptyState from '@/components/common/EmptyState';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { toPersianDigit } from '@/utils/numberUtils';
 import { searchService } from '@/api';
 import { USE_MOCK } from '@/api/config';
-import { getCurrentLocation, calculateDistance, formatDistance } from '@/utils/geo-utils';
-import { useToast } from '@/hooks/useToast';
+import { MOCK_BUSINESSES_LIST, MOCK_BUSINESSES_MAP } from '@/data/businesses';
 
-// ═══════ گزینه‌های فیلتر فاصله ═══════
-const DISTANCE_OPTIONS = [
-  { id: 'all', label: 'همه فاصله‌ها', value: null, icon: '🌍' },
-  { id: '1km', label: 'تا ۱ کیلومتر', value: 1, icon: '🚶' },
-  { id: '3km', label: 'تا ۳ کیلومتر', value: 3, icon: '🚲' },
-  { id: '5km', label: 'تا ۵ کیلومتر', value: 5, icon: '🚗' },
-  { id: '10km', label: 'تا ۱۰ کیلومتر', value: 10, icon: '🛣️' },
-  { id: '20km', label: 'تا ۲۰ کیلومتر', value: 20, icon: '🏙️' },
+const TAB_OPTIONS = [
+  { id: 'all', label: 'همه' },
+  { id: 'businesses', label: 'کسب‌وکار' },
+  { id: 'services', label: 'خدمات' },
 ];
 
-// ═══════════ کامپوننت داخلی با useSearchParams ═══════════
-function SearchPageContent() {
+export default function SearchPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { colors } = useTheme();
-  const { showToast } = useToast();
 
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [activeQuery, setActiveQuery] = useState(searchParams.get('q') || '');
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [distanceFilter, setDistanceFilter] = useState(null);
-  const [distanceFilterVisible, setDistanceFilterVisible] = useState(false);
-  const [userLocation, setUserLocation] = useState(null);
-  const [locationLoading, setLocationLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState({ businesses: [], services: [], total: 0 });
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchHistory, setSearchHistory] = useState([]);
 
-  // ═══════ دریافت موقعیت کاربر ═══════
-  const fetchUserLocation = useCallback(async () => {
-    if (userLocation) return userLocation;
-    setLocationLoading(true);
-    try {
-      const location = await getCurrentLocation();
-      setUserLocation(location);
-      setLocationLoading(false);
-      return location;
-    } catch (error) {
-      setLocationLoading(false);
-      showToast('دسترسی به موقعیت مکانی امکان‌پذیر نیست', 'warning');
-      return null;
-    }
-  }, [userLocation, showToast]);
-
-  // ═══════ جستجو با debounce ═══════
+  // ═══ دریافت تاریخچه جستجو ═══
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setActiveQuery(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // ═══════ محاسبه فاصله برای کسب‌وکارها ═══════
-  const businessesWithDistance = useMemo(() => {
-    const results = searchAll(activeQuery);
-    let businesses = results.businesses || [];
-
-    if (userLocation) {
-      businesses = businesses.map((business) => {
-        const businessLat = business.latitude || business.location?.latitude;
-        const businessLng = business.longitude || business.location?.longitude;
-        if (businessLat && businessLng) {
-          const distance = calculateDistance(
-            userLocation.latitude,
-            userLocation.longitude,
-            businessLat,
-            businessLng
-          );
-          return { ...business, distance, distanceText: formatDistance(distance) };
+    const fetchHistory = async () => {
+      try {
+        if (USE_MOCK) {
+          setSearchHistory([]);
+        } else {
+          const result = await searchService.getSearchHistory();
+          setSearchHistory(result.data || []);
         }
-        return { ...business, distance: null, distanceText: null };
-      });
-
-      businesses = [...businesses].sort((a, b) => {
-        if (a.distance === null && b.distance === null) return 0;
-        if (a.distance === null) return 1;
-        if (b.distance === null) return -1;
-        return a.distance - b.distance;
-      });
-    }
-
-    if (distanceFilter && userLocation) {
-      businesses = businesses.filter((b) => b.distance !== null && b.distance <= distanceFilter);
-    }
-
-    return businesses;
-  }, [activeQuery, userLocation, distanceFilter]);
-
-  // ═══════ نتایج جستجو ═══════
-  const searchResults = useMemo(() => {
-    const results = searchAll(activeQuery);
-    return {
-      ...results,
-      businesses: businessesWithDistance,
+      } catch (error) {
+        console.error('Failed to fetch search history:', error);
+      }
     };
-  }, [activeQuery, businessesWithDistance]);
-
-  const resultCounts = useMemo(() => getResultCounts(searchResults), [searchResults]);
-
-  const filteredResults = useMemo(() => {
-    switch (activeTab) {
-      case 'businesses':
-        return searchResults.businesses;
-      case 'modelRequests':
-        return searchResults.modelRequests;
-      case 'lineRentals':
-        return searchResults.lineRentals;
-      default:
-        return null;
-    }
-  }, [searchResults, activeTab]);
-
-  // ═══════ Handlers ═══════
-  const handleSearch = useCallback(
-    (query) => {
-      const q = typeof query === 'string' ? query : searchQuery;
-      setActiveQuery(q);
-      setActiveTab('all');
-    },
-    [searchQuery]
-  );
-
-  const handleClear = useCallback(() => {
-    setSearchQuery('');
-    setActiveQuery('');
-    setActiveTab('all');
-    setDistanceFilter(null);
+    fetchHistory();
   }, []);
+
+  // ═══ جستجو با debounce ═══
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSearchResults({ businesses: [], services: [], total: 0 });
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        if (USE_MOCK) {
+          const q = searchQuery.trim().toLowerCase();
+          const businesses = MOCK_BUSINESSES_LIST.filter(
+            (b) =>
+              b.name.toLowerCase().includes(q) ||
+              b.serviceType.toLowerCase().includes(q) ||
+              b.category.toLowerCase().includes(q)
+          );
+          setSearchResults({ businesses, services: [], total: businesses.length });
+        } else {
+          const result = await searchService.search(searchQuery, activeTab, 20);
+          setSearchResults({
+            businesses: result.data.businesses || [],
+            services: result.data.services || [],
+            total: result.data.total || 0,
+          });
+        }
+      } catch (error) {
+        console.error('Search failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeTab]);
+
+  // ═══ فیلتر نتایج بر اساس تب ═══
+  const filteredResults = useMemo(() => {
+    if (activeTab === 'all') return searchResults;
+    if (activeTab === 'businesses')
+      return {
+        businesses: searchResults.businesses,
+        services: [],
+        total: searchResults.businesses.length,
+      };
+    if (activeTab === 'services')
+      return {
+        businesses: [],
+        services: searchResults.services,
+        total: searchResults.services.length,
+      };
+    return searchResults;
+  }, [searchResults, activeTab]);
 
   const handleBusinessPress = useCallback(
     (business) => {
@@ -153,214 +108,15 @@ function SearchPageContent() {
     [router]
   );
 
-  const handleModelPress = useCallback(
-    (request) => {
-      router.push(`/model-requests/${request.id}`);
-    },
-    [router]
-  );
-
-  const handleLinePress = useCallback(
-    (ad) => {
-      router.push(`/line-rentals/${ad.id}`);
-    },
-    [router]
-  );
-
-  const handleCategoryPress = useCallback(
-    (category) => {
-      router.push(`/category/${category.id}`);
-    },
-    [router]
-  );
-
-  const handleDistanceFilterPress = useCallback(async () => {
-    if (!userLocation) {
-      const location = await fetchUserLocation();
-      if (!location) return;
-    }
-    setDistanceFilterVisible(true);
-  }, [userLocation, fetchUserLocation]);
-
-  const handleDistanceApply = useCallback(
-    (value) => {
-      setDistanceFilter(value);
-      setDistanceFilterVisible(false);
-      if (value) {
-        showToast(`نمایش کسب‌وکارها تا ${value} کیلومتر`, 'info');
-      }
-    },
-    [showToast]
-  );
-
-  const handleLocationRequest = useCallback(async () => {
-    const location = await fetchUserLocation();
-    if (location) {
-      showToast('موقعیت شما دریافت شد', 'success');
-    }
-  }, [fetchUserLocation, showToast]);
-
-  // ═══════ رندر نتایج ═══════
-  const renderResults = () => {
-    const hasResults = resultCounts.all > 0;
-
-    if (!hasResults && activeQuery.trim()) {
-      return <SearchEmptyState query={activeQuery} activeTab={activeTab} />;
-    }
-
-    if (activeTab === 'all') {
-      return (
-        <div className="space-y-6">
-          {searchResults.businesses.length > 0 && (
-            <div>
-              <SectionHeader
-                icon={<FiSearch size={18} />}
-                iconColor={colors.primary}
-                title="کسب‌وکارها"
-                subtitle={userLocation ? 'مرتب‌شده بر اساس نزدیک‌ترین فاصله' : 'نتایج جستجو'}
-              />
-              <div className="space-y-3">
-                {searchResults.businesses.slice(0, 5).map((business) => (
-                  <SearchBusinessCard
-                    key={business.id}
-                    business={business}
-                    onPress={handleBusinessPress}
-                    userLocation={userLocation}
-                  />
-                ))}
-              </div>
-              {searchResults.businesses.length > 5 && (
-                <button
-                  onClick={() => setActiveTab('businesses')}
-                  className="w-full mt-3 py-3 text-center text-sm font-[Vazir-Bold] rounded-xl border"
-                  style={{ color: colors.primary, borderColor: colors.border }}
-                >
-                  مشاهده همه {searchResults.businesses.length} کسب‌وکار
-                </button>
-              )}
-            </div>
-          )}
-
-          {searchResults.modelRequests.length > 0 && (
-            <div>
-              <SectionHeader
-                icon={<FiSearch size={18} />}
-                iconColor="#E91E63"
-                title="فرصت‌های مدلینگ"
-                subtitle="با تخفیف ویژه مدل شوید"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                {searchResults.modelRequests.slice(0, 4).map((request) => (
-                  <SearchModelCard key={request.id} request={request} onPress={handleModelPress} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {searchResults.lineRentals.length > 0 && (
-            <div>
-              <SectionHeader
-                icon={<FiSearch size={18} />}
-                iconColor="#667eea"
-                title="اجاره لاین"
-                subtitle="فرصت‌های همکاری و اجاره"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                {searchResults.lineRentals.slice(0, 4).map((ad) => (
-                  <SearchLineCard key={ad.id} ad={ad} onPress={handleLinePress} />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    switch (activeTab) {
-      case 'businesses':
-        return (
-          <div className="space-y-3">
-            {filteredResults.map((business) => (
-              <SearchBusinessCard
-                key={business.id}
-                business={business}
-                onPress={handleBusinessPress}
-                userLocation={userLocation}
-              />
-            ))}
-          </div>
-        );
-      case 'modelRequests':
-        return (
-          <div className="grid grid-cols-2 gap-3">
-            {filteredResults.map((request) => (
-              <SearchModelCard key={request.id} request={request} onPress={handleModelPress} />
-            ))}
-          </div>
-        );
-      case 'lineRentals':
-        return (
-          <div className="grid grid-cols-2 gap-3">
-            {filteredResults.map((ad) => (
-              <SearchLineCard key={ad.id} ad={ad} onPress={handleLinePress} />
-            ))}
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const renderEmptyState = () => (
-    <div className="px-4 py-6 space-y-6">
-      <div>
-        <SectionHeader
-          icon={<FiSearch size={18} />}
-          iconColor="#FF9800"
-          title="دسته‌بندی‌های محبوب"
-          subtitle="یک دسته‌بندی انتخاب کنید"
-        />
-        <CategoryGrid categories={MOCK_CATEGORIES} onSelect={handleCategoryPress} />
-      </div>
-
-      <Card variant="elevated" padding={20} radius={18}>
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: colors.primary + '15' }}
-          >
-            <FiSearch size={28} style={{ color: colors.primary }} />
-          </div>
-          <h3
-            className="text-base font-[Vazir-Bold] text-center"
-            style={{ color: colors.textMain }}
-          >
-            چه چیزهایی می‌توانید جستجو کنید؟
-          </h3>
-          <div className="w-full space-y-3">
-            {[
-              { icon: '🏪', text: 'نام کسب‌وکارها', color: colors.primary },
-              { icon: '👤', text: 'فرصت‌های مدلینگ', color: '#E91E63' },
-              { icon: '🏢', text: 'آگهی‌های اجاره لاین', color: '#667eea' },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3 py-2">
-                <span className="text-sm" style={{ color: colors.primary }}>
-                  ✓
-                </span>
-                <span className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
-                  {item.text}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
+  const handleClear = useCallback(() => {
+    setSearchQuery('');
+    setSearchResults({ businesses: [], services: [], total: 0 });
+    setActiveTab('all');
+  }, []);
 
   return (
     <ScreenWrapper scrollable padding={0}>
-      {/* هدر */}
+      {/* هدر جستجو */}
       <div
         className="px-4 py-3 border-b"
         style={{ backgroundColor: colors.background, borderBottomColor: colors.border }}
@@ -368,121 +124,209 @@ function SearchPageContent() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="w-11 h-11 rounded-2xl flex items-center justify-center border"
+            className="w-10 h-10 rounded-xl flex items-center justify-center border"
             style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
           >
-            <FiArrowRight size={22} style={{ color: colors.textMain }} />
+            <FiArrowRight size={20} style={{ color: colors.textMain }} />
           </button>
-          <div className="flex-1">
-            <SearchBar
+          {/* باکس جستجو */}
+          <div
+            className="flex-1 flex items-center gap-2.5 px-4 h-12 rounded-2xl border transition-all"
+            style={{
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            }}
+          >
+            <FiSearch size={20} style={{ color: colors.textSecondary }} />
+            <input
+              type="text"
               value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSubmit={() => handleSearch(searchQuery)}
-              onClear={handleClear}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="جستجوی خدمات، کسب‌وکارها..."
+              className="flex-1 bg-transparent outline-none text-sm font-[Vazir] text-right"
+              style={{ color: colors.textMain }}
               autoFocus
             />
+            {searchQuery.length > 0 && (
+              <button onClick={handleClear} className="p-1">
+                <FiX size={16} style={{ color: colors.textSecondary }} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* ردیف فیلتر فاصله */}
-        {activeQuery.trim() && (
-          <div className="flex items-center gap-2 mt-3">
-            <button
-              onClick={handleDistanceFilterPress}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-[1.5px] transition-all"
-              style={{
-                backgroundColor: distanceFilter ? colors.primary + '15' : colors.cardBackground,
-                borderColor: distanceFilter ? colors.primary : colors.border,
-              }}
-            >
-              <FiMapPin
-                size={16}
-                style={{ color: distanceFilter ? colors.primary : colors.textMain }}
-              />
-              <span
-                className="text-xs font-[Vazir-Bold]"
-                style={{ color: distanceFilter ? colors.primary : colors.textMain }}
-              >
-                {distanceFilter ? `تا ${distanceFilter} کیلومتر` : 'فیلتر فاصله'}
-              </span>
-              {distanceFilter && (
-                <span
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: colors.primary }}
-                />
-              )}
-            </button>
-
-            {!userLocation && (
-              <button
-                onClick={handleLocationRequest}
-                disabled={locationLoading}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-[1.5px] transition-all"
-                style={{
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                }}
-              >
-                {locationLoading ? (
-                  <div
-                    className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
-                    style={{ color: colors.primary }}
-                  />
-                ) : (
-                  <FiMapPin size={16} style={{ color: colors.textSecondary }} />
-                )}
-                <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-                  دریافت موقعیت
-                </span>
-              </button>
-            )}
-
-            {distanceFilter && (
-              <button
-                onClick={() => setDistanceFilter(null)}
-                className="flex items-center gap-1 px-3 py-2.5 rounded-xl text-xs font-[Vazir-Bold]"
-                style={{ backgroundColor: '#E5393515', color: '#E53935' }}
-              >
-                حذف فیلتر
-              </button>
-            )}
+        {/* تب‌ها */}
+        {searchQuery.trim().length >= 2 && (
+          <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-hide">
+            {TAB_OPTIONS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const count =
+                tab.id === 'all'
+                  ? searchResults.total
+                  : tab.id === 'businesses'
+                    ? searchResults.businesses.length
+                    : searchResults.services.length;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-[14px] border-[1.5px] whitespace-nowrap text-xs font-[Vazir-Bold] transition-all flex-shrink-0"
+                  style={{
+                    backgroundColor: isActive ? colors.primary : colors.cardBackground,
+                    borderColor: isActive ? colors.primary : colors.border,
+                    color: isActive ? '#fff' : colors.textMain,
+                  }}
+                >
+                  {tab.label}
+                  {count > 0 && (
+                    <span
+                      className="min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-[Vazir-Bold]"
+                      style={{
+                        backgroundColor: isActive ? 'rgba(255,255,255,0.3)' : colors.primary + '20',
+                        color: isActive ? '#fff' : colors.primary,
+                      }}
+                    >
+                      {toPersianDigit(count)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* تب‌ها */}
-      {activeQuery.trim() && resultCounts.all > 0 && (
-        <SearchTabs activeTab={activeTab} counts={resultCounts} onChange={setActiveTab} />
-      )}
+      {/* نتایج جستجو */}
+      <div className="px-4 py-4 pb-32">
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner label="در حال جستجو..." />
+          </div>
+        ) : searchQuery.trim().length < 2 ? (
+          /* حالت خالی — نمایش تاریخچه یا راهنما */
+          <div className="flex flex-col items-center py-12 gap-4">
+            <span className="text-5xl">🔍</span>
+            <h3
+              className="text-base font-[Vazir-Bold] text-center"
+              style={{ color: colors.textMain }}
+            >
+              چه چیزی می‌خواهید جستجو کنید؟
+            </h3>
+            <p
+              className="text-sm text-center leading-6 max-w-xs"
+              style={{ color: colors.textSecondary }}
+            >
+              نام کسب‌وکار، خدمت یا دسته‌بندی مورد نظر را وارد کنید
+            </p>
+          </div>
+        ) : filteredResults.total > 0 ? (
+          <div className="space-y-4">
+            {/* نتایج کسب‌وکارها */}
+            {filteredResults.businesses.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                  کسب‌وکارها ({toPersianDigit(filteredResults.businesses.length)})
+                </h3>
+                {filteredResults.businesses.map((business) => (
+                  <button
+                    key={business.id}
+                    onClick={() => handleBusinessPress(business)}
+                    className="w-full flex items-center gap-3 p-3.5 rounded-2xl border text-right transition-all hover:shadow-md active:scale-[0.99]"
+                    style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+                  >
+                    {/* لوگو */}
+                    {business.logo && (
+                      <Image
+                        src={business.logo}
+                        alt={business.name}
+                        width={48}
+                        height={48}
+                        className="rounded-xl"
+                      />
+                    )}
+                    {/* اطلاعات */}
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-sm font-[Vazir-Bold] line-clamp-1"
+                        style={{ color: colors.textMain }}
+                      >
+                        {business.name}
+                      </p>
+                      <p
+                        className="text-xs font-[Vazir-Medium] line-clamp-1"
+                        style={{ color: colors.primary }}
+                      >
+                        {business.category_name || business.category || ''}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {business.city_name && (
+                          <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                            📍 {business.city_name}
+                          </span>
+                        )}
+                        {business.rating > 0 && (
+                          <span
+                            className="flex items-center gap-1 text-[10px] font-[Vazir-Bold]"
+                            style={{ color: colors.textMain }}
+                          >
+                            <FiStar size={10} color="#FFC107" fill="#FFC107" />
+                            {toPersianDigit(business.rating)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
 
-      {/* نتایج */}
-      {activeQuery.trim() ? <div className="px-4 py-4">{renderResults()}</div> : renderEmptyState()}
-
-      {/* مدال فیلتر فاصله */}
-      <DistanceFilterSheet
-        visible={distanceFilterVisible}
-        onClose={() => setDistanceFilterVisible(false)}
-        onApply={handleDistanceApply}
-        currentFilter={distanceFilter}
-        options={DISTANCE_OPTIONS}
-        userLocation={userLocation}
-      />
+            {/* نتایج خدمات */}
+            {filteredResults.services.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                  خدمات ({toPersianDigit(filteredResults.services.length)})
+                </h3>
+                {filteredResults.services.map((service) => (
+                  <div
+                    key={service.id}
+                    className="w-full p-3.5 rounded-2xl border"
+                    style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+                  >
+                    <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                      {service.name}
+                    </p>
+                    <p
+                      className="text-xs font-[Vazir-Medium] mt-1"
+                      style={{ color: colors.primary }}
+                    >
+                      {service.business_name}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                        {toPersianDigit((service.final_price || 0).toLocaleString('en-US'))} تومان
+                      </span>
+                      {service.has_deposit && (
+                        <span
+                          className="text-[10px] px-2 py-0.5 rounded-lg"
+                          style={{ backgroundColor: '#FF980018', color: '#FF9800' }}
+                        >
+                          بیعانه
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <EmptyState
+            icon="🔍"
+            title="نتیجه‌ای یافت نشد"
+            description={`عبارت «${searchQuery}» نتیجه‌ای نداشت`}
+          />
+        )}
+      </div>
     </ScreenWrapper>
-  );
-}
-
-// ═══════════ کامپوننت اصلی با Suspense ═══════════
-export default function SearchPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-app">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      }
-    >
-      <SearchPageContent />
-    </Suspense>
   );
 }

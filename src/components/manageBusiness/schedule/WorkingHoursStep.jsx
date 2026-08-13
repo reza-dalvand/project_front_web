@@ -7,7 +7,7 @@ import TimePickerField from './TimePickerField';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { minutesToTime, timeToMinutes } from '@/utils/dateUtils';
 
-const SLOT_DURATIONS = [15, 30, 45, 60, 90, 120];
+const SLOT_DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240, 300, 360];
 
 const format24 = (timeStr) => {
   if (!timeStr) return '—';
@@ -222,7 +222,7 @@ export default function WorkingHoursStep({
               <button
                 key={d}
                 onClick={() => onSlotDurationChange(d)}
-                className="px-3 py-2 rounded-xl border text-xs font-[Vazir-Bold] transition-all flex-1 min-w-[70px] sm:flex-none hover:scale-[1.03] active:scale-[0.97]"
+                className="px-3 py-2 rounded-xl border text-xs fontsrc/constants/collabTypes.js-[Vazir-Bold] transition-all flex-1 min-w-[70px] sm:flex-none hover:scale-[1.03] active:scale-[0.97]"
                 style={{
                   backgroundColor: slotDuration === d ? colors.primary : colors.background,
                   borderColor: slotDuration === d ? colors.primary : colors.border,
@@ -245,18 +245,19 @@ export default function WorkingHoursStep({
               </span>
             </div>
           )}
-          {slotDuration > 240 && (
+          {/* ✅ اصلاح: شرط از ۲۴۰ به ۳۶۰ تغییر کرد */}
+          {slotDuration > 360 && (
             <div
               className="flex items-center gap-1.5 mt-3 py-2 px-3 rounded-lg border"
               style={{ backgroundColor: '#FF980010', borderColor: '#FF980040' }}
             >
               <FiX size={13} color="#FF9800" />
               <span className="text-[11px] font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
-                مدت نوبت خیلی طولانیه (بیشتر از ۴ ساعت)
+                مدت نوبت خیلی طولانیه (بیشتر از ۶ ساعت)
               </span>
             </div>
           )}
-          {slotDuration >= 10 && slotDuration <= 240 && (
+          {slotDuration >= 10 && slotDuration <= 360 && (
             <div
               className="flex items-center gap-1.5 mt-3 py-2 px-3 rounded-lg border"
               style={{ backgroundColor: '#43A04710', borderColor: '#43A04740' }}

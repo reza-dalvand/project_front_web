@@ -2,75 +2,49 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  FiKey,
-  FiPhone,
-  FiX,
-  FiAlertCircle,
-  FiCheckCircle,
-  FiInfo,
-  FiShield,
-} from 'react-icons/fi';
+import { FiKey, FiX, FiAlertCircle, FiCheckCircle, FiInfo, FiPhone } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import Avatar from '@/components/common/Avatar';
 import Button from '@/components/common/Button';
-import OTPInput from '@/components/common/OTPInput';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
-// ═══════ فاز ۲: لایه API ═══════
 import { appointmentsService } from '@/api';
 import { USE_MOCK } from '@/api/config';
 
-const CODE_LENGTH = 4; // ✅ هماهنگ با بک‌اند: verification_code CharField(max_length=4)
+const CODE_LENGTH = 4;
 
-/**
- * کامپوننت واحد تایید کد خدمت
- *
- * @param {boolean}  visible      - وضعیت نمایش
- * @param {object}   appointment  - داده نوبت
- * @param {function} onClose      - بستن مودال
- * @param {function} onConfirm    - تایید موفق (appointmentId) => void
- * @param {boolean}  showCall     - نمایش دکمه تماس با مشتری
- * @param {boolean}  usePortal    - رندر با پورتال (پیش‌فرض: true)
- * @param {'orange'|'primary'} variant - رنگ‌بندی دکمه تایید
- */
 export default function VerifyCodeModal({
   visible,
   appointment,
   onClose,
   onConfirm,
   showCall = false,
-  usePortal = true,
   variant = 'orange',
 }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
+  const instanceId = useRef('verify-code-modal');
+  const inputRefs = useRef([]);
+
   const [code, setCode] = useState(['', '', '', '']);
   const [currentBox, setCurrentBox] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const inputRefs = useRef([]);
-  const instanceId = useRef('verify-code-modal');
 
-  // ─── ریست هنگام باز شدن ───
   useEffect(() => {
     if (visible && appointment) {
       setCode(['', '', '', '']);
       setCurrentBox(0);
       setError('');
       setLoading(false);
+      acquireScrollLock(instanceId.current);
+    } else {
+      releaseScrollLock(instanceId.current);
     }
+    return () => releaseScrollLock(instanceId.current);
   }, [visible, appointment]);
 
-  // ─── قفل اسکرول ───
-  useEffect(() => {
-    if (visible) acquireScrollLock(instanceId.current);
-    else releaseScrollLock(instanceId.current);
-    return () => releaseScrollLock(instanceId.current);
-  }, [visible]);
-
-  // ─── بستن با Escape ───
   useEffect(() => {
     if (!visible) return;
     const handleEsc = (e) => {
@@ -82,7 +56,6 @@ export default function VerifyCodeModal({
 
   if (!visible || !appointment) return null;
 
-  // ─── تایید کد — هماهنگ با بک‌اند ═══════
   const handleConfirm = async () => {
     const enteredCode = code.join('');
     if (enteredCode.length < CODE_LENGTH) {
@@ -95,11 +68,8 @@ export default function VerifyCodeModal({
 
     try {
       if (!USE_MOCK) {
-        // در آینده: فراخوانی واقعی API
-        // POST /appointments/{pk}/verify-code/
         await appointmentsService.verifyServiceCode(appointment.id, enteredCode);
       } else {
-        // حالت Mock — بررسی محلی کد
         await new Promise((r) => setTimeout(r, 1200));
         if (enteredCode !== appointment.verificationCode) {
           setError('کد وارد شده صحیح نیست. لطفاً از مشتری کد درست را بپرسید.');
@@ -120,7 +90,40 @@ export default function VerifyCodeModal({
     }
   };
 
-  // ─── تماس با مشتری ───
+  const handleChange = (text, index) => {
+    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
+    const newCode = [...code];
+
+    if (cleaned.length > 1) {
+      const digits = cleaned.slice(0, CODE_LENGTH).split('');
+      digits.forEach((digit, i) => {
+        if (index + i < CODE_LENGTH) newCode[index + i] = digit;
+      });
+      setCode(newCode);
+      const nextIndex = Math.min(index + digits.length, CODE_LENGTH - 1);
+      setCurrentBox(nextIndex);
+      inputRefs.current[nextIndex]?.focus();
+      return;
+    }
+
+    const digit = cleaned[0] || '';
+    newCode[index] = digit;
+    setCode(newCode);
+    if (error) setError('');
+
+    if (digit && index < CODE_LENGTH - 1) {
+      inputRefs.current[index + 1]?.focus();
+      setCurrentBox(index + 1);
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'Backspace' && !code[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+      setCurrentBox(index - 1);
+    }
+  };
+
   const handleCall = () => {
     const phone = toEnglishDigits(appointment.customerPhone || '').replace(/[^0-9]/g, '');
     if (phone) {
@@ -131,8 +134,6 @@ export default function VerifyCodeModal({
   };
 
   const isComplete = code.join('').length === CODE_LENGTH;
-
-  // ─── رنگ دکمه تایید ───
   const confirmBg = variant === 'orange' ? '#FF9800' : '#43A047';
 
   const content = (
@@ -146,7 +147,7 @@ export default function VerifyCodeModal({
         style={{ backgroundColor: colors.cardBackground }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ═══ هدر ═══ */}
+        {/* هدر */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
             <div
@@ -173,7 +174,7 @@ export default function VerifyCodeModal({
           </button>
         </div>
 
-        {/* ═══ اطلاعات مشتری ═══ */}
+        {/* اطلاعات مشتری */}
         <div className="flex items-center gap-3 py-1">
           <Avatar name={appointment.customerName} size="md" />
           <div className="flex flex-col gap-0.5 flex-1 min-w-0">
@@ -186,22 +187,49 @@ export default function VerifyCodeModal({
           </div>
         </div>
 
-        {/* ═══ ورودی کد — کامپوننت مشترک OTPInput ═══ */}
+        {/* ورودی کد */}
         <div className="py-2">
-          <OTPInput
-            value={code}
-            onChange={(newCode) => {
-              setCode(newCode);
-              if (error) setError('');
-            }}
-            length={CODE_LENGTH}
-            error={error}
-            currentBox={currentBox}
-            onCurrentBoxChange={setCurrentBox}
-          />
+          <div className="flex justify-center gap-2.5" dir="ltr">
+            {code.map((digit, index) => (
+              <input
+                key={index}
+                ref={(ref) => (inputRefs.current[index] = ref)}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={toPersianDigit(digit)}
+                onChange={(e) => handleChange(e.target.value, index)}
+                onKeyDown={(e) => handleKeyDown(e, index)}
+                onFocus={() => setCurrentBox(index)}
+                className="outline-none"
+                style={{
+                  width: '56px',
+                  height: '64px',
+                  borderRadius: '16px',
+                  backgroundColor: colors.cardBackground,
+                  border: `2px solid ${
+                    error && digit === ''
+                      ? '#E53935'
+                      : currentBox === index
+                        ? colors.primary
+                        : colors.border
+                  }`,
+                  color: colors.textMain,
+                  fontSize: '24px',
+                  fontFamily: "'Vazir-Bold', sans-serif",
+                  textAlign: 'center',
+                  lineHeight: '60px',
+                  padding: 0,
+                  direction: 'ltr',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s ease',
+                }}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* ═══ پیام خطا ═══ */}
+        {/* خطا */}
         {error && (
           <div
             className="flex items-center gap-2 p-3 rounded-xl border"
@@ -214,27 +242,7 @@ export default function VerifyCodeModal({
           </div>
         )}
 
-        {/* ═══ راهنمای کد تست ═══ */}
-        {USE_MOCK && (
-          <div
-            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border"
-            style={{
-              backgroundColor: colors.primary + '08',
-              borderColor: colors.primary + '25',
-            }}
-          >
-            <FiInfo size={12} style={{ color: colors.primary }} />
-            <span className="text-[10px]" style={{ color: colors.textSecondary }}>
-              حالت آزمایشی: کد{' '}
-              <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                {toPersianDigit(appointment.verificationCode)}
-              </span>{' '}
-              است
-            </span>
-          </div>
-        )}
-
-        {/* ═══ دکمه‌ها ═══ */}
+        {/* دکمه‌ها */}
         <div className="flex flex-col gap-2.5 mt-1">
           <Button
             title={loading ? 'در حال تایید...' : 'تایید کد'}
@@ -251,7 +259,7 @@ export default function VerifyCodeModal({
           {showCall && (
             <button
               onClick={handleCall}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 text-sm font-[Vazir-Bold] transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 text-sm font-[Vazir-Bold] transition-all"
               style={{ borderColor: '#2196F3', color: '#2196F3' }}
             >
               <FiPhone size={16} color="#2196F3" />
@@ -263,8 +271,5 @@ export default function VerifyCodeModal({
     </div>
   );
 
-  if (usePortal) {
-    return createPortal(content, document.body);
-  }
-  return content;
+  return createPortal(content, document.body);
 }

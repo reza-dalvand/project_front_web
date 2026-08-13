@@ -1,6 +1,7 @@
 // src/api/axios-instance.js
 /**
  * 🌐 Axios Instance مرکزی
+ * بدون تغییر نسبت به نسخه قبلی — فقط تأیید می‌شود
  */
 import axios from 'axios';
 import { API_CONFIG } from './config';
@@ -16,8 +17,6 @@ const api = axios.create({
 // ═══════════════════════════════════════════════
 api.interceptors.request.use(
   (config) => {
-    // ✅ به جای require، از getState زستاند استفاده می‌کنیم
-    // این روش circular import ایجاد نمی‌کند
     try {
       const { useTokenStore } = require('@/stores/useTokenStore');
       const token = useTokenStore.getState().getAccessToken();
@@ -70,11 +69,10 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // ✅ استفاده از getState به جای require
         const { useTokenStore } = await import('@/stores/useTokenStore');
         const { getRefreshToken, setTokens, clearTokens } = useTokenStore.getState();
-
         const refreshToken = getRefreshToken();
+
         if (!refreshToken) {
           throw new Error('No refresh token');
         }
@@ -90,7 +88,6 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // خروج اجباری
         try {
           const { useAuthStore } = await import('@/stores/useAuthStore');
           useAuthStore.getState().logout();

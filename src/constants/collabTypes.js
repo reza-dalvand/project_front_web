@@ -90,21 +90,26 @@ export const SLOT_DURATIONS = [
   { id: 45, label: '۴۵ دقیقه', hint: 'متوسط' },
   { id: 60, label: '۶۰ دقیقه', hint: 'یک ساعت' },
   { id: 90, label: '۹۰ دقیقه', hint: 'طولانی' },
-  { id: 120, label: '۱۲۰ دقیقه', hint: 'ویژه' },
+  { id: 120, label: '۱۲۰ دقیقه', hint: 'دو ساعت' },
+  { id: 180, label: '۱۸۰ دقیقه', hint: 'سه ساعت' },
+  { id: 240, label: '۲۴۰ دقیقه', hint: 'چهار ساعت' },
+  { id: 300, label: '۳۰۰ دقیقه', hint: 'پنج ساعت' },
+  { id: 360, label: '۳۶۰ دقیقه', hint: 'شش ساعت' },
 ];
 
 // ═══════════════════════════════════════
 //    محدودیت‌های اعتبارسنجی
 // ═══════════════════════════════════════
 export const LIMITS = {
-  MIN_FINAL_PRICE: 50000, // حداقل قیمت نهایی خدمت
-  MIN_DEPOSIT: 50000, // حداقل مبلغ بیعانه
-  MAX_DESCRIPTION_LENGTH: 300, // حداکثر طول توضیحات
-  MAX_TITLE_LENGTH: 100, // حداکثر طول عنوان
-  OTP_LENGTH: 5, // طول کد تایید
-  VERIFICATION_CODE_LENGTH: 4, // طول کد تایید نوبت
-  RESEND_OTP_SECONDS: 60, // زمان انتظار ارسال مجدد OTP
-  REGENERATE_CODE_SECONDS: 300, // زمان بین تولید مجدد کد تایید
+  MIN_FINAL_PRICE: 50000,
+  MIN_DEPOSIT: 50000,
+  MAX_DESCRIPTION_LENGTH: 300,
+  MAX_TITLE_LENGTH: 100,
+  OTP_LENGTH: 5,
+  VERIFICATION_CODE_LENGTH: 4,
+  RESEND_OTP_SECONDS: 60,
+  REGENERATE_CODE_SECONDS: 300,
+  MAX_SLOT_DURATION: 360, // ✅ حداکثر مدت نوبت: ۳۶۰ دقیقه
 };
 
 // ═══════════════════════════════════════

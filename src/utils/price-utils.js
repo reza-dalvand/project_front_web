@@ -2,59 +2,45 @@
 /**
  * 💰 محاسبات قیمت و کمیسیون
  *
- * قوانین کمیسیون (نسخه نهایی — هماهنگ با تست‌ها):
+ * قوانین کمیسیون (نسخه نهایی):
  * - زیر ۲۵۰ هزار تومان: ۷ هزار تومان ثابت
- * - از ۲۵۰ هزار تا ۵۰۰ هزار تومان: ۴ درصد
- * - از ۵۰۰ هزار تومان به بالا: ۵ درصد
+ * - از ۲۵۰ هزار تا ۵۰۰ هزار تومان: ۳ درصد ✅
+ * - از ۵۰۰ هزار تومان به بالا: ۴ درصد ✅
  * - سقف کمیسیون: ۵۰ هزار تومان
- *
- * این مبلغ از قیمت کل کسر می‌شود (نه اضافه)
  */
-
 /**
  * سقف کمیسیون
  */
 export const MAX_APP_FEE = 50000;
-
 /**
  * حداقل قیمت نهایی خدمت
  */
 export const MIN_FINAL_PRICE = 50000;
-
 /**
  * حداقل مبلغ بیعانه
  */
 export const MIN_DEPOSIT = 50000;
-
 /**
  * محاسبه کمیسیون اپلیکیشن بر اساس قیمت اصلی خدمت
- * ✅ اصلاح: درصدها هماهنگ با تست‌ها
  * @param {number} basePrice - قیمت پایه خدمت (تومان)
  * @returns {number} - مبلغ کمیسیون (تومان)
  */
 export const calculateAppFee = (basePrice) => {
   if (!basePrice || basePrice <= 0) return 0;
-
   let fee = 0;
-
   if (basePrice < 250000) {
-    // زیر ۲۵۰ هزار تومان: ۷ هزار تومان ثابت
     fee = 7000;
   } else if (basePrice <= 500000) {
-    // ✅ اصلاح: از ۲۵۰ تا ۵۰۰ هزار: ۴ درصد
-    fee = Math.round(basePrice * 0.04);
+    // ✅ ۳ درصد
+    fee = Math.round(basePrice * 0.03);
   } else {
-    // ✅ اصلاح: از ۵۰۰ هزار به بالا: ۵ درصد
-    fee = Math.round(basePrice * 0.05);
+    // ✅ ۴ درصد
+    fee = Math.round(basePrice * 0.04);
   }
-
-  // سقف کمیسیون: ۵۰ هزار تومان
   return Math.min(fee, MAX_APP_FEE);
 };
-
 /**
  * لیست بازه‌های کمیسیون برای نمایش در مدال راهنما
- * ✅ اصلاح: درصدها هماهنگ با تست‌ها
  */
 export const APP_FEE_TIERS = [
   {
@@ -68,21 +54,20 @@ export const APP_FEE_TIERS = [
   {
     min: 250000,
     max: 500000,
-    fee: 4, // ✅ اصلاح: ۴٪
+    fee: 3,
     type: 'percent',
     label: 'درصدی',
-    description: '۴٪ از مبلغ خدمت',
+    description: '۳٪ از مبلغ خدمت',
   },
   {
     min: 500000,
     max: Infinity,
-    fee: 5, // ✅ اصلاح: ۵٪
+    fee: 4,
     type: 'percent',
     label: 'درصدی',
-    description: '۵٪ از مبلغ خدمت',
+    description: '۴٪ از مبلغ خدمت',
   },
 ];
-
 /**
  * پیدا کردن ردیف فعلی کمیسیون برای هایلایت کردن
  * @param {number} basePrice
@@ -90,14 +75,11 @@ export const APP_FEE_TIERS = [
  */
 export const getCurrentFeeTier = (basePrice) => {
   if (!basePrice || basePrice <= 0) return APP_FEE_TIERS[0];
-
   const tier = APP_FEE_TIERS.find((t) => basePrice > t.min && basePrice <= t.max);
   if (tier) return tier;
-
   if (basePrice <= APP_FEE_TIERS[0].max) return APP_FEE_TIERS[0];
   return APP_FEE_TIERS[APP_FEE_TIERS.length - 1];
 };
-
 /**
  * محاسبه قیمت نهایی با تخفیف
  * @param {number} originalPrice - قیمت اصلی
@@ -109,7 +91,6 @@ export const calculateFinalPrice = (originalPrice, discountPercent = 0) => {
   const discount = Math.round((originalPrice * discountPercent) / 100);
   return Math.max(0, originalPrice - discount);
 };
-
 /**
  * محاسبه مبلغ تخفیف
  * @param {number} originalPrice
@@ -120,7 +101,6 @@ export const calculateDiscountAmount = (originalPrice, discountPercent = 0) => {
   if (!originalPrice || !discountPercent) return 0;
   return Math.round((originalPrice * discountPercent) / 100);
 };
-
 /**
  * محاسبه بیعانه بر اساس قوانین
  * @param {number} finalPrice - قیمت نهایی خدمت
@@ -133,7 +113,6 @@ export const calculateDeposit = (finalPrice, hasDeposit = false, depositPercent 
   const deposit = Math.round((finalPrice * depositPercent) / 100);
   return Math.max(deposit, MIN_DEPOSIT);
 };
-
 /**
  * محاسبه مبلغ باقی‌مانده (پرداخت در سالن)
  * @param {number} finalPrice
@@ -143,7 +122,6 @@ export const calculateDeposit = (finalPrice, hasDeposit = false, depositPercent 
 export const calculateRemaining = (finalPrice, depositAmount = 0) => {
   return Math.max(0, finalPrice - depositAmount);
 };
-
 /**
  * محاسبه سهم کسب‌وکار پس از کسر کمیسیون
  * @param {number} finalPrice - قیمت نهایی خدمت
@@ -153,7 +131,6 @@ export const calculateBusinessShare = (finalPrice) => {
   const fee = calculateAppFee(finalPrice);
   return Math.max(0, finalPrice - fee);
 };
-
 /**
  * ساخت خلاصه قیمت برای نمایش
  * @param {number} originalPrice
@@ -174,7 +151,6 @@ export const buildPriceSummary = (
   const depositAmount = calculateDeposit(finalPrice, hasDeposit, depositPercent);
   const remaining = calculateRemaining(finalPrice, depositAmount);
   const businessShare = calculateBusinessShare(finalPrice);
-
   return {
     originalPrice,
     discountPercent,

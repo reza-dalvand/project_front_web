@@ -1,8 +1,8 @@
+// src/app/auth/login/page.jsx
 'use client';
-
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FiSmartphone, FiShield, FiSend, FiCheck } from 'react-icons/fi';
+import { FiSmartphone, FiShield, FiSend } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button, Input } from '@/components/common';
@@ -10,7 +10,6 @@ import { validatePhone, cleanPhone } from '@/utils/phoneUtils';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { authService } from '@/api';
 
-// ✅ کامپوننت داخلی که از useSearchParams استفاده می‌کند
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,12 +43,14 @@ function LoginPageContent() {
       setError('شماره موبایل معتبر نیست (مثال: ۰۹۱۲۳۴۵۶۷۸۹)');
       return;
     }
+
     setLoading(true);
     setError('');
+
     try {
       const cleanedPhone = cleanPhone(phone);
       await authService.sendOTP(cleanedPhone);
-      setPendingAuth(cleanedPhone, '', '');
+      setPendingAuth(cleanedPhone);
       setLoading(false);
       router.push(`/auth/verify-otp?redirect=${encodeURIComponent(redirectUrl)}`);
     } catch (err) {
@@ -144,7 +145,6 @@ function LoginPageContent() {
             rightIcon={<FiSmartphone size={18} style={{ color: colors.textSecondary }} />}
           />
 
-          {/* شمارنده ارقام */}
           {phone.length > 0 && phone.length < 11 && (
             <div
               className="flex items-center gap-2 py-1.5 px-3 rounded-lg border self-start mb-3"
@@ -170,7 +170,16 @@ function LoginPageContent() {
               }}
               type="button"
             >
-              {termsAccepted && <FiCheck size={14} style={{ color: '#fff' }} />}
+              {termsAccepted && (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path
+                    d="M2 7l3.5 3.5L12 3.5"
+                    stroke="#fff"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              )}
             </button>
             <span className="text-[13px] leading-5" style={{ color: colors.textMain }}>
               با{' '}
@@ -193,8 +202,8 @@ function LoginPageContent() {
             variant="primary"
             size="lg"
             fullWidth
-            icon={<FiSend size={16} />}
-            iconPosition="left"
+            icon={<FiSend size={16} color="#fff" />}
+            iconPosition="right"
           />
         </div>
 
@@ -221,7 +230,6 @@ function LoginPageContent() {
   );
 }
 
-// ✅ کامپوننت اصلی با Suspense
 export default function LoginPage() {
   return (
     <Suspense

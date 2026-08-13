@@ -1,11 +1,6 @@
 // src/stores/useAuthStore.js
 /**
- * Store احراز هویت - بازنویسی برای JWT
- *
- * هماهنگ با بک‌اند:
- * - OTP ۵ رقمی
- * - JWT Access + Refresh Token
- * - Logout با Blacklist
+ * Store احراز هویت — نسخه نهایی هماهنگ با بک‌اند
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -14,27 +9,21 @@ import { useTokenStore } from './useTokenStore';
 import { isTokenExpired } from '@/utils/jwt-utils';
 
 // ═══════════════════════════════════════════
-//    ۱. Store اصلی احراز هویت (با persist)
+//    ۱. Store اصلی احراز هویت
 // ═══════════════════════════════════════════
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      // ─── State ───
       isAuthenticated: false,
       user: null,
       pendingPhone: null,
       pendingName: null,
       _hydrated: false,
 
-      // ─── Hydration ───
       setHydrated: () => set({ _hydrated: true }),
 
-      // ─── Actions ───
       /**
        * ذخیره شماره در انتظار OTP
-       * @param {string} phone
-       * @param {string} firstName
-       * @param {string} lastName
        */
       setPendingAuth: (phone, firstName = '', lastName = '') => {
         set({
@@ -45,16 +34,15 @@ export const useAuthStore = create(
 
       /**
        * ورود موفق — ذخیره user + توکن‌ها
-       * @param {object} userData - داده‌های کاربر از API
-       * @param {object} tokens - { access_token, refresh_token, expires_in }
+       * @param {object} userData - داده‌های کاربر از API (فرمت snake_case بک‌اند)
+       * @param {object} tokens - { access_token, refresh_token }
        */
       login: (userData, tokens) => {
-        // ذخیره توکن‌ها در store جداگانه
+        // ذخیره توکن‌ها
         if (tokens?.access_token) {
           useTokenStore.getState().setTokens({
             access: tokens.access_token,
             refresh: tokens.refresh_token,
-            expiresIn: tokens.expires_in,
           });
         }
 
@@ -63,15 +51,17 @@ export const useAuthStore = create(
           user: {
             id: userData.id,
             phone: userData.phone,
-            phoneDisplay: userData.phone_display,
-            name: userData.full_name || `${userData.first_name} ${userData.last_name}`.trim(),
-            firstName: userData.first_name,
-            lastName: userData.last_name,
-            avatar: userData.avatar,
-            isVerified: userData.is_verified,
-            isNationalIdVerified: userData.is_national_id_verified,
-            verifiedName: userData.verified_name,
-            dateJoined: userData.date_joined,
+            phoneDisplay: userData.phone_display || userData.phone,
+            name:
+              userData.full_name ||
+              `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
+            firstName: userData.first_name || '',
+            lastName: userData.last_name || '',
+            avatar: userData.avatar || null,
+            isVerified: userData.is_verified ?? false,
+            isNationalIdVerified: userData.is_national_id_verified ?? false,
+            verifiedName: userData.verified_name || '',
+            dateJoined: userData.date_joined || '',
           },
           pendingPhone: null,
           pendingName: null,
@@ -87,17 +77,11 @@ export const useAuthStore = create(
           if (refreshToken) {
             await authService.logout(refreshToken, false);
           }
-        } catch (e) {
-          console.log('Logout API failed (probably offline):', e.message);
+        } catch {
+          // آفلاین یا خطای شبکه — فقط state پاک شود
         }
-        // پاک کردن توکن‌ها
         useTokenStore.getState().clearTokens();
-        set({
-          isAuthenticated: false,
-          user: null,
-          pendingPhone: null,
-          pendingName: null,
-        });
+        set({ isAuthenticated: false, user: null, pendingPhone: null, pendingName: null });
       },
 
       /**
@@ -109,19 +93,13 @@ export const useAuthStore = create(
           if (refreshToken) {
             await authService.logout(refreshToken, true);
           }
-        } catch (e) {
-          console.log('Logout all API failed:', e.message);
-        }
+        } catch {}
         useTokenStore.getState().clearTokens();
-        set({
-          isAuthenticated: false,
-          user: null,
-        });
+        set({ isAuthenticated: false, user: null });
       },
 
       /**
        * بروزرسانی پروفایل کاربر
-       * @param {object} updates
        */
       updateUser: (updates) =>
         set((state) => ({
@@ -130,36 +108,30 @@ export const useAuthStore = create(
 
       /**
        * بررسی اعتبار session
-       * اگر access token منقضی شده ولی refresh token داریم، تلاش برای refresh
        * @returns {Promise<boolean>}
        */
       checkSession: async () => {
         const { accessToken, refreshToken } = useTokenStore.getState();
 
-        // اگر اصلاً توکنی نداریم
         if (!accessToken && !refreshToken) {
           set({ isAuthenticated: false, user: null });
           return false;
         }
 
-        // اگر access token هنوز معتبر است
         if (accessToken && !isTokenExpired(accessToken)) {
           return true;
         }
 
-        // اگر refresh token داریم، تلاش برای refresh
         if (refreshToken) {
           try {
             const result = await authService.refreshToken(refreshToken);
-            const { access, refresh } = result.data;
+            const data = result.data;
             useTokenStore.getState().setTokens({
-              access,
-              refresh,
-              expiresIn: null,
+              access: data.access,
+              refresh: data.refresh,
             });
             return true;
           } catch {
-            // Refresh failed — خروج
             useTokenStore.getState().clearTokens();
             set({ isAuthenticated: false, user: null });
             return false;
@@ -188,7 +160,7 @@ export const useAuthStore = create(
 );
 
 // ═══════════════════════════════════════════
-//    ۲. Store مدال احراز هویت (بدون persist)
+//    ۲. Store مدال احراز هویت
 // ═══════════════════════════════════════════
 export const useAuthModalStore = create((set, get) => ({
   showAuthModal: false,
@@ -205,9 +177,7 @@ export const useAuthModalStore = create((set, get) => ({
       setTimeout(() => {
         try {
           pendingAction();
-        } catch (e) {
-          console.error('Pending action failed:', e);
-        }
+        } catch {}
       }, 300);
     }
   },

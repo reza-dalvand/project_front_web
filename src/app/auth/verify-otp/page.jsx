@@ -1,9 +1,8 @@
 // src/app/auth/verify-otp/page.jsx
 'use client';
-
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FiMessageSquare, FiEdit, FiCheck, FiRefreshCw } from 'react-icons/fi';
+import { FiMessageSquare, FiEdit, FiRefreshCw } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/common';
@@ -12,17 +11,15 @@ import { toPersianDigit } from '@/utils/numberUtils';
 import { authService } from '@/api';
 import { OTP_CONFIG } from '@/api/config';
 
-const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH; // 5
-const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS; // 60
+const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;
+const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS;
 
-// ═══════════ کامپوننت داخلی با useSearchParams ═══════════
 function VerifyOtpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { colors } = useTheme();
   const login = useAuthStore((s) => s.login);
   const pendingPhone = useAuthStore((s) => s.pendingPhone);
-  const pendingName = useAuthStore((s) => s.pendingName);
   const isLoggingIn = useRef(false);
   const redirectUrl = searchParams.get('redirect') || '/';
 
@@ -33,14 +30,12 @@ function VerifyOtpPageContent() {
   const [timer, setTimer] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
 
-  // اگر شماره موبایل ذخیره نشده، برگرد به لاگین
   useEffect(() => {
     if (!pendingPhone && !isLoggingIn.current) {
       router.replace(`/auth/login?redirect=${encodeURIComponent(redirectUrl)}`);
     }
   }, [pendingPhone, router, redirectUrl]);
 
-  // تایمر ارسال مجدد
   useEffect(() => {
     if (timer <= 0) {
       setCanResend(true);
@@ -50,7 +45,6 @@ function VerifyOtpPageContent() {
     return () => clearInterval(interval);
   }, [timer]);
 
-  // ماسک معکوس
   const maskedPhone = pendingPhone ? pendingPhone.slice(-4) + '***' + pendingPhone.slice(0, 4) : '';
 
   const handleVerify = async () => {
@@ -59,19 +53,21 @@ function VerifyOtpPageContent() {
       setError(`لطفاً کد ${toPersianDigit(OTP_LENGTH)} رقمی را کامل وارد کنید`);
       return;
     }
+
     setLoading(true);
     setError('');
+
     try {
       const result = await authService.verifyOTP(pendingPhone, code);
 
-      // ✅ FIX: بررسی null بودن data
       if (!result?.data?.user) {
         throw new Error('خطا در ورود. لطفاً دوباره تلاش کنید.');
       }
 
-      const { user, access_token, refresh_token, expires_in } = result.data;
+      const { user, access_token, refresh_token } = result.data;
       isLoggingIn.current = true;
-      login(user, { access_token, refresh_token, expires_in });
+
+      login(user, { access_token, refresh_token });
       router.replace(redirectUrl);
     } catch (err) {
       setLoading(false);
@@ -140,7 +136,6 @@ function VerifyOtpPageContent() {
           onCurrentBoxChange={setCurrentBox}
         />
 
-        {/* پیام خطا */}
         {error && (
           <p className="text-center text-sm" style={{ color: '#E57373' }}>
             {error}
@@ -161,6 +156,7 @@ function VerifyOtpPageContent() {
               ویرایش شماره
             </span>
           </button>
+
           {canResend ? (
             <button onClick={handleResend} className="flex items-center gap-1" type="button">
               <FiRefreshCw size={14} style={{ color: colors.primary }} />
@@ -184,27 +180,12 @@ function VerifyOtpPageContent() {
           variant="primary"
           size="lg"
           fullWidth
-          iconPosition="left"
         />
-
-        {/* راهنمای کد تست */}
-        <div
-          className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border"
-          style={{
-            backgroundColor: colors.primary + '10',
-            borderColor: colors.primary + '30',
-          }}
-        >
-          <span className="text-xs" style={{ color: colors.primary }}>
-            حالت آزمایشی: کد تایید <span className="font-[Vazir-Bold]">۱۲۳۴۵</span> است
-          </span>
-        </div>
       </div>
     </div>
   );
 }
 
-// ═══════════ کامپوننت اصلی با Suspense ═══════════
 export default function VerifyOtpPage() {
   return (
     <Suspense

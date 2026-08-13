@@ -2,7 +2,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import { FiPlus, FiUser } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -17,23 +16,15 @@ import { adsService } from '@/api';
 import { USE_MOCK } from '@/api/config';
 import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 
-// ✅ Lazy Load مدال جزئیات
-const ModelRequestDetailModal = dynamic(
-  () => import('@/components/manageBusiness/modelRequest/ModelRequestDetailModal'),
-  { ssr: false, loading: () => null }
-);
-
 export default function ModelRequestsPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
   const [requests, setRequests] = useState(MOCK_MODEL_REQUESTS);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [detailVisible, setDetailVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ═══ دریافت لیست من از API ═══
+  // ═══════ دریافت لیست من از API ═══════
   useEffect(() => {
     const fetchMyRequests = async () => {
       if (USE_MOCK) return;
@@ -54,44 +45,25 @@ export default function ModelRequestsPage() {
   const handleCreate = useCallback(() => router.push('/manage/model-requests/create'), [router]);
 
   const handleEdit = useCallback(
-    (request) => {
-      router.push(`/manage/model-requests/create?id=${request.id}`);
-    },
+    (request) => router.push(`/manage/model-requests/create?id=${request.id}`),
     [router]
   );
 
   const handleDelete = useCallback(
     async (request) => {
-      if (USE_MOCK) {
-        setRequests((prev) => prev.filter((r) => r.id !== request.id));
-        setDetailVisible(false);
-        setSelectedRequest(null);
-        showToast('درخواست مدل با موفقیت حذف شد', 'success');
-        return;
-      }
       try {
-        await adsService.deleteModelRequest(request.id);
+        if (!USE_MOCK) {
+          await adsService.deleteModelRequest(request.id);
+        }
         setRequests((prev) => prev.filter((r) => r.id !== request.id));
-        setDetailVisible(false);
-        setSelectedRequest(null);
         showToast('درخواست مدل با موفقیت حذف شد', 'success');
       } catch (error) {
         console.error('Failed to delete model request:', error);
-        showToast('خطا در حذف درخواست', 'error');
+        showToast(error.message || 'خطا در حذف درخواست', 'error');
       }
     },
     [showToast]
   );
-
-  const openDetail = useCallback((request) => {
-    setSelectedRequest(request);
-    setDetailVisible(true);
-  }, []);
-
-  const closeDetail = useCallback(() => {
-    setDetailVisible(false);
-    setTimeout(() => setSelectedRequest(null), 300);
-  }, []);
 
   if (!isAuthenticated) {
     return (
@@ -107,23 +79,16 @@ export default function ModelRequestsPage() {
     <ScreenWrapper padding={0}>
       <Header title="درخواست‌های مدل" onBackPress={() => router.push('/manage')} />
       <div className="flex-1 overflow-y-auto p-4 pb-32">
-        {/* Hero */}
         <div className="flex flex-col items-center gap-2 py-4 mb-4">
           <div
             className="w-[72px] h-[72px] rounded-3xl flex items-center justify-center"
-            style={{ backgroundColor: colors.primary + '15' }}
+            style={{ backgroundColor: '#E91E6315' }}
           >
-            <FiUser size={32} style={{ color: colors.primary }} />
+            <FiUser size={32} color="#E91E63" />
           </div>
           <h2 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-            درخواست‌های مدل
+            مدیریت درخواست‌های مدل
           </h2>
-          <p
-            className="text-xs font-[Vazir] text-center px-5"
-            style={{ color: colors.textSecondary }}
-          >
-            برای مشاهده جزئیات، روی هر درخواست ضربه بزنید
-          </p>
         </div>
 
         {isLoading ? (
@@ -151,7 +116,7 @@ export default function ModelRequestsPage() {
                   <FiPlus size={22} color="#fff" />
                 </div>
                 <div className="flex-1 text-right">
-                  <p className="text-sm font-[Vazir-Bold] text-white">ثبت درخواست مدل جدید</p>
+                  <p className="text-sm font-[Vazir-Bold] text-white">ایجاد درخواست مدل جدید</p>
                   <p className="text-[11px] text-white/80">مدل جدیدی برای خدمات خود جذب کنید</p>
                 </div>
               </button>
@@ -159,7 +124,13 @@ export default function ModelRequestsPage() {
 
             {requests.length > 0 ? (
               requests.map((request) => (
-                <ModelRequestCard key={request.id} request={request} onPress={openDetail} />
+                <ModelRequestCard
+                  key={request.id}
+                  request={request}
+                  onPress={(req) => {}}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
               ))
             ) : (
               <EmptyState
@@ -173,14 +144,6 @@ export default function ModelRequestsPage() {
           </>
         )}
       </div>
-
-      <ModelRequestDetailModal
-        visible={detailVisible}
-        request={selectedRequest}
-        onClose={closeDetail}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
     </ScreenWrapper>
   );
 }
