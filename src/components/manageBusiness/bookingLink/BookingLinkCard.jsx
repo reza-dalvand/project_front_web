@@ -94,25 +94,6 @@ export default function BookingLinkCard({ bookingLink, onShare, onCopy }) {
           <span className="text-sm font-[Vazir-Bold] text-white">اشتراک‌گذاری</span>
         </button>
       </div>
-
-      {/* آمار لینک */}
-      <div
-        className="flex items-center justify-around pt-4 border-t"
-        style={{ borderColor: colors.border }}
-      >
-        <div className="flex items-center gap-2">
-          <FiMousePointer size={16} style={{ color: colors.primary }} />
-          <span className="text-xs" style={{ color: colors.textSecondary }}>
-            {toPersianDigit(clicks)} کلیک
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FiCalendar size={16} style={{ color: '#43A047' }} />
-          <span className="text-xs" style={{ color: colors.textSecondary }}>
-            {toPersianDigit(bookings)} رزرو
-          </span>
-        </div>
-      </div>
     </Card>
   );
 }

@@ -295,24 +295,44 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
             <p className="text-xs mb-3" style={{ color: colors.textSecondary }}>
               درصد سالن و همکار را وارد کنید (مجموع باید ۱۰۰٪ باشد)
             </p>
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <label className="text-xs mb-1 block" style={{ color: colors.primary }}>
-                  سهم سالن
+            {/* ✅ اصلاح: grid به جای flex + حذف mb اضافی */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  className="text-xs mb-1.5 block font-[Vazir-Medium]"
+                  style={{ color: colors.primary }}
+                >
+                  سهم سالن (٪)
                 </label>
-                <Input placeholder="۴۰" value={percentSalon} onChangeText={handlePercentSalon} />
+                <div className="mb-0 [&>div]:mb-0">
+                  <Input
+                    placeholder="۴۰"
+                    value={percentSalon}
+                    onChangeText={handlePercentSalon}
+                    type="tel"
+                    maxLength={3}
+                  />
+                </div>
               </div>
-              <div className="flex-1">
-                <label className="text-xs mb-1 block" style={{ color: '#9C27B0' }}>
-                  سهم همکار
+              <div>
+                <label
+                  className="text-xs mb-1.5 block font-[Vazir-Medium]"
+                  style={{ color: '#9C27B0' }}
+                >
+                  سهم همکار (٪)
                 </label>
-                <Input
-                  placeholder="۶۰"
-                  value={percentPartner}
-                  onChangeText={handlePercentPartner}
-                />
+                <div className="mb-0 [&>div]:mb-0">
+                  <Input
+                    placeholder="۶۰"
+                    value={percentPartner}
+                    onChangeText={handlePercentPartner}
+                    type="tel"
+                    maxLength={3}
+                  />
+                </div>
               </div>
             </div>
+            {/* نمایش مجموع */}
             {parseNumber(percentSalon) > 0 && (
               <div
                 className="flex items-center gap-2 mt-3 p-2.5 rounded-lg border"
@@ -328,7 +348,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
                 }}
               >
                 <span
-                  className="text-xs"
+                  className="text-xs font-[Vazir-Bold]"
                   style={{
                     color:
                       parseNumber(percentSalon) + parseNumber(percentPartner) === 100
@@ -337,13 +357,41 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
                   }}
                 >
                   {parseNumber(percentSalon) + parseNumber(percentPartner) === 100
-                    ? `✓ مجموع: ۱۰۰٪`
-                    : `مجموع: ${toPersianDigit(parseNumber(percentSalon) + parseNumber(percentPartner))}٪`}
+                    ? '✓ مجموع: ۱۰۰٪'
+                    : `مجموع: ${toPersianDigit(
+                        parseNumber(percentSalon) + parseNumber(percentPartner)
+                      )}٪`}
                 </span>
               </div>
             )}
           </Card>
         )}
+
+        {collabType === 'fixed' && (
+          <Card variant="default" padding={14} radius={14}>
+            <div className="[&>div]:mb-3 last:[&>div]:mb-0">
+              <Input
+                label="مبلغ اجاره ماهانه (تومان) *"
+                placeholder="مثال: ۵,۰۰۰,۰۰۰"
+                value={fixedAmount}
+                onChangeText={(t) => {
+                  setFixedAmount(formatPriceInput(t));
+                  setErrors((p) => ({ ...p, price: '' }));
+                }}
+                type="tel"
+              />
+              <Input
+                label="مبلغ رهن (اختیاری)"
+                placeholder="مثال: ۲۰,۰۰۰,۰۰۰ یا خالی"
+                value={fixedDeposit}
+                onChangeText={(t) => setFixedDeposit(formatPriceInput(t))}
+                type="tel"
+              />
+            </div>
+          </Card>
+        )}
+
+        {collabType === 'hourly' && <Card variant="default" padding={14} radius={14}></Card>}
         {collabType === 'fixed' && (
           <Card variant="default" padding={14} radius={14}>
             <Input

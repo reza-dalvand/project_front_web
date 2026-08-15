@@ -10,6 +10,7 @@ export default function LineRentalStats({ ads }) {
   const stats = {
     total: ads.length,
     active: ads.filter((a) => a.status === 'active').length,
+    inactive: ads.filter((a) => a.status === 'inactive').length,
   };
 
   return (
@@ -28,6 +29,14 @@ export default function LineRentalStats({ ads }) {
           label="فعال"
           value={toPersianDigit(stats.active)}
           color="#4CAF50"
+          variant="compact"
+        />
+        <div className="w-px h-10 mx-2" style={{ backgroundColor: colors.border }} />
+        <StatsCard
+          icon="🚫"
+          label="غیرفعال"
+          value={toPersianDigit(stats.inactive)}
+          color="#E53935"
           variant="compact"
         />
       </div>
