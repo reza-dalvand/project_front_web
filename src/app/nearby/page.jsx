@@ -20,6 +20,12 @@ import NearbyModelRequestsSection from '@/components/nearby/NearbyModelRequestsS
 import NearbyLineRentalsSection from '@/components/nearby/NearbyLineRentalsSection';
 import LocationInfoBar from '@/components/nearby/LocationInfoBar';
 
+// ✅ FIX (فاز ۴): کش ماژول‌سطح برای موقعیت مکانی
+// جلوگیری از فراخوانی مجدد GPS/WiFi در هر mount (صرفه‌جویی ۲-۱۰ ثانیه)
+let cachedLocation = null;
+let cachedLocationTimestamp = 0;
+const LOCATION_CACHE_TTL = 5 * 60 * 1000; // ۵ دقیقه کش
+
 export default function NearbyPage() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -31,11 +37,24 @@ export default function NearbyPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const PAGE_SIZE = 10;
 
-  const fetchLocation = useCallback(async () => {
+  // ✅ FIX (فاز ۴): استفاده از کش + پارامتر forceRefresh برای refresh دستی
+  const fetchLocation = useCallback(async (forceRefresh = false) => {
+    // استفاده از کش اگر موجود و تازه باشد
+    if (
+      !forceRefresh &&
+      cachedLocation &&
+      Date.now() - cachedLocationTimestamp < LOCATION_CACHE_TTL
+    ) {
+      setUserLocation(cachedLocation);
+      return;
+    }
+
     setLocationLoading(true);
     setLocationError(null);
     try {
       const loc = await getCurrentLocation();
+      cachedLocation = loc;
+      cachedLocationTimestamp = Date.now();
       setUserLocation(loc);
     } catch (err) {
       setLocationError(getLocationErrorMessage(err));
@@ -65,51 +84,22 @@ export default function NearbyPage() {
 
   const getCategoryForSubService = (subServiceId) => {
     const map = {
-      makeup_bride: '1',
-      makeup_party: '1',
-      makeup_natural: '1',
-      makeup_european: '1',
-      makeup_grim: '1',
-      shinyon: '1',
-      nail_gel: '2',
-      nail_powder: '2',
-      nail_design: '2',
-      nail_gelish: '2',
-      nail_repair: '2',
-      pedicure: '2',
-      laser_alex: '3',
-      laser_diode: '3',
-      laser_fullbody: '3',
-      laser_face: '3',
+      makeup_bride: '1', makeup_party: '1', makeup_natural: '1', makeup_european: '1',
+      makeup_grim: '1', shinyon: '1',
+      nail_gel: '2', nail_powder: '2', nail_design: '2', nail_gelish: '2',
+      nail_repair: '2', pedicure: '2',
+      laser_alex: '3', laser_diode: '3', laser_fullbody: '3', laser_face: '3',
       laser_bikini: '3',
-      facial_basic: '4',
-      facial_vip: '4',
-      facial_gold: '4',
-      facial_hydro: '4',
-      facial_acne: '4',
-      facial_antiage: '4',
-      hair_color_full: '5',
-      hair_highlight: '5',
-      hair_balayage: '5',
-      hair_ombre: '5',
-      hair_bleach: '5',
-      hair_root: '5',
-      keratin_brazilian: '6',
-      keratin_protein: '6',
-      keratin_botox: '6',
-      keratin_nanoplasty: '6',
-      hair_straighten: '6',
-      lash_classic: '7',
-      lash_hollywood: '7',
-      lash_volume: '7',
-      lash_lift: '7',
-      lash_tint: '7',
-      lash_removal: '7',
-      massage_swedish: '8',
-      massage_thai: '8',
-      massage_sports: '8',
-      massage_stone: '8',
-      massage_aroma: '8',
+      facial_basic: '4', facial_vip: '4', facial_gold: '4', facial_hydro: '4',
+      facial_acne: '4', facial_antiage: '4',
+      hair_color_full: '5', hair_highlight: '5', hair_balayage: '5', hair_ombre: '5',
+      hair_bleach: '5', hair_root: '5',
+      keratin_brazilian: '6', keratin_protein: '6', keratin_botox: '6',
+      keratin_nanoplasty: '6', hair_straighten: '6',
+      lash_classic: '7', lash_hollywood: '7', lash_volume: '7', lash_lift: '7',
+      lash_tint: '7', lash_removal: '7',
+      massage_swedish: '8', massage_thai: '8', massage_sports: '8',
+      massage_stone: '8', massage_aroma: '8',
     };
     return map[subServiceId] || null;
   };
@@ -178,25 +168,23 @@ export default function NearbyPage() {
 
   return (
     <ScreenWrapper scrollable padding={0}>
+      {/* ✅ FIX (فاز ۴): forceRefresh=true برای refresh دستی */}
       <NearbyHeader
         onBack={() => router.back()}
-        onRefresh={fetchLocation}
+        onRefresh={() => fetchLocation(true)}
         isLoading={locationLoading}
         hasLocation={!!userLocation}
       />
-
       {locationLoading && !userLocation && <NearbyLoadingState />}
       {!userLocation && !locationLoading && locationError && (
-        <NearbyErrorState errorMessage={locationError} onRetry={fetchLocation} />
+        <NearbyErrorState errorMessage={locationError} onRetry={() => fetchLocation(true)} />
       )}
       {!userLocation && !locationLoading && !locationError && (
-        <NearbyEmptyState onEnableLocation={fetchLocation} />
+        <NearbyEmptyState onEnableLocation={() => fetchLocation(true)} />
       )}
-
       {userLocation && (
         <div className="px-5 pt-4 pb-32 space-y-6">
           <LocationInfoBar latitude={userLocation.latitude} longitude={userLocation.longitude} />
-
           <section>
             <SectionHeader
               icon={<FiMapPin size={18} />}
@@ -210,7 +198,6 @@ export default function NearbyPage() {
               onSelect={handleCategorySelect}
             />
           </section>
-
           {selectedCategoryId && (
             <NearbyBusinessList
               selectedCategoryId={selectedCategoryId}
@@ -223,14 +210,12 @@ export default function NearbyPage() {
               onClearFilter={() => setSelectedCategoryId(null)}
             />
           )}
-
           {!selectedCategoryId && (
             <NearbyModelRequestsSection
               nearbyModelRequests={nearbyModelRequests}
               onModelPress={handleModelPress}
             />
           )}
-
           {!selectedCategoryId && (
             <NearbyLineRentalsSection
               nearbyLineRentals={nearbyLineRentals}

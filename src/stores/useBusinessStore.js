@@ -17,12 +17,12 @@ export const useBusinessStore = create(
       gallery: [],
       _version: STORAGE_VERSION,
 
-      // ─── Slice‌ها (متدها از اینجا می‌آیند) ───
-      ...createServicesSlice(set, get), // ✅ get هم پاس داده شد
+      // ─── Slice‌ها ───
+      ...createServicesSlice(set, get),
       ...createAppointmentsSlice(set),
       ...createTeamSlice(set),
       ...createPortfoliosSlice(set),
-      ...createSchedulesSlice(set, get), // ✅ get هم پاس داده شد
+      ...createSchedulesSlice(set, get),
 
       // ─── اطلاعات پایه ───
       updateBusinessInfo: (updates) =>
@@ -266,3 +266,18 @@ export const useBusinessStore = create(
     }
   )
 );
+
+// ═══════════════════════════════════════════════════════
+//    ✅ FIX (فاز ۴): Selector‌های اختصاصی
+//    جلوگیری از re-render کل store در هر کامپوننت
+// ═══════════════════════════════════════════════════════
+export const useBusinessName = () => useBusinessStore((s) => s.businessData?.name);
+export const useBusinessServices = () => useBusinessStore((s) => s.businessData?.services || []);
+export const useBusinessAppointments = () =>
+  useBusinessStore((s) => s.businessData?.appointments || []);
+export const useBusinessPortfolios = () =>
+  useBusinessStore((s) => s.businessData?.portfolios || []);
+export const useBusinessGallery = () => useBusinessStore((s) => s.gallery);
+export const useBusinessIsActive = () => useBusinessStore((s) => s.businessData?.isActive);
+export const useBusinessBankInfo = () => useBusinessStore((s) => s.businessData?.bankInfo);
+export const useBusinessBookingSlug = () => useBusinessStore((s) => s.businessData?.bookingSlug);

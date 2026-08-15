@@ -22,15 +22,13 @@ export { default as CharCounter } from './CharCounter';
 export { default as ActionButtons } from './ActionButtons';
 export { default as StatsCard } from './StatsCard';
 export { default as PriceBreakdown } from './PriceBreakdown';
-export { default as StatusBadge } from './StatusBadge';
 export { default as CollabBadge } from './CollabBadge';
 export { default as CostTypeBadge } from './CostTypeBadge';
 export { default as InfoRow } from './InfoRow';
 export { default as SuccessModal } from './SuccessModal';
-export { default as PriceGuideModal } from './PriceGuideModal';
 export { default as Dropdown } from './Dropdown';
 export { default as ImageUploader } from './ImageUploader';
-export { default as ConfirmDialog } from './ConfirmDialog'; // ✅ جدید
+export { default as ConfirmDialog } from './ConfirmDialog';
 
 // ═══════ کامپوننت‌های احراز هویت ═══════
 export { default as AuthModal } from './AuthModal';

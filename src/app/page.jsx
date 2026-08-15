@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { FiGrid, FiUser, FiStar, FiAward } from 'react-icons/fi';
@@ -143,7 +143,11 @@ export default function HomePage() {
   );
 
   // ─── افزودن نوبت‌های انجام‌شده به pendingReviews ───
+  const pendingReviewsInitialized = useRef(false);
+
   useEffect(() => {
+    if (pendingReviewsInitialized.current) return;
+    pendingReviewsInitialized.current = true;
     MOCK_DONE_APPOINTMENTS.forEach((apt) => {
       addPendingReview(apt);
     });

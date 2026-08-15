@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/useToast';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { todayJalaali, PERSIAN_MONTHS, PERSIAN_WEEKDAYS } from '@/utils/dateUtils';
 import AppointmentListItem from './AppointmentListItem';
-// ✅ تغییر: import از کامپوننت ادغام‌شده
 import VerifyCodeModal from '@/components/manageBusiness/VerifyCodeModal';
 
 const timeToMinutes = (timeStr) => {
@@ -30,7 +29,6 @@ export default function AppointmentsList() {
   const updateAppointmentStatus = useBusinessStore((s) => s.updateAppointmentStatus);
   const [verifyTarget, setVerifyTarget] = useState(null);
   const [verifyVisible, setVerifyVisible] = useState(false);
-
   const today = useMemo(() => todayJalaali(), []);
 
   const todayAppointments = useMemo(() => {
@@ -45,12 +43,16 @@ export default function AppointmentsList() {
     });
   }, [appointments]);
 
+  // ✅ FIX (فاز ۴): بهینه‌سازی با for...of به جای forEach
   const statusCounts = useMemo(() => {
     const counts = { confirmed: 0, pending_verification: 0 };
-    todayAppointments.forEach((apt) => {
-      if (apt.status === 'pending_verification') counts.pending_verification++;
-      else counts.confirmed++;
-    });
+    for (const apt of todayAppointments) {
+      if (apt.status === 'pending_verification') {
+        counts.pending_verification++;
+      } else {
+        counts.confirmed++;
+      }
+    }
     return counts;
   }, [todayAppointments]);
 
@@ -116,7 +118,6 @@ export default function AppointmentsList() {
           {dateLabel}
         </span>
       </div>
-
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         {statusCounts.pending_verification > 0 && (
           <span
@@ -135,14 +136,11 @@ export default function AppointmentsList() {
           </span>
         )}
       </div>
-
       <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
         {todayAppointments.map((apt) => (
           <AppointmentListItem key={apt.id} appointment={apt} onPress={handlePress} />
         ))}
       </div>
-
-      {/* ✅ استفاده از کامپوننت ادغام‌شده */}
       <VerifyCodeModal
         visible={verifyVisible}
         appointment={verifyTarget}
@@ -152,7 +150,6 @@ export default function AppointmentsList() {
         }}
         onConfirm={handleVerifySuccess}
         showCall={true}
-        usePortal={true}
         variant="orange"
       />
     </div>

@@ -13,8 +13,6 @@ import WorkingHoursStep from './WorkingHoursStep';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { timeToMinutes } from '@/utils/dateUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
-import { schedulesService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 
 export default function ScheduleModal({
   visible,

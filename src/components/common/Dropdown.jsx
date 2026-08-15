@@ -1,3 +1,4 @@
+// src/components/common/Dropdown.jsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -21,9 +22,11 @@ export default function Dropdown({
 
   useEffect(() => {
     setMounted(true);
+    // ✅ FIX (فاز ۴): ذخیره id قبل از unmount
+    const id = instanceId.current;
     return () => {
       setMounted(false);
-      releaseScrollLock(instanceId.current);
+      releaseScrollLock(id);
     };
   }, []);
 
@@ -75,7 +78,6 @@ export default function Dropdown({
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-[var(--border)]" />
         </div>
-
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
           <h3 className="text-base font-vazir-bold flex-1 text-[var(--text)]">
@@ -88,7 +90,6 @@ export default function Dropdown({
             <FiX size={20} className="text-[var(--text)]" />
           </button>
         </div>
-
         {/* Options */}
         <div className="flex-1 overflow-y-auto py-2">
           {options.length === 0 ? (
@@ -103,16 +104,15 @@ export default function Dropdown({
                   key={item.id}
                   onClick={() => handleSelect(item)}
                   className={`w-full flex items-center justify-between px-5 py-4 border-b
-            transition-colors hover:opacity-80
-            ${isSelected ? 'bg-[var(--primary)]/12' : 'bg-transparent'}
-          `}
-                  // ✅ اصلاح شد: حذف concat نامعتبر، استفاده مستقیم از متغیر تم
+                    transition-colors hover:opacity-80
+                    ${isSelected ? 'bg-[var(--primary)]/12' : 'bg-transparent'}
+                  `}
                   style={{ borderColor: 'var(--color-border)' }}
                 >
                   <span
                     className={`text-sm flex-1 text-right
-              ${isSelected ? 'text-[var(--primary)] font-vazir-bold' : 'text-[var(--text)] font-vazir'}
-            `}
+                      ${isSelected ? 'text-[var(--primary)] font-vazir-bold' : 'text-[var(--text)] font-vazir'}
+                    `}
                   >
                     {item.label}
                   </span>

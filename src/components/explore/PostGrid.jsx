@@ -1,3 +1,4 @@
+// src/components/explore/PostGrid.jsx
 'use client';
 import { useEffect, useRef } from 'react';
 import { FiCheckCircle } from 'react-icons/fi';
@@ -18,23 +19,33 @@ export default function PostGrid({
   const { colors } = useTheme();
   const sentinelRef = useRef(null);
 
-  // ═══════ Intersection Observer برای لود صفحه بعدی ═══════
+  // ✅ FIX (فاز ۴): guard برای جلوگیری از load همزمان
+  // هنگام اسکرول سریع، ممکن است observer چندبار trigger شود
+  const isLoadingRef = useRef(false);
+
   useEffect(() => {
     if (!onLoadMore || !hasMore || isLoadingMore) return;
     if (!sentinelRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0].isIntersecting && !isLoadingRef.current) {
+          isLoadingRef.current = true;
           onLoadMore();
         }
       },
       { rootMargin: '300px', threshold: 0 }
     );
-
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
   }, [onLoadMore, hasMore, isLoadingMore]);
+
+  // ✅ FIX (فاز ۴): reset guard وقتی loading تمام شد
+  useEffect(() => {
+    if (!isLoadingMore) {
+      isLoadingRef.current = false;
+    }
+  }, [isLoadingMore]);
 
   // حالت خالی
   if (!posts || posts.length === 0) {
@@ -57,10 +68,8 @@ export default function PostGrid({
           <PostThumbnail key={post.id} post={post} onPress={onPostPress} />
         ))}
       </div>
-
       {/* Sentinel نامرئی برای trigger لود بعدی */}
       {hasMore && <div ref={sentinelRef} className="h-1" />}
-
       {/* اسپینر لود صفحه بعدی */}
       {isLoadingMore && (
         <div className="flex items-center justify-center gap-3 py-6">
@@ -73,7 +82,6 @@ export default function PostGrid({
           </span>
         </div>
       )}
-
       {/* پیام پایان لیست */}
       {!hasMore && !isLoadingMore && posts.length > 0 && (
         <div className="flex items-center justify-center gap-3 py-8 px-6">

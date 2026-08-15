@@ -3,14 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FiHeart, FiBookmark, FiChevronLeft } from 'react-icons/fi';
+import { FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import EmptyState from '@/components/common/EmptyState';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
-import { MOCK_FAVORITE_BUSINESSES, MOCK_FAVORITE_POSTS } from '@/data/businesses';
 import { USE_MOCK } from '@/api/config';
 import { toPersianDigit } from '@/utils/numberUtils';
 
@@ -18,16 +17,13 @@ export default function FavoritesPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
-
   const favoriteBusinesses = useFavoriteStore((s) => s.favoriteBusinesses);
   const favoritePosts = useFavoriteStore((s) => s.favoritePosts);
   const fetchFavorites = useFavoriteStore((s) => s.fetchFavorites);
   const toggleBusinessFavorite = useFavoriteStore((s) => s.toggleBusinessFavorite);
   const togglePostFavorite = useFavoriteStore((s) => s.togglePostFavorite);
-
   const [activeTab, setActiveTab] = useState('businesses');
 
-  // ─── دریافت علاقه‌مندی‌ها از API ───
   useEffect(() => {
     if (!USE_MOCK) {
       fetchFavorites();
@@ -76,8 +72,6 @@ export default function FavoritesPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="علاقه‌مندی‌های من" onBackPress={() => router.back()} />
-
-      {/* Tabs */}
       <div className="px-4 pt-3 pb-2">
         <div
           className="flex p-1 rounded-xl border gap-1"
@@ -110,9 +104,7 @@ export default function FavoritesPage() {
           ))}
         </div>
       </div>
-
       <div className="p-4 pb-32 space-y-3">
-        {/* ═══ تب کسب‌وکارها ═══ */}
         {activeTab === 'businesses' && (
           <>
             {favoriteBusinesses.length > 0 ? (
@@ -126,12 +118,15 @@ export default function FavoritesPage() {
                     onClick={() => handleBusinessPress(biz)}
                     className="w-full flex items-center gap-3 p-3.5 text-right"
                   >
+                    {/* ✅ FIX (فاز ۴): width/height به جای fill بدون ابعاد والد */}
                     <Image
                       src={biz.logo}
                       alt={biz.name}
                       width={46}
                       height={46}
                       className="rounded-xl"
+                      loading="lazy"
+                      quality={80}
                     />
                     <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                       <span
@@ -158,7 +153,7 @@ export default function FavoritesPage() {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
                       style={{ backgroundColor: '#E91E6315' }}
                     >
-                      <FiBookmark size={14} color="#E91E63" fill="#E91E63" />
+                      <span className="text-sm">🔖</span>
                       <span className="text-[11px] font-[Vazir-Bold]" style={{ color: '#E91E63' }}>
                         حذف
                       </span>
@@ -175,8 +170,6 @@ export default function FavoritesPage() {
             )}
           </>
         )}
-
-        {/* ═══ تب پست‌های ویترین ═══ */}
         {activeTab === 'posts' && (
           <>
             {favoritePosts.length > 0 ? (
@@ -187,13 +180,16 @@ export default function FavoritesPage() {
                     className="rounded-2xl border overflow-hidden"
                     style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
                   >
+                    {/* ✅ FIX (فاز ۴): ابعاد مشخص + lazy loading */}
                     <div className="relative w-full h-[120px]">
                       <Image
                         src={post.image || post.gallery?.[0]}
                         alt={post.businessName}
                         fill
                         className="object-cover"
-                        sizes="50vw"
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        loading="lazy"
+                        quality={80}
                       />
                     </div>
                     <div className="p-2.5 space-y-1.5">
@@ -214,7 +210,7 @@ export default function FavoritesPage() {
                         className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg"
                         style={{ backgroundColor: '#E91E6315' }}
                       >
-                        <FiBookmark size={12} color="#E91E63" fill="#E91E63" />
+                        <span className="text-[10px]">🔖</span>
                         <span
                           className="text-[10px] font-[Vazir-Bold]"
                           style={{ color: '#E91E63' }}

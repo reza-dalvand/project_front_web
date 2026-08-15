@@ -38,10 +38,6 @@ export default function BusinessDetailsPage() {
   const [activePortfolio, setActivePortfolio] = useState(null);
 
   // ═══════ دریافت جزئیات از API ═══════
-  // src/app/business/[id]/BusinessDetailsClient.jsx
-  // فقط بخش useEffect برای دریافت داده را پیدا و جایگزین کنید:
-
-  // ═══════ دریافت جزئیات از API ═══════
   useEffect(() => {
     const fetchBusiness = async () => {
       setIsLoading(true);

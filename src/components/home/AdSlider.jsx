@@ -1,6 +1,6 @@
+// src/components/home/AdSlider.jsx
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { FiCalendar } from 'react-icons/fi';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -11,6 +11,20 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // ✅ FIX (فاز ۴): تشخیص visibility اسلایدر
+  const [isInView, setIsInView] = useState(true);
+  const sliderRef = useRef(null);
+
+  useEffect(() => {
+    if (!sliderRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(sliderRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (!emblaApi) return;
     const onSelect = () => setActiveIndex(emblaApi.selectedScrollSnap());
@@ -18,16 +32,18 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
     return () => emblaApi.off('select', onSelect);
   }, [emblaApi]);
 
+  // ✅ FIX (فاز ۴): Auto-play فقط وقتی visible است
+  // جلوگیری از مصرف CPU در تب‌های غیرفعال
   useEffect(() => {
-    if (!emblaApi || ads.length <= 1) return;
+    if (!emblaApi || ads.length <= 1 || !isInView) return;
     const interval = setInterval(() => emblaApi.scrollNext(), autoPlayInterval);
     return () => clearInterval(interval);
-  }, [emblaApi, ads.length, autoPlayInterval]);
+  }, [emblaApi, ads.length, autoPlayInterval, isInView]);
 
   if (!ads || ads.length === 0) return null;
 
   return (
-    <div className="relative">
+    <div className="relative" ref={sliderRef}>
       <div className="overflow-hidden rounded-3xl" ref={emblaRef}>
         <div className="flex">
           {ads.map((ad) => (
@@ -47,7 +63,6 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
                 className="absolute bottom-0 left-0 right-0 h-[62%] rounded-b-3xl pointer-events-none"
                 style={{ backgroundColor: 'rgba(0,0,0,0.30)' }}
               />
-
               <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col gap-2">
                 <h3 className="text-[18px] font-[Vazir-Bold] text-white leading-6 line-clamp-2 drop-shadow-lg">
                   {ad.title}
@@ -68,7 +83,6 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
                   <span className="text-[13px] font-[Vazir-Bold] text-white">رزرو نوبت</span>
                 </button>
               </div>
-
               {ad.badge && (
                 <div className="absolute top-3 right-3 bg-[#E53935] px-2.5 py-1 rounded-lg shadow-md">
                   <span className="text-[11px] font-[Vazir-Bold] text-white">{ad.badge}</span>
@@ -78,7 +92,6 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
           ))}
         </div>
       </div>
-
       <div className="flex items-center justify-center gap-1.5 mt-4">
         {ads.map((_, i) => (
           <button

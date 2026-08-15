@@ -2,6 +2,26 @@
 import { useAuthStore, useAuthModalStore } from '@/stores/useAuthStore';
 import { act } from '@testing-library/react';
 
+// ✅ Helper برای ساخت داده‌های تست
+const createTestUser = (phone = '09123456789', firstName = 'مریم', lastName = 'حسینی') => ({
+  id: 1,
+  phone,
+  phone_display: `${phone.slice(0, 4)}***${phone.slice(-4)}`,
+  first_name: firstName,
+  last_name: lastName,
+  full_name: `${firstName} ${lastName}`,
+  avatar: null,
+  is_verified: true,
+  is_national_id_verified: false,
+  verified_name: '',
+  date_joined: '2024-01-15T10:00:00Z',
+});
+
+const createTestTokens = () => ({
+  access_token: 'mock_access_token_test',
+  refresh_token: 'mock_refresh_token_test',
+});
+
 describe('useAuthStore', () => {
   beforeEach(() => {
     useAuthStore.setState({
@@ -9,12 +29,10 @@ describe('useAuthStore', () => {
       user: null,
       pendingPhone: null,
       pendingName: null,
+      needsProfileCompletion: false,
       _hydrated: true,
     });
-    useAuthModalStore.setState({
-      showAuthModal: false,
-      pendingAction: null,
-    });
+    useAuthModalStore.setState({ showAuthModal: false, pendingAction: null });
   });
 
   it('وضعیت پیش‌فرض: لاگین نیست', () => {
@@ -23,9 +41,10 @@ describe('useAuthStore', () => {
     expect(state.user).toBeNull();
   });
 
+  // ✅ FIX: login با signature جدید
   it('ورود با موفقیت', () => {
     act(() => {
-      useAuthStore.getState().login('09123456789', 'مریم حسینی');
+      useAuthStore.getState().login(createTestUser(), createTestTokens());
     });
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(true);
@@ -33,9 +52,10 @@ describe('useAuthStore', () => {
     expect(state.user.name).toBe('مریم حسینی');
   });
 
+  // ✅ FIX: login با signature جدید
   it('خروج از حساب', () => {
     act(() => {
-      useAuthStore.getState().login('09123456789', 'مریم');
+      useAuthStore.getState().login(createTestUser(), createTestTokens());
       useAuthStore.getState().logout();
     });
     const state = useAuthStore.getState();
@@ -43,9 +63,10 @@ describe('useAuthStore', () => {
     expect(state.user).toBeNull();
   });
 
+  // ✅ FIX: login با signature جدید
   it('بروزرسانی پروفایل', () => {
     act(() => {
-      useAuthStore.getState().login('09123456789', 'مریم');
+      useAuthStore.getState().login(createTestUser(), createTestTokens());
       useAuthStore.getState().updateUser({ name: 'مریم حسینی' });
     });
     expect(useAuthStore.getState().user.name).toBe('مریم حسینی');

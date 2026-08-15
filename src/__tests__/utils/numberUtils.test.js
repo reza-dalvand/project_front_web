@@ -20,11 +20,9 @@ describe('numberUtils', () => {
       expect(toPersianDigit('0123456789')).toBe('۰۱۲۳۴۵۶۷۸۹');
       expect(toPersianDigit('1403')).toBe('۱۴۰۳');
     });
-
     it('متن بدون عدد', () => {
       expect(toPersianDigit('سلام')).toBe('سلام');
     });
-
     it('ورودی null/undefined', () => {
       expect(toPersianDigit(null)).toBe('');
       expect(toPersianDigit(undefined)).toBe('');
@@ -37,11 +35,9 @@ describe('numberUtils', () => {
       expect(toEnglishDigits('۰۱۲۳۴۵۶۷۸۹')).toBe('0123456789');
       expect(toEnglishDigits('۱۴۰۳')).toBe('1403');
     });
-
     it('تبدیل اعداد عربی به انگلیسی', () => {
       expect(toEnglishDigits('٠١٢٣٤٥٦٧٨٩')).toBe('0123456789');
     });
-
     it('ترکیب فارسی و انگلیسی', () => {
       expect(toEnglishDigits('۱۲34')).toBe('1234');
     });
@@ -53,7 +49,6 @@ describe('numberUtils', () => {
       expect(parseNumber('۱,۲۳۴,۵۶۷')).toBe(1234567);
       expect(parseNumber('۷۵۰,۰۰۰ تومان')).toBe(750000);
     });
-
     it('ورودی خالی', () => {
       expect(parseNumber('')).toBe(0);
       expect(parseNumber('abc')).toBe(0);
@@ -66,7 +61,6 @@ describe('numberUtils', () => {
       expect(formatPrice(750000)).toBe('۷۵۰,۰۰۰ تومان');
       expect(formatPrice(1000000)).toBe('۱,۰۰۰,۰۰۰ تومان');
     });
-
     it('قیمت صفر', () => {
       expect(formatPrice(0)).toBe('۰ تومان');
     });
@@ -77,7 +71,6 @@ describe('numberUtils', () => {
     it('فرمت کوتاه میلیون', () => {
       expect(formatPriceShort(2500000)).toBe('۲.۵M');
     });
-
     it('فرمت کوتاه هزار', () => {
       expect(formatPriceShort(750000)).toBe('۷۵۰K');
     });
@@ -89,7 +82,6 @@ describe('numberUtils', () => {
       expect(formatPriceInput('750000')).toBe('۷۵۰,۰۰۰');
       expect(formatPriceInput('۷۵۰۰۰۰')).toBe('۷۵۰,۰۰۰');
     });
-
     it('ورودی خالی', () => {
       expect(formatPriceInput('')).toBe('');
     });
@@ -111,15 +103,15 @@ describe('numberUtils', () => {
       expect(calculateAppFee(249999)).toBe(7000);
     });
     it('۲۵۰ تا ۵۰۰ هزار → ۳٪', () => {
-      expect(calculateAppFee(250000)).toBe(7500); // ۳٪ × ۲۵۰,۰۰۰
-      expect(calculateAppFee(500000)).toBe(15000); // ۳٪ × ۵۰۰,۰۰۰
+      expect(calculateAppFee(250000)).toBe(7500);
+      expect(calculateAppFee(500000)).toBe(15000);
     });
     it('بالای ۵۰۰ هزار → ۴٪', () => {
-      expect(calculateAppFee(600000)).toBe(24000); // ۴٪ × ۶۰۰,۰۰۰
-      expect(calculateAppFee(1000000)).toBe(40000); // ۴٪ × ۱,۰۰۰,۰۰۰
+      expect(calculateAppFee(600000)).toBe(24000);
+      expect(calculateAppFee(1000000)).toBe(40000);
     });
     it('سقف ۵۰ هزار', () => {
-      expect(calculateAppFee(2000000)).toBe(50000); // ۴٪ × ۲M = 80K > 50K → سقف
+      expect(calculateAppFee(2000000)).toBe(50000);
       expect(calculateAppFee(5000000)).toBe(50000);
     });
     it('ورودی صفر یا منفی', () => {
@@ -132,7 +124,8 @@ describe('numberUtils', () => {
       expect(calculateAppFee(250000)).toBe(7500);
     });
   });
-  // ═══════ APP_FEE_TIERS — نسخه نهایی ═══════
+
+  // ═══════ APP_FEE_TIERS — ✅ FIX (فاز ۱): describe تکراری و متناقض حذف شد ═══════
   describe('APP_FEE_TIERS', () => {
     it('سه ردیف تعریف شده', () => {
       expect(APP_FEE_TIERS).toHaveLength(3);
@@ -144,33 +137,11 @@ describe('numberUtils', () => {
     });
     it('ردیف دوم: ۳٪', () => {
       expect(APP_FEE_TIERS[1].type).toBe('percent');
-      expect(APP_FEE_TIERS[1].fee).toBe(3); // ✅ ۳٪
+      expect(APP_FEE_TIERS[1].fee).toBe(3); // ✅ ۳٪ (مطابق کد)
     });
     it('ردیف سوم: ۴٪', () => {
       expect(APP_FEE_TIERS[2].type).toBe('percent');
-      expect(APP_FEE_TIERS[2].fee).toBe(4); // ✅ ۴٪
-    });
-  });
-  // ═══════ APP_FEE_TIERS ═══════
-  describe('APP_FEE_TIERS', () => {
-    it('سه ردیف تعریف شده', () => {
-      expect(APP_FEE_TIERS).toHaveLength(3);
-    });
-
-    it('ردیف اول: ثابت ۷ هزار', () => {
-      expect(APP_FEE_TIERS[0].type).toBe('fixed');
-      expect(APP_FEE_TIERS[0].fee).toBe(7000);
-      expect(APP_FEE_TIERS[0].max).toBe(250000);
-    });
-
-    it('ردیف دوم: ۴٪', () => {
-      expect(APP_FEE_TIERS[1].type).toBe('percent');
-      expect(APP_FEE_TIERS[1].fee).toBe(4);
-    });
-
-    it('ردیف سوم: ۵٪', () => {
-      expect(APP_FEE_TIERS[2].type).toBe('percent');
-      expect(APP_FEE_TIERS[2].fee).toBe(5);
+      expect(APP_FEE_TIERS[2].fee).toBe(4); // ✅ ۴٪ (مطابق کد)
     });
   });
 
@@ -181,7 +152,6 @@ describe('numberUtils', () => {
       expect(getCurrentFeeTier(300000).type).toBe('percent');
       expect(getCurrentFeeTier(600000).type).toBe('percent');
     });
-
     it('ورودی صفر', () => {
       expect(getCurrentFeeTier(0)).toEqual(APP_FEE_TIERS[0]);
     });

@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX } from 'react-icons/fi';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+
 let bottomSheetCounter = 0;
+const activeBottomSheets = new Set();
+
 export default function BottomSheet({
   visible,
   onClose,
@@ -20,13 +23,18 @@ export default function BottomSheet({
   const dragStartY = useRef(0);
   const currentTranslateY = useRef(0);
   const instanceId = useRef(`bottomsheet-${++bottomSheetCounter}`);
+
   useEffect(() => {
     setMounted(true);
+    const id = instanceId.current;
+    activeBottomSheets.add(id);
     return () => {
       setMounted(false);
-      releaseScrollLock(instanceId.current);
+      activeBottomSheets.delete(id);
+      releaseScrollLock(id);
     };
   }, []);
+
   useEffect(() => {
     if (visible) {
       setShow(true);
@@ -50,6 +58,7 @@ export default function BottomSheet({
       };
     }
   }, [visible]);
+
   useEffect(() => {
     if (!visible) return;
     const handleEscape = (e) => {
@@ -58,10 +67,12 @@ export default function BottomSheet({
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
   }, [visible, onClose]);
+
   const handleTouchStart = (e) => {
     dragStartY.current = e.touches[0].clientY;
     currentTranslateY.current = 0;
   };
+
   const handleTouchMove = (e) => {
     const deltaY = e.touches[0].clientY - dragStartY.current;
     if (deltaY > 0 && sheetRef.current) {
@@ -69,6 +80,7 @@ export default function BottomSheet({
       sheetRef.current.style.transform = `translateY(${deltaY}px)`;
     }
   };
+
   const handleTouchEnd = () => {
     if (sheetRef.current) {
       sheetRef.current.style.transform = '';
@@ -78,16 +90,19 @@ export default function BottomSheet({
     }
     currentTranslateY.current = 0;
   };
+
   if (!mounted || !show) return null;
+
   const maxHeight = `${snapPoint * 100}vh`;
+
   const content = (
     <>
       {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[9998] transition-opacity duration-300
-${animating && !visible ? 'opacity-0' : 'opacity-100'}
-${visible && !animating ? 'opacity-100' : 'opacity-0'}
-`}
+          ${animating && !visible ? 'opacity-0' : 'opacity-100'}
+          ${visible && !animating ? 'opacity-100' : 'opacity-0'}
+        `}
         style={{ backgroundColor: 'rgba(0, 0, 0, 0.55)' }}
         onClick={onClose}
       />
@@ -95,12 +110,12 @@ ${visible && !animating ? 'opacity-100' : 'opacity-0'}
       <div
         ref={sheetRef}
         className={`fixed bottom-0 left-0 right-0 z-[9999]
-  rounded-t-3xl border-t border-[var(--border)]
-  transition-transform duration-300 ease-out flex flex-col
-  bg-[var(--card)] shadow-[0_-4px_20px_rgba(0,0,0,0.15)]
-  safe-bottom
-  ${visible && !animating ? 'translate-y-0' : 'translate-y-full'}
-  `}
+          rounded-t-3xl border-t border-[var(--border)]
+          transition-transform duration-300 ease-out flex flex-col
+          bg-[var(--card)] shadow-[0_-4px_20px_rgba(0,0,0,0.15)]
+          safe-bottom
+          ${visible && !animating ? 'translate-y-0' : 'translate-y-full'}
+        `}
         style={{ maxHeight }}
       >
         {/* Drag Handle */}
@@ -121,7 +136,7 @@ ${visible && !animating ? 'opacity-100' : 'opacity-0'}
             <button
               onClick={onClose}
               className="w-8 h-8 rounded-full flex items-center justify-center
-transition-colors duration-200 bg-[var(--bg)]"
+                transition-colors duration-200 bg-[var(--bg)]"
             >
               <FiX size={18} className="text-[var(--text)]" />
             </button>
@@ -129,7 +144,7 @@ transition-colors duration-200 bg-[var(--bg)]"
         )}
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
-        {/* Footer - ✅ اضافه کردن padding-bottom برای فاصله از BottomTabBar */}
+        {/* Footer */}
         {footer && (
           <div className="px-5 py-4 pb-8 border-t border-[var(--border)] bg-[var(--card)]">
             {footer}
@@ -138,5 +153,6 @@ transition-colors duration-200 bg-[var(--bg)]"
       </div>
     </>
   );
+
   return createPortal(content, document.body);
 }

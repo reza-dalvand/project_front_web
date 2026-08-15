@@ -1,8 +1,5 @@
 // src/components/manageBusiness/financial/constants.js
 import { toPersianDigit, formatPrice } from '@/utils/numberUtils';
-import { MOCK_TRANSACTIONS as _MOCK_TX } from '@/data/transactions';
-
-export const MOCK_TRANSACTIONS = _MOCK_TX;
 
 // Re-export برای استفاده راحت‌تر
 export { toPersianDigit, formatPrice };
@@ -53,11 +50,11 @@ export const TX_TABS = [
 // اطلاعات بانکی موقت
 export const MOCK_BANK_INFO = {
   ownerName: 'مریم حسینی',
-  nationalId: '', // ✅ خالی (قبلاً 11 رقم داشت!)
-  sheba: '', // ✅ خالی
+  nationalId: '',
+  sheba: '',
   cardNumber: '',
   bankName: '',
-  bankId: null, // ✅ فیلد جدید برای Dropdown
+  bankId: null,
   accountNumber: '',
   isRegistered: false,
   isVerified: false,

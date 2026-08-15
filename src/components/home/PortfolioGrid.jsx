@@ -1,5 +1,5 @@
+// src/components/home/PortfolioGrid.jsx
 'use client';
-
 import Image from 'next/image';
 import { FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -26,8 +26,6 @@ export default function PortfolioGrid({ portfolios, onPortfolioPress }) {
       <h2 className="text-base font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
         گالری نمونه‌کارها
       </h2>
-
-      {/* Grid دو ستونه */}
       <div className="grid grid-cols-2 gap-3">
         {portfolios.map((portfolio, index) => {
           const imageCount = portfolio.images?.length || 1;
@@ -36,36 +34,33 @@ export default function PortfolioGrid({ portfolios, onPortfolioPress }) {
               key={portfolio.id || index}
               onClick={() => onPortfolioPress(portfolio, index)}
               className="relative w-full aspect-square rounded-2xl overflow-hidden
-                         shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
               style={{ backgroundColor: '#eee' }}
             >
+              {/* ✅ FIX (فاز ۴): loading="lazy" + quality={80} */}
               <Image
                 src={portfolio.coverImage || portfolio.images?.[0]}
                 alt={portfolio.title || 'portfolio'}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 50vw, 300px"
+                loading="lazy"
+                quality={80}
               />
-
-              {/* گرادیان پایین */}
               <div
                 className="absolute bottom-0 left-0 right-0 h-[50%]"
                 style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
               />
-
-              {/* Badge تعداد تصاویر */}
               {imageCount > 1 && (
                 <div
                   className="absolute top-2 right-2 flex items-center gap-1
-                             px-2 py-1 rounded-lg"
+                    px-2 py-1 rounded-lg"
                   style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
                 >
                   <span className="text-[10px] text-white">🖼️</span>
                   <span className="text-[10px] font-[Vazir-Bold] text-white">{imageCount}</span>
                 </div>
               )}
-
-              {/* عنوان نمونه‌کار روی تصویر */}
               {portfolio.title && (
                 <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2.5">
                   <p className="text-xs font-[Vazir-Bold] text-white leading-[17px] line-clamp-2">
