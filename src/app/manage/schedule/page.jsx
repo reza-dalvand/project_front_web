@@ -15,22 +15,46 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ServiceTypeIcon from '@/components/manageBusiness/services/ServiceTypeIcon';
 import { ScheduleModal } from '@/components/manageBusiness/schedule';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { timeToMinutes } from '@/utils/dateUtils';
 import { USE_MOCK } from '@/api/config';
+
+/**
+* محاسبه تعداد نوبت‌های یک روز بر اساس ساعات کاری و استراحت‌ها
+ */
+const calculateSlotCount = (schedule) => {
+  const { workStart, workEnd, slotDuration, breaks = [] } = schedule;
+  const startMin = timeToMinutes(workStart);
+  const endMin = timeToMinutes(workEnd);
+  if (!startMin || !endMin || endMin <= startMin || !slotDuration || slotDuration <= 0) return 0;
+  const occupiedRanges = breaks.map((b) => {
+    const bStart = Math.max(timeToMinutes(b.start), startMin);
+    const bEnd = Math.min(timeToMinutes(b.end), endMin);
+    return { start: bStart, end: Math.max(bStart, bEnd) };
+  });
+  let count = 0;
+  let currentMin = startMin;
+  while (currentMin + slotDuration <= endMin) {
+    const slotEnd = currentMin + slotDuration;
+    const isOccupied = occupiedRanges.some(
+      (range) => currentMin < range.end && slotEnd > range.start
+    );
+    if (!isOccupied) count++;
+    currentMin += slotDuration;
+  }
+  return count;
+};
 
 export default function ManageSchedulePage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
-
   const businessData = useBusinessStore((s) => s.businessData);
   const fetchSchedules = useBusinessStore((s) => s.fetchSchedules);
   const createScheduleApi = useBusinessStore((s) => s.createScheduleApi);
   const schedulesLoading = useBusinessStore((s) => s.schedulesLoading);
-
   const services = (businessData?.services || []).filter((s) => s.isActive !== false);
   const schedules = businessData?.schedules || {};
-
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState(null);
 
@@ -50,11 +74,19 @@ export default function ManageSchedulePage() {
     }
   };
 
-  // ═══ محاسبه تعداد روزهای تنظیم‌شده هر سرویس ═══
-  const getServiceScheduleCount = (serviceId) => {
+  // ═══ محاسبه آمار هر سرویس: روز + نوبت ═══
+  const getServiceScheduleStats = (serviceId) => {
     const ownerSchedules = schedules['owner'] || {};
     const serviceSchedules = ownerSchedules[serviceId] || {};
-    return Object.keys(serviceSchedules).filter((key) => serviceSchedules[key]?.active).length;
+    const activeDays = Object.keys(serviceSchedules).filter(
+      (key) => serviceSchedules[key]?.active !== false
+    );
+    let totalSlots = 0;
+    activeDays.forEach((key) => {
+      const schedule = serviceSchedules[key];
+      totalSlots += schedule.slotCount || calculateSlotCount(schedule);
+    });
+    return { days: activeDays.length, slots: totalSlots };
   };
 
   if (!isAuthenticated) {
@@ -70,7 +102,6 @@ export default function ManageSchedulePage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="مدیریت زمان‌بندی" onBackPress={() => router.push('/manage')} />
-
       <div className="overflow-y-auto pb-32 px-5 pt-4 space-y-4">
         {/* هدر */}
         <div className="flex flex-col items-center gap-2 py-3">
@@ -98,7 +129,7 @@ export default function ManageSchedulePage() {
             {services.length > 0 ? (
               <div className="flex flex-col gap-3">
                 {services.map((service) => {
-                  const scheduleCount = getServiceScheduleCount(service.id);
+                  const stats = getServiceScheduleStats(service.id);
                   return (
                     <Card key={service.id} variant="elevated" padding={14} radius={18}>
                       <div className="flex items-center gap-3">
@@ -113,30 +144,46 @@ export default function ManageSchedulePage() {
                           <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
                             {service.typeName}
                           </p>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <FiCalendar
-                              size={12}
-                              color={scheduleCount > 0 ? '#43A047' : colors.textSecondary}
-                            />
-                            <span
-                              className="text-[11px] font-[Vazir-Bold]"
-                              style={{
-                                color: scheduleCount > 0 ? '#43A047' : colors.textSecondary,
-                              }}
-                            >
-                              {scheduleCount > 0
-                                ? `${toPersianDigit(scheduleCount)} روز تنظیم شده`
-                                : 'هنوز تنظیم نشده'}
-                            </span>
+                          {/* ✅ نمایش روز و نوبت */}
+                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                            {/* روزها */}
+                            <div className="flex items-center gap-1">
+                              <FiCalendar
+                                size={12}
+                                color={stats.days > 0 ? '#43A047' : colors.textSecondary}
+                              />
+                              <span
+                                className="text-[11px] font-[Vazir-Bold]"
+                                style={{
+                                  color: stats.days > 0 ? '#43A047' : colors.textSecondary,
+                                }}
+                              >
+                                {stats.days > 0
+                                  ? `${toPersianDigit(stats.days)} روز تنظیم شده`
+                                  : 'هنوز تنظیم نشده'}
+                              </span>
+                            </div>
+                            {/* نوبت‌ها — فقط وقتی روز تنظیم شده */}
+                            {stats.days > 0 && (
+                              <div className="flex items-center gap-1">
+                                <FiClock size={12} color="#2196F3" />
+                                <span
+                                  className="text-[11px] font-[Vazir-Bold]"
+                                  style={{ color: '#2196F3' }}
+                                >
+                                  {toPersianDigit(stats.slots)} نوبت
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <Button
-                          title={scheduleCount > 0 ? 'ویرایش' : 'تنظیم'}
+                          title={stats.days > 0 ? 'ویرایش' : 'تنظیم'}
                           onPress={() => {
                             setSelectedServiceId(service.id);
                             setModalVisible(true);
                           }}
-                          variant={scheduleCount > 0 ? 'outline' : 'primary'}
+                          variant={stats.days > 0 ? 'outline' : 'primary'}
                           size="sm"
                         />
                       </div>
