@@ -1,6 +1,7 @@
 // src/app/manage/reviews/page.jsx
 'use client';
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; 
 import { FiStar, FiMessageSquare, FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -26,6 +27,7 @@ const FILTER_OPTIONS = [
 
 export default function ReviewsPage() {
   const { colors } = useTheme();
+  const router = useRouter(); // ✅ اضافه شد
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
 
@@ -41,7 +43,6 @@ export default function ReviewsPage() {
         if (USE_MOCK) {
           setReviews(MOCK_REVIEWS);
         } else {
-          // در آینده: business_id از store گرفته شود
           const result = await reviewsService.getBusinessReviews(1);
           setReviews(result.data?.reviews || []);
         }
@@ -80,6 +81,7 @@ export default function ReviewsPage() {
 
   return (
     <ScreenWrapper padding={0}>
+      {/* ✅ اصلاح شد: router.back() به جای router که undefined بود */}
       <Header title="نظرات و امتیازات" onBackPress={() => router.back()} />
 
       <div className="p-4 pb-32 space-y-4">

@@ -45,9 +45,7 @@ export default function HomeHeader({
               name={userName}
               size="md"
               showBorder
-              showIcon // ✅ این خط اضافه بشه
               className="!border-white/60"
-              variant="onPrimary"
             />
             <div className="flex flex-col gap-0.5 flex-1">
               <span className="text-[12px] font-[Vazir] text-white/85">سلام، وقت بخیر 👋</span>

@@ -173,6 +173,8 @@ export default function BusinessDetailsPage() {
         visible={bookingModalVisible}
         onClose={closeBooking}
         service={selectedService}
+        businessId={business?.id || params.id}
+        businessName={business?.name || ''}
       />
       <PortfolioModal
         visible={portfolioModalVisible}

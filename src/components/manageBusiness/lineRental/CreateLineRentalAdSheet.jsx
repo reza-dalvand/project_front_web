@@ -26,6 +26,7 @@ const MAX_PHONE = 11;
 export default function CreateLineRentalAdSheet({ visible, onClose, onSave, editingAd }) {
   const { colors } = useTheme();
   const isEditMode = !!editingAd;
+
   const [title, setTitle] = useState('');
   const [categoryId, setCategoryId] = useState(null);
   const [subServiceId, setSubServiceId] = useState(null);
@@ -33,6 +34,8 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
   const [description, setDescription] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [errors, setErrors] = useState({});
+
+  // فیلدهای قیمت بر اساس نوع همکاری
   const [percentSalon, setPercentSalon] = useState('');
   const [percentPartner, setPercentPartner] = useState('');
   const [fixedAmount, setFixedAmount] = useState('');
@@ -41,6 +44,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
 
   const availableSubServices = categoryId ? getSubServicesByCategory(categoryId) : [];
 
+  // ═══════ مقداردهی اولیه فرم هنگام باز شدن ═══════
   useEffect(() => {
     if (visible) {
       if (editingAd) {
@@ -76,6 +80,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     }
   }, [visible, editingAd]);
 
+  // ═══════ تغییر نوع همکاری → ریست فیلدهای قیمت ═══════
   const handleCollabChange = (id) => {
     setCollabType(id);
     setPercentSalon('');
@@ -86,6 +91,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     setErrors((p) => ({ ...p, collabType: '', price: '' }));
   };
 
+  // ═══════ محاسبه خودکار درصد متقابل ═══════
   const handlePercentSalon = (t) => {
     setPercentSalon(t);
     const n = parseNumber(t);
@@ -154,6 +160,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     return Object.keys(newErrors).length === 0;
   };
 
+  // ═══════ ذخیره ═══════
   const handleSave = () => {
     if (!validate()) return;
 
@@ -210,7 +217,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
       snapPoint={0.92}
     >
       <div className="space-y-6 pb-4">
-        {/* عنوان */}
+        {/* ═══════ عنوان ═══════ */}
         <Input
           label="عنوان آگهی *"
           placeholder="مثال: لاین ناخن با تجهیزات کامل"
@@ -223,7 +230,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           hint={`${toPersianDigit(title.length)} از ${toPersianDigit(MAX_TITLE)} کاراکتر`}
         />
 
-        {/* دسته‌بندی خدمات */}
+        {/* ═══════ دسته‌بندی خدمات ═══════ */}
         <Dropdown
           label="دسته‌بندی خدمات *"
           placeholder="دسته‌بندی را انتخاب کنید"
@@ -239,7 +246,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.categoryId}</p>
         )}
 
-        {/* نوع خدمت */}
+        {/* ═══════ نوع خدمت ═══════ */}
         <Dropdown
           label="نوع خدمت لاین *"
           placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
@@ -255,7 +262,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.subServiceId}</p>
         )}
 
-        {/* نوع همکاری */}
+        {/* ═══════ نوع همکاری ═══════ */}
         <div>
           <p className="text-sm font-[Vazir-Medium] mb-3" style={{ color: colors.textMain }}>
             نوع همکاری *
@@ -289,13 +296,14 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           {errors.collabType && <p className="text-xs text-[#E53935] mt-2">{errors.collabType}</p>}
         </div>
 
-        {/* فیلدهای قیمت بر اساس نوع همکاری */}
+        {/* ═══════ فیلدهای قیمت بر اساس نوع همکاری ═══════ */}
+
+        {/* ─── درصدی ─── */}
         {collabType === 'percent' && (
           <Card variant="default" padding={14} radius={14}>
             <p className="text-xs mb-3" style={{ color: colors.textSecondary }}>
               درصد سالن و همکار را وارد کنید (مجموع باید ۱۰۰٪ باشد)
             </p>
-            {/* ✅ اصلاح: grid به جای flex + حذف mb اضافی */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label
@@ -367,6 +375,8 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           </Card>
         )}
 
+        {/* ─── اجاره ثابت ─── */}
+        {/* ✅ اصلاح شد: فقط یک بلاک fixed (قبلاً دو بار تکرار شده بود) */}
         {collabType === 'fixed' && (
           <Card variant="default" padding={14} radius={14}>
             <div className="[&>div]:mb-3 last:[&>div]:mb-0">
@@ -391,26 +401,8 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           </Card>
         )}
 
-        {collabType === 'hourly' && <Card variant="default" padding={14} radius={14}></Card>}
-        {collabType === 'fixed' && (
-          <Card variant="default" padding={14} radius={14}>
-            <Input
-              label="مبلغ اجاره ماهانه (تومان) *"
-              placeholder="مثال: ۵,۰۰۰,۰۰۰"
-              value={fixedAmount}
-              onChangeText={(t) => {
-                setFixedAmount(formatPriceInput(t));
-                setErrors((p) => ({ ...p, price: '' }));
-              }}
-            />
-            <Input
-              label="مبلغ رهن (اختیاری)"
-              placeholder="مثال: ۲۰,۰۰۰,۰۰۰ یا خالی"
-              value={fixedDeposit}
-              onChangeText={(t) => setFixedDeposit(formatPriceInput(t))}
-            />
-          </Card>
-        )}
+        {/* ─── ساعتی ─── */}
+        {/* ✅ اصلاح شد: قبلاً این بلاک خالی بود */}
         {collabType === 'hourly' && (
           <Card variant="default" padding={14} radius={14}>
             <Input
@@ -421,12 +413,15 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
                 setHourlyRate(formatPriceInput(t));
                 setErrors((p) => ({ ...p, price: '' }));
               }}
+              type="tel"
             />
           </Card>
         )}
+
+        {/* خطای قیمت */}
         {errors.price && <p className="text-xs text-[#E53935]">{errors.price}</p>}
 
-        {/* توضیحات */}
+        {/* ═══════ توضیحات ═══════ */}
         <Input
           label="توضیحات *"
           placeholder="درباره لاین، تجهیزات، شرایط همکاری و مزایا بنویسید..."
@@ -442,7 +437,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
         />
         <CharCounter current={descLen} max={MAX_DESCRIPTION} />
 
-        {/* شماره تماس */}
+        {/* ═══════ شماره تماس ═══════ */}
         <Input
           label="شماره تماس *"
           placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹"
@@ -459,7 +454,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           error={errors.contactPhone}
         />
 
-        {/* دکمه ثبت */}
+        {/* ═══════ دکمه ثبت ═══════ */}
         <Button
           title={isEditMode ? 'ذخیره تغییرات' : 'ثبت آگهی رایگان'}
           onPress={handleSave}
