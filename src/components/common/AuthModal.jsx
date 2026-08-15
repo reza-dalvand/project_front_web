@@ -234,8 +234,8 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     : 'fixed inset-0 z-[9999] flex items-center justify-center p-4';
 
   const panelClass = isBottomSheet
-    ? 'relative w-full max-w-md rounded-t-3xl md:rounded-3xl overflow-hidden flex flex-col max-h-[92vh]'
-    : 'relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl';
+    ? 'relative w-full max-w-md rounded-t-3xl md:rounded-3xl overflow-hidden flex flex-col h-[96dvh] md:h-auto md:max-h-[92dvh]'
+    : 'relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[96dvh] md:h-auto md:max-h-[92dvh]';
 
   const getTitle = () => {
     if (stage === 'info') return 'ورود / ثبت‌نام';
@@ -284,7 +284,13 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
           </button>
         </div>
 
-        <div className="p-5 overflow-y-auto flex-1">
+        <div
+          className="p-5 overflow-y-auto flex-1 overscroll-contain"
+          style={{
+            paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {/* ═══ مرحله ۱: شماره موبایل ═══ */}
           {stage === 'info' && (
             <div className="flex flex-col gap-4">
@@ -337,16 +343,19 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                   موافقم
                 </span>
               </label>
-
-              <Button
-                title="دریافت کد تایید"
-                onPress={handleSendOtp}
-                loading={loading}
-                disabled={phone.length !== 11 || !validatePhone(phone) || !termsAccepted || loading}
-                variant="primary"
-                size="lg"
-                fullWidth
-              />
+              <div className="pb-6">
+                <Button
+                  title="دریافت کد تایید"
+                  onPress={handleSendOtp}
+                  loading={loading}
+                  disabled={
+                    phone.length !== 11 || !validatePhone(phone) || !termsAccepted || loading
+                  }
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                />
+              </div>
             </div>
           )}
 
@@ -456,16 +465,17 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                   </span>
                 )}
               </div>
-
-              <Button
-                title="تایید و ورود"
-                onPress={handleVerifyOtp}
-                loading={loading}
-                disabled={otp.join('').length < OTP_LENGTH || loading}
-                variant="primary"
-                size="lg"
-                fullWidth
-              />
+              <div className="pb-6">
+                <Button
+                  title="تایید و ورود"
+                  onPress={handleVerifyOtp}
+                  loading={loading}
+                  disabled={otp.join('').length < OTP_LENGTH || loading}
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                />
+              </div>
             </div>
           )}
 
@@ -506,15 +516,17 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 error={profileError && !lastName.trim() ? profileError : ''}
               />
 
-              <Button
-                title="ذخیره و ادامه"
-                onPress={handleSaveProfile}
-                loading={loading}
-                disabled={loading}
-                variant="primary"
-                size="lg"
-                fullWidth
-              />
+              <div className="pb-6">
+                <Button
+                  title="ذخیره و ادامه"
+                  onPress={handleSaveProfile}
+                  loading={loading}
+                  disabled={loading}
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                />
+              </div>
             </div>
           )}
 
