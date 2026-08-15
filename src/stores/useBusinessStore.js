@@ -18,11 +18,11 @@ export const useBusinessStore = create(
       _version: STORAGE_VERSION,
 
       // ─── Slice‌ها (متدها از اینجا می‌آیند) ───
-      ...createServicesSlice(set, get),      // ✅ get هم پاس داده شد
+      ...createServicesSlice(set, get), // ✅ get هم پاس داده شد
       ...createAppointmentsSlice(set),
       ...createTeamSlice(set),
       ...createPortfoliosSlice(set),
-      ...createSchedulesSlice(set, get),     // ✅ get هم پاس داده شد
+      ...createSchedulesSlice(set, get), // ✅ get هم پاس داده شد
 
       // ─── اطلاعات پایه ───
       updateBusinessInfo: (updates) =>

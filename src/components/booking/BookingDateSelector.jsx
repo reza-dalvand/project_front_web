@@ -1,39 +1,39 @@
 // src/components/booking/BookingDateSelector.jsx
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { FiChevronRight, FiChevronLeft, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 import {
-  toJalaali,
   PERSIAN_MONTHS,
   PERSIAN_WEEKDAYS,
   jalaaliMonthLength,
   getFirstDayOfWeekJalaali,
+  toJalaali,
 } from '@/utils/dateUtils';
 
 export default function BookingDateSelector({
   selectedDate,
   onDateSelect,
-  availableDates = [], // ✅ از API می‌آید
-  isLoading = false, // ✅ جدید
+  availableDates = [],
+  isLoading = false,
 }) {
   const { colors } = useTheme();
-
   const today = useMemo(() => {
     const now = new Date();
     return toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
   }, []);
 
-  const [viewMonth, setViewMonth] = useMemo(() => {
+  // ✅ اصلاح: useState جداگانه با مقدار اولیه محاسبه‌شده
+  const initialMonth = useMemo(() => {
     if (availableDates && availableDates.length > 0) {
       const first = availableDates[0];
-      return [{ jy: first.jy, jm: first.jm }, () => {}];
+      return { jy: first.jy, jm: first.jm };
     }
-    return [{ jy: today.jy, jm: today.jm }, () => {}];
+    return { jy: today.jy, jm: today.jm };
   }, [availableDates, today]);
 
-  const [currentView, setCurrentView] = useState({ jy: today.jy, jm: today.jm });
+  const [currentView, setCurrentView] = useState(initialMonth);
 
   const goToPrev = () => {
     setCurrentView((prev) =>
@@ -105,6 +105,16 @@ export default function BookingDateSelector({
         </button>
       </div>
 
+      {/* لودینگ */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-4">
+          <div
+            className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin"
+            style={{ color: colors.primary }}
+          />
+        </div>
+      )}
+
       {/* نام روزهای هفته */}
       <div className="grid grid-cols-7 gap-1 mb-1">
         {PERSIAN_WEEKDAYS.map((d) => (
@@ -127,7 +137,6 @@ export default function BookingDateSelector({
           const available = isAvailable(day.jd);
           const selected = isSelected(day.jd);
           const isToday = isSameDate(day, today);
-
           return (
             <button
               key={day.key}

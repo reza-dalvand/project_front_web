@@ -1,7 +1,7 @@
 // src/app/manage/reviews/page.jsx
 'use client';
 import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from 'next/navigation';
 import { FiStar, FiMessageSquare, FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';

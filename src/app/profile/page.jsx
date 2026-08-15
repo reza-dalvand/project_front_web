@@ -115,8 +115,13 @@ export default function ProfilePage() {
     router.push(item.route);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      // حتی اگر API خطا داد، state محلی پاک می‌شود
+      console.error('Logout API error:', err);
+    }
     setShowLogoutConfirm(false);
     showToast('با موفقیت از حساب خارج شدید', 'success');
     router.push('/');

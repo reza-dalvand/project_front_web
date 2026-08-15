@@ -2,7 +2,6 @@
 /**
  * 📦 Export مرکزی لایه API
  */
-
 // ═══════════ Config ═══════════
 export { USE_MOCK, API_CONFIG, JWT_CONFIG, PAGINATION_CONFIG, OTP_CONFIG } from './config';
 
@@ -30,4 +29,5 @@ export { remindersService } from './services/reminders.service';
 export { supportService } from './services/support.service';
 export { categoriesService } from './services/categories.service';
 export { locationsService } from './services/locations.service';
-export { priceListService } from './services/price-list.service'; // ✅ جدید
+export { priceListService } from './services/price-list.service';
+export { bankInfoService } from './services/bank-info.service';

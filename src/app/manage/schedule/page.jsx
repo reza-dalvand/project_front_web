@@ -1,6 +1,6 @@
 // src/app/manage/schedule/page.jsx
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiClock, FiCalendar, FiPlus } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -18,9 +18,6 @@ import { toPersianDigit } from '@/utils/numberUtils';
 import { timeToMinutes } from '@/utils/dateUtils';
 import { USE_MOCK } from '@/api/config';
 
-/**
- * محاسبه تعداد نوبت‌های یک روز بر اساس ساعات کاری و استراحت‌ها
- */
 const calculateSlotCount = (schedule) => {
   const { workStart, workEnd, slotDuration, breaks = [] } = schedule;
   const startMin = timeToMinutes(workStart);
@@ -58,12 +55,29 @@ export default function ManageSchedulePage() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState(null);
 
-  // ═══ دریافت زمان‌بندی‌ها از API ═══
   useEffect(() => {
     if (!USE_MOCK) {
       fetchSchedules().catch(() => {});
     }
   }, []);
+
+  // ✅ اصلاح: استخراج existingDates برای سرویس انتخاب‌شده
+  const existingDates = useMemo(() => {
+    if (!selectedServiceId || !schedules) return [];
+    // ساختار: schedules[ownerId][serviceId][dateKey] = scheduleData
+    const dates = [];
+    Object.values(schedules).forEach((ownerSchedules) => {
+      const serviceSchedules = ownerSchedules?.[selectedServiceId];
+      if (!serviceSchedules) return;
+      Object.keys(serviceSchedules).forEach((dateKey) => {
+        const parts = dateKey.split('/').map(Number);
+        if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+          dates.push({ jy: parts[0], jm: parts[1], jd: parts[2] });
+        }
+      });
+    });
+    return dates;
+  }, [schedules, selectedServiceId]);
 
   const handleSave = async (scheduleData) => {
     try {
@@ -74,7 +88,6 @@ export default function ManageSchedulePage() {
     }
   };
 
-  // ═══ محاسبه آمار هر سرویس: روز + نوبت ═══
   const getServiceScheduleStats = (serviceId) => {
     const ownerSchedules = schedules['owner'] || {};
     const serviceSchedules = ownerSchedules[serviceId] || {};
@@ -103,7 +116,6 @@ export default function ManageSchedulePage() {
     <ScreenWrapper padding={0}>
       <Header title="مدیریت زمان‌بندی" onBackPress={() => router.push('/manage')} />
       <div className="overflow-y-auto pb-32 px-5 pt-4 space-y-4">
-        {/* هدر */}
         <div className="flex flex-col items-center gap-2 py-3">
           <div
             className="w-[72px] h-[72px] rounded-3xl flex items-center justify-center"
@@ -125,7 +137,6 @@ export default function ManageSchedulePage() {
           </div>
         ) : (
           <>
-            {/* لیست خدمات */}
             {services.length > 0 ? (
               <div className="flex flex-col gap-3">
                 {services.map((service) => {
@@ -144,9 +155,7 @@ export default function ManageSchedulePage() {
                           <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
                             {service.typeName}
                           </p>
-                          {/* ✅ نمایش روز و نوبت */}
                           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                            {/* روزها */}
                             <div className="flex items-center gap-1">
                               <FiCalendar
                                 size={12}
@@ -163,7 +172,6 @@ export default function ManageSchedulePage() {
                                   : 'هنوز تنظیم نشده'}
                               </span>
                             </div>
-                            {/* نوبت‌ها — فقط وقتی روز تنظیم شده */}
                             {stats.days > 0 && (
                               <div className="flex items-center gap-1">
                                 <FiClock size={12} color="#2196F3" />
@@ -214,7 +222,7 @@ export default function ManageSchedulePage() {
         )}
       </div>
 
-      {/* مدال زمان‌بندی */}
+      {/* ✅ اصلاح: existingDates به جای [] */}
       <ScheduleModal
         visible={modalVisible}
         onClose={() => {
@@ -224,7 +232,7 @@ export default function ManageSchedulePage() {
         services={services}
         initialServiceId={selectedServiceId}
         existingSchedule={schedules}
-        existingDates={[]}
+        existingDates={existingDates}
         onSave={handleSave}
       />
     </ScreenWrapper>

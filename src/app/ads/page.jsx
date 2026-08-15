@@ -12,7 +12,8 @@ import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { adsService } from '@/api';
 import { USE_MOCK } from '@/api/config';
-import { MOCK_MODEL_REQUESTS, MOCK_LINE_RENTALS } from '@/data/ads';
+import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
+import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 
 export default function AllAdsPage() {
   const router = useRouter();
