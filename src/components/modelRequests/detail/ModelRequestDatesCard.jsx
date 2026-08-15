@@ -11,12 +11,8 @@ export default function ModelRequestDatesCard({ createdAt, expiresAt }) {
 
   return (
     <Card variant="default" padding={14} radius={14}>
-      {createdAt && (
-        <InfoRow icon="📅" label="تاریخ ایجاد" value={createdAt} />
-      )}
-      {expiresAt && (
-        <InfoRow icon="⏰" label="تاریخ انقضا" value={expiresAt} />
-      )}
+      {createdAt && <InfoRow icon="📅" label="تاریخ ایجاد" value={createdAt} />}
+      {expiresAt && <InfoRow icon="⏰" label="تاریخ انقضا" value={expiresAt} />}
     </Card>
   );
 }

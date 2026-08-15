@@ -2,12 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import {
-  FiGrid,
-  FiUser,
-  FiStar,
-  FiAward,
-} from 'react-icons/fi';
+import { FiGrid, FiUser, FiStar, FiAward } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import { useReviewStore } from '@/stores/useReviewStore';
@@ -102,8 +97,13 @@ export default function HomePage() {
       }
     }
   }, [
-    nearbyEnabled, nearbyDenied, showToast,
-    enableNearby, disableNearby, setNearbyLoading, setNearbyDenied,
+    nearbyEnabled,
+    nearbyDenied,
+    showToast,
+    enableNearby,
+    disableNearby,
+    setNearbyLoading,
+    setNearbyDenied,
   ]);
 
   // ═══════ فیلتر مدلینگ بر اساس فاصله ═══════
@@ -112,8 +112,10 @@ export default function HomePage() {
     return MOCK_MODEL_REQUESTS.filter((req) => {
       if (!req.latitude || !req.longitude) return false;
       const dist = calculateDistance(
-        userLocation.latitude, userLocation.longitude,
-        req.latitude, req.longitude
+        userLocation.latitude,
+        userLocation.longitude,
+        req.latitude,
+        req.longitude
       );
       return dist <= maxDistanceKm;
     });
@@ -125,8 +127,10 @@ export default function HomePage() {
     return MOCK_LINE_RENTALS.filter((ad) => {
       if (!ad.latitude || !ad.longitude) return false;
       const dist = calculateDistance(
-        userLocation.latitude, userLocation.longitude,
-        ad.latitude, ad.longitude
+        userLocation.latitude,
+        userLocation.longitude,
+        ad.latitude,
+        ad.longitude
       );
       return dist <= maxDistanceKm;
     });
@@ -235,7 +239,9 @@ export default function HomePage() {
             icon={<FiStar size={18} />}
             iconColor={colors.primary}
             title="پیشنهادات ویژه"
-            rightElement={<SeeAllButton onPress={() => router.push('/ads')} count={MOCK_ADS.length} />}
+            rightElement={
+              <SeeAllButton onPress={() => router.push('/ads')} count={MOCK_ADS.length} />
+            }
           />
           <AdSlider ads={MOCK_ADS} onPress={handleAdPress} />
         </section>
@@ -277,7 +283,11 @@ export default function HomePage() {
           {filteredModelRequests.length > 0 ? (
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
               {filteredModelRequests.map((request) => (
-                <ModelRequestCard key={request.id} request={request} onPress={handleModelRequestPress} />
+                <ModelRequestCard
+                  key={request.id}
+                  request={request}
+                  onPress={handleModelRequestPress}
+                />
               ))}
             </div>
           ) : (
@@ -339,7 +349,10 @@ export default function HomePage() {
       <BottomTabBar />
 
       {/* ═══════════ مدال‌ها ═══════════ */}
-      <NotificationModal visible={notificationVisible} onClose={() => setNotificationVisible(false)} />
+      <NotificationModal
+        visible={notificationVisible}
+        onClose={() => setNotificationVisible(false)}
+      />
       <HomeFilterModal
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}

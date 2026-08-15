@@ -12,7 +12,12 @@ const format24 = (timeStr) => {
   return toPersianDigit(cleaned);
 };
 
-export default function WorkRangeSection({ workStart, workEnd, onWorkStartChange, onWorkEndChange }) {
+export default function WorkRangeSection({
+  workStart,
+  workEnd,
+  onWorkStartChange,
+  onWorkEndChange,
+}) {
   const { colors } = useTheme();
   const workStartMin = timeToMinutes(workStart);
   const workEndMin = timeToMinutes(workEnd);

@@ -50,7 +50,10 @@ export default function BusinessLocationSection({
 
         {/* آدرس */}
         <div>
-          <label className="block text-sm font-[Vazir-Medium] mb-2" style={{ color: colors.textMain }}>
+          <label
+            className="block text-sm font-[Vazir-Medium] mb-2"
+            style={{ color: colors.textMain }}
+          >
             آدرس دقیق <span style={{ color: '#E53935' }}>*</span>
           </label>
           <textarea
@@ -65,20 +68,19 @@ export default function BusinessLocationSection({
               color: colors.textMain,
             }}
           />
-          {errors.address && (
-            <p className="text-xs text-[#E53935] mt-1.5">{errors.address}</p>
-          )}
+          {errors.address && <p className="text-xs text-[#E53935] mt-1.5">{errors.address}</p>}
         </div>
 
         {/* نقشه */}
         <div>
-          <label className="block text-sm font-[Vazir-Medium] mb-2" style={{ color: colors.textMain }}>
+          <label
+            className="block text-sm font-[Vazir-Medium] mb-2"
+            style={{ color: colors.textMain }}
+          >
             موقعیت روی نقشه <span style={{ color: '#E53935' }}>*</span>
           </label>
           <MapPicker initialLocation={location} onLocationSelect={onLocationSelect} />
-          {errors.location && (
-            <p className="text-xs text-[#E53935] mt-1.5">{errors.location}</p>
-          )}
+          {errors.location && <p className="text-xs text-[#E53935] mt-1.5">{errors.location}</p>}
         </div>
       </Card>
     </div>

@@ -27,10 +27,7 @@ export default function DeleteConfirmModal({ visible, onConfirm, onCancel }) {
         >
           <FiShield size={40} color="#E53935" />
         </div>
-        <h3
-          className="text-lg font-[Vazir-Bold] text-center"
-          style={{ color: colors.textMain }}
-        >
+        <h3 className="text-lg font-[Vazir-Bold] text-center" style={{ color: colors.textMain }}>
           حذف حساب کاربری
         </h3>
         <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
@@ -44,10 +41,7 @@ export default function DeleteConfirmModal({ visible, onConfirm, onCancel }) {
           }}
         >
           <FiAlertTriangle size={14} color="#E53935" className="flex-shrink-0 mt-0.5" />
-          <span
-            className="text-xs font-[Vazir] leading-5 flex-1"
-            style={{ color: '#E53935' }}
-          >
+          <span className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: '#E53935' }}>
             برای تایید حذف، کد OTP به شماره شما ارسال می‌شود
           </span>
         </div>

@@ -91,11 +91,7 @@ export default function LineRentalCard({ rental, onPress }) {
           {rental.title}
         </h3>
         <div className="flex items-center gap-1.5">
-          <CollabBadge
-            type={collabType}
-            priceDisplay={rental.priceDisplay}
-            variant="compact"
-          />
+          <CollabBadge type={collabType} priceDisplay={rental.priceDisplay} variant="compact" />
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1.5">

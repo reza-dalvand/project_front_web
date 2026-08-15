@@ -6,7 +6,12 @@ import Card from '@/components/common/Card';
 import ImageUploader from '@/components/common/ImageUploader';
 import SectionHeader from '@/components/common/SectionHeader';
 
-export default function BusinessImagesSection({ coverUrl, ownerPhoto, onCoverChange, onOwnerPhotoChange }) {
+export default function BusinessImagesSection({
+  coverUrl,
+  ownerPhoto,
+  onCoverChange,
+  onOwnerPhotoChange,
+}) {
   const { colors } = useTheme();
 
   return (
@@ -39,10 +44,7 @@ export default function BusinessImagesSection({ coverUrl, ownerPhoto, onCoverCha
         </label>
         <div className="flex flex-col items-center gap-3">
           <ImageUploader value={ownerPhoto} onChange={onOwnerPhotoChange} variant="avatar" />
-          <p
-            className="text-xs font-[Vazir] text-center"
-            style={{ color: colors.textSecondary }}
-          >
+          <p className="text-xs font-[Vazir] text-center" style={{ color: colors.textSecondary }}>
             عکس واقعی مدیر کسب‌وکار (جهت احراز هویت و اعتماد مشتریان)
           </p>
         </div>

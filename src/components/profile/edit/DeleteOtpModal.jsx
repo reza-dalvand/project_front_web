@@ -64,12 +64,7 @@ export default function DeleteOtpModal({
           را وارد کنید
         </p>
         {/* OTP Inputs */}
-        <OTPInput
-          value={otp}
-          onChange={onOtpChange}
-          length={otpLength}
-          error={error}
-        />
+        <OTPInput value={otp} onChange={onOtpChange} length={otpLength} error={error} />
         {error && (
           <p className="text-center text-sm" style={{ color: '#E57373' }}>
             {error}

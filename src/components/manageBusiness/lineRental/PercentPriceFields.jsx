@@ -38,10 +38,7 @@ export default function PercentPriceFields({
           </div>
         </div>
         <div>
-          <label
-            className="text-xs mb-1.5 block font-[Vazir-Medium]"
-            style={{ color: '#9C27B0' }}
-          >
+          <label className="text-xs mb-1.5 block font-[Vazir-Medium]" style={{ color: '#9C27B0' }}>
             سهم همکار (٪)
           </label>
           <div className="mb-0 [&>div]:mb-0">
@@ -70,9 +67,7 @@ export default function PercentPriceFields({
               color: total === 100 ? '#4CAF50' : '#FF9800',
             }}
           >
-            {total === 100
-              ? '✓ مجموع: ۱۰۰٪'
-              : `مجموع: ${toPersianDigit(total)}٪`}
+            {total === 100 ? '✓ مجموع: ۱۰۰٪' : `مجموع: ${toPersianDigit(total)}٪`}
           </span>
         </div>
       )}

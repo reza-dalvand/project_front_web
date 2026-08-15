@@ -28,12 +28,7 @@ const IRANIAN_BANKS = [
   { id: 'tosee', label: 'بانک توسعه صادرات' },
 ];
 
-export default function BankEditFormFields({
-  form,
-  errors,
-  businessOwnerName,
-  onFieldChange,
-}) {
+export default function BankEditFormFields({ form, errors, businessOwnerName, onFieldChange }) {
   const { colors } = useTheme();
 
   return (
@@ -129,10 +124,7 @@ export default function BankEditFormFields({
               <span className="text-xs mt-0.5" style={{ color: colors.primary }}>
                 •
               </span>
-              <span
-                className="text-[11px] leading-[18px]"
-                style={{ color: colors.textSecondary }}
-              >
+              <span className="text-[11px] leading-[18px]" style={{ color: colors.textSecondary }}>
                 {note}
               </span>
             </li>

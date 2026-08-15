@@ -37,11 +37,18 @@ export default function BusinessBasicInfoSection({
 
   return (
     <div className="space-y-3">
-      <SectionHeader icon={<FiBriefcase size={18} />} iconColor={colors.primary} title="اطلاعات پایه" />
+      <SectionHeader
+        icon={<FiBriefcase size={18} />}
+        iconColor={colors.primary}
+        title="اطلاعات پایه"
+      />
       <Card variant="elevated" padding={16} radius={18}>
         {/* نام */}
         <div>
-          <label className="block text-sm font-[Vazir-Medium] mb-2" style={{ color: colors.textMain }}>
+          <label
+            className="block text-sm font-[Vazir-Medium] mb-2"
+            style={{ color: colors.textMain }}
+          >
             نام کسب‌وکار <span style={{ color: '#E53935' }}>*</span>
           </label>
           <input
@@ -56,9 +63,7 @@ export default function BusinessBasicInfoSection({
               color: colors.textMain,
             }}
           />
-          {errors.name && (
-            <p className="text-xs text-[#E53935] mt-1.5">{errors.name}</p>
-          )}
+          {errors.name && <p className="text-xs text-[#E53935] mt-1.5">{errors.name}</p>}
         </div>
 
         {/* نوع کسب‌وکار */}
@@ -79,7 +84,10 @@ export default function BusinessBasicInfoSection({
 
         {/* شماره تماس */}
         <div>
-          <label className="block text-sm font-[Vazir-Medium] mb-2" style={{ color: colors.textMain }}>
+          <label
+            className="block text-sm font-[Vazir-Medium] mb-2"
+            style={{ color: colors.textMain }}
+          >
             شماره تماس
           </label>
           <div className="relative">
@@ -105,7 +113,10 @@ export default function BusinessBasicInfoSection({
 
         {/* ساعات کاری */}
         <div>
-          <label className="block text-sm font-[Vazir-Medium] mb-2" style={{ color: colors.textMain }}>
+          <label
+            className="block text-sm font-[Vazir-Medium] mb-2"
+            style={{ color: colors.textMain }}
+          >
             ساعات کاری
           </label>
           <div className="relative">
@@ -131,7 +142,10 @@ export default function BusinessBasicInfoSection({
 
         {/* درباره کسب‌وکار */}
         <div>
-          <label className="block text-sm font-[Vazir-Medium] mb-2" style={{ color: colors.textMain }}>
+          <label
+            className="block text-sm font-[Vazir-Medium] mb-2"
+            style={{ color: colors.textMain }}
+          >
             درباره کسب‌وکار
           </label>
           <textarea

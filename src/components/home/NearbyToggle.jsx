@@ -4,12 +4,7 @@ import { FiMapPin } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-export default function NearbyToggle({
-  nearbyEnabled,
-  nearbyLoading,
-  maxDistanceKm,
-  onToggle,
-}) {
+export default function NearbyToggle({ nearbyEnabled, nearbyLoading, maxDistanceKm, onToggle }) {
   const { colors } = useTheme();
 
   return (
@@ -42,7 +37,10 @@ export default function NearbyToggle({
         >
           {nearbyEnabled ? 'نزدیک‌ترین‌ها فعال است' : 'نزدیک‌ترین‌ها به من'}
         </span>
-        <span className="text-[11px] font-[Vazir] block mt-0.5" style={{ color: colors.textSecondary }}>
+        <span
+          className="text-[11px] font-[Vazir] block mt-0.5"
+          style={{ color: colors.textSecondary }}
+        >
           {nearbyEnabled
             ? `تا ${toPersianDigit(maxDistanceKm)} کیلومتری شما`
             : 'سالن‌ها، کلینیک‌ها و مراکز اطراف شما'}

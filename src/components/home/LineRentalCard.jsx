@@ -110,7 +110,11 @@ export default function LineRentalCard({ ad, onPress }) {
             }}
           >
             {ad.collabType === 'percent' ? '📊' : ad.collabType === 'hourly' ? '⏰' : '💰'}
-            {ad.collabType === 'percent' ? 'درصدی' : ad.collabType === 'hourly' ? 'ساعتی' : 'اجاره ثابت'}
+            {ad.collabType === 'percent'
+              ? 'درصدی'
+              : ad.collabType === 'hourly'
+                ? 'ساعتی'
+                : 'اجاره ثابت'}
           </span>
         </div>
         {/* شهر */}

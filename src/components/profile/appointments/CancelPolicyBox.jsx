@@ -17,8 +17,8 @@ export default function CancelPolicyBox({ canCancel, hoursLeft }) {
         <FiCheckCircle size={18} color="#43A047" className="flex-shrink-0 mt-0.5" />
         <div className="flex-1">
           <p className="text-sm font-[Vazir] leading-6" style={{ color: colors.textMain }}>
-            امکان لغو این نوبت وجود دارد ({formatHoursLeft(hoursLeft)} تا نوبت). بیعانه
-            به صورت کامل به شما مسترد می‌شود.
+            امکان لغو این نوبت وجود دارد ({formatHoursLeft(hoursLeft)} تا نوبت). بیعانه به صورت کامل
+            به شما مسترد می‌شود.
           </p>
           <a
             href="https://zibano.app/rules/cancellation"
@@ -42,9 +42,8 @@ export default function CancelPolicyBox({ canCancel, hoursLeft }) {
       <FiAlertTriangle size={18} color="#E53935" className="flex-shrink-0 mt-0.5" />
       <div className="flex-1">
         <p className="text-sm font-[Vazir] leading-6" style={{ color: colors.textMain }}>
-          امکان لغو این نوبت وجود ندارد ({formatHoursLeft(hoursLeft ?? 0)} تا نوبت).
-          طبق قوانین، لغو فقط تا {toPersianDigit(CANCELLATION_THRESHOLD_HOURS)} ساعت قبل
-          امکان‌پذیر است.
+          امکان لغو این نوبت وجود ندارد ({formatHoursLeft(hoursLeft ?? 0)} تا نوبت). طبق قوانین، لغو
+          فقط تا {toPersianDigit(CANCELLATION_THRESHOLD_HOURS)} ساعت قبل امکان‌پذیر است.
         </p>
         <a
           href="https://zibano.app/rules/cancellation"

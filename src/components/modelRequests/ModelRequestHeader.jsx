@@ -34,9 +34,7 @@ export default function ModelRequestHeader({ count }) {
           className="w-10 h-10 rounded-xl flex items-center justify-center"
           style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
         >
-          <span className="text-sm font-[Vazir-Bold] text-white">
-            {toPersianDigit(count)}
-          </span>
+          <span className="text-sm font-[Vazir-Bold] text-white">{toPersianDigit(count)}</span>
         </div>
       </div>
     </div>

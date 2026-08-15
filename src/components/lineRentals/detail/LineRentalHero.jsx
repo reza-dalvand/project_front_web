@@ -52,10 +52,7 @@ export default function LineRentalHero({
 
       {/* ایموجی خدمت */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span
-          className="text-[80px]"
-          style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.3))' }}
-        >
+        <span className="text-[80px]" style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.3))' }}>
           {getLineEmoji(serviceTypeName)}
         </span>
       </div>

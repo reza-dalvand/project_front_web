@@ -16,10 +16,7 @@ export default function PostBusinessInfo({ post, onProfilePress, onBooking }) {
         borderColor: colors.border,
       }}
     >
-      <button
-        onClick={onProfilePress}
-        className="flex items-center gap-3 flex-1 text-right"
-      >
+      <button onClick={onProfilePress} className="flex items-center gap-3 flex-1 text-right">
         <Image
           src={post.businessLogo}
           alt={post.businessName}
@@ -29,10 +26,7 @@ export default function PostBusinessInfo({ post, onProfilePress, onBooking }) {
         />
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
-            <span
-              className="text-sm font-bold line-clamp-1"
-              style={{ color: colors.textMain }}
-            >
+            <span className="text-sm font-bold line-clamp-1" style={{ color: colors.textMain }}>
               {post.businessName}
             </span>
             <MdVerified size={14} color="#4FC3F7" />

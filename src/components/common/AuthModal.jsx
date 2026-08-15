@@ -118,7 +118,8 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     try {
       const result = await authService.verifyOTP(cleanPhone(phone), code);
       if (!result?.data?.user) throw new Error('خطا در ورود. لطفاً دوباره تلاش کنید.');
-      const { user, access_token, refresh_token, is_new_user, needs_profile_completion } = result.data;
+      const { user, access_token, refresh_token, is_new_user, needs_profile_completion } =
+        result.data;
       login(user, { access_token, refresh_token }, { is_new_user, needs_profile_completion });
       if (needs_profile_completion) {
         setStage('profile');

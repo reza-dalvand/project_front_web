@@ -19,10 +19,7 @@ export default function ProgressCard({ filledCount, totalCount }) {
           {toPersianDigit(filledCount)} از {toPersianDigit(totalCount)}
         </span>
       </div>
-      <div
-        className="h-2 rounded-full overflow-hidden"
-        style={{ backgroundColor: colors.border }}
-      >
+      <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: colors.border }}>
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{

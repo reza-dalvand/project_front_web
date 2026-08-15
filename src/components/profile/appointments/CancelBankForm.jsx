@@ -40,10 +40,7 @@ export default function CancelBankForm({
       >
         <FiAlertTriangle size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p
-            className="text-xs font-[Vazir] leading-5"
-            style={{ color: colors.textSecondary }}
-          >
+          <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
             برای استرداد وجه، اطلاعات حساب بانکی خود را وارد کنید.
           </p>
         </div>
@@ -80,10 +77,7 @@ export default function CancelBankForm({
           borderColor: colors.primary + '25',
         }}
       >
-        <FiInfo
-          size={14}
-          style={{ color: colors.primary, flexShrink: 0, marginTop: 2 }}
-        />
+        <FiInfo size={14} style={{ color: colors.primary, flexShrink: 0, marginTop: 2 }} />
         <p
           className="text-[11px] font-[Vazir] leading-4 flex-1"
           style={{ color: colors.textSecondary }}
@@ -97,4 +91,4 @@ export default function CancelBankForm({
       </div>
     </>
   );
-}   
+}

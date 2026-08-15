@@ -34,7 +34,12 @@ export default function LineRentalPriceCard({ collabType, priceInfo }) {
           icon: '⏰',
         };
       default:
-        return { label: 'قیمت', value: priceInfo.priceDisplay || '—', color: '#607D8B', icon: '💰' };
+        return {
+          label: 'قیمت',
+          value: priceInfo.priceDisplay || '—',
+          color: '#607D8B',
+          icon: '💰',
+        };
     }
   };
 

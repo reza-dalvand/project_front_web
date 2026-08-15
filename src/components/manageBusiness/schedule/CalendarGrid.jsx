@@ -15,8 +15,7 @@ export default function CalendarGrid({
 }) {
   const { colors } = useTheme();
 
-  const isSameDate = (d1, d2) =>
-    d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
+  const isSameDate = (d1, d2) => d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
 
   const isSelected = (day) =>
     selectedDates.some((d) => isSameDate(d, { jy: viewMonth.jy, jm: viewMonth.jm, jd: day }));

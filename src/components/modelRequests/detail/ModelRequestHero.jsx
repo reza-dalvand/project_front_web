@@ -60,10 +60,7 @@ export default function ModelRequestHero({
 
       {/* ایموجی خدمت */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span
-          className="text-[80px]"
-          style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.3))' }}
-        >
+        <span className="text-[80px]" style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.3))' }}>
           {getServiceEmoji(serviceName)}
         </span>
       </div>

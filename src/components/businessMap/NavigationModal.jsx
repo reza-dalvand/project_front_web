@@ -102,7 +102,10 @@ export default function NavigationModal({ visible, onClose, onSelect, navLoading
                   <p className="text-[15px] font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     {app.name}
                   </p>
-                  <p className="text-[11px] font-[Vazir] mt-0.5" style={{ color: colors.textSecondary }}>
+                  <p
+                    className="text-[11px] font-[Vazir] mt-0.5"
+                    style={{ color: colors.textSecondary }}
+                  >
                     {app.subtitle}
                   </p>
                 </div>
@@ -126,9 +129,12 @@ export default function NavigationModal({ visible, onClose, onSelect, navLoading
             }}
           >
             <span className="text-base flex-shrink-0">💡</span>
-            <p className="text-[11px] font-[Vazir] leading-5 flex-1" style={{ color: colors.textSecondary }}>
-              اگر اپلیکیشن مسیریاب روی گوشی شما نصب باشد، مستقیماً باز می‌شود. در غیر این صورت،
-              نسخه وب آن باز خواهد شد.
+            <p
+              className="text-[11px] font-[Vazir] leading-5 flex-1"
+              style={{ color: colors.textSecondary }}
+            >
+              اگر اپلیکیشن مسیریاب روی گوشی شما نصب باشد، مستقیماً باز می‌شود. در غیر این صورت، نسخه
+              وب آن باز خواهد شد.
             </p>
           </div>
         </div>
@@ -136,4 +142,4 @@ export default function NavigationModal({ visible, onClose, onSelect, navLoading
     </div>,
     document.body
   );
-}   
+}

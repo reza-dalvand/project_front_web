@@ -14,32 +14,20 @@ export default function CancelBankInfoDisplay({ bankInfo }) {
       >
         <div className="flex items-center gap-2 mb-1">
           <FiCheckCircle size={16} color="#4CAF50" />
-          <span
-            className="text-sm font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             اطلاعات بانکی ثبت‌شده
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span
-            className="text-xs font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
             بانک
           </span>
-          <span
-            className="text-sm font-[Vazir-Bold]"
-            style={{ color: colors.textMain }}
-          >
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             {bankInfo.bankName}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span
-            className="text-xs font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
             شماره شبا
           </span>
           <span
@@ -50,10 +38,7 @@ export default function CancelBankInfoDisplay({ bankInfo }) {
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span
-            className="text-xs font-[Vazir]"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
             شماره کارت
           </span>
           <span
@@ -71,10 +56,7 @@ export default function CancelBankInfoDisplay({ bankInfo }) {
       >
         <FiShield size={18} color="#4CAF50" className="flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p
-            className="text-sm font-[Vazir] leading-6"
-            style={{ color: colors.textMain }}
-          >
+          <p className="text-sm font-[Vazir] leading-6" style={{ color: colors.textMain }}>
             بازگشت وجه به حساب شما انجام خواهد شد.
           </p>
         </div>

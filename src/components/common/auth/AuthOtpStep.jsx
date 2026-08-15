@@ -81,9 +81,7 @@ export default function AuthOtpStep({
               height: '60px',
               borderRadius: '14px',
               backgroundColor: colors.cardBackground,
-              border: `2px solid ${
-                error && digit === '' ? '#E57373' : colors.border
-              }`,
+              border: `2px solid ${error && digit === '' ? '#E57373' : colors.border}`,
               color: colors.textMain,
               fontSize: '22px',
               fontFamily: "'Vazir-Bold', sans-serif",
