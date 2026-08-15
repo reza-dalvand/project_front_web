@@ -1,222 +1,257 @@
+// src/components/createbusiness/TermsAndConditionsStep.jsx
 'use client';
-
 import { useState } from 'react';
-import { FiShield, FiClock, FiLock, FiTrendingUp, FiCheck, FiChevronDown } from 'react-icons/fi';
+import { FiShield, FiCheck, FiChevronLeft, FiLock } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
-import Card from '@/components/common/Card';
+import { toPersianDigit } from '@/utils/numberUtils';
 
-const TERMS_SECTIONS = [
-  {
-    icon: FiShield,
-    iconColor: '#4CAF50',
-    title: 'احراز هویت الزامی',
-    description:
-      'برای جلوگیری از سوءاستفاده، کد ملی شما با شماره ثبت‌نام‌شده تطبیق داده می‌شود. این اطلاعات محرمانه باقی می‌ماند.',
-  },
-  {
-    icon: FiClock,
-    iconColor: '#FF9800',
-    title: 'تعهد به کیفیت خدمات',
-    description:
-      'کسب‌وکار شما متعهد به ارائه خدمات با کیفیت و مطابق با توضیحات ثبت‌شده است. شکایات مشتریان به صورت جدی پیگیری می‌شود.',
-  },
-  {
-    icon: FiLock,
-    iconColor: '#2196F3',
-    title: 'حفاظت از اطلاعات',
-    description:
-      'اطلاعات شخصی مشتریان رمزنگاری شده و هرگز در اختیار شخص ثالث قرار نمی‌گیرد. شما نیز موظف به حفظ محرمانگی هستید.',
-  },
-  {
-    icon: FiTrendingUp,
-    iconColor: '#FFC107',
-    title: 'تبلیغات و سرویس‌های ویژه',
-    description:
-      'امکان خرید سرویس‌های ویژه مانند تبلیغات در صفحه اصلی، نمایش برتر و پیامک‌های انبوه برای شما فراهم است.',
-  },
+// ═══════ مراحل ثبت کسب‌وکار ═══════
+const REGISTRATION_STEPS = [
+{
+id: 1,
+emoji: '📋',
+title: 'قوانین و مقررات',
+description: 'مطالعه و پذیرش قوانین زیبانو',
+color: '#9C27B0',
+},
+{
+id: 2,
+emoji: '🪪',
+title: 'احراز هویت',
+description: 'تایید کد ملی با شماره ثبت‌نام',
+color: '#FF9800',
+},
+{
+id: 3,
+emoji: '🏪',
+title: 'اطلاعات کسب‌وکار',
+description: 'نام، آدرس، تصاویر و موقعیت مکانی',
+color: '#2196F3',
+},
 ];
 
 export default function TermsAndConditionsStep({ onAccept, onDecline }) {
-  const { colors } = useTheme();
-  const [accepted, setAccepted] = useState(false);
-  const [scrolledToBottom, setScrolledToBottom] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+const { colors } = useTheme();
+const [accepted, setAccepted] = useState(false);
 
-  const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    const progress = (scrollTop + clientHeight) / scrollHeight;
-    setScrollProgress(Math.min(progress, 1));
+const canProceed = accepted;
 
-    // تشخیص رسیدن به انتهای صفحه
-    const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
-    if (distanceFromBottom <= 150 && !scrolledToBottom) {
-      setScrolledToBottom(true);
-    }
-  };
+return (
+<div className="flex flex-col h-full" style={{ backgroundColor: colors.background }}>
+{/* ═══════ محتوای اسکرولی ═══════ */}
+<div className="flex-1 overflow-y-auto px-5 pt-6 pb-4 space-y-6">
+{/* هدر */}
+<div className="flex flex-col items-center gap-4">
+<div className="relative">
+<div
+className="absolute -inset-3 rounded-full border-2 border-dashed"
+style={{ borderColor: colors.primary + '25' }}
+/>
+<div
+className="w-20 h-20 rounded-full flex items-center justify-center relative z-10 shadow-lg"
+style={{ backgroundColor: colors.primary }}
+>
+<FiShield size={36} color="#fff" />
+</div>
+</div>
+<div className="text-center">
+<h2 className="text-xl font-[Vazir-Bold] mb-1" style={{ color: colors.textMain }}>
+ثبت کسب‌وکار جدید
+</h2>
+<p className="text-sm" style={{ color: colors.textSecondary }}>
+برای شروع، مراحل زیر را طی خواهید کرد
+</p>
+</div>
+</div>
 
-  const canProceed = accepted && scrolledToBottom;
+{/* ═══════ مراحل ثبت ═══════ */}
+<div className="space-y-0">
+{REGISTRATION_STEPS.map((step, index) => {
+const isFirst = index === 0;
+const isLast = index === REGISTRATION_STEPS.length - 1;
+return (
+<div key={step.id} className="flex gap-4">
+{/* خط تایم‌لاین + دایره */}
+<div className="flex flex-col items-center">
+{/* دایره شماره */}
+<div
+className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 border-2 z-10"
+style={{
+backgroundColor: isFirst ? step.color : colors.cardBackground,
+borderColor: isFirst ? step.color : colors.border,
+}}
+>
+{isFirst ? (
+<span className="text-lg">{step.emoji}</span>
+) : (
+<span
+className="text-sm font-[Vazir-Bold]"
+style={{ color: isFirst ? '#fff' : colors.textSecondary }}
+>
+{toPersianDigit(step.id)}
+</span>
+)}
+</div>
+{/* خط عمودی */}
+{!isLast && (
+<div
+className="w-0.5 flex-1 my-1 rounded-full"
+style={{
+backgroundColor: colors.border,
+minHeight: '32px',
+}}
+/>
+)}
+</div>
+{/* محتوای مرحله */}
+<div className={`flex-1 ${!isLast ? 'pb-5' : ''}`}>
+<div
+className="p-3.5 rounded-2xl border transition-all"
+style={{
+backgroundColor: isFirst
+? step.color + '08'
+: colors.cardBackground,
+borderColor: isFirst
+? step.color + '40'
+: colors.border,
+}}
+>
+<div className="flex items-center gap-2.5 mb-1">
+<span className="text-base">{step.emoji}</span>
+<span
+className="text-sm font-[Vazir-Bold] flex-1"
+style={{
+color: isFirst ? step.color : colors.textMain,
+}}
+>
+{step.title}
+</span>
+{isFirst && (
+<span
+className="text-[9px] font-[Vazir-Bold] px-2 py-0.5 rounded-full"
+style={{
+backgroundColor: step.color,
+color: '#fff',
+}}
+>
+مرحله فعلی
+</span>
+)}
+</div>
+<p
+className="text-xs leading-5"
+style={{ color: colors.textSecondary }}
+>
+{step.description}
+</p>
+</div>
+</div>
+</div>
+);
+})}
+</div>
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* هدر لوکس */}
-      <div className="flex flex-col items-center gap-4 py-6">
-        <div className="relative">
-          <div
-            className="w-20 h-20 rounded-full flex items-center justify-center relative z-10 shadow-lg"
-            style={{ backgroundColor: colors.primary }}
-          >
-            <FiShield size={32} color="#fff" />
-          </div>
-          <div
-            className="absolute inset-0 rounded-full border-2"
-            style={{ borderColor: colors.primary + '40' }}
-          />
-          <div
-            className="absolute -inset-2 rounded-full border"
-            style={{ borderColor: colors.primary + '20' }}
-          />
-        </div>
-        <div className="text-center">
-          <h2 className="text-xl font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
-            قوانین و مقررات
-          </h2>
-          <p className="text-xs font-[Vazir] px-8" style={{ color: colors.textSecondary }}>
-            لطفاً قبل از شروع، قوانین زیبانو را مطالعه بفرمایید
-          </p>
-        </div>
-      </div>
+{/* ═══════ چک‌باکس قوانین ═══════ */}
+<div
+className="rounded-2xl border-2 overflow-hidden"
+style={{
+borderColor: accepted ? colors.primary : colors.border,
+}}
+>
+<button
+onClick={() => setAccepted(!accepted)}
+className="w-full flex items-center gap-3.5 p-4 text-right transition-all"
+style={{
+backgroundColor: accepted
+? colors.primary + '08'
+: colors.cardBackground,
+}}
+>
+{/* چک‌باکس */}
+<div
+className="w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+style={{
+backgroundColor: accepted ? colors.primary : 'transparent',
+borderColor: accepted ? colors.primary : colors.border,
+}}
+>
+{accepted && <FiCheck size={16} color="#fff" />}
+</div>
+{/* متن */}
+<span
+className="text-sm font-[Vazir] leading-6 flex-1"
+style={{ color: colors.textMain }}
+>
+تمامی قوانین و مقررات زیبانو را{' '}
+<span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
+مطالعه کرده و می‌پذیرم.
+</span>
+</span>
+</button>
+{/* لینک قوانین */}
+<div
+className="flex items-center justify-center gap-1.5 py-2.5 border-t"
+style={{ borderColor: colors.border }}
+>
+<a
+href="https://zibano.app/terms"
+target="_blank"
+rel="noopener noreferrer"
+className="flex items-center gap-1"
+>
+<FiLock size={11} style={{ color: colors.primary }} />
+<span
+className="text-[11px] font-[Vazir-Medium] underline underline-offset-2"
+style={{ color: colors.primary }}
+>
+مطالعه کامل قوانین و مقررات
+</span>
+</a>
+</div>
+</div>
 
-      {/* نوار پیشرفت اسکرول */}
-      <div
-        className="h-1.5 mx-5 rounded-full overflow-hidden mb-4"
-        style={{ backgroundColor: colors.border }}
-      >
-        <div
-          className="h-full rounded-full transition-all duration-300"
-          style={{
-            width: `${scrollProgress * 100}%`,
-            backgroundColor: scrolledToBottom ? '#4CAF50' : colors.primary,
-          }}
-        />
-      </div>
+{/* پیام راهنما */}
+{!accepted && (
+<p
+className="text-[11px] text-center"
+style={{ color: colors.textSecondary }}
+>
+برای ادامه، ابتدا قوانین را بپذیرید
+</p>
+)}
+</div>
 
-      {/* محتوای اسکرولی */}
-      <div className="flex-1 overflow-y-auto px-5 space-y-3 pb-4" onScroll={handleScroll}>
-        {TERMS_SECTIONS.map((section, index) => {
-          const Icon = section.icon;
-          return (
-            <Card key={index} variant="default" padding={14} radius={14}>
-              <div className="flex gap-3 items-start">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: section.iconColor + '15' }}
-                >
-                  <Icon size={18} color={section.iconColor} />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
-                    {section.title}
-                  </h3>
-                  <p
-                    className="text-xs font-[Vazir] leading-5 text-justify"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    {section.description}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-
-        {/* پیام پایان اسکرول */}
-        {scrolledToBottom ? (
-          <div
-            className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border"
-            style={{
-              backgroundColor: '#4CAF5015',
-              borderColor: '#4CAF5040',
-            }}
-          >
-            <FiCheck size={18} color="#4CAF50" />
-            <span className="text-sm font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
-              تمام قوانین را مطالعه کردید
-            </span>
-          </div>
-        ) : (
-          <div
-            className="flex items-center justify-center gap-2 py-3 rounded-xl animate-pulse"
-            style={{ backgroundColor: colors.primary + '10' }}
-          >
-            <FiChevronDown size={16} style={{ color: colors.primary }} />
-            <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
-              برای مشاهده همه قوانین، صفحه را به پایین بکشید
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* فوتر */}
-      <div className="px-5 pt-4 pb-6 space-y-3">
-        {/* چک‌باکس قوانین */}
-        <button
-          onClick={() => setAccepted(!accepted)}
-          className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 text-right transition-all"
-          style={{
-            backgroundColor: accepted ? colors.primary + '15' : colors.cardBackground,
-            borderColor: accepted ? colors.primary : colors.border,
-          }}
-        >
-          <div
-            className="w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors"
-            style={{
-              backgroundColor: accepted ? colors.primary : 'transparent',
-              borderColor: accepted ? colors.primary : colors.border,
-            }}
-          >
-            {accepted && <FiCheck size={16} color="#fff" />}
-          </div>
-          <span
-            className="text-sm font-[Vazir] leading-6 flex-1"
-            style={{ color: colors.textMain }}
-          >
-            تمامی قوانین و مقررات فوق را{' '}
-            <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
-              مطالعه کرده و می‌پذیرم.
-            </span>
-          </span>
-        </button>
-
-        {/* دکمه‌ها */}
-        <div className="flex gap-3">
-          <Button
-            title="انصراف"
-            onPress={onDecline}
-            variant="outline"
-            size="lg"
-            className="flex-1"
-          />
-          <Button
-            title="ثبت کسب و کار"
-            onPress={onAccept}
-            variant="primary"
-            size="lg"
-            disabled={!canProceed}
-            className="flex-1"
-            iconPosition="right"
-          />
-        </div>
-
-        {/* پیام راهنما */}
-        {!canProceed && (
-          <p className="text-xs font-[Vazir] text-center" style={{ color: colors.textSecondary }}>
-            {!scrolledToBottom
-              ? `📖 ${Math.round(scrollProgress * 100)}٪ مطالعه شده - ادامه دهید`
-              : '☑️ برای ادامه، قوانین را بپذیرید'}
-          </p>
-        )}
-      </div>
-    </div>
-  );
+{/* ═══════ فوتر ثابت — بدون اسکرول ═══════ */}
+<div
+className="flex-shrink-0 px-5 pt-3 border-t"
+style={{
+borderColor: colors.border,
+backgroundColor: colors.cardBackground,
+/* ✅ فاصله از Navigation Bar گوشی */
+paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+}}
+>
+<div className="flex gap-3">
+<Button
+title="انصراف"
+onPress={onDecline}
+variant="outline"
+size="lg"
+className="flex-1"
+/>
+<Button
+title="مرحله بعد"
+onPress={onAccept}
+variant="primary"
+size="lg"
+disabled={!canProceed}
+className="flex-[2]"
+icon={<FiChevronLeft size={18} color="#fff" />}
+iconPosition="right"
+/>
+</div>
+</div>
+</div>
+);
 }
