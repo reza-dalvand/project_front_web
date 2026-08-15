@@ -57,11 +57,11 @@ describe('useAuthStore', () => {
       useAuthStore.getState().login(createTestUser(), createTestTokens());
     });
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
-    
+
     await act(async () => {
       await useAuthStore.getState().logout();
     });
-    
+
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(false);
     expect(state.user).toBeNull();

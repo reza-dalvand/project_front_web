@@ -1,14 +1,14 @@
 // src/api/api-client.js
 /**
-* 🛡️ API Client - لایه نهایی درخواست‌ها
-*
-* تمام درخواست‌ها از این لایه عبور می‌کنند.
-* مسئولیت‌ها:
-*   - انتخاب بین Mock و Real API
-*   - نرمال‌سازی Response (شامل fieldMapper و pagination)
-*   - مدیریت خطا
-*   - افزودن delay شبیه‌سازی برای Mock
-*/
+ * 🛡️ API Client - لایه نهایی درخواست‌ها
+ *
+ * تمام درخواست‌ها از این لایه عبور می‌کنند.
+ * مسئولیت‌ها:
+ *   - انتخاب بین Mock و Real API
+ *   - نرمال‌سازی Response (شامل fieldMapper و pagination)
+ *   - مدیریت خطا
+ *   - افزودن delay شبیه‌سازی برای Mock
+ */
 import api from './axios-instance';
 import { USE_MOCK } from './config';
 import { normalizeSuccessResponse, normalizeErrorResponse } from './response-normalizer';
@@ -40,7 +40,7 @@ const apiClient = {
       throw normalizeErrorResponse(error);
     }
   },
-  
+
   async post(url, data = {}, config = {}) {
     if (USE_MOCK) {
       await simulateDelay();
@@ -54,7 +54,7 @@ const apiClient = {
       throw normalizeErrorResponse(error);
     }
   },
-  
+
   async put(url, data = {}, config = {}) {
     if (USE_MOCK) {
       await simulateDelay();
@@ -68,7 +68,7 @@ const apiClient = {
       throw normalizeErrorResponse(error);
     }
   },
-  
+
   async patch(url, data = {}, config = {}) {
     if (USE_MOCK) {
       await simulateDelay();
@@ -82,7 +82,7 @@ const apiClient = {
       throw normalizeErrorResponse(error);
     }
   },
-  
+
   async delete(url, config = {}) {
     if (USE_MOCK) {
       await simulateDelay();
@@ -96,7 +96,7 @@ const apiClient = {
       throw normalizeErrorResponse(error);
     }
   },
-  
+
   async upload(url, formData, config = {}) {
     if (USE_MOCK) {
       await simulateDelay(500, 1500);

@@ -12,8 +12,8 @@
 // قبلاً بعد از jalaaliToJDN بود و در برخی bundlerها TDZ می‌داد
 const jalCal = (jy) => {
   const breaks = [
-    -61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181,
-    1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178,
+    -61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394,
+    2456, 3178,
   ];
   const bl = breaks.length;
   const gy = jy + 621;
@@ -82,11 +82,7 @@ const jalaaliToJDN = (jy, jm, jd) => {
   const gy = jy + 621;
   const r = jalCal(jy); // ✅ jalCal الان قبل از این تابع تعریف شده
   const jdn =
-    gregorianToJDN(gy, 3, r.march) +
-    (jm - 1) * 31 -
-    Math.floor((jm - 1) / 7) * (jm - 7) +
-    jd -
-    1;
+    gregorianToJDN(gy, 3, r.march) + (jm - 1) * 31 - Math.floor((jm - 1) / 7) * (jm - 7) + jd - 1;
   return jdn;
 };
 

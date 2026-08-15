@@ -17,10 +17,9 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
 
   useEffect(() => {
     if (!sliderRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsInView(entry.isIntersecting),
-      { threshold: 0.1 }
-    );
+    const observer = new IntersectionObserver(([entry]) => setIsInView(entry.isIntersecting), {
+      threshold: 0.1,
+    });
     observer.observe(sliderRef.current);
     return () => observer.disconnect();
   }, []);

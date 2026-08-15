@@ -62,11 +62,11 @@ describe('Auth Flow Integration', () => {
       useAuthStore.getState().login(createTestUser(), createTestTokens());
     });
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
-    
+
     await act(async () => {
       await useAuthStore.getState().logout();
     });
-    
+
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
     expect(useAuthStore.getState().user).toBeNull();
   });
@@ -75,7 +75,7 @@ describe('Auth Flow Integration', () => {
   it('Flow pendingAction پس از لاگین', async () => {
     jest.useFakeTimers();
     const mockAction = jest.fn();
-    
+
     act(() => {
       useAuthModalStore.getState().openAuthModal(mockAction);
     });
@@ -85,12 +85,12 @@ describe('Auth Flow Integration', () => {
     act(() => {
       useAuthModalStore.getState().closeAuthModal();
     });
-    
+
     // pendingAction با تأخیر ۳۰۰ms اجرا می‌شود
     act(() => {
       jest.advanceTimersByTime(400);
     });
-    
+
     expect(mockAction).toHaveBeenCalled();
     jest.useRealTimers();
   });

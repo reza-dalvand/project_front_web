@@ -22,11 +22,11 @@ describe('useApiCacheStore', () => {
     act(() => {
       useApiCacheStore.getState().setCache('short_lived', 'data', 1000); // ۱ ثانیه
     });
-    
+
     expect(useApiCacheStore.getState().getCache('short_lived')).toBe('data');
-    
+
     jest.advanceTimersByTime(1500); // ۱.۵ ثانیه بعد
-    
+
     expect(useApiCacheStore.getState().getCache('short_lived')).toBeNull();
     jest.useRealTimers();
   });

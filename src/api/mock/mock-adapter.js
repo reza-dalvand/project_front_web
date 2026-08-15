@@ -1,13 +1,13 @@
 // src/api/mock/mock-adapter.js
 /**
-* 🎭 Mock Adapter
-*
-* در حالت USE_MOCK = true، این ماژول پاسخ‌های Mock برمی‌گرداند.
-* ساختار پاسخ‌ها دقیقاً مطابق فرمت بک‌اند است.
-*
-* فرمت پاسخ:
-* { success: true, data: {...}, message: '...', meta: {...} }
-*/
+ * 🎭 Mock Adapter
+ *
+ * در حالت USE_MOCK = true، این ماژول پاسخ‌های Mock برمی‌گرداند.
+ * ساختار پاسخ‌ها دقیقاً مطابق فرمت بک‌اند است.
+ *
+ * فرمت پاسخ:
+ * { success: true, data: {...}, message: '...', meta: {...} }
+ */
 // ═══════════════════════════════════════════════
 //    Import داده‌های Mock از src/data
 // ═══════════════════════════════════════════════
@@ -439,11 +439,11 @@ const routeHandlers = {
   'GET /favorites': () => {
     return successResponse({
       // ✅ استفاده از داده‌های موجود به جای متغیرهای ناموجود
-      businesses: MOCK_BUSINESSES_LIST.slice(0, 3), 
+      businesses: MOCK_BUSINESSES_LIST.slice(0, 3),
       posts: MOCK_POSTS.slice(0, 3),
     });
   },
-  
+
   'POST /favorites/toggle': () => {
     return successResponse({ is_favorited: true }, 'به علاقه‌مندی‌ها اضافه شد');
   },
@@ -636,15 +636,15 @@ const normalizeUrl = (url) => {
   let normalized = url.startsWith('/') ? url.slice(1) : url;
   // ✅ FIX: حذف trailing slash
   normalized = normalized.replace(/\/+$/, '');
-  
+
   // جایگزینی IDهای عددی
   normalized = normalized.replace(/\/\d+\//g, '/:id/');
   normalized = normalized.replace(/\/\d+$/g, '/:id');
-  
+
   // ✅ FIX: جایگزینی IDهای رشته‌ای Mock (مثل apt_1, pay_1, stl_1, biz_1)
   normalized = normalized.replace(/\/[a-zA-Z_]+\d+\//g, '/:id/');
   normalized = normalized.replace(/\/[a-zA-Z_]+\d+$/g, '/:id');
-  
+
   normalized = normalized.replace(/\/public\/[^/]+/, '/public/:slug');
   return normalized;
 };
