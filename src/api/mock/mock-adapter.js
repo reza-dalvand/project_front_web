@@ -16,8 +16,6 @@ import {
   MOCK_BUSINESSES_LIST,
   MOCK_BUSINESSES_MAP,
   MOCK_CATEGORIES,
-  MOCK_FAVORITE_BUSINESSES,
-  MOCK_FAVORITE_POSTS,
 } from '@/data/businesses';
 import { MOCK_ALL_ADS, MOCK_ADS } from '@/data/ads';
 import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
@@ -440,10 +438,12 @@ const routeHandlers = {
   // ─── Favorites ───
   'GET /favorites': () => {
     return successResponse({
-      businesses: MOCK_FAVORITE_BUSINESSES,
-      posts: MOCK_FAVORITE_POSTS,
+      // ✅ استفاده از داده‌های موجود به جای متغیرهای ناموجود
+      businesses: MOCK_BUSINESSES_LIST.slice(0, 3), 
+      posts: MOCK_POSTS.slice(0, 3),
     });
   },
+  
   'POST /favorites/toggle': () => {
     return successResponse({ is_favorited: true }, 'به علاقه‌مندی‌ها اضافه شد');
   },
