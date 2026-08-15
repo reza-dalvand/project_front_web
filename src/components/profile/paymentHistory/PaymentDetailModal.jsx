@@ -2,20 +2,44 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiShare2, FiDownload, FiFileText, FiClock, FiCreditCard } from 'react-icons/fi';
+import Image from 'next/image';
+import {
+  FiX,
+  FiShare2,
+  FiFileText,
+  FiClock,
+  FiCreditCard,
+  FiCheckCircle,
+  FiXCircle,
+  FiRotateCcw,
+  FiDollarSign,
+  FiTag,
+  FiCalendar,
+  FiUser,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import Button from '@/components/common/Button';
 import InfoRow from '@/components/common/InfoRow';
-import { TX_STATUS_MAP, TX_TYPE_MAP } from '@/stores/usePaymentStore';
 import { formatPrice, toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-/**
- * مدال جزئیات پرداخت مشتری
- *
- * @param {object} payment - از API (TransactionDetailSerializer)
- */
+// ═══════ وضعیت‌های پرداخت مشتری ═══════
+const STATUS_CONFIG = {
+  success: { label: 'موفق', color: '#43A047', Icon: FiCheckCircle },
+  failed: { label: 'ناموفق', color: '#E53935', Icon: FiXCircle },
+  pending: { label: 'در انتظار', color: '#FFA000', Icon: FiClock },
+  refunded: { label: 'مسترد شده', color: '#1E88E5', Icon: FiRotateCcw },
+};
+
+// ═══════ انواع پرداخت ═══════
+const TYPE_CONFIG = {
+  deposit: { label: 'بیعانه', color: '#FF9800' },
+  full_payment: { label: 'پرداخت کامل', color: '#2196F3' },
+  service_purchase: { label: 'خرید سرویس', color: '#9C27B0' },
+  refund: { label: 'استرداد', color: '#1E88E5' },
+};
+
 export default function PaymentDetailModal({ visible, payment, onClose }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
@@ -38,17 +62,19 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
 
   if (!visible || !payment) return null;
 
-  const statusMeta = TX_STATUS_MAP[payment.status] || TX_STATUS_MAP.failed;
-  const typeMeta = TX_TYPE_MAP[payment.type] || TX_TYPE_MAP.deposit;
+  const status = STATUS_CONFIG[payment.status] || STATUS_CONFIG.pending;
+  const type = TYPE_CONFIG[payment.type] || TYPE_CONFIG.deposit;
+  const StatusIcon = status.Icon;
 
+  // ═══ ساخت پیام اشتراک‌گذاری ═══
   const buildShareMessage = () =>
     [
       '🧾 فاکتور زیبانو',
-      `📋 ${payment.business_name || 'پرداخت'}`,
-      `💰 مبلغ: ${formatPrice(payment.amount)}`,
-      `🔖 کد پیگیری: ${payment.tracking_code}`,
+      `📋 ${payment.businessName || 'پرداخت'}`,
+      `💰 مبلغ: ${formatPrice(payment.paidAmount || payment.amount || 0)}`,
+      `🔖 کد پیگیری: ${payment.trackingCode || payment.tracking_code || '—'}`,
       '✅ زیبانو - رزرو آنلاین خدمات زیبایی',
-    ].join('\n');
+    ].join('');
 
   const handleShare = async () => {
     const msg = buildShareMessage();
@@ -82,7 +108,7 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* هدر */}
+        {/* ═══ هدر ═══ */}
         <div
           className="flex items-center gap-3 px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
@@ -98,7 +124,7 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
               جزئیات پرداخت
             </h3>
             <p className="text-xs truncate" style={{ color: colors.textSecondary }}>
-              {payment.tracking_code}
+              {payment.trackingCode || payment.tracking_code || 'بدون کد پیگیری'}
             </p>
           </div>
           <button
@@ -110,22 +136,20 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
           </button>
         </div>
 
-        {/* محتوا */}
+        {/* ═══ محتوای اسکرولی ═══ */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Badge وضعیت */}
           <div className="flex justify-center">
             <span
-              className="px-4 py-2 rounded-xl text-sm font-[Vazir-Bold]"
-              style={{
-                backgroundColor: statusMeta.color + '18',
-                color: statusMeta.color,
-              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-[Vazir-Bold]"
+              style={{ backgroundColor: status.color + '18', color: status.color }}
             >
-              {statusMeta.label}
+              <StatusIcon size={16} />
+              {status.label}
             </span>
           </div>
 
-          {/* مبلغ */}
+          {/* ═══ مبلغ پرداختی ═══ */}
           <div
             className="flex items-center justify-between p-4 rounded-2xl border"
             style={{
@@ -140,59 +164,215 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
               </span>
             </div>
             <span className="text-xl font-[Vazir-Bold]" style={{ color: colors.primary }}>
-              {formatPrice(payment.amount)}
+              {formatPrice(payment.paidAmount || payment.amount || 0)}
             </span>
           </div>
 
-          {/* اطلاعات تراکنش */}
+          {/* ═══ دلیل ناموفق بودن ═══ */}
+          {payment.status === 'failed' && payment.failureReason && (
+            <div
+              className="flex items-start gap-2.5 p-3.5 rounded-xl border"
+              style={{ backgroundColor: '#E5393508', borderColor: '#E5393530' }}
+            >
+              <FiXCircle size={16} color="#E53935" className="flex-shrink-0 mt-0.5" />
+              <p className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: '#E53935' }}>
+                {payment.failureReason}
+              </p>
+            </div>
+          )}
+
+          {/* ═══ اطلاعات استرداد ═══ */}
+          {payment.status === 'refunded' && (
+            <div
+              className="rounded-2xl border p-3 space-y-1"
+              style={{ borderColor: '#1E88E540', backgroundColor: '#1E88E508' }}
+            >
+              <InfoRow
+                icon={<FiRotateCcw size={16} />}
+                iconColor="#1E88E5"
+                label="مبلغ مسترد شده"
+                value={formatPrice(payment.refundAmount || 0)}
+                valueColor="#1E88E5"
+                valueBold
+                showDivider
+              />
+              {payment.cancellationFee > 0 && (
+                <InfoRow
+                  icon={<FiXCircle size={16} />}
+                  iconColor="#E53935"
+                  label="جریمه لغو"
+                  value={formatPrice(payment.cancellationFee)}
+                  valueColor="#E53935"
+                />
+              )}
+            </div>
+          )}
+
+          {/* ═══ جزئیات مالی ═══ */}
           <div className="rounded-2xl border p-3 space-y-1" style={{ borderColor: colors.border }}>
-            {payment.business_name && (
+            {payment.totalPrice > 0 && (
               <InfoRow
-                icon={<span className="text-base">🏪</span>}
-                label="کسب‌وکار"
-                value={payment.business_name}
-                showDivider
-              />
-            )}
-            {payment.created_at && (
-              <InfoRow
-                icon={<FiClock size={16} />}
+                icon={<FiDollarSign size={16} />}
                 iconColor={colors.textSecondary}
-                label="تاریخ تراکنش"
-                value={payment.created_at}
+                label="مبلغ کل خدمت"
+                value={formatPrice(payment.totalPrice)}
                 showDivider
               />
             )}
-            {payment.gateway && (
+            {payment.discountPercent > 0 && (
+              <InfoRow
+                icon={<FiTag size={16} />}
+                iconColor="#4CAF50"
+                label={`تخفیف (${toPersianDigit(payment.discountPercent)}٪)`}
+                value={`- ${formatPrice(payment.discountAmount || 0)}`}
+                valueColor="#4CAF50"
+                showDivider
+              />
+            )}
+            {payment.depositAmount > 0 && (
               <InfoRow
                 icon={<FiCreditCard size={16} />}
-                iconColor={colors.textSecondary}
-                label="درگاه پرداخت"
-                value={payment.gateway}
+                iconColor="#FF9800"
+                label="بیعانه"
+                value={formatPrice(payment.depositAmount)}
                 showDivider
               />
             )}
-            {payment.card_number && (
+            {payment.remainingAmount > 0 && (
               <InfoRow
-                icon={<span className="text-base">💳</span>}
-                label="شماره کارت"
-                value={`${payment.card_number} (${payment.card_bank || ''})`}
-                monospace
-                showDivider
-              />
-            )}
-            {payment.tracking_code && (
-              <InfoRow
-                icon={<span className="text-base">🔖</span>}
-                label="کد پیگیری"
-                value={toPersianDigit(payment.tracking_code)}
-                monospace
+                icon={<FiDollarSign size={16} />}
+                iconColor="#2196F3"
+                label="باقی‌مانده (پرداخت در سالن)"
+                value={formatPrice(payment.remainingAmount)}
+                valueColor="#2196F3"
               />
             )}
           </div>
+
+          {/* ═══ اطلاعات کسب‌وکار و خدمت ═══ */}
+          <div className="rounded-2xl border p-3 space-y-1" style={{ borderColor: colors.border }}>
+            {payment.businessLogo && (
+              <div className="flex items-center gap-3 mb-2">
+                <Image
+                  src={payment.businessLogo}
+                  alt={payment.businessName || ''}
+                  width={40}
+                  height={40}
+                  className="rounded-xl"
+                />
+                <div className="flex-1 min-w-0">
+                  <span
+                    className="text-sm font-[Vazir-Bold] block truncate"
+                    style={{ color: colors.textMain }}
+                  >
+                    {payment.businessName}
+                  </span>
+                  {payment.serviceName && (
+                    <span
+                      className="text-xs truncate block"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {payment.serviceName}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+            {payment.employeeName && (
+              <InfoRow
+                icon={<FiUser size={16} />}
+                iconColor="#9C27B0"
+                label="کارمند"
+                value={payment.employeeName}
+                showDivider
+              />
+            )}
+            {payment.appointmentDate && (
+              <InfoRow
+                icon={<FiCalendar size={16} />}
+                iconColor={colors.textSecondary}
+                label="تاریخ نوبت"
+                value={`${payment.appointmentDate} - ${payment.appointmentTime || ''}`}
+                showDivider
+              />
+            )}
+            <InfoRow
+              icon={<FiClock size={16} />}
+              iconColor={colors.textSecondary}
+              label="تاریخ تراکنش"
+              value={`${payment.dayName || ''} ${payment.date || ''} - ${payment.time || ''}`}
+            />
+          </div>
+
+          {/* ═══ اطلاعات درگاه پرداخت ═══ */}
+          <div className="rounded-2xl border p-3 space-y-1" style={{ borderColor: colors.border }}>
+            <InfoRow
+              icon={<FiCreditCard size={16} />}
+              iconColor="#2196F3"
+              label="درگاه پرداخت"
+              value={payment.paymentGateway || payment.gateway || '—'}
+              showDivider
+            />
+            {payment.cardNumber && (
+              <InfoRow
+                icon={<span className="text-base">💳</span>}
+                label="شماره کارت"
+                value={payment.cardNumber}
+                monospace
+                showDivider
+              />
+            )}
+            {payment.cardBank && (
+              <InfoRow
+                icon={<span className="text-base">🏦</span>}
+                label="بانک کارت"
+                value={payment.cardBank}
+              />
+            )}
+          </div>
+
+          {/* ═══ کد پیگیری ═══ */}
+          <div
+            className="flex items-center justify-between p-4 rounded-2xl border"
+            style={{ borderColor: colors.border }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">🔖</span>
+              <span className="text-xs" style={{ color: colors.textSecondary }}>
+                کد پیگیری
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className="text-sm font-[Vazir-Bold]"
+                style={{ color: colors.textMain, letterSpacing: '1px', direction: 'ltr' }}
+              >
+                {payment.trackingCode || payment.tracking_code || '—'}
+              </span>
+            </div>
+          </div>
+          {payment.refNumber && (
+            <div
+              className="flex items-center justify-between p-4 rounded-2xl border -mt-2"
+              style={{ borderColor: colors.border }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">📄</span>
+                <span className="text-xs" style={{ color: colors.textSecondary }}>
+                  شماره مرجع
+                </span>
+              </div>
+              <span
+                className="text-sm font-[Vazir-Bold]"
+                style={{ color: colors.textMain, direction: 'ltr' }}
+              >
+                {payment.refNumber}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* فوتر */}
+        {/* ═══ فوتر ═══ */}
         <div
           className="px-5 pt-4 border-t space-y-3"
           style={{

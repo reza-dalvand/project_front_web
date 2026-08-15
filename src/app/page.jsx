@@ -36,15 +36,19 @@ import { MOCK_DONE_APPOINTMENTS } from '@/data/appointments';
 import CostTypeBadge from '@/components/common/CostTypeBadge';
 import CollabBadge from '@/components/common/CollabBadge';
 
-
-
 // ─── انتخاب ایموجی بر اساس نام خدمت ───
 const getServiceEmoji = (serviceName = '') => {
   if (serviceName.includes('ناخن')) return '💅';
   if (serviceName.includes('میکاپ') || serviceName.includes('گریم')) return '💄';
-  if (serviceName.includes('فیشیال') || serviceName.includes('پوست') || serviceName.includes('پاکسازی')) return '✨';
+  if (
+    serviceName.includes('فیشیال') ||
+    serviceName.includes('پوست') ||
+    serviceName.includes('پاکسازی')
+  )
+    return '✨';
   if (serviceName.includes('لیزر')) return '⚡';
-  if (serviceName.includes('مو') || serviceName.includes('رنگ') || serviceName.includes('کراتین')) return '🎨';
+  if (serviceName.includes('مو') || serviceName.includes('رنگ') || serviceName.includes('کراتین'))
+    return '🎨';
   if (serviceName.includes('مژه') || serviceName.includes('ابرو')) return '👁️';
   if (serviceName.includes('ماساژ')) return '💆‍♀️';
   return '💆‍♀️';
@@ -55,7 +59,8 @@ const getLineEmoji = (typeName = '') => {
   if (typeName.includes('میکاپ') || typeName.includes('گریم')) return '💄';
   if (typeName.includes('فیشیال') || typeName.includes('پوست')) return '✨';
   if (typeName.includes('لیزر')) return '⚡';
-  if (typeName.includes('مو') || typeName.includes('رنگ') || typeName.includes('کراتین')) return '🎨';
+  if (typeName.includes('مو') || typeName.includes('رنگ') || typeName.includes('کراتین'))
+    return '🎨';
   if (typeName.includes('مژه') || typeName.includes('ابرو')) return '👁️';
   if (typeName.includes('ماساژ')) return '💆‍♀️';
   return '🏢';
@@ -413,316 +418,320 @@ export default function HomePage() {
           />
         </section>
 
-{/* ─── ۳. فرصت‌های مدلینگ ─── */}
-<section>
-  <SectionHeader
-    icon={<FiUser size={18} />}
-    iconColor="#E91E63"
-    title="فرصت‌های مدلینگ"
-    subtitle="با تخفیف ویژه مدل شوید و نمونه‌کار بسازید"
-    rightElement={
-      <SeeAllButton
-        onPress={() => router.push('/model-requests')}
-        count={filteredModelRequests.length}
-      />
-    }
-  />
-  {filteredModelRequests.length > 0 ? (
-    <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-      {filteredModelRequests.map((request) => (
-        <button
-          key={request.id}
-          onClick={() => handleModelRequestPress(request)}
-          className="flex-shrink-0 w-[230px] rounded-[20px] overflow-hidden text-right
+        {/* ─── ۳. فرصت‌های مدلینگ ─── */}
+        <section>
+          <SectionHeader
+            icon={<FiUser size={18} />}
+            iconColor="#E91E63"
+            title="فرصت‌های مدلینگ"
+            subtitle="با تخفیف ویژه مدل شوید و نمونه‌کار بسازید"
+            rightElement={
+              <SeeAllButton
+                onPress={() => router.push('/model-requests')}
+                count={filteredModelRequests.length}
+              />
+            }
+          />
+          {filteredModelRequests.length > 0 ? (
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+              {filteredModelRequests.map((request) => (
+                <button
+                  key={request.id}
+                  onClick={() => handleModelRequestPress(request)}
+                  className="flex-shrink-0 w-[230px] rounded-[20px] overflow-hidden text-right
             transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-          style={{
-            backgroundColor: colors.cardBackground,
-            border: `1px solid ${colors.border}`,
-          }}
-        >
-          {/* ═══ هدر گرادیانی ═══ */}
-          <div
-            className="relative h-[130px] overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, #E91E63 0%, #AD1457 60%, #880E4F 100%)',
-            }}
-          >
-            {/* دایره‌های تزئینی */}
-            <div
-              className="absolute -top-8 -right-8 w-28 h-28 rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.10)' }}
-            />
-            <div
-              className="absolute -bottom-6 -left-4 w-20 h-20 rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
-            />
-            <div
-              className="absolute top-8 left-10 w-10 h-10 rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
-            />
-            <div
-              className="absolute bottom-4 right-6 w-6 h-6 rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-            />
-
-            {/* ایموجی خدمت */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span
-                className="text-[48px]"
-                style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.25))' }}
-              >
-                {getServiceEmoji(request.serviceName)}
-              </span>
-            </div>
-
-            {/* بج فوری */}
-            {request.isUrgent && (
-              <div
-                className="absolute top-3 left-3 px-2.5 py-1 rounded-lg
-                  backdrop-blur-sm"
-                style={{ backgroundColor: 'rgba(255,152,0,0.9)' }}
-              >
-                <span className="text-[10px] font-[Vazir-Bold] text-white">🔥 فوری</span>
-              </div>
-            )}
-
-            {/* بج نوع هزینه */}
-            <div
-              className="absolute top-3 right-3 px-2.5 py-1 rounded-lg backdrop-blur-sm"
-              style={{
-                backgroundColor:
-                  request.costType === 'free'
-                    ? 'rgba(76,175,80,0.9)'
-                    : request.costType === 'paid'
-                      ? 'rgba(33,150,243,0.9)'
-                      : 'rgba(255,152,0,0.9)',
-              }}
-            >
-              <span className="text-[10px] font-[Vazir-Bold] text-white">
-                {request.costType === 'free'
-                  ? 'رایگان'
-                  : request.costType === 'paid'
-                    ? 'با هزینه'
-                    : 'هزینه مواد'}
-              </span>
-            </div>
-
-            {/* نوار شیشه‌ای پایین هدر */}
-            <div
-              className="absolute bottom-0 left-0 right-0 h-[36px] flex items-center px-3 gap-2"
-              style={{ backgroundColor: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
-            >
-              <span className="text-[11px] font-[Vazir-Medium] text-white/90 truncate flex-1">
-                {request.serviceName}
-              </span>
-              {request.discount > 0 && (
-                <span
-                  className="text-[10px] font-[Vazir-Bold] px-1.5 py-0.5 rounded-md flex-shrink-0"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: '#fff' }}
+                  style={{
+                    backgroundColor: colors.cardBackground,
+                    border: `1px solid ${colors.border}`,
+                  }}
                 >
-                  {toPersianDigit(request.discount)}٪ تخفیف
-                </span>
-              )}
+                  {/* ═══ هدر گرادیانی ═══ */}
+                  <div
+                    className="relative h-[130px] overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(135deg, #E91E63 0%, #AD1457 60%, #880E4F 100%)',
+                    }}
+                  >
+                    {/* دایره‌های تزئینی */}
+                    <div
+                      className="absolute -top-8 -right-8 w-28 h-28 rounded-full"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.10)' }}
+                    />
+                    <div
+                      className="absolute -bottom-6 -left-4 w-20 h-20 rounded-full"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+                    />
+                    <div
+                      className="absolute top-8 left-10 w-10 h-10 rounded-full"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+                    />
+                    <div
+                      className="absolute bottom-4 right-6 w-6 h-6 rounded-full"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+                    />
+
+                    {/* ایموجی خدمت */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span
+                        className="text-[48px]"
+                        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.25))' }}
+                      >
+                        {getServiceEmoji(request.serviceName)}
+                      </span>
+                    </div>
+
+                    {/* بج فوری */}
+                    {request.isUrgent && (
+                      <div
+                        className="absolute top-3 left-3 px-2.5 py-1 rounded-lg
+                  backdrop-blur-sm"
+                        style={{ backgroundColor: 'rgba(255,152,0,0.9)' }}
+                      >
+                        <span className="text-[10px] font-[Vazir-Bold] text-white">🔥 فوری</span>
+                      </div>
+                    )}
+
+                    {/* بج نوع هزینه */}
+                    <div
+                      className="absolute top-3 right-3 px-2.5 py-1 rounded-lg backdrop-blur-sm"
+                      style={{
+                        backgroundColor:
+                          request.costType === 'free'
+                            ? 'rgba(76,175,80,0.9)'
+                            : request.costType === 'paid'
+                              ? 'rgba(33,150,243,0.9)'
+                              : 'rgba(255,152,0,0.9)',
+                      }}
+                    >
+                      <span className="text-[10px] font-[Vazir-Bold] text-white">
+                        {request.costType === 'free'
+                          ? 'رایگان'
+                          : request.costType === 'paid'
+                            ? 'با هزینه'
+                            : 'هزینه مواد'}
+                      </span>
+                    </div>
+
+                    {/* نوار شیشه‌ای پایین هدر */}
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-[36px] flex items-center px-3 gap-2"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
+                    >
+                      <span className="text-[11px] font-[Vazir-Medium] text-white/90 truncate flex-1">
+                        {request.serviceName}
+                      </span>
+                      {request.discount > 0 && (
+                        <span
+                          className="text-[10px] font-[Vazir-Bold] px-1.5 py-0.5 rounded-md flex-shrink-0"
+                          style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: '#fff' }}
+                        >
+                          {toPersianDigit(request.discount)}٪ تخفیف
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ═══ بدنه کارت ═══ */}
+                  <div className="p-3.5 space-y-2">
+                    <h4
+                      className="text-[13px] font-[Vazir-Bold] leading-[20px] line-clamp-2 min-h-[40px]"
+                      style={{ color: colors.textMain }}
+                    >
+                      {request.title}
+                    </h4>
+
+                    {/* کسب‌وکار + شهر */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[13px]">🏪</span>
+                      <span
+                        className="text-[11px] font-[Vazir-Medium] truncate flex-1"
+                        style={{ color: colors.primary }}
+                      >
+                        {request.businessName}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <FiMapPin size={11} style={{ color: colors.textSecondary }} />
+                      <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                        {request.city}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
-          </div>
-
-          {/* ═══ بدنه کارت ═══ */}
-          <div className="p-3.5 space-y-2">
-            <h4
-              className="text-[13px] font-[Vazir-Bold] leading-[20px] line-clamp-2 min-h-[40px]"
-              style={{ color: colors.textMain }}
-            >
-              {request.title}
-            </h4>
-
-            {/* کسب‌وکار + شهر */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[13px]">🏪</span>
-              <span
-                className="text-[11px] font-[Vazir-Medium] truncate flex-1"
+          ) : (
+            <div className="flex flex-col items-center py-8 gap-2">
+              <span className="text-3xl">📍</span>
+              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                فرصت مدلینگی در این فاصله پیدا نشد
+              </p>
+              <button
+                onClick={disableNearby}
+                className="text-xs font-[Vazir-Bold] underline"
                 style={{ color: colors.primary }}
               >
-                {request.businessName}
-              </span>
+                نمایش همه
+              </button>
             </div>
-            <div className="flex items-center gap-1.5">
-              <FiMapPin size={11} style={{ color: colors.textSecondary }} />
-              <span className="text-[10px]" style={{ color: colors.textSecondary }}>
-                {request.city}
-              </span>
-            </div>
-          </div>
-        </button>
-      ))}
-    </div>
-  ) : (
-    <div className="flex flex-col items-center py-8 gap-2">
-      <span className="text-3xl">📍</span>
-      <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-        فرصت مدلینگی در این فاصله پیدا نشد
-      </p>
-      <button
-        onClick={disableNearby}
-        className="text-xs font-[Vazir-Bold] underline"
-        style={{ color: colors.primary }}
-      >
-        نمایش همه
-      </button>
-    </div>
-  )}
-</section>
+          )}
+        </section>
 
-{/* ─── ۴. فرصت‌های همکاری / اجاره لاین ─── */}
-<section>
-  <SectionHeader
-    icon={<FiAward size={18} />}
-    iconColor="#667eea"
-    title="فرصت‌های همکاری"
-    subtitle="با اجاره لاین، کسب‌وکار خود را گسترش دهید"
-    rightElement={
-      <SeeAllButton
-        onPress={() => router.push('/line-rentals')}
-        count={filteredLineRentals.length}
-      />
-    }
-  />
-  {filteredLineRentals.length > 0 ? (
-    <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-      {filteredLineRentals.map((ad) => (
-        <button
-          key={ad.id}
-          onClick={() => handleLineRentalPress(ad)}
-          className="flex-shrink-0 w-[230px] rounded-[20px] overflow-hidden text-right
+        {/* ─── ۴. فرصت‌های همکاری / اجاره لاین ─── */}
+        <section>
+          <SectionHeader
+            icon={<FiAward size={18} />}
+            iconColor="#667eea"
+            title="فرصت‌های همکاری"
+            subtitle="با اجاره لاین، کسب‌وکار خود را گسترش دهید"
+            rightElement={
+              <SeeAllButton
+                onPress={() => router.push('/line-rentals')}
+                count={filteredLineRentals.length}
+              />
+            }
+          />
+          {filteredLineRentals.length > 0 ? (
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+              {filteredLineRentals.map((ad) => (
+                <button
+                  key={ad.id}
+                  onClick={() => handleLineRentalPress(ad)}
+                  className="flex-shrink-0 w-[230px] rounded-[20px] overflow-hidden text-right
             transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-          style={{
-            backgroundColor: colors.cardBackground,
-            border: `1px solid ${colors.border}`,
-          }}
-        >
-          {/* ═══ هدر گرادیانی ═══ */}
-          <div
-            className="relative h-[130px] overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #5a67d8 50%, #764ba2 100%)',
-            }}
-          >
-            {/* دایره‌های تزئینی */}
-            <div
-              className="absolute -top-6 -left-6 w-24 h-24 rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.10)' }}
-            />
-            <div
-              className="absolute -bottom-8 -right-6 w-28 h-28 rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
-            />
-            <div
-              className="absolute top-10 right-12 w-8 h-8 rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
-            />
-            <div
-              className="absolute bottom-6 left-8 w-5 h-5 rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-            />
+                  style={{
+                    backgroundColor: colors.cardBackground,
+                    border: `1px solid ${colors.border}`,
+                  }}
+                >
+                  {/* ═══ هدر گرادیانی ═══ */}
+                  <div
+                    className="relative h-[130px] overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #5a67d8 50%, #764ba2 100%)',
+                    }}
+                  >
+                    {/* دایره‌های تزئینی */}
+                    <div
+                      className="absolute -top-6 -left-6 w-24 h-24 rounded-full"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.10)' }}
+                    />
+                    <div
+                      className="absolute -bottom-8 -right-6 w-28 h-28 rounded-full"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+                    />
+                    <div
+                      className="absolute top-10 right-12 w-8 h-8 rounded-full"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+                    />
+                    <div
+                      className="absolute bottom-6 left-8 w-5 h-5 rounded-full"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+                    />
 
-            {/* ایموجی خدمت */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span
-                className="text-[48px]"
-                style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.25))' }}
+                    {/* ایموجی خدمت */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span
+                        className="text-[48px]"
+                        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.25))' }}
+                      >
+                        {getLineEmoji(ad.serviceTypeName)}
+                      </span>
+                    </div>
+
+                    {/* بج نوع خدمت */}
+                    <div
+                      className="absolute top-3 right-3 px-2.5 py-1 rounded-lg backdrop-blur-sm"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+                    >
+                      <span className="text-[10px] font-[Vazir-Bold] text-white">
+                        {ad.serviceTypeName}
+                      </span>
+                    </div>
+
+                    {/* نوار شیشه‌ای پایین هدر */}
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-[36px] flex items-center px-3 gap-2"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
+                    >
+                      <span className="text-[11px] font-[Vazir-Medium] text-white/90 truncate flex-1">
+                        {ad.collabType === 'percent'
+                          ? `درصدی ${ad.priceDisplay}`
+                          : ad.collabType === 'hourly'
+                            ? `ساعتی ${ad.priceDisplay}`
+                            : `اجاره ثابت ${ad.priceDisplay}`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* ═══ بدنه کارت ═══ */}
+                  <div className="p-3.5 space-y-2">
+                    <h4
+                      className="text-[13px] font-[Vazir-Bold] leading-[20px] line-clamp-2 min-h-[40px]"
+                      style={{ color: colors.textMain }}
+                    >
+                      {ad.title}
+                    </h4>
+
+                    {/* بج نوع همکاری */}
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold]"
+                        style={{
+                          backgroundColor:
+                            ad.collabType === 'percent'
+                              ? '#9C27B018'
+                              : ad.collabType === 'hourly'
+                                ? '#FF980018'
+                                : '#2196F318',
+                          color:
+                            ad.collabType === 'percent'
+                              ? '#9C27B0'
+                              : ad.collabType === 'hourly'
+                                ? '#FF9800'
+                                : '#2196F3',
+                        }}
+                      >
+                        {ad.collabType === 'percent'
+                          ? '📊'
+                          : ad.collabType === 'hourly'
+                            ? '⏰'
+                            : '💰'}
+                        {ad.collabType === 'percent'
+                          ? 'درصدی'
+                          : ad.collabType === 'hourly'
+                            ? 'ساعتی'
+                            : 'اجاره ثابت'}
+                      </span>
+                    </div>
+
+                    {/* شهر */}
+                    <div className="flex items-center gap-1.5">
+                      <FiMapPin size={11} style={{ color: colors.textSecondary }} />
+                      <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                        {ad.city}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center py-8 gap-2">
+              <span className="text-3xl">📍</span>
+              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                فرصت همکاری در این فاصله پیدا نشد
+              </p>
+              <button
+                onClick={disableNearby}
+                className="text-xs font-[Vazir-Bold] underline"
+                style={{ color: colors.primary }}
               >
-                {getLineEmoji(ad.serviceTypeName)}
-              </span>
+                نمایش همه
+              </button>
             </div>
-
-            {/* بج نوع خدمت */}
-            <div
-              className="absolute top-3 right-3 px-2.5 py-1 rounded-lg backdrop-blur-sm"
-              style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-            >
-              <span className="text-[10px] font-[Vazir-Bold] text-white">
-                {ad.serviceTypeName}
-              </span>
-            </div>
-
-            {/* نوار شیشه‌ای پایین هدر */}
-            <div
-              className="absolute bottom-0 left-0 right-0 h-[36px] flex items-center px-3 gap-2"
-              style={{ backgroundColor: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
-            >
-              <span className="text-[11px] font-[Vazir-Medium] text-white/90 truncate flex-1">
-                {ad.collabType === 'percent'
-                  ? `درصدی ${ad.priceDisplay}`
-                  : ad.collabType === 'hourly'
-                    ? `ساعتی ${ad.priceDisplay}`
-                    : `اجاره ثابت ${ad.priceDisplay}`}
-              </span>
-            </div>
-          </div>
-
-          {/* ═══ بدنه کارت ═══ */}
-          <div className="p-3.5 space-y-2">
-            <h4
-              className="text-[13px] font-[Vazir-Bold] leading-[20px] line-clamp-2 min-h-[40px]"
-              style={{ color: colors.textMain }}
-            >
-              {ad.title}
-            </h4>
-
-            {/* بج نوع همکاری */}
-            <div className="flex items-center gap-1.5">
-              <span
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-[Vazir-Bold]"
-                style={{
-                  backgroundColor:
-                    ad.collabType === 'percent'
-                      ? '#9C27B018'
-                      : ad.collabType === 'hourly'
-                        ? '#FF980018'
-                        : '#2196F318',
-                  color:
-                    ad.collabType === 'percent'
-                      ? '#9C27B0'
-                      : ad.collabType === 'hourly'
-                        ? '#FF9800'
-                        : '#2196F3',
-                }}
-              >
-                {ad.collabType === 'percent' ? '📊' : ad.collabType === 'hourly' ? '⏰' : '💰'}
-                {ad.collabType === 'percent'
-                  ? 'درصدی'
-                  : ad.collabType === 'hourly'
-                    ? 'ساعتی'
-                    : 'اجاره ثابت'}
-              </span>
-            </div>
-
-            {/* شهر */}
-            <div className="flex items-center gap-1.5">
-              <FiMapPin size={11} style={{ color: colors.textSecondary }} />
-              <span className="text-[10px]" style={{ color: colors.textSecondary }}>
-                {ad.city}
-              </span>
-            </div>
-          </div>
-        </button>
-      ))}
-    </div>
-  ) : (
-    <div className="flex flex-col items-center py-8 gap-2">
-      <span className="text-3xl">📍</span>
-      <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-        فرصت همکاری در این فاصله پیدا نشد
-      </p>
-      <button
-        onClick={disableNearby}
-        className="text-xs font-[Vazir-Bold] underline"
-        style={{ color: colors.primary }}
-      >
-        نمایش همه
-      </button>
-    </div>
-  )}
-</section>
+          )}
+        </section>
       </div>
 
       {/* ═══════════ Bottom Tab Bar ═══════════ */}

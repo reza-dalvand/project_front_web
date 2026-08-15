@@ -8,9 +8,15 @@ import { toPersianDigit } from '@/utils/numberUtils';
 const getServiceEmoji = (serviceName = '') => {
   if (serviceName.includes('ناخن')) return '💅';
   if (serviceName.includes('میکاپ') || serviceName.includes('گریم')) return '💄';
-  if (serviceName.includes('فیشیال') || serviceName.includes('پوست') || serviceName.includes('پاکسازی')) return '✨';
+  if (
+    serviceName.includes('فیشیال') ||
+    serviceName.includes('پوست') ||
+    serviceName.includes('پاکسازی')
+  )
+    return '✨';
   if (serviceName.includes('لیزر')) return '⚡';
-  if (serviceName.includes('مو') || serviceName.includes('رنگ') || serviceName.includes('کراتین')) return '🎨';
+  if (serviceName.includes('مو') || serviceName.includes('رنگ') || serviceName.includes('کراتین'))
+    return '🎨';
   if (serviceName.includes('مژه') || serviceName.includes('ابرو')) return '👁️';
   if (serviceName.includes('ماساژ')) return '💆‍♀️';
   return '💆‍♀️';

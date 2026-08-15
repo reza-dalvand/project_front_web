@@ -1,17 +1,15 @@
 // src/stores/usePriceListStore.js
 /**
- * Store لیست قیمت — بدون یادداشت (notes حذف شد)
- *
- * قیمت‌ها فقط از بخش «خدمات» خوانده می‌شوند.
- * تم و وضعیت انتشار قابل تغییر هستند.
+ * Store لیست قیمت — با API
+ * قیمت‌ها از services کسب‌وکار خوانده می‌شوند
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { priceListService } from '@/api';
 import { USE_MOCK } from '@/api/config';
 import { PRICE_LIST_THEMES } from '@/data/priceList';
+import { useBusinessStore } from './useBusinessStore';
 
-// ═══════ ساختار پیش‌فرض ═══════
 const DEFAULT_LIST = (businessId) => ({
   businessId,
   themeId: 'classic',
@@ -19,7 +17,24 @@ const DEFAULT_LIST = (businessId) => ({
   services: [],
 });
 
-// ═══════ تبدیل فرمت بک‌اند به فرمت فرانت ═══════
+// ═══════ تبدیل services بیزینس‌استور به فرمت لیست قیمت ═══════
+const buildServicesFromBusiness = () => {
+  const businessData = useBusinessStore.getState().businessData;
+  return (businessData?.services || [])
+    .filter((s) => s.isActive !== false)
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      typeName: s.typeName || '',
+      typeId: s.typeId || '',
+      originalPrice: s.originalPrice,
+      discountPercent: s.discountPercent || 0,
+      finalPrice: s.finalPrice || s.originalPrice,
+      hasDeposit: s.hasDeposit || false,
+      depositAmount: s.depositAmount || 0,
+    }));
+};
+
 const mapPriceListFromApi = (data, businessId) => ({
   businessId,
   themeId: data.theme || 'classic',
@@ -37,7 +52,6 @@ const mapPriceListFromApi = (data, businessId) => ({
   })),
 });
 
-// ═══════ تبدیل فرمت فرانت به فرمت بک‌اند ═══════
 const mapPriceListToApi = (list) => ({
   theme: list.themeId,
   is_published: list.isPublished,
@@ -46,22 +60,28 @@ const mapPriceListToApi = (list) => ({
 export const usePriceListStore = create(
   persist(
     (set, get) => ({
-      // ─── State ───
       lists: {},
       isLoading: false,
       error: null,
 
-      // ─── دریافت از API ───
       fetchPriceList: async (businessId) => {
         set({ isLoading: true, error: null });
         try {
           if (USE_MOCK) {
-            const defaultList = DEFAULT_LIST(businessId);
+            // ✅ در حالت MOCK، services از BusinessStore خوانده می‌شود
+            const services = buildServicesFromBusiness();
+            const existing = get().lists[businessId];
+            const mockList = {
+              businessId,
+              themeId: existing?.themeId || 'classic',
+              isPublished: existing?.isPublished || false,
+              services,
+            };
             set((s) => ({
-              lists: { ...s.lists, [businessId]: defaultList },
+              lists: { ...s.lists, [businessId]: mockList },
               isLoading: false,
             }));
-            return defaultList;
+            return mockList;
           }
           const result = await priceListService.getPriceList();
           const mapped = mapPriceListFromApi(result.data, businessId);
@@ -72,29 +92,36 @@ export const usePriceListStore = create(
           return mapped;
         } catch (error) {
           console.error('fetchPriceList failed:', error);
-          const defaultList = DEFAULT_LIST(businessId);
+          const services = buildServicesFromBusiness();
+          const fallbackList = {
+            businessId,
+            themeId: 'classic',
+            isPublished: false,
+            services,
+          };
           set((s) => ({
-            lists: { ...s.lists, [businessId]: defaultList },
+            lists: { ...s.lists, [businessId]: fallbackList },
             error: error.message,
             isLoading: false,
           }));
-          return defaultList;
+          return fallbackList;
         }
       },
 
-      // ─── ساخت لیست پیش‌فرض اگر وجود نداشته باشد ───
       ensureList: (businessId) => {
         if (!get().lists[businessId]) {
+          const services = buildServicesFromBusiness();
           set((s) => ({
-            lists: { ...s.lists, [businessId]: DEFAULT_LIST(businessId) },
+            lists: {
+              ...s.lists,
+              [businessId]: { ...DEFAULT_LIST(businessId), services },
+            },
           }));
         }
       },
 
-      // ─── Getter ───
       getList: (businessId) => get().lists[businessId] || null,
 
-      // ─── بروزرسانی محلی ───
       updateList: (businessId, updates) =>
         set((s) => ({
           lists: {
@@ -106,7 +133,6 @@ export const usePriceListStore = create(
           },
         })),
 
-      // ─── تغییر تم ───
       setTheme: (businessId, themeId) => {
         get().updateList(businessId, { themeId });
         if (!USE_MOCK) {
@@ -117,7 +143,6 @@ export const usePriceListStore = create(
         }
       },
 
-      // ─── انتشار / مخفی کردن ───
       togglePublish: (businessId) => {
         const current = get().lists[businessId] || DEFAULT_LIST(businessId);
         const next = !current.isPublished;
@@ -131,7 +156,6 @@ export const usePriceListStore = create(
         return next;
       },
 
-      // ─── دریافت تم ───
       getTheme: (businessId) => {
         const list = get().lists[businessId];
         const themeId = list?.themeId || 'classic';

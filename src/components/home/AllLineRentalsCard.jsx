@@ -8,7 +8,8 @@ const getLineEmoji = (typeName = '') => {
   if (typeName.includes('میکاپ') || typeName.includes('گریم')) return '💄';
   if (typeName.includes('فیشیال') || typeName.includes('پوست')) return '✨';
   if (typeName.includes('لیزر')) return '⚡';
-  if (typeName.includes('مو') || typeName.includes('رنگ') || typeName.includes('کراتین')) return '🎨';
+  if (typeName.includes('مو') || typeName.includes('رنگ') || typeName.includes('کراتین'))
+    return '🎨';
   if (typeName.includes('مژه') || typeName.includes('ابرو')) return '👁️';
   if (typeName.includes('ماساژ')) return '💆‍♀️';
   return '🏢';
@@ -57,9 +58,7 @@ export default function AllLineRentalsCard({ ad, onPress }) {
             className="absolute top-3 left-3 px-2.5 py-1 rounded-lg shadow-md"
             style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
           >
-            <span className="text-[10px] font-[Vazir-Bold] text-white">
-              {ad.serviceTypeName}
-            </span>
+            <span className="text-[10px] font-[Vazir-Bold] text-white">{ad.serviceTypeName}</span>
           </div>
           {/* نوار شیشه‌ای */}
           <div

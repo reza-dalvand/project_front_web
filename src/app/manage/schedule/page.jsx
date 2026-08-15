@@ -19,7 +19,7 @@ import { timeToMinutes } from '@/utils/dateUtils';
 import { USE_MOCK } from '@/api/config';
 
 /**
-* محاسبه تعداد نوبت‌های یک روز بر اساس ساعات کاری و استراحت‌ها
+ * محاسبه تعداد نوبت‌های یک روز بر اساس ساعات کاری و استراحت‌ها
  */
 const calculateSlotCount = (schedule) => {
   const { workStart, workEnd, slotDuration, breaks = [] } = schedule;

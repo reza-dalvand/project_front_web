@@ -6,9 +6,11 @@ import {
   FiChevronUp,
   FiHelpCircle,
   FiPlus,
+  FiChevronRight,
   FiMessageSquare,
   FiClock,
 } from 'react-icons/fi';
+import { FaWhatsapp, FaTelegramPlane } from 'react-icons/fa';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -19,7 +21,7 @@ import { USE_MOCK } from '@/api/config';
 import {
   FAQ_ITEMS,
   FAQ_CATEGORIES,
-  SUPPORT_CHANNELS,
+  SUPPORT_HOURS_SIMPLE,
 } from '@/components/profile/support/constants';
 import dynamic from 'next/dynamic';
 import { toPersianDigit } from '@/utils/numberUtils';
@@ -48,7 +50,7 @@ export default function SupportPage() {
   const { colors } = useTheme();
   const { showToast } = useToast();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('faq'); // 'faq' | 'tickets'
+  const [activeTab, setActiveTab] = useState('faq');
   const [activeCategory, setActiveCategory] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
   const [faqs, setFaqs] = useState([]);
@@ -113,9 +115,22 @@ export default function SupportPage() {
     showToast('تیکت با موفقیت ایجاد شد', 'success');
   };
 
+  // ═══ هندلرهای دکمه‌های تماس ═══
+  const handleWhatsApp = () => {
+    window.open(
+      'https://wa.me/989123456789?text=' + encodeURIComponent('سلام، نیاز به پشتیبانی دارم'),
+      '_blank',
+      'noopener,noreferrer'
+    );
+  };
+
+  const handleTelegram = () => {
+    window.open('https://t.me/zibano_support', '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <ScreenWrapper padding={0}>
-      {/* هدر */}
+      {/* ═══════ هدر ═══════ */}
       <div className="rounded-b-3xl pb-7 px-5 pt-8" style={{ backgroundColor: colors.primary }}>
         <div className="flex items-center gap-4">
           <button
@@ -123,14 +138,13 @@ export default function SupportPage() {
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
           >
-            <FiChevronDown size={20} color="#fff" />
+            <FiChevronRight size={20} color="#fff" />
           </button>
           <div className="flex-1">
             <h1 className="text-xl font-[Vazir-Bold] text-white">پشتیبانی و راهنما</h1>
             <p className="text-xs text-white/70 mt-1">تیم ما آماده پاسخگویی به شماست</p>
           </div>
         </div>
-
         {/* تب‌ها */}
         <div className="flex gap-2 mt-6">
           <button
@@ -145,7 +159,7 @@ export default function SupportPage() {
             <FiHelpCircle size={16} />
             سوالات متداول
           </button>
-          <button
+          {/* <button
             onClick={() => setActiveTab('tickets')}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-[Vazir-Bold] transition-all"
             style={{
@@ -164,12 +178,90 @@ export default function SupportPage() {
                 {toPersianDigit(tickets.length)}
               </span>
             )}
-          </button>
+          </button> */}
         </div>
       </div>
 
-      {/* محتوا */}
-      <div className="px-5 pt-5 pb-32">
+      {/* ═══════ دکمه‌های واتساپ و تلگرام — زیر هدر، بالای فیلتر ═══════ */}
+      <div className="grid grid-cols-2 gap-3 px-5 pt-5 pb-2">
+        {/* دکمه واتساپ */}
+        <button
+          onClick={handleWhatsApp}
+          className="flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            backgroundColor: '#25D36608',
+            borderColor: '#25D36640',
+          }}
+        >
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: '#25D36620' }}
+          >
+            <FaWhatsapp size={28} color="#25D366" />
+          </div>
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#25D366' }}>
+            واتساپ
+          </span>
+          <span
+            className="text-[10px] font-[Vazir] text-center leading-4"
+            style={{ color: colors.textSecondary }}
+          >
+            پاسخگویی سریع
+          </span>
+        </button>
+
+        {/* دکمه تلگرام */}
+        <button
+          onClick={handleTelegram}
+          className="flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            backgroundColor: '#0088cc08',
+            borderColor: '#0088cc40',
+          }}
+        >
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: '#0088cc20' }}
+          >
+            <FaTelegramPlane size={28} color="#0088cc" />
+          </div>
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#0088cc' }}>
+            تلگرام
+          </span>
+          <span
+            className="text-[10px] font-[Vazir] text-center leading-4"
+            style={{ color: colors.textSecondary }}
+          >
+            ارسال پیام و تصویر
+          </span>
+        </button>
+      </div>
+
+      {/* ساعت پاسخگویی */}
+      <div className="px-5 pb-4">
+        <div
+          className="flex items-center gap-3 p-3.5 rounded-2xl border"
+          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+        >
+          <div
+            className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: '#FF980020' }}
+          >
+            <span className="text-lg">🕐</span>
+          </div>
+          <div className="flex-1 gap-1">
+            <p className="text-xs" style={{ color: colors.textSecondary }}>
+              ساعات پاسخگویی
+            </p>
+            <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+              {SUPPORT_HOURS_SIMPLE}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════ محتوا ═══════ */}
+      <div className="px-5 pt-2 pb-32">
         {activeTab === 'faq' ? (
           <>
             {/* فیلتر دسته‌بندی */}
@@ -262,13 +354,13 @@ export default function SupportPage() {
                           {category && (
                             <div
                               className="flex items-center gap-1.5 mt-3 self-start inline-flex px-2.5 py-1 rounded-lg"
-                              style={{ backgroundColor: category.color + '15' }}
+                              style={{ backgroundColor: (category?.color || '#607D8B') + '15' }}
                             >
                               <span
                                 className="text-[10px] font-[Vazir-Bold]"
-                                style={{ color: category.color }}
+                                style={{ color: category?.color || '#607D8B' }}
                               >
-                                {category.label}
+                                {category?.label}
                               </span>
                             </div>
                           )}
