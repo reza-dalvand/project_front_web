@@ -1,31 +1,24 @@
 // src/app/manage/services/edit/page.jsx
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FiInfo, FiDollarSign, FiTag, FiShield, FiSave, FiClock } from 'react-icons/fi';
+import { FiSave } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
-import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
-import Card from '@/components/common/Card';
-import Dropdown from '@/components/common/Dropdown';
-import SectionHeader from '@/components/common/SectionHeader';
-import CharCounter from '@/components/common/CharCounter';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ServiceBasicInfoSection from '@/components/manageBusiness/services/edit/ServiceBasicInfoSection';
+import ServicePricingSection from '@/components/manageBusiness/services/edit/ServicePricingSection';
+import ServiceDepositSection from '@/components/manageBusiness/services/edit/ServiceDepositSection';
+import ServiceDurationSection from '@/components/manageBusiness/services/edit/ServiceDurationSection';
 import { toPersianDigit, formatPriceInput, parseNumber } from '@/utils/numberUtils';
-import {
-  SERVICE_CATEGORIES,
-  getSubServicesByCategory,
-  getServiceTypeInfo,
-} from '@/constants/serviceTypes';
+import { MIN_FINAL_PRICE, MIN_DEPOSIT } from '@/utils/price-utils';
 import { USE_MOCK } from '@/api/config';
 
 const MAX_DESCRIPTION_LENGTH = 300;
-const MIN_FINAL_PRICE = 50000;
-const MIN_DEPOSIT = 50000;
 
 function EditServicePageContent() {
   const router = useRouter();
@@ -52,7 +45,6 @@ function EditServicePageContent() {
   const [discountPercent, setDiscountPercent] = useState(
     existingService?.discountPercent ? String(existingService.discountPercent) : ''
   );
-  // ✅ بیعانه همیشه فعال — فقط مبلغ قابل ویرایش است
   const [depositAmount, setDepositAmount] = useState(
     existingService?.depositAmount ? formatPriceInput(String(existingService.depositAmount)) : ''
   );
@@ -68,16 +60,14 @@ function EditServicePageContent() {
   const [loading, setLoading] = useState(false);
 
   // ═══ در حالت ویرایش، اگر سرویس در store نبود از API بگیر ═══
-  useEffect(() => {
+  useState(() => {
     if (serviceId && !existingService && !USE_MOCK) {
       setLoading(true);
       fetchServices()
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
     }
-  }, [serviceId]);
-
-  const availableSubServices = categoryId ? getSubServicesByCategory(categoryId) : [];
+  });
 
   // ═══ محاسبات قیمت ═══
   const originalNum = parseNumber(originalPrice);
@@ -98,8 +88,6 @@ function EditServicePageContent() {
       newErrors.originalPrice = `قیمت نهایی باید حداقل ${toPersianDigit(MIN_FINAL_PRICE.toLocaleString())} تومان باشد`;
     }
     if (discountNum > 100) newErrors.discountPercent = 'درصد تخفیف نمی‌تواند بیشتر از ۱۰۰ باشد';
-
-    // ✅ بیعانه الزامی است
     if (depositNum <= 0) {
       newErrors.depositAmount = 'مبلغ بیعانه الزامی است';
     } else if (depositNum < MIN_DEPOSIT) {
@@ -107,7 +95,6 @@ function EditServicePageContent() {
     } else if (depositNum > finalPrice) {
       newErrors.depositAmount = 'بیعانه نمی‌تواند بیشتر از قیمت نهایی باشد';
     }
-
     if (parseNumber(renewalDays) > 365) {
       newErrors.renewalDays = 'حداکثر ۳۶۵ روز مجاز است';
     }
@@ -124,12 +111,10 @@ function EditServicePageContent() {
         name: name.trim(),
         categoryId,
         typeId,
-        typeName: availableSubServices.find((s) => s.id === typeId)?.label || '',
-        categoryLabel: SERVICE_CATEGORIES.find((c) => c.id === categoryId)?.label || '',
         originalPrice: originalNum,
         discountPercent: discountNum,
         finalPrice,
-        hasDeposit: true, // ✅ همیشه true
+        hasDeposit: true,
         depositAmount: depositNum,
         duration: parseNumber(duration) || 60,
         renewalDays: parseNumber(renewalDays) || 0,
@@ -169,176 +154,70 @@ function EditServicePageContent() {
       />
       <div className="overflow-y-auto pb-32 px-5 pt-3 space-y-5">
         {/* اطلاعات پایه */}
-        <SectionHeader
-          icon={<FiInfo size={18} />}
-          iconColor={colors.primary}
-          title="اطلاعات پایه"
+        <ServiceBasicInfoSection
+          name={name}
+          categoryId={categoryId}
+          typeId={typeId}
+          errors={errors}
+          onNameChange={(t) => {
+            setName(t);
+            setErrors((p) => ({ ...p, name: '' }));
+          }}
+          onCategoryChange={(val) => {
+            setCategoryId(val);
+            setTypeId(null);
+            setErrors((p) => ({ ...p, categoryId: '', typeId: '' }));
+          }}
+          onTypeChange={(val) => {
+            setTypeId(val);
+            setErrors((p) => ({ ...p, typeId: '' }));
+          }}
         />
-        <Card variant="elevated" padding={16} radius={18}>
-          <Input
-            label="نام خدمت *"
-            placeholder="مثال: فیشیال تخصصی پوست"
-            value={name}
-            onChangeText={(t) => {
-              setName(t);
-              setErrors((p) => ({ ...p, name: '' }));
-            }}
-            error={errors.name}
-          />
-          <Dropdown
-            label="دسته‌بندی خدمت *"
-            placeholder="دسته‌بندی را انتخاب کنید"
-            value={categoryId}
-            options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
-            onSelect={(val) => {
-              setCategoryId(val);
-              setTypeId(null);
-              setErrors((p) => ({ ...p, categoryId: '', typeId: '' }));
-            }}
-          />
-          {errors.categoryId && (
-            <p className="text-xs text-[#E53935] mt-1 mb-3">{errors.categoryId}</p>
-          )}
-          <Dropdown
-            label="نوع خدمت *"
-            placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
-            value={typeId}
-            options={availableSubServices}
-            onSelect={(val) => {
-              setTypeId(val);
-              setErrors((p) => ({ ...p, typeId: '' }));
-            }}
-            disabled={!categoryId}
-          />
-          {errors.typeId && <p className="text-xs text-[#E53935] mt-1">{errors.typeId}</p>}
-        </Card>
 
         {/* قیمت‌گذاری */}
-        <SectionHeader icon={<FiDollarSign size={18} />} iconColor="#43A047" title="قیمت‌گذاری" />
-        <Card variant="elevated" padding={16} radius={18}>
-          <Input
-            label="قیمت اصلی (تومان) *"
-            placeholder="مثال: ۷۵۰,۰۰۰"
-            value={originalPrice}
-            onChangeText={(t) => {
-              setOriginalPrice(formatPriceInput(t));
-              setErrors((p) => ({ ...p, originalPrice: '' }));
-            }}
-            error={errors.originalPrice}
-          />
-          <Input
-            label="درصد تخفیف (اختیاری)"
-            placeholder="مثال: ۲۰"
-            value={discountPercent}
-            onChangeText={(t) => {
-              const cleaned = t.replace(/[^0-9]/g, '');
-              if (parseNumber(cleaned) <= 100 || cleaned === '') {
-                setDiscountPercent(cleaned);
-                setErrors((p) => ({ ...p, discountPercent: '' }));
-              }
-            }}
-            error={errors.discountPercent}
-          />
-          {/* پیش‌نمایش قیمت */}
-          {originalNum > 0 && (
-            <div
-              className="mt-3 p-3 rounded-xl border"
-              style={{ backgroundColor: colors.background, borderColor: colors.border }}
-            >
-              <div className="flex justify-between mb-1">
-                <span className="text-xs" style={{ color: colors.textSecondary }}>
-                  قیمت نهایی:
-                </span>
-                <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                  {toPersianDigit(finalPrice.toLocaleString())} تومان
-                </span>
-              </div>
-              {discountNum > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-xs" style={{ color: colors.textSecondary }}>
-                    مبلغ تخفیف:
-                  </span>
-                  <span className="text-xs" style={{ color: '#4CAF50' }}>
-                    - {toPersianDigit(discountAmount.toLocaleString())} تومان
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </Card>
+        <ServicePricingSection
+          originalPrice={originalPrice}
+          discountPercent={discountPercent}
+          finalPrice={finalPrice}
+          errors={errors}
+          onOriginalPriceChange={(t) => {
+            setOriginalPrice(formatPriceInput(t));
+            setErrors((p) => ({ ...p, originalPrice: '' }));
+          }}
+          onDiscountChange={(t) => {
+            const cleaned = t.replace(/[^0-9]/g, '');
+            if (parseNumber(cleaned) <= 100 || cleaned === '') {
+              setDiscountPercent(cleaned);
+              setErrors((p) => ({ ...p, discountPercent: '' }));
+            }
+          }}
+        />
 
-        {/* ═══ بیعانه — الزامی، بدون سوئیچ ═══ */}
-        <SectionHeader icon={<FiShield size={18} />} iconColor="#FF9800" title="بیعانه رزرو" />
-        <Card variant="elevated" padding={16} radius={18}>
-          {/* ✅ پیام الزامی بودن */}
-          <div
-            className="flex items-start gap-2.5 p-3 rounded-xl border mb-4"
-            style={{
-              backgroundColor: '#FF980008',
-              borderColor: '#FF980030',
-            }}
-          >
-            <span className="text-base flex-shrink-0">🔒</span>
-            <p
-              className="text-xs font-[Vazir] leading-5 flex-1"
-              style={{ color: colors.textSecondary }}
-            >
-              بیعانه برای تمام خدمات{' '}
-              <span className="font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
-                الزامی
-              </span>{' '}
-              است. مشتری برای تایید رزرو باید بیعانه را آنلاین پرداخت کند.
-            </p>
-          </div>
-          <Input
-            label="مبلغ بیعانه (تومان) *"
-            placeholder="مثال: ۲۰۰,۰۰۰"
-            value={depositAmount}
-            onChangeText={(t) => {
-              setDepositAmount(formatPriceInput(t));
-              setErrors((p) => ({ ...p, depositAmount: '' }));
-            }}
-            error={errors.depositAmount}
-            hint={`حداقل: ${toPersianDigit(MIN_DEPOSIT.toLocaleString())} تومان`}
-          />
-        </Card>
+        {/* بیعانه */}
+        <ServiceDepositSection
+          depositAmount={depositAmount}
+          errors={errors}
+          onDepositChange={(t) => {
+            setDepositAmount(formatPriceInput(t));
+            setErrors((p) => ({ ...p, depositAmount: '' }));
+          }}
+        />
 
-        {/* مدت و یادآوری */}
-        <SectionHeader icon={<FiClock size={18} />} iconColor="#2196F3" title="مدت و یادآوری" />
-        <Card variant="elevated" padding={16} radius={18}>
-          <Input
-            label="مدت هر نوبت (دقیقه)"
-            placeholder="مثال: ۶۰"
-            value={duration}
-            onChangeText={(t) => setDuration(t.replace(/[^0-9]/g, ''))}
-          />
-          <Input
-            label="یادآوری تمدید (روز)"
-            placeholder="۰ = بدون یادآوری"
-            value={renewalDays}
-            onChangeText={(t) => {
-              setRenewalDays(t.replace(/[^0-9]/g, ''));
-              setErrors((p) => ({ ...p, renewalDays: '' }));
-            }}
-            error={errors.renewalDays}
-            hint="پس از انجام خدمت، بعد از این تعداد روز یادآوری ارسال می‌شود"
-          />
-        </Card>
-
-        {/* توضیحات */}
-        <SectionHeader icon={<FiTag size={18} />} iconColor="#9C27B0" title="توضیحات" />
-        <Card variant="elevated" padding={16} radius={18}>
-          <Input
-            label="توضیحات (اختیاری)"
-            placeholder="توضیحاتی درباره این خدمت..."
-            value={description}
-            onChangeText={(t) => {
-              if (t.length <= MAX_DESCRIPTION_LENGTH) setDescription(t);
-            }}
-            multiline
-          />
-          <CharCounter current={description.length} max={MAX_DESCRIPTION_LENGTH} />
-        </Card>
+        {/* مدت، یادآوری و توضیحات */}
+        <ServiceDurationSection
+          duration={duration}
+          renewalDays={renewalDays}
+          description={description}
+          errors={errors}
+          onDurationChange={(t) => setDuration(t.replace(/[^0-9]/g, ''))}
+          onRenewalDaysChange={(t) => {
+            setRenewalDays(t.replace(/[^0-9]/g, ''));
+            setErrors((p) => ({ ...p, renewalDays: '' }));
+          }}
+          onDescriptionChange={(t) => {
+            if (t.length <= MAX_DESCRIPTION_LENGTH) setDescription(t);
+          }}
+        />
 
         {/* دکمه ذخیره */}
         <Button

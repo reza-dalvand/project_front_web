@@ -1,24 +1,18 @@
 // src/components/manageBusiness/lineRental/CreateLineRentalAdSheet.jsx
 'use client';
 import { useState, useEffect } from 'react';
-import { FiCheck, FiTrash2 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import BottomSheet from '@/components/common/BottomSheet';
-import Input from '@/components/common/Input';
-import Dropdown from '@/components/common/Dropdown';
 import Button from '@/components/common/Button';
-import Card from '@/components/common/Card';
-import CharCounter from '@/components/common/CharCounter';
+import LineRentalBasicFields from './LineRentalBasicFields';
+import CollabTypeSelector from './CollabTypeSelector';
+import PercentPriceFields from './PercentPriceFields';
+import FixedPriceFields from './FixedPriceFields';
+import HourlyPriceFields from './HourlyPriceFields';
 import { toPersianDigit, parseNumber, formatPriceInput } from '@/utils/numberUtils';
 import { COLLAB_TYPES } from '@/constants/collabTypes';
 import { SERVICE_CATEGORIES, getSubServicesByCategory } from '@/constants/serviceTypes';
 
-// ═══════ محدودیت‌های بک‌اند ═══════
-// title: max 100
-// description: max 500
-// contact_phone: max 11
-// collab_type: percent/fixed/hourly
-// percent_salon + percent_partner = 100 (برای percent)
 const MAX_TITLE = 100;
 const MAX_DESCRIPTION = 500;
 const MAX_PHONE = 11;
@@ -26,7 +20,6 @@ const MAX_PHONE = 11;
 export default function CreateLineRentalAdSheet({ visible, onClose, onSave, editingAd }) {
   const { colors } = useTheme();
   const isEditMode = !!editingAd;
-
   const [title, setTitle] = useState('');
   const [categoryId, setCategoryId] = useState(null);
   const [subServiceId, setSubServiceId] = useState(null);
@@ -34,8 +27,6 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
   const [description, setDescription] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [errors, setErrors] = useState({});
-
-  // فیلدهای قیمت بر اساس نوع همکاری
   const [percentSalon, setPercentSalon] = useState('');
   const [percentPartner, setPercentPartner] = useState('');
   const [fixedAmount, setFixedAmount] = useState('');
@@ -44,7 +35,6 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
 
   const availableSubServices = categoryId ? getSubServicesByCategory(categoryId) : [];
 
-  // ═══════ مقداردهی اولیه فرم هنگام باز شدن ═══════
   useEffect(() => {
     if (visible) {
       if (editingAd) {
@@ -80,7 +70,6 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     }
   }, [visible, editingAd]);
 
-  // ═══════ تغییر نوع همکاری → ریست فیلدهای قیمت ═══════
   const handleCollabChange = (id) => {
     setCollabType(id);
     setPercentSalon('');
@@ -91,7 +80,6 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     setErrors((p) => ({ ...p, collabType: '', price: '' }));
   };
 
-  // ═══════ محاسبه خودکار درصد متقابل ═══════
   const handlePercentSalon = (t) => {
     setPercentSalon(t);
     const n = parseNumber(t);
@@ -108,41 +96,26 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     setErrors((p) => ({ ...p, price: '' }));
   };
 
-  // ═══════ اعتبارسنجی مطابق بک‌اند ═══════
   const validate = () => {
     const newErrors = {};
-
-    // title: الزامی، max 100
     if (!title.trim()) {
       newErrors.title = 'عنوان آگهی الزامی است';
     } else if (title.trim().length > MAX_TITLE) {
       newErrors.title = `عنوان نمی‌تواند بیشتر از ${toPersianDigit(MAX_TITLE)} کاراکتر باشد`;
     }
-
-    // categoryId: الزامی
     if (!categoryId) newErrors.categoryId = 'دسته‌بندی خدمات را انتخاب کنید';
-
-    // subServiceId: الزامی
     if (!subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
-
-    // collabType: الزامی
     if (!collabType) newErrors.collabType = 'نوع همکاری را انتخاب کنید';
-
-    // description: الزامی، max 500
     if (!description.trim()) {
       newErrors.description = 'توضیحات الزامی است';
     } else if (description.trim().length > MAX_DESCRIPTION) {
       newErrors.description = `توضیحات نمی‌تواند بیشتر از ${toPersianDigit(MAX_DESCRIPTION)} کاراکتر باشد`;
     }
-
-    // contactPhone: الزامی، ۱۱ رقم
     if (!contactPhone.trim()) {
       newErrors.contactPhone = 'شماره تماس الزامی است';
     } else if (contactPhone.trim().length !== MAX_PHONE) {
       newErrors.contactPhone = `شماره تماس باید دقیقاً ${toPersianDigit(MAX_PHONE)} رقم باشد`;
     }
-
-    // اعتبارسنجی قیمت بر اساس نوع همکاری
     if (collabType === 'percent') {
       const s = parseNumber(percentSalon),
         p = parseNumber(percentPartner);
@@ -155,21 +128,16 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
       const h = parseNumber(hourlyRate);
       if (!h) newErrors.price = 'نرخ ساعتی را وارد کنید';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // ═══════ ذخیره ═══════
   const handleSave = () => {
     if (!validate()) return;
-
     const collab = COLLAB_TYPES.find((c) => c.id === collabType);
     const svc = availableSubServices.find((s) => s.id === subServiceId);
-
     let priceData = {};
     let priceDisplay = '';
-
     if (collabType === 'percent') {
       priceData = {
         percentSalon: parseNumber(percentSalon),
@@ -189,7 +157,6 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
       priceData = { hourlyRate: parseNumber(hourlyRate) };
       priceDisplay = `${toPersianDigit(priceData.hourlyRate.toLocaleString('en-US'))} / ساعت`;
     }
-
     onSave({
       id: editingAd?.id || `lr_${Date.now()}`,
       title: title.trim(),
@@ -207,8 +174,6 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     onClose();
   };
 
-  const descLen = description.length;
-
   return (
     <BottomSheet
       visible={visible}
@@ -217,244 +182,80 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
       snapPoint={0.92}
     >
       <div className="space-y-6 pb-4">
-        {/* ═══════ عنوان ═══════ */}
-        <Input
-          label="عنوان آگهی *"
-          placeholder="مثال: لاین ناخن با تجهیزات کامل"
-          value={title}
-          onChangeText={(t) => {
+        <LineRentalBasicFields
+          title={title}
+          categoryId={categoryId}
+          subServiceId={subServiceId}
+          description={description}
+          contactPhone={contactPhone}
+          errors={errors}
+          onTitleChange={(t) => {
             if (t.length <= MAX_TITLE) setTitle(t);
             setErrors((p) => ({ ...p, title: '' }));
           }}
-          error={errors.title}
-          hint={`${toPersianDigit(title.length)} از ${toPersianDigit(MAX_TITLE)} کاراکتر`}
-        />
-
-        {/* ═══════ دسته‌بندی خدمات ═══════ */}
-        <Dropdown
-          label="دسته‌بندی خدمات *"
-          placeholder="دسته‌بندی را انتخاب کنید"
-          value={categoryId}
-          options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
-          onSelect={(val) => {
+          onCategoryChange={(val) => {
             setCategoryId(val);
             setSubServiceId(null);
             setErrors((p) => ({ ...p, categoryId: '' }));
           }}
-        />
-        {errors.categoryId && (
-          <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.categoryId}</p>
-        )}
-
-        {/* ═══════ نوع خدمت ═══════ */}
-        <Dropdown
-          label="نوع خدمت لاین *"
-          placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
-          value={subServiceId}
-          options={availableSubServices}
-          onSelect={(val) => {
+          onSubServiceChange={(val) => {
             setSubServiceId(val);
             setErrors((p) => ({ ...p, subServiceId: '' }));
           }}
-          disabled={!categoryId}
-        />
-        {errors.subServiceId && (
-          <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.subServiceId}</p>
-        )}
-
-        {/* ═══════ نوع همکاری ═══════ */}
-        <div>
-          <p className="text-sm font-[Vazir-Medium] mb-3" style={{ color: colors.textMain }}>
-            نوع همکاری *
-          </p>
-          <div className="flex gap-2">
-            {COLLAB_TYPES.map((ct) => {
-              const isSel = collabType === ct.id;
-              return (
-                <button
-                  key={ct.id}
-                  onClick={() => handleCollabChange(ct.id)}
-                  className="flex-1 flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-2 transition-all text-center"
-                  style={{
-                    backgroundColor: isSel ? ct.color + '15' : colors.cardBackground,
-                    borderColor: isSel ? ct.color : colors.border,
-                  }}
-                >
-                  <span
-                    className="text-sm font-[Vazir-Bold]"
-                    style={{ color: isSel ? ct.color : colors.textMain }}
-                  >
-                    {ct.label}
-                  </span>
-                  <span className="text-[10px] leading-4" style={{ color: colors.textSecondary }}>
-                    {ct.hint}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          {errors.collabType && <p className="text-xs text-[#E53935] mt-2">{errors.collabType}</p>}
-        </div>
-
-        {/* ═══════ فیلدهای قیمت بر اساس نوع همکاری ═══════ */}
-
-        {/* ─── درصدی ─── */}
-        {collabType === 'percent' && (
-          <Card variant="default" padding={14} radius={14}>
-            <p className="text-xs mb-3" style={{ color: colors.textSecondary }}>
-              درصد سالن و همکار را وارد کنید (مجموع باید ۱۰۰٪ باشد)
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label
-                  className="text-xs mb-1.5 block font-[Vazir-Medium]"
-                  style={{ color: colors.primary }}
-                >
-                  سهم سالن (٪)
-                </label>
-                <div className="mb-0 [&>div]:mb-0">
-                  <Input
-                    placeholder="۴۰"
-                    value={percentSalon}
-                    onChangeText={handlePercentSalon}
-                    type="tel"
-                    maxLength={3}
-                  />
-                </div>
-              </div>
-              <div>
-                <label
-                  className="text-xs mb-1.5 block font-[Vazir-Medium]"
-                  style={{ color: '#9C27B0' }}
-                >
-                  سهم همکار (٪)
-                </label>
-                <div className="mb-0 [&>div]:mb-0">
-                  <Input
-                    placeholder="۶۰"
-                    value={percentPartner}
-                    onChangeText={handlePercentPartner}
-                    type="tel"
-                    maxLength={3}
-                  />
-                </div>
-              </div>
-            </div>
-            {/* نمایش مجموع */}
-            {parseNumber(percentSalon) > 0 && (
-              <div
-                className="flex items-center gap-2 mt-3 p-2.5 rounded-lg border"
-                style={{
-                  backgroundColor:
-                    parseNumber(percentSalon) + parseNumber(percentPartner) === 100
-                      ? '#4CAF5010'
-                      : '#FF980010',
-                  borderColor:
-                    parseNumber(percentSalon) + parseNumber(percentPartner) === 100
-                      ? '#4CAF5040'
-                      : '#FF980040',
-                }}
-              >
-                <span
-                  className="text-xs font-[Vazir-Bold]"
-                  style={{
-                    color:
-                      parseNumber(percentSalon) + parseNumber(percentPartner) === 100
-                        ? '#4CAF50'
-                        : '#FF9800',
-                  }}
-                >
-                  {parseNumber(percentSalon) + parseNumber(percentPartner) === 100
-                    ? '✓ مجموع: ۱۰۰٪'
-                    : `مجموع: ${toPersianDigit(
-                        parseNumber(percentSalon) + parseNumber(percentPartner)
-                      )}٪`}
-                </span>
-              </div>
-            )}
-          </Card>
-        )}
-
-        {/* ─── اجاره ثابت ─── */}
-        {/* ✅ اصلاح شد: فقط یک بلاک fixed (قبلاً دو بار تکرار شده بود) */}
-        {collabType === 'fixed' && (
-          <Card variant="default" padding={14} radius={14}>
-            <div className="[&>div]:mb-3 last:[&>div]:mb-0">
-              <Input
-                label="مبلغ اجاره ماهانه (تومان) *"
-                placeholder="مثال: ۵,۰۰۰,۰۰۰"
-                value={fixedAmount}
-                onChangeText={(t) => {
-                  setFixedAmount(formatPriceInput(t));
-                  setErrors((p) => ({ ...p, price: '' }));
-                }}
-                type="tel"
-              />
-              <Input
-                label="مبلغ رهن (اختیاری)"
-                placeholder="مثال: ۲۰,۰۰۰,۰۰۰ یا خالی"
-                value={fixedDeposit}
-                onChangeText={(t) => setFixedDeposit(formatPriceInput(t))}
-                type="tel"
-              />
-            </div>
-          </Card>
-        )}
-
-        {/* ─── ساعتی ─── */}
-        {/* ✅ اصلاح شد: قبلاً این بلاک خالی بود */}
-        {collabType === 'hourly' && (
-          <Card variant="default" padding={14} radius={14}>
-            <Input
-              label="نرخ هر ساعت (تومان) *"
-              placeholder="مثال: ۱۵۰,۰۰۰"
-              value={hourlyRate}
-              onChangeText={(t) => {
-                setHourlyRate(formatPriceInput(t));
-                setErrors((p) => ({ ...p, price: '' }));
-              }}
-              type="tel"
-            />
-          </Card>
-        )}
-
-        {/* خطای قیمت */}
-        {errors.price && <p className="text-xs text-[#E53935]">{errors.price}</p>}
-
-        {/* ═══════ توضیحات ═══════ */}
-        <Input
-          label="توضیحات *"
-          placeholder="درباره لاین، تجهیزات، شرایط همکاری و مزایا بنویسید..."
-          value={description}
-          onChangeText={(t) => {
+          onDescriptionChange={(t) => {
             if (t.length <= MAX_DESCRIPTION) {
               setDescription(t);
               setErrors((p) => ({ ...p, description: '' }));
             }
           }}
-          multiline
-          error={errors.description}
-        />
-        <CharCounter current={descLen} max={MAX_DESCRIPTION} />
-
-        {/* ═══════ شماره تماس ═══════ */}
-        <Input
-          label="شماره تماس *"
-          placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹"
-          value={contactPhone}
-          onChangeText={(t) => {
+          onContactPhoneChange={(t) => {
             const cleaned = t.replace(/[^0-9]/g, '');
             if (cleaned.length <= MAX_PHONE) {
               setContactPhone(cleaned);
               setErrors((p) => ({ ...p, contactPhone: '' }));
             }
           }}
-          type="tel"
-          maxLength={MAX_PHONE}
-          error={errors.contactPhone}
         />
 
-        {/* ═══════ دکمه ثبت ═══════ */}
+        <CollabTypeSelector
+          collabType={collabType}
+          onSelect={handleCollabChange}
+          error={errors.collabType}
+        />
+
+        {collabType === 'percent' && (
+          <PercentPriceFields
+            percentSalon={percentSalon}
+            percentPartner={percentPartner}
+            onPercentSalonChange={handlePercentSalon}
+            onPercentPartnerChange={handlePercentPartner}
+          />
+        )}
+
+        {collabType === 'fixed' && (
+          <FixedPriceFields
+            fixedAmount={fixedAmount}
+            fixedDeposit={fixedDeposit}
+            onFixedAmountChange={(t) => {
+              setFixedAmount(formatPriceInput(t));
+              setErrors((p) => ({ ...p, price: '' }));
+            }}
+            onFixedDepositChange={(t) => setFixedDeposit(formatPriceInput(t))}
+          />
+        )}
+
+        {collabType === 'hourly' && (
+          <HourlyPriceFields
+            hourlyRate={hourlyRate}
+            onHourlyRateChange={(t) => {
+              setHourlyRate(formatPriceInput(t));
+              setErrors((p) => ({ ...p, price: '' }));
+            }}
+          />
+        )}
+
+        {errors.price && <p className="text-xs text-[#E53935]">{errors.price}</p>}
+
         <Button
           title={isEditMode ? 'ذخیره تغییرات' : 'ثبت آگهی رایگان'}
           onPress={handleSave}
