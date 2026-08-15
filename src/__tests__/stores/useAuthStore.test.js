@@ -41,7 +41,6 @@ describe('useAuthStore', () => {
     expect(state.user).toBeNull();
   });
 
-  // ✅ FIX: login با signature جدید
   it('ورود با موفقیت', () => {
     act(() => {
       useAuthStore.getState().login(createTestUser(), createTestTokens());
@@ -52,18 +51,22 @@ describe('useAuthStore', () => {
     expect(state.user.name).toBe('مریم حسینی');
   });
 
-  // ✅ FIX: login با signature جدید
-  it('خروج از حساب', () => {
+  // ✅ FIX: خروج از حساب (async/await)
+  it('خروج از حساب', async () => {
     act(() => {
       useAuthStore.getState().login(createTestUser(), createTestTokens());
-      useAuthStore.getState().logout();
     });
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    
+    await act(async () => {
+      await useAuthStore.getState().logout();
+    });
+    
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(false);
     expect(state.user).toBeNull();
   });
 
-  // ✅ FIX: login با signature جدید
   it('بروزرسانی پروفایل', () => {
     act(() => {
       useAuthStore.getState().login(createTestUser(), createTestTokens());

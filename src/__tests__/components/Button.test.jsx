@@ -25,7 +25,9 @@ describe('Button', () => {
   it('حالت loading', () => {
     const onPress = jest.fn();
     render(<Button title="در حال بارگذاری" loading onPress={onPress} />);
-    fireEvent.click(screen.getByText('در حال بارگذاری'));
+    // ✅ FIX: در حالت loading متن مخفی می‌شود، پس از getByRole استفاده می‌کنیم
+    const button = screen.getByRole('button');
+    fireEvent.click(button);
     expect(onPress).not.toHaveBeenCalled();
   });
 

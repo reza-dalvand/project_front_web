@@ -25,18 +25,21 @@ const simulateDelay = (min = 300, max = 800) => {
 // ═══════════════════════════════════════════════
 //    متدهای اصلی
 // ═══════════════════════════════════════════════
+// src/api/api-client.js
+import api from './axios-instance';
+import { USE_MOCK } from './config';
+import { normalizeSuccessResponse, normalizeErrorResponse } from './response-normalizer';
+import { getMockHandler } from './mock/mock-adapter';
+
+// ... (بقیه کدها)
+
 const apiClient = {
-  /**
-   * GET Request
-   * @param {string} url
-   * @param {object} config - Axios config (params, headers, ...)
-   * @returns {Promise<{data, meta, message}>}
-   */
   async get(url, config = {}) {
     if (USE_MOCK) {
       await simulateDelay();
       const mockHandler = getMockHandler('GET', url, config.params);
-      return mockHandler;
+      // ✅ FIX: عبور دادن پاسخ Mock از نرمال‌ساز
+      return normalizeSuccessResponse({ data: mockHandler });
     }
     try {
       const response = await api.get(url, config);
@@ -46,17 +49,11 @@ const apiClient = {
     }
   },
 
-  /**
-   * POST Request
-   * @param {string} url
-   * @param {object} data - Body
-   * @param {object} config
-   */
   async post(url, data = {}, config = {}) {
     if (USE_MOCK) {
       await simulateDelay();
       const mockHandler = getMockHandler('POST', url, data);
-      return mockHandler;
+      return normalizeSuccessResponse({ data: mockHandler });
     }
     try {
       const response = await api.post(url, data, config);
@@ -66,14 +63,11 @@ const apiClient = {
     }
   },
 
-  /**
-   * PUT Request
-   */
   async put(url, data = {}, config = {}) {
     if (USE_MOCK) {
       await simulateDelay();
       const mockHandler = getMockHandler('PUT', url, data);
-      return mockHandler;
+      return normalizeSuccessResponse({ data: mockHandler });
     }
     try {
       const response = await api.put(url, data, config);
@@ -83,14 +77,11 @@ const apiClient = {
     }
   },
 
-  /**
-   * PATCH Request
-   */
   async patch(url, data = {}, config = {}) {
     if (USE_MOCK) {
       await simulateDelay();
       const mockHandler = getMockHandler('PATCH', url, data);
-      return mockHandler;
+      return normalizeSuccessResponse({ data: mockHandler });
     }
     try {
       const response = await api.patch(url, data, config);
@@ -100,14 +91,11 @@ const apiClient = {
     }
   },
 
-  /**
-   * DELETE Request
-   */
   async delete(url, config = {}) {
     if (USE_MOCK) {
       await simulateDelay();
       const mockHandler = getMockHandler('DELETE', url, config.params);
-      return mockHandler;
+      return normalizeSuccessResponse({ data: mockHandler });
     }
     try {
       const response = await api.delete(url, config);
@@ -117,14 +105,11 @@ const apiClient = {
     }
   },
 
-  /**
-   * Upload فایل (FormData)
-   */
   async upload(url, formData, config = {}) {
     if (USE_MOCK) {
       await simulateDelay(500, 1500);
       const mockHandler = getMockHandler('UPLOAD', url, formData);
-      return mockHandler;
+      return normalizeSuccessResponse({ data: mockHandler });
     }
     try {
       const response = await api.post(url, formData, {

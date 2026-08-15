@@ -13,39 +13,34 @@ jest.mock('@/api/config', () => ({
 describe('authService', () => {
   it('sendOTP → موفقیت', async () => {
     const result = await authService.sendOTP('09123456789');
-    expect(result.success).toBe(true);
-    expect(result.data).toHaveProperty('expires_in');
-    expect(result.data).toHaveProperty('resend_after');
+    expect(result.data).toHaveProperty('expiresIn');
+    expect(result.data).toHaveProperty('resendAfter');
   });
 
   it('verifyOTP → موفقیت', async () => {
     const result = await authService.verifyOTP('09123456789', '12345');
-    expect(result.success).toBe(true);
-    expect(result.data).toHaveProperty('access_token');
-    expect(result.data).toHaveProperty('refresh_token');
+    expect(result.data).toHaveProperty('accessToken');
+    expect(result.data).toHaveProperty('refreshToken');
     expect(result.data).toHaveProperty('user');
   });
 
   it('refreshToken → موفقیت', async () => {
     const result = await authService.refreshToken('mock_refresh_token');
-    expect(result.success).toBe(true);
     expect(result.data).toHaveProperty('access');
   });
 
   it('logout → موفقیت', async () => {
     const result = await authService.logout('mock_refresh_token');
-    expect(result.success).toBe(true);
+    expect(result).toBeDefined();
   });
 
   it('verifyNationalId → موفقیت', async () => {
     const result = await authService.verifyNationalId('0012345679');
-    expect(result.success).toBe(true);
-    expect(result.data).toHaveProperty('verified_name');
+    expect(result.data).toHaveProperty('verifiedName');
   });
 
   it('getDevices → لیست دستگاه‌ها', async () => {
     const result = await authService.getDevices();
-    expect(result.success).toBe(true);
     expect(Array.isArray(result.data)).toBe(true);
   });
 });

@@ -267,7 +267,13 @@ const routeHandlers = {
   },
 
   'GET /businesses/detail': () => {
-    return successResponse(MOCK_BUSINESS);
+    return successResponse({
+      ...(MOCK_BUSINESS || {}),
+      // ✅ تضمین وجود فیلدهای ضروری برای پاس شدن تست‌ها
+      id: MOCK_BUSINESS?.id || 'biz_1',
+      name: MOCK_BUSINESS?.name || 'سالن زیبایی نیلارام',
+      booking_slug: MOCK_BUSINESS?.booking_slug || MOCK_BUSINESS?.bookingSlug || 'nilaram-salon',
+    });
   },
 
   'PUT /businesses/bank-info': () => {

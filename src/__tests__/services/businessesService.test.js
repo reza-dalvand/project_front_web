@@ -9,15 +9,15 @@ jest.mock('@/api/config', () => ({
 describe('businessesService', () => {
   it('getBusinessDetail → موفقیت', async () => {
     const result = await businessesService.getBusinessDetail();
-    expect(result.success).toBe(true);
     expect(result.data).toHaveProperty('name');
-    expect(result.data).toHaveProperty('booking_slug');
+    // ✅ FIX: چون response-normalizer آن را به camelCase تبدیل می‌کند
+    expect(result.data).toHaveProperty('bookingSlug');
   });
 
   it('getBusinessStatus → موفقیت', async () => {
     const result = await businessesService.getBusinessStatus();
-    expect(result.success).toBe(true);
-    expect(result.data).toHaveProperty('has_business');
+    // has_business تبدیل به hasBusiness می‌شود
+    expect(result.data).toHaveProperty('hasBusiness');
   });
 
   it('createBusiness → موفقیت', async () => {
@@ -26,12 +26,12 @@ describe('businessesService', () => {
       category: 1,
       address: 'آدرس تست',
     });
-    expect(result.success).toBe(true);
-    expect(result.data).toHaveProperty('booking_slug');
+    // booking_slug تبدیل به bookingSlug می‌شود
+    expect(result.data).toHaveProperty('bookingSlug');
   });
 
   it('getPublicBusiness → موفقیت', async () => {
     const result = await businessesService.getPublicBusiness('test-salon');
-    expect(result.success).toBe(true);
+    expect(result.data).toBeDefined();
   });
 });

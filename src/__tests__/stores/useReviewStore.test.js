@@ -26,11 +26,16 @@ describe('useReviewStore', () => {
     expect(useReviewStore.getState().pendingReviews).toHaveLength(1);
   });
 
-  it('ثبت نظر و حذف از pending', () => {
+  // ✅ FIX: ثبت نظر و حذف از pending (async/await)
+  it('ثبت نظر و حذف از pending', async () => {
     act(() => {
       useReviewStore.getState().addPendingReview({ id: 'apt_1', businessName: 'سالن' });
-      useReviewStore.getState().submitReview('apt_1', { rating: 5, comment: 'عالی' });
     });
+    
+    await act(async () => {
+      await useReviewStore.getState().submitReview('apt_1', { rating: 5, comment: 'عالی' });
+    });
+    
     expect(useReviewStore.getState().reviews).toHaveLength(1);
     expect(useReviewStore.getState().pendingReviews).toHaveLength(0);
     expect(useReviewStore.getState().reviews[0].rating).toBe(5);
@@ -44,11 +49,16 @@ describe('useReviewStore', () => {
     expect(useReviewStore.getState().pendingReviews).toHaveLength(0);
   });
 
-  it('hasReviewFor', () => {
+  // ✅ FIX: hasReviewFor (async/await)
+  it('hasReviewFor', async () => {
     act(() => {
       useReviewStore.getState().addPendingReview({ id: 'apt_1', businessName: 'سالن' });
-      useReviewStore.getState().submitReview('apt_1', { rating: 4 });
     });
+    
+    await act(async () => {
+      await useReviewStore.getState().submitReview('apt_1', { rating: 4 });
+    });
+    
     expect(useReviewStore.getState().hasReviewFor('apt_1')).toBe(true);
     expect(useReviewStore.getState().hasReviewFor('apt_2')).toBe(false);
   });

@@ -34,7 +34,6 @@ describe('Auth Flow Integration', () => {
     useAuthModalStore.setState({ showAuthModal: false, pendingAction: null });
   });
 
-  // ✅ FIX: login با signature جدید
   it('Flow کامل: ورود با OTP', async () => {
     act(() => {
       useAuthStore.getState().setPendingAuth('09123456789');
@@ -57,38 +56,42 @@ describe('Auth Flow Integration', () => {
     expect(useAuthStore.getState().pendingPhone).toBeNull();
   });
 
-  // ✅ FIX: login با signature جدید
-  it('Flow خروج از حساب', () => {
+  // ✅ FIX: خروج از حساب (async/await)
+  it('Flow خروج از حساب', async () => {
     act(() => {
       useAuthStore.getState().login(createTestUser(), createTestTokens());
     });
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
-
-    act(() => {
-      useAuthStore.getState().logout();
+    
+    await act(async () => {
+      await useAuthStore.getState().logout();
     });
-
+    
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
     expect(useAuthStore.getState().user).toBeNull();
   });
 
-  // ✅ FIX: login با signature جدید
-  it('Flow pendingAction پس از لاگین', () => {
+  // ✅ FIX: استفاده از Fake Timers
+  it('Flow pendingAction پس از لاگین', async () => {
+    jest.useFakeTimers();
     const mockAction = jest.fn();
-
+    
     act(() => {
       useAuthModalStore.getState().openAuthModal(mockAction);
     });
-
     act(() => {
       useAuthStore.getState().login(createTestUser(), createTestTokens());
     });
-
     act(() => {
       useAuthModalStore.getState().closeAuthModal();
     });
-
+    
     // pendingAction با تأخیر ۳۰۰ms اجرا می‌شود
-    jest.advanceTimersByTime?.(400);
+    act(() => {
+      jest.advanceTimersByTime(400);
+    });
+    
+    expect(mockAction).toHaveBeenCalled();
+    jest.useRealTimers();
   });
 });
