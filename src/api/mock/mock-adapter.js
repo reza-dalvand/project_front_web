@@ -1,14 +1,13 @@
 // src/api/mock/mock-adapter.js
 /**
- * 🎭 Mock Adapter
- *
- * در حالت USE_MOCK = true، این ماژول پاسخ‌های Mock برمی‌گرداند.
- * ساختار پاسخ‌ها دقیقاً مطابق فرمت بک‌اند است.
- *
- * فرمت پاسخ:
- * { success: true, data: {...}, message: '...', meta: {...} }
- */
-
+* 🎭 Mock Adapter
+*
+* در حالت USE_MOCK = true، این ماژول پاسخ‌های Mock برمی‌گرداند.
+* ساختار پاسخ‌ها دقیقاً مطابق فرمت بک‌اند است.
+*
+* فرمت پاسخ:
+* { success: true, data: {...}, message: '...', meta: {...} }
+*/
 // ═══════════════════════════════════════════════
 //    Import داده‌های Mock از src/data
 // ═══════════════════════════════════════════════
@@ -59,7 +58,6 @@ const paginate = (items, page = 1, pageSize = 20) => {
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
   const paginatedItems = items.slice(start, end);
-
   return {
     items: paginatedItems,
     meta: {
@@ -93,23 +91,21 @@ const routeHandlers = {
       date_joined: '2024-01-15T10:00:00Z',
     });
   },
-
   'POST /accounts/auth/otp/send': () => {
     return successResponse(
       {
         expires_in: 300,
         resend_after: 60,
-        is_registered: true, // ✅ جدید
+        is_registered: true,
       },
       'کد تایید به شماره شما ارسال شد'
     );
   },
-
   'POST /accounts/auth/otp/verify': () => {
     return successResponse(
       {
         is_new_user: false,
-        needs_profile_completion: false, // ✅ جدید
+        needs_profile_completion: false,
         access_token: 'mock_access_token_' + Date.now(),
         refresh_token: 'mock_refresh_token_' + Date.now(),
         token_type: 'Bearer',
@@ -131,23 +127,18 @@ const routeHandlers = {
       'ورود موفقیت‌آمیز'
     );
   },
-
-  // ✅ جدید: اضافه کردن این handler
   'POST /accounts/account/delete/send-otp': () => {
     return successResponse({ expires_in: 300, resend_after: 60 }, 'کد تایید حذف حساب ارسال شد');
   },
-
   'POST /accounts/auth/token/refresh': () => {
     return successResponse({
       access: 'mock_new_access_token_' + Date.now(),
       refresh: 'mock_new_refresh_token_' + Date.now(),
     });
   },
-
   'POST /accounts/auth/logout': () => {
     return successResponse(null, 'با موفقیت خارج شدید');
   },
-
   'POST /accounts/auth/national-id/verify': () => {
     return successResponse(
       {
@@ -158,19 +149,15 @@ const routeHandlers = {
       'هویت شما با موفقیت تایید شد'
     );
   },
-
   'GET /accounts/devices': () => {
     return successResponse(MOCK_DEVICES, null, { count: MOCK_DEVICES.length });
   },
-
   'POST /accounts/devices/:id/revoke': () => {
     return successResponse(null, 'نشست دستگاه بسته شد');
   },
-
   'POST /accounts/account/delete': () => {
     return successResponse(null, 'حساب کاربری شما با موفقیت حذف شد');
   },
-
   'POST /accounts/profile/change-phone': () => {
     return successResponse(
       {
@@ -181,7 +168,6 @@ const routeHandlers = {
       'کد تایید به شماره جدید ارسال شد'
     );
   },
-
   'POST /accounts/profile/change-phone/confirm': () => {
     return successResponse(
       {
@@ -199,7 +185,6 @@ const routeHandlers = {
   'GET /categories/service-categories': () => {
     return successResponse(MOCK_CATEGORIES, null, { count: MOCK_CATEGORIES.length });
   },
-
   'GET /categories/business-categories': () => {
     return successResponse(
       [
@@ -229,7 +214,6 @@ const routeHandlers = {
       { count: 5 }
     );
   },
-
   'GET /locations/provinces/:id/cities': () => {
     return successResponse(
       [
@@ -254,7 +238,6 @@ const routeHandlers = {
       'کسب‌وکار شما با موفقیت ثبت شد و در انتظار تایید است'
     );
   },
-
   'GET /businesses/status': () => {
     return successResponse({
       has_business: true,
@@ -265,17 +248,14 @@ const routeHandlers = {
       created_at: '2024-01-15T10:00:00Z',
     });
   },
-
   'GET /businesses/detail': () => {
     return successResponse({
       ...(MOCK_BUSINESS || {}),
-      // ✅ تضمین وجود فیلدهای ضروری برای پاس شدن تست‌ها
       id: MOCK_BUSINESS?.id || 'biz_1',
       name: MOCK_BUSINESS?.name || 'سالن زیبایی نیلارام',
       booking_slug: MOCK_BUSINESS?.booking_slug || MOCK_BUSINESS?.bookingSlug || 'nilaram-salon',
     });
   },
-
   'PUT /businesses/bank-info': () => {
     return successResponse(
       {
@@ -290,11 +270,9 @@ const routeHandlers = {
       'اطلاعات بانکی با موفقیت ثبت شد'
     );
   },
-
   'DELETE /businesses/delete': () => {
     return successResponse(null, 'کسب‌وکار با موفقیت حذف شد');
   },
-
   'GET /businesses/public/:slug': () => {
     return successResponse(MOCK_BUSINESS);
   },
@@ -304,12 +282,10 @@ const routeHandlers = {
     const services = MOCK_BUSINESS.services || [];
     return successResponse(services, null, { count: services.length });
   },
-
   'GET /services/:id': () => {
     const services = MOCK_BUSINESS.services || [];
     return successResponse(services[0] || null);
   },
-
   'POST /services/:id/toggle-active': () => {
     return successResponse(null, 'وضعیت خدمت تغییر کرد');
   },
@@ -318,7 +294,6 @@ const routeHandlers = {
   'GET /schedules': () => {
     return successResponse([], null, { count: 0 });
   },
-
   'GET /schedules/by-date': () => {
     return successResponse([], null, { count: 0 });
   },
@@ -339,18 +314,15 @@ const routeHandlers = {
       'نوبت با موفقیت رزرو شد'
     );
   },
-
   'GET /appointments/my-appointments': () => {
     return successResponse(MOCK_PROFILE_APPOINTMENTS, null, {
       count: MOCK_PROFILE_APPOINTMENTS.length,
     });
   },
-
   'GET /appointments/business-appointments': () => {
     const appointments = MOCK_BUSINESS.appointments || [];
     return successResponse(appointments, null, { count: appointments.length });
   },
-
   'GET /appointments/business-stats': () => {
     const appointments = MOCK_BUSINESS.appointments || [];
     return successResponse({
@@ -361,24 +333,19 @@ const routeHandlers = {
       today: appointments.filter((a) => a.date_key === '1405/04/22').length,
     });
   },
-
   'GET /appointments/:id': () => {
     const appointments = MOCK_BUSINESS.appointments || [];
     return successResponse(appointments[0] || null);
   },
-
   'POST /appointments/:id/cancel': () => {
     return successResponse(null, 'نوبت با موفقیت لغو شد');
   },
-
   'POST /appointments/:id/regenerate-code': () => {
     return successResponse({ verification_code: '5678' }, 'کد تایید جدید تولید شد');
   },
-
   'POST /appointments/:id/cancel-by-business': () => {
     return successResponse(null, 'نوبت لغو شد. بیعانه به مشتری مسترد می‌شود.');
   },
-
   'POST /appointments/:id/verify-code': () => {
     return successResponse(
       {
@@ -403,15 +370,12 @@ const routeHandlers = {
       'لطفاً پرداخت را در درگاه بانکی تکمیل کنید'
     );
   },
-
   'GET /payments/history': () => {
     return successResponse(MOCK_PAYMENTS, null, { count: MOCK_PAYMENTS.length });
   },
-
   'GET /payments/history/:id': () => {
     return successResponse(MOCK_PAYMENTS[0] || null);
   },
-
   'GET /payments/business/stats': () => {
     return successResponse({
       blocked: 500000,
@@ -421,11 +385,9 @@ const routeHandlers = {
       total: 2200000,
     });
   },
-
   'GET /payments/business/transactions': () => {
     return successResponse(MOCK_TRANSACTIONS, null, { count: MOCK_TRANSACTIONS.length });
   },
-
   'POST /payments/business/settlement/request': () => {
     return successResponse(
       {
@@ -438,7 +400,6 @@ const routeHandlers = {
       'درخواست تسویه ثبت شد'
     );
   },
-
   'GET /payments/business/settlements': () => {
     return successResponse([], null, { count: 0 });
   },
@@ -456,19 +417,15 @@ const routeHandlers = {
       'نظر شما با موفقیت ثبت شد'
     );
   },
-
   'GET /reviews/business/:id': () => {
     return successResponse(MOCK_REVIEWS, null, { count: MOCK_REVIEWS.length });
   },
-
   'GET /reviews/my-reviews': () => {
     return successResponse([], null, { count: 0 });
   },
-
   'GET /reviews/can-review/:id': () => {
     return successResponse({ can_review: true });
   },
-
   'POST /reviews/reply': () => {
     return successResponse(
       {
@@ -487,11 +444,9 @@ const routeHandlers = {
       posts: MOCK_FAVORITE_POSTS,
     });
   },
-
   'POST /favorites/toggle': () => {
     return successResponse({ is_favorited: true }, 'به علاقه‌مندی‌ها اضافه شد');
   },
-
   'GET /favorites/count': () => {
     return successResponse({
       business: MOCK_FAVORITE_BUSINESSES.length,
@@ -504,7 +459,6 @@ const routeHandlers = {
   'GET /notifications': () => {
     return successResponse(MOCK_NOTIFICATIONS, null, { count: MOCK_NOTIFICATIONS.length });
   },
-
   'GET /notifications/count': () => {
     const unread = MOCK_NOTIFICATIONS.filter((n) => !n.isRead).length;
     return successResponse({
@@ -513,15 +467,12 @@ const routeHandlers = {
       by_type: { booking: 2, discount: 1, reminder: 1 },
     });
   },
-
   'POST /notifications/mark-read': () => {
     return successResponse({ marked_count: 3 }, 'اعلان‌ها خوانده شدند');
   },
-
   'DELETE /notifications/delete-all': () => {
     return successResponse({ deleted_count: 5 }, 'اعلان‌ها حذف شدند');
   },
-
   'DELETE /notifications/:id': () => {
     return successResponse(null, 'اعلان حذف شد');
   },
@@ -537,7 +488,6 @@ const routeHandlers = {
       total: MOCK_BUSINESSES_LIST.length + MOCK_POSTS.length,
     });
   },
-
   'GET /search/suggestions': () => {
     return successResponse(['فیشیال', 'کاشت ناخن', 'لیزر', 'میکاپ عروس']);
   },
@@ -547,22 +497,18 @@ const routeHandlers = {
     const { items, meta } = paginate(MOCK_POSTS, 1, 20);
     return successResponse(items, null, meta);
   },
-
   'GET /explore/posts/:id': () => {
     return successResponse(MOCK_POSTS[0] || null);
   },
-
   'GET /explore/my-posts': () => {
     return successResponse([], null, { count: 0 });
   },
-
   'POST /explore/my-posts/create': () => {
     return successResponse(
       { id: 'post_' + Date.now(), caption: 'پست جدید', created_at: new Date().toISOString() },
       'پست با موفقیت ایجاد شد'
     );
   },
-
   'DELETE /explore/my-posts/:id/delete': () => {
     return successResponse(null, 'پست حذف شد');
   },
@@ -572,24 +518,20 @@ const routeHandlers = {
     const portfolios = MOCK_BUSINESS.portfolios || [];
     return successResponse(portfolios, null, { count: portfolios.length });
   },
-
   'GET /portfolios/:id': () => {
     const portfolios = MOCK_BUSINESS.portfolios || [];
     return successResponse(portfolios[0] || null);
   },
-
   'GET /portfolios/my-portfolios': () => {
     const portfolios = MOCK_BUSINESS.portfolios || [];
     return successResponse(portfolios, null, { count: portfolios.length });
   },
-
   'POST /portfolios/my-portfolios/create': () => {
     return successResponse(
       { id: 'pf_' + Date.now(), title: 'نمونه‌کار جدید' },
       'نمونه‌کار با موفقیت ایجاد شد'
     );
   },
-
   'DELETE /portfolios/my-portfolios/:id/delete': () => {
     return successResponse(null, 'نمونه‌کار حذف شد');
   },
@@ -598,22 +540,18 @@ const routeHandlers = {
   'GET /ads/model-requests': () => {
     return successResponse(MOCK_MODEL_REQUESTS, null, { count: MOCK_MODEL_REQUESTS.length });
   },
-
   'GET /ads/model-requests/:id': () => {
     return successResponse(MOCK_MODEL_REQUESTS[0] || null);
   },
-
   'GET /ads/my-model-requests': () => {
     return successResponse(MOCK_MODEL_REQUESTS, null, { count: MOCK_MODEL_REQUESTS.length });
   },
-
   'POST /ads/my-model-requests/create': () => {
     return successResponse(
       { id: 'mr_' + Date.now(), title: 'درخواست مدل جدید' },
       'درخواست مدل ایجاد شد'
     );
   },
-
   'DELETE /ads/my-model-requests/:id/delete': () => {
     return successResponse(null, 'درخواست مدل حذف شد');
   },
@@ -622,22 +560,18 @@ const routeHandlers = {
   'GET /ads/line-rentals': () => {
     return successResponse(MOCK_LINE_RENTALS, null, { count: MOCK_LINE_RENTALS.length });
   },
-
   'GET /ads/line-rentals/:id': () => {
     return successResponse(MOCK_LINE_RENTALS[0] || null);
   },
-
   'GET /ads/my-line-rentals': () => {
     return successResponse(MOCK_LINE_RENTALS, null, { count: MOCK_LINE_RENTALS.length });
   },
-
   'POST /ads/my-line-rentals/create': () => {
     return successResponse(
       { id: 'lr_' + Date.now(), title: 'آگهی لاین جدید' },
       'آگهی اجاره لاین ایجاد شد'
     );
   },
-
   'DELETE /ads/my-line-rentals/:id/delete': () => {
     return successResponse(null, 'آگهی حذف شد');
   },
@@ -648,7 +582,6 @@ const routeHandlers = {
       count: MOCK_REMINDER_CUSTOMERS.length,
     });
   },
-
   'GET /reminders/my-reminders': () => {
     return successResponse(MOCK_REMINDER_CUSTOMERS, null, {
       count: MOCK_REMINDER_CUSTOMERS.length,
@@ -682,18 +615,15 @@ const routeHandlers = {
       { count: 3 }
     );
   },
-
   'GET /support/tickets': () => {
     return successResponse([], null, { count: 0 });
   },
-
   'POST /support/tickets/create': () => {
     return successResponse(
       { id: 'ticket_' + Date.now(), subject: 'تیکت جدید', status: 'open' },
       'تیکت پشتیبانی ایجاد شد'
     );
   },
-
   'GET /support/tickets/:id': () => {
     return successResponse(null);
   },
@@ -704,12 +634,17 @@ const routeHandlers = {
 // ═══════════════════════════════════════════════
 const normalizeUrl = (url) => {
   let normalized = url.startsWith('/') ? url.slice(1) : url;
-
   // ✅ FIX: حذف trailing slash
   normalized = normalized.replace(/\/+$/, '');
-
+  
+  // جایگزینی IDهای عددی
   normalized = normalized.replace(/\/\d+\//g, '/:id/');
   normalized = normalized.replace(/\/\d+$/g, '/:id');
+  
+  // ✅ FIX: جایگزینی IDهای رشته‌ای Mock (مثل apt_1, pay_1, stl_1, biz_1)
+  normalized = normalized.replace(/\/[a-zA-Z_]+\d+\//g, '/:id/');
+  normalized = normalized.replace(/\/[a-zA-Z_]+\d+$/g, '/:id');
+  
   normalized = normalized.replace(/\/public\/[^/]+/, '/public/:slug');
   return normalized;
 };
@@ -717,7 +652,6 @@ const normalizeUrl = (url) => {
 export const getMockHandler = (method, url, params = null) => {
   const normalizedUrl = normalizeUrl(url);
   const key = `${method} /${normalizedUrl}`;
-
   const handler = routeHandlers[key];
 
   if (handler) {
