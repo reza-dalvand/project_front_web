@@ -1,5 +1,5 @@
+// src/components/manageBusiness/lineRental/LineRentalAdCard.jsx
 'use client';
-import Image from 'next/image';
 import { FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import CollabBadge from '@/components/common/CollabBadge';
@@ -17,26 +17,20 @@ export default function LineRentalAdCard({ ad, onPress }) {
   return (
     <button
       onClick={() => onPress?.(ad)}
-      className="w-full flex items-center gap-3 p-3 rounded-2xl border mb-2.5
+      className="w-full flex items-center gap-3 p-3.5 rounded-2xl border mb-2.5
         transition-all hover:scale-[1.01] active:scale-[0.99] text-right"
       style={{
         backgroundColor: colors.cardBackground,
         borderColor: colors.border,
       }}
     >
-      {/* Thumbnail لاین */}
-      {ad.lineImage ? (
-        <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
-          <Image src={ad.lineImage} alt={ad.title} fill className="object-cover" sizes="56px" />
-        </div>
-      ) : (
-        <div
-          className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: colors.background }}
-        >
-          <span className="text-xl">🏢</span>
-        </div>
-      )}
+      {/* ✅ آیکون به جای تصویر (هم‌سبک کارت مدل) */}
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: '#667eea15' }}
+      >
+        <span className="text-xl">🏢</span>
+      </div>
 
       {/* محتوا */}
       <div className="flex-1 min-w-0 gap-1.5">

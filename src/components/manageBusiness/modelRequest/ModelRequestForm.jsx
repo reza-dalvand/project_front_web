@@ -11,6 +11,7 @@ import SectionHeader from '@/components/common/SectionHeader';
 import CostTypeBadge from '@/components/common/CostTypeBadge';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { COST_TYPE_OPTIONS } from '@/constants/collabTypes';
+import { SERVICE_CATEGORIES, getSubServicesByCategory } from '@/constants/serviceTypes';
 
 // ═══════ محدودیت‌های بک‌اند ═══════
 const MAX_TITLE = 100;
@@ -20,15 +21,21 @@ const MAX_PHONE = 11;
 export default function ModelRequestForm({ services, initialData, defaultPhone, onSave, onClose }) {
 const { colors } = useTheme();
 const [formData, setFormData] = useState({
-serviceId: initialData?.serviceId || null,
 title: initialData?.title || '',
+categoryId: initialData?.categoryId || null,
+subServiceId: initialData?.subServiceId || null,
 description: initialData?.description || '',
-contactPhone: initialData?.contactPhone || defaultPhone || '',
+contactPhone: initialData?.contactPhone || '',
 costType: initialData?.costType || 'material_cost',
 discount: initialData?.discount || 0,
 isUrgent: initialData?.isUrgent || false,
 });
 const [errors, setErrors] = useState({});
+
+// زیرخدمات بر اساس دسته‌بندی انتخاب شده
+const availableSubServices = formData.categoryId
+? getSubServicesByCategory(formData.categoryId)
+: [];
 
 const updateField = (key, value) => {
 setFormData((prev) => ({ ...prev, [key]: value }));
@@ -40,19 +47,23 @@ const validate = () => {
 const newErrors = {};
 
 if (!formData.title.trim()) {
-newErrors.title = 'عنوان الزامی است';
+newErrors.title = 'عنوان درخواست الزامی است';
 } else if (formData.title.trim().length > MAX_TITLE) {
 newErrors.title = `عنوان نمی‌تواند بیشتر از ${toPersianDigit(MAX_TITLE)} کاراکتر باشد`;
+}
+
+if (!formData.categoryId) {
+newErrors.categoryId = 'دسته‌بندی خدمات را انتخاب کنید';
+}
+
+if (!formData.subServiceId) {
+newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
 }
 
 if (!formData.description.trim()) {
 newErrors.description = 'توضیحات الزامی است';
 } else if (formData.description.trim().length > MAX_DESCRIPTION) {
 newErrors.description = `توضیحات نمی‌تواند بیشتر از ${toPersianDigit(MAX_DESCRIPTION)} کاراکتر باشد`;
-}
-
-if (!formData.serviceId) {
-newErrors.serviceId = 'خدمت را انتخاب کنید';
 }
 
 if (!formData.contactPhone.trim()) {
@@ -67,13 +78,16 @@ return Object.keys(newErrors).length === 0;
 
 const handleSave = () => {
 if (!validate()) return;
-onSave(formData);
-};
 
-const serviceOptions = (services || []).map((s) => ({
-id: s.id,
-label: s.name,
-}));
+const subService = availableSubServices.find((s) => s.id === formData.subServiceId);
+const category = SERVICE_CATEGORIES.find((c) => c.id === formData.categoryId);
+
+onSave({
+...formData,
+categoryLabel: category?.label || '',
+subServiceLabel: subService?.label || '',
+});
+};
 
 return (
 <div className="p-5 space-y-6 pb-32">
@@ -85,17 +99,7 @@ iconColor={colors.primary}
 title="اطلاعات درخواست"
 />
 <Card variant="elevated" padding={16} radius={18}>
-<Dropdown
-label="خدمت موردنظر *"
-placeholder="خدمت را انتخاب کنید"
-value={formData.serviceId}
-options={serviceOptions}
-onSelect={(val) => updateField('serviceId', val)}
-/>
-{errors.serviceId && (
-<p className="text-xs text-[#E53935] mt-1 mb-3">{errors.serviceId}</p>
-)}
-
+{/* ✅ ۱. عنوان درخواست — اول */}
 <Input
 label="عنوان درخواست *"
 placeholder="مثال: مدل برای فیشیال VIP عروس"
@@ -107,6 +111,40 @@ error={errors.title}
 hint={`${toPersianDigit(formData.title.length)} از ${toPersianDigit(MAX_TITLE)} کاراکتر`}
 />
 
+{/* ✅ ۲. دسته‌بندی خدمات */}
+<Dropdown
+label="دسته‌بندی خدمات *"
+placeholder="دسته‌بندی را انتخاب کنید"
+value={formData.categoryId}
+options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
+onSelect={(val) => {
+updateField('categoryId', val);
+// ریست نوع خدمت هنگام تغییر دسته‌بندی
+setFormData((prev) => ({ ...prev, categoryId: val, subServiceId: null }));
+}}
+/>
+{errors.categoryId && (
+<p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.categoryId}</p>
+)}
+
+{/* ✅ ۳. نوع خدمت */}
+<Dropdown
+label="نوع خدمت *"
+placeholder={
+formData.categoryId
+? 'نوع خدمت را انتخاب کنید'
+: 'ابتدا دسته‌بندی را انتخاب کنید'
+}
+value={formData.subServiceId}
+options={availableSubServices}
+onSelect={(val) => updateField('subServiceId', val)}
+disabled={!formData.categoryId}
+/>
+{errors.subServiceId && (
+<p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.subServiceId}</p>
+)}
+
+{/* توضیحات */}
 <Input
 label="توضیحات *"
 placeholder="توضیحات کامل درباره نیاز به مدل..."
@@ -119,6 +157,7 @@ error={errors.description}
 hint={`${toPersianDigit(formData.description.length)} از ${toPersianDigit(MAX_DESCRIPTION)} کاراکتر`}
 />
 
+{/* شماره تماس */}
 <Input
 label="شماره تماس برای مدل‌ها *"
 placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹"
