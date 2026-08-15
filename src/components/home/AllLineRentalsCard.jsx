@@ -1,109 +1,106 @@
 'use client';
-import Image from 'next/image';
 import { FiMapPin } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { Card, CollabBadge } from '@/components/common';
 
-// متادیتای انواع خدمات برای Badge
-const SERVICE_TYPE_META = {
-  facial: { color: '#C2185B', icon: '💆‍♀️' },
-  nail: { color: '#7B1FA2', icon: '💅' },
-  hair_color: { color: '#0277BD', icon: '🎨' },
-  keratin: { color: '#E65100', icon: '✨' },
-  laser: { color: '#00838F', icon: '⚡' },
-  makeup: { color: '#AD1457', icon: '💄' },
-  eyelash: { color: '#4527A0', icon: '👁️' },
-  waxing: { color: '#2E7D32', icon: '🧴' },
-  massage: { color: '#558B2F', icon: '💆‍♀️' },
-  tattoo: { color: '#D84315', icon: '✒️' },
-  skincare: { color: '#00695C', icon: '🧖‍♀️' },
-  hair_cut: { color: '#5D4037', icon: '✂️' },
-  bridal: { color: '#880E4F', icon: '👰' },
-  other: { color: '#455A64', icon: '💼' },
+const getLineEmoji = (typeName = '') => {
+  if (typeName.includes('ناخن')) return '💅';
+  if (typeName.includes('میکاپ') || typeName.includes('گریم')) return '💄';
+  if (typeName.includes('فیشیال') || typeName.includes('پوست')) return '✨';
+  if (typeName.includes('لیزر')) return '⚡';
+  if (typeName.includes('مو') || typeName.includes('رنگ') || typeName.includes('کراتین')) return '🎨';
+  if (typeName.includes('مژه') || typeName.includes('ابرو')) return '👁️';
+  if (typeName.includes('ماساژ')) return '💆‍♀️';
+  return '🏢';
 };
 
 export default function AllLineRentalsCard({ ad, onPress }) {
   const { colors } = useTheme();
-  const serviceMeta = SERVICE_TYPE_META[ad.serviceTypeId] || SERVICE_TYPE_META.other;
-
   return (
-    <Card variant="elevated" padding={0} radius={20} className="mb-3.5 overflow-hidden">
-      <div
-        onClick={() => onPress(ad)}
-        className="w-full text-right cursor-pointer ..."
-        role="button" // برای حفظ دسترسی‌پذیری (Accessibility)
-        tabIndex={0}
-      >
-        {/* تصویر */}
-        <div className="relative w-full h-[180px]">
-          <Image
-            src={ad.lineImage}
-            alt={ad.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 600px"
+    <Card variant="elevated" padding={0} radius={20}>
+      <button onClick={() => onPress?.(ad)} className="w-full text-right">
+        {/* ═══ هدر گرادیانی (بدون تصویر) ═══ */}
+        <div
+          className="relative w-full h-[160px] overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #5a67d8 50%, #764ba2 100%)',
+          }}
+        >
+          {/* دایره‌های تزئینی */}
+          <div
+            className="absolute -top-6 -left-6 w-24 h-24 rounded-full"
+            style={{ backgroundColor: 'rgba(255,255,255,0.10)' }}
           />
           <div
-            className="absolute bottom-0 left-0 right-0 h-[70px]"
-            style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+            className="absolute -bottom-8 -right-6 w-28 h-28 rounded-full"
+            style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
           />
-          {/* Badge نوع خدمت */}
           <div
-            className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1.5 rounded-xl shadow-md"
-            style={{ backgroundColor: serviceMeta.color }}
+            className="absolute top-10 right-12 w-8 h-8 rounded-full"
+            style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+          />
+          <div
+            className="absolute bottom-6 left-8 w-5 h-5 rounded-full"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+          />
+          {/* ایموجی خدمت */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span
+              className="text-[48px]"
+              style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.25))' }}
+            >
+              {getLineEmoji(ad.serviceTypeName)}
+            </span>
+          </div>
+          {/* بج نوع خدمت */}
+          <div
+            className="absolute top-3 left-3 px-2.5 py-1 rounded-lg shadow-md"
+            style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
           >
-            <span className="text-[10px]">{serviceMeta.icon}</span>
-            <span className="text-[10px] font-[Vazir-Bold] text-white">{ad.serviceTypeName}</span>
+            <span className="text-[10px] font-[Vazir-Bold] text-white">
+              {ad.serviceTypeName}
+            </span>
+          </div>
+          {/* نوار شیشه‌ای */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-[36px] flex items-center px-3 gap-2"
+            style={{ backgroundColor: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
+          >
+            <span className="text-[11px] font-[Vazir-Medium] text-white/90 truncate flex-1">
+              {ad.collabType === 'percent'
+                ? `درصدی ${ad.priceDisplay}`
+                : ad.collabType === 'hourly'
+                  ? `ساعتی ${ad.priceDisplay}`
+                  : `اجاره ثابت ${ad.priceDisplay}`}
+            </span>
           </div>
         </div>
-
-        {/* محتوا */}
-        <div className="p-4 space-y-2.5">
-          {/* عنوان */}
+        {/* ═══ محتوا ═══ */}
+        <div className="p-3.5 space-y-2">
           <h3
-            className="text-base font-[Vazir-Bold] leading-6 line-clamp-2"
+            className="text-base font-[Vazir-Bold] leading-[23px] line-clamp-2 min-h-[46px]"
             style={{ color: colors.textMain }}
           >
             {ad.title}
           </h3>
-
-          {/* نام کسب‌وکار */}
-          <div className="flex items-center gap-1">
-            <span className="text-xs">🏪</span>
-            <span className="text-xs font-[Vazir-Medium]" style={{ color: colors.primary }}>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">🏪</span>
+            <span
+              className="text-[11px] font-[Vazir-Medium] line-clamp-1"
+              style={{ color: colors.primary }}
+            >
               {ad.businessName}
             </span>
           </div>
-
-          {/* نوع همکاری */}
-          <CollabBadge type={ad.collabType} priceDisplay={ad.priceDisplay} variant="solid" />
-
-          {/* شهر */}
+          <CollabBadge type={ad.collabType} priceDisplay={ad.priceDisplay} variant="compact" />
           <div className="flex items-center gap-1">
             <FiMapPin size={12} color={colors.textSecondary} />
-            <span className="text-[11px]" style={{ color: colors.textSecondary }}>
+            <span className="text-[10px]" style={{ color: colors.textSecondary }}>
               {ad.city}
             </span>
           </div>
-
-          {/* دکمه جزئیات */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onPress?.(ad);
-            }}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl
-              transition-all hover:opacity-90 active:scale-[0.99] shadow-md"
-            style={{ backgroundColor: '#667eea' }}
-          >
-            <span className="text-sm">📋</span>
-            <span className="text-sm font-[Vazir-Bold] text-white text-center">
-              مشاهده جزئیات و تماس
-            </span>
-            <span className="text-sm text-white">←</span>
-          </button>
         </div>
-      </div>
+      </button>
     </Card>
   );
 }
