@@ -1,6 +1,6 @@
 // src/app/manage/settings/page.jsx
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FiBriefcase,
@@ -11,6 +11,7 @@ import {
   FiAlertCircle,
   FiTrash2,
   FiUser,
+  FiSave,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -25,52 +26,100 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import ImageUploader from '@/components/common/ImageUploader';
 import SectionHeader from '@/components/common/SectionHeader';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
-import MapPicker from '@/components/common/MapPicker'; // ✅ مستقیم
+import MapPicker from '@/components/common/MapPicker';
+import { USE_MOCK } from '@/api/config';
 
 const BUSINESS_CATEGORIES = [
-  { id: 'salon', label: 'سالن زیبایی (چند منظوره)' },
-  { id: 'clinic', label: 'کلینیک پوست و مو' },
-  { id: 'laser', label: 'مرکز لیزر' },
-  { id: 'nail', label: 'مرکز تخصصی ناخن' },
-  { id: 'keratin', label: 'مرکز کراتین و رنگ مو' },
-  { id: 'makeup', label: 'استودیو میکاپ و گریم' },
-  { id: 'barbershop', label: 'آرایشگاه مردانه' },
-  { id: 'spa', label: 'اسپا و ماساژ' },
-  { id: 'eyelash', label: 'مرکز تخصصی مژه و ابرو' },
-  { id: 'tattoo', label: 'استودیو تتو و هاشور' },
+  { id: '1', label: 'سالن زیبایی (چند منظوره)' },
+  { id: '2', label: 'کلینیک پوست و مو' },
+  { id: '3', label: 'مرکز لیزر' },
+  { id: '4', label: 'مرکز تخصصی ناخن' },
+  { id: '5', label: 'مرکز کراتین و رنگ مو' },
+  { id: '6', label: 'استودیو میکاپ و گریم' },
+  { id: '7', label: 'آرایشگاه مردانه' },
+  { id: '8', label: 'اسپا و ماساژ' },
+  { id: '9', label: 'مرکز تخصصی مژه و ابرو' },
+  { id: '10', label: 'استودیو تتو و هاشور' },
 ];
 
 export default function BusinessSettingsPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
+  const { showToast } = useToast();
+
+  // Store
   const businessData = useBusinessStore((s) => s.businessData);
   const updateBusinessInfo = useBusinessStore((s) => s.updateBusinessInfo);
   const deleteBusiness = useBusinessStore((s) => s.deleteBusiness);
-  const { showToast } = useToast();
+  const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
+  const updateBusinessApi = useBusinessStore((s) => s.updateBusinessApi);
+  const deleteBusinessApi = useBusinessStore((s) => s.deleteBusinessApi);
 
+  // State فرم
   const [formData, setFormData] = useState({
-    name: businessData.name || '',
-    categoryId: businessData.categoryId || null,
-    provinceId: businessData.provinceId || null,
-    cityId: businessData.cityId || null,
-    address: businessData.address || '',
-    phone: businessData.phone || '',
-    workingHours: businessData.workingHours || '',
-    coverUrl: businessData.coverUrl || null,
-    ownerPhoto: businessData.ownerPhoto || null,
-    location: businessData.location || null,
+    name: '',
+    categoryId: null,
+    provinceId: null,
+    cityId: null,
+    address: '',
+    phone: '',
+    workingHours: '',
+    about: '',
+    coverUrl: null,
+    ownerPhoto: null,
+    location: null,
   });
-
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  const updateField = (key, value) => {
+  // ═══════ بارگذاری اولیه داده‌ها ═══════
+  useEffect(() => {
+    const loadBusinessData = async () => {
+      setIsLoading(true);
+      try {
+        if (!USE_MOCK) {
+          await fetchBusinessDetail();
+        }
+        // پر کردن فرم از store
+        const data = useBusinessStore.getState().businessData;
+        setFormData({
+          name: data.name || '',
+          categoryId: data.categoryId || null,
+          provinceId: data.provinceId || null,
+          cityId: data.cityId || null,
+          address: data.address || '',
+          phone: data.phone || '',
+          workingHours: data.workingHours || '',
+          about: data.about || '',
+          coverUrl: data.coverUrl || null,
+          ownerPhoto: data.ownerPhoto || null,
+          location: data.location || null,
+        });
+      } catch (error) {
+        console.error('Failed to load business data:', error);
+        showToast('خطا در بارگذاری اطلاعات کسب‌وکار', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadBusinessData();
+  }, [fetchBusinessDetail, showToast]);
+
+  // ═══════ آپدیت فیلد ═══════
+  const updateField = useCallback((key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
-    if (errors[key]) setErrors((e) => ({ ...e, [key]: '' }));
-  };
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[key];
+      return newErrors;
+    });
+  }, []);
 
   const handleProvinceChange = (provinceId) => {
     updateField('provinceId', provinceId);
@@ -78,49 +127,74 @@ export default function BusinessSettingsPage() {
     updateField('location', null);
   };
 
-  const handleSave = () => {
+  // ═══════ اعتبارسنجی ═══════
+  const validate = useCallback(() => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'نام کسب‌وکار الزامی است';
-    if (!formData.categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
-    if (!formData.address.trim()) newErrors.address = 'آدرس الزامی است';
-    if (!formData.ownerPhoto && !businessData.ownerPhoto)
-      newErrors.ownerPhoto = 'تصویر صاحب کسب‌وکار الزامی است';
-
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      showToast('لطفاً خطاهای فرم را برطرف کنید', 'error');
-      return;
+    if (!formData.name.trim() || formData.name.trim().length < 3) {
+      newErrors.name = 'نام کسب‌وکار الزامی است (حداقل ۳ کاراکتر)';
     }
+    if (!formData.categoryId) {
+      newErrors.categoryId = 'نوع کسب‌وکار را انتخاب کنید';
+    }
+    if (!formData.address.trim() || formData.address.trim().length < 10) {
+      newErrors.address = 'آدرس باید حداقل ۱۰ کاراکتر باشد';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
+
+  // ═══════ ذخیره تغییرات ═══════
+  const handleSave = async () => {
+    if (!validate()) return;
 
     setSaving(true);
-    setTimeout(() => {
+    try {
+      if (!USE_MOCK) {
+        await updateBusinessApi({
+          name: formData.name.trim(),
+          category: formData.categoryId,
+          address: formData.address.trim(),
+          phone: formData.phone,
+          working_hours: formData.workingHours,
+          about: formData.about,
+        });
+      }
+
+      // آپدیت store محلی
       updateBusinessInfo({
         name: formData.name.trim(),
         categoryId: formData.categoryId,
-        provinceId: formData.provinceId,
-        cityId: formData.cityId,
         address: formData.address.trim(),
-        phone: formData.phone.trim(),
-        workingHours: formData.workingHours.trim(),
-        coverUrl: formData.coverUrl,
-        ownerPhoto: formData.ownerPhoto,
-        location: formData.location,
+        phone: formData.phone,
+        workingHours: formData.workingHours,
+        about: formData.about,
       });
+
       setSaving(false);
       showToast('✓ تغییرات با موفقیت ذخیره شد', 'success');
-      setTimeout(() => {
-        router.back();
-      }, 800);
-    }, 1000);
+    } catch (error) {
+      setSaving(false);
+      showToast(error.message || 'خطا در ذخیره تغییرات', 'error');
+    }
   };
 
-  const handleDelete = () => {
-    deleteBusiness();
+  // ═══════ حذف کسب‌وکار ═══════
+  const handleDeleteConfirm = async () => {
     setDeleteModalVisible(false);
-    showToast('کسب‌وکار حذف شد', 'info');
-    router.push('/create-business');
+    try {
+      if (!USE_MOCK) {
+        await deleteBusinessApi();
+      } else {
+        deleteBusiness();
+      }
+      showToast('کسب‌وکار حذف شد', 'info');
+      router.push('/create-business');
+    } catch (error) {
+      showToast(error.message || 'خطا در حذف کسب‌وکار', 'error');
+    }
   };
 
+  // ═══════ رندر ═══════
   if (!isAuthenticated) {
     return (
       <ScreenWrapper>
@@ -131,17 +205,31 @@ export default function BusinessSettingsPage() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <ScreenWrapper padding={0}>
+        <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.push('/manage')} />
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner label="در حال بارگذاری اطلاعات..." />
+        </div>
+      </ScreenWrapper>
+    );
+  }
+
   return (
     <ScreenWrapper padding={0}>
-      <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.back()} />
+      <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.push('/manage')} />
+
       <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
-        {/* تصاویر */}
+        {/* ═══════ تصاویر ═══════ */}
         <div className="space-y-3">
           <SectionHeader
             icon={<FiBriefcase size={18} />}
             iconColor={colors.primary}
             title="تصاویر کسب‌وکار"
           />
+
+          {/* کاور */}
           <Card variant="elevated" padding={16} radius={18}>
             <label
               className="block text-sm mb-2 text-right font-[Vazir-Medium]"
@@ -156,6 +244,8 @@ export default function BusinessSettingsPage() {
               hint="تصویر با کیفیت از محیط سالن (۱۲۰۰×۴۰۰)"
             />
           </Card>
+
+          {/* عکس صاحب کسب‌وکار */}
           <Card variant="elevated" padding={16} radius={18}>
             <label
               className="block text-sm mb-2 text-right font-[Vazir-Medium]"
@@ -180,13 +270,14 @@ export default function BusinessSettingsPage() {
           </Card>
         </div>
 
-        {/* اطلاعات پایه */}
+        {/* ═══════ اطلاعات پایه ═══════ */}
         <div className="space-y-3">
           <SectionHeader
             icon={<FiBriefcase size={18} />}
             iconColor={colors.primary}
             title="اطلاعات پایه"
           />
+
           <Card variant="elevated" padding={16} radius={18}>
             <Input
               label="نام کسب‌وکار *"
@@ -195,6 +286,7 @@ export default function BusinessSettingsPage() {
               onChangeText={(t) => updateField('name', t)}
               error={errors.name}
             />
+
             <Dropdown
               label="نوع کسب‌وکار *"
               placeholder="انتخاب نوع کسب‌وکار"
@@ -210,6 +302,7 @@ export default function BusinessSettingsPage() {
                 </span>
               </div>
             )}
+
             <Input
               label="شماره تماس"
               placeholder="مثال: ۰۲۱-۲۲۳۳۴۴۵۵"
@@ -217,6 +310,7 @@ export default function BusinessSettingsPage() {
               onChangeText={(t) => updateField('phone', t)}
               rightIcon={<FiPhone size={18} color={colors.textSecondary} />}
             />
+
             <Input
               label="ساعات کاری"
               placeholder="مثال: شنبه تا پنج‌شنبه ۱۰ الی ۲۰"
@@ -224,12 +318,21 @@ export default function BusinessSettingsPage() {
               onChangeText={(t) => updateField('workingHours', t)}
               rightIcon={<FiClock size={18} color={colors.textSecondary} />}
             />
+
+            <Input
+              label="درباره کسب‌وکار"
+              placeholder="توضیحاتی درباره خدمات و تجربه سالن..."
+              value={formData.about}
+              onChangeText={(t) => updateField('about', t)}
+              multiline
+            />
           </Card>
         </div>
 
-        {/* موقعیت مکانی */}
+        {/* ═══════ موقعیت مکانی ═══════ */}
         <div className="space-y-3">
           <SectionHeader icon={<FiMapPin size={18} />} iconColor="#E53935" title="موقعیت مکانی" />
+
           <Card variant="elevated" padding={16} radius={18}>
             <Dropdown
               label="استان *"
@@ -238,6 +341,7 @@ export default function BusinessSettingsPage() {
               options={PROVINCES}
               onSelect={handleProvinceChange}
             />
+
             <Dropdown
               label="شهر *"
               placeholder={formData.provinceId ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
@@ -246,6 +350,7 @@ export default function BusinessSettingsPage() {
               onSelect={(val) => updateField('cityId', val)}
               disabled={!formData.provinceId}
             />
+
             <Input
               label="آدرس دقیق *"
               placeholder="خیابان، کوچه، پلاک، واحد..."
@@ -254,6 +359,7 @@ export default function BusinessSettingsPage() {
               error={errors.address}
               multiline
             />
+
             <MapPicker
               initialLocation={formData.location}
               onLocationSelect={(location) => updateField('location', location)}
@@ -261,17 +367,20 @@ export default function BusinessSettingsPage() {
           </Card>
         </div>
 
+        {/* ═══════ دکمه ذخیره ═══════ */}
         <Button
-          title="ذخیره تغییرات"
+          title={saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
           onPress={handleSave}
           loading={saving}
+          disabled={saving}
           variant="primary"
           size="lg"
           fullWidth
+          icon={<FiSave size={18} color="#fff" />}
           iconPosition="right"
         />
 
-        {/* ناحیه خطرناک */}
+        {/* ═══════ ناحیه خطرناک ═══════ */}
         <div className="pt-6">
           <Card
             variant="default"
@@ -288,10 +397,13 @@ export default function BusinessSettingsPage() {
                 <FiTrash2 size={22} color="#E53935" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-[Vazir-Bold]" style={{ color: '#E53935' }}>
+                <p className="text-sm font-[Vazir-Bold] block" style={{ color: '#E53935' }}>
                   حذف کسب و کار
                 </p>
-                <p className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+                <p
+                  className="text-[11px] font-[Vazir] leading-4"
+                  style={{ color: colors.textSecondary }}
+                >
                   حذف دائمی کسب‌وکار و تمام اطلاعات مرتبط
                 </p>
               </div>
@@ -309,74 +421,17 @@ export default function BusinessSettingsPage() {
         </div>
       </div>
 
-      {/* مدال تایید حذف */}
-      {deleteModalVisible && (
-        <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center p-6"
-          style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
-          onClick={(e) => e.target === e.currentTarget && setDeleteModalVisible(false)}
-        >
-          <div
-            className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-4"
-            style={{ backgroundColor: colors.cardBackground }}
-          >
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: '#E5393515' }}
-            >
-              <FiTrash2 size={40} color="#E53935" />
-            </div>
-            <h3
-              className="text-xl font-[Vazir-Bold] text-center"
-              style={{ color: colors.textMain }}
-            >
-              حذف کسب و کار
-            </h3>
-            <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
-              آیا مطمئن هستید که می‌خواهید کسب‌وکار خود را حذف کنید؟ این عمل قابل بازگشت نیست.
-            </p>
-            <div
-              className="w-full p-4 rounded-xl space-y-2"
-              style={{ backgroundColor: '#E5393508', border: '1px solid #E5393530' }}
-            >
-              {[
-                'تمامی خدمات، نمونه‌کارها و نوبت‌ها حذف می‌شوند',
-                'مشتریان دیگر نمی‌توانند از شما نوبت بگیرند',
-                'این عمل غیرقابل بازگشت است',
-              ].map((text, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span className="text-xs mt-0.5" style={{ color: '#E53935' }}>
-                    •
-                  </span>
-                  <span
-                    className="text-xs font-[Vazir] leading-5 flex-1"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    {text}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-3 w-full mt-2">
-              <Button
-                title="انصراف"
-                onPress={() => setDeleteModalVisible(false)}
-                variant="outline"
-                size="lg"
-                className="flex-1"
-              />
-              <Button
-                title="تایید و حذف"
-                onPress={handleDelete}
-                variant="primary"
-                size="lg"
-                className="flex-1"
-                style={{ backgroundColor: '#E53935' }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ═══════ ConfirmDialog حذف ═══════ */}
+      <ConfirmDialog
+        visible={deleteModalVisible}
+        title="حذف کسب و کار"
+        message="آیا مطمئن هستید که می‌خواهید کسب‌وکار خود را حذف کنید؟ این عمل قابل بازگشت نیست و تمام اطلاعات مرتبط حذف خواهد شد."
+        confirmText="حذف دائمی"
+        cancelText="انصراف"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteModalVisible(false)}
+      />
     </ScreenWrapper>
   );
 }

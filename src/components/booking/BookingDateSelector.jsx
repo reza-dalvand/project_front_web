@@ -12,7 +12,12 @@ import {
   getFirstDayOfWeekJalaali,
 } from '@/utils/dateUtils';
 
-export default function BookingDateSelector({ selectedDate, onDateSelect, availableDates = [] }) {
+export default function BookingDateSelector({
+  selectedDate,
+  onDateSelect,
+  availableDates = [], // ✅ از API می‌آید
+  isLoading = false, // ✅ جدید
+}) {
   const { colors } = useTheme();
 
   const today = useMemo(() => {

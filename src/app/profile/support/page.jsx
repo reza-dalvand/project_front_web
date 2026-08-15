@@ -47,7 +47,7 @@ const TICKET_PRIORITY_META = {
 export default function SupportPage() {
   const { colors } = useTheme();
   const { showToast } = useToast();
-  const router = useRouter(); 
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('faq'); // 'faq' | 'tickets'
   const [activeCategory, setActiveCategory] = useState('all');
   const [expandedId, setExpandedId] = useState(null);

@@ -95,6 +95,7 @@ export default function BasicInfoStep({
     fetchCities();
   }, [formData.provinceId]);
 
+  // ═══════ اعتبارسنجی فیلد ═══════
   const validateField = useCallback((field, value) => {
     switch (field) {
       case 'name':
@@ -120,10 +121,12 @@ export default function BasicInfoStep({
     }
   }, []);
 
+  // ═══════ اعتبارسنجی کل فرم ═══════
   const validateAll = useCallback(() => {
     const fields = ['name', 'categoryId', 'provinceId', 'cityId', 'address'];
     const newErrors = {};
     let hasError = false;
+
     fields.forEach((field) => {
       const error = validateField(field, formData[field]);
       if (error) {
@@ -131,12 +134,14 @@ export default function BasicInfoStep({
         hasError = true;
       }
     });
+
     return { newErrors, isValid: !hasError };
   }, [formData, validateField]);
 
   useEffect(() => {
     const { newErrors, isValid: currentValid } = validateAll();
     setIsValid(currentValid);
+
     const filteredErrors = {};
     Object.keys(newErrors).forEach((field) => {
       if (touched[field]) filteredErrors[field] = newErrors[field];
@@ -180,11 +185,71 @@ export default function BasicInfoStep({
     markTouched('provinceId');
   };
 
+  // ═══════════════════════════════════════════════════════
+  //    ساخت FormData مطابق بک‌اند
+  // ═══════════════════════════════════════════════════════
+  const buildFormData = () => {
+    const fd = new FormData();
+
+    // فیلدهای متنی — نام‌های دقیق بک‌اند
+    fd.append('name', formData.name.trim());
+    fd.append('category', formData.categoryId); // ✅ category نه categoryId
+    fd.append('province', formData.provinceId); // ✅ province نه provinceId
+    fd.append('city', formData.cityId); // ✅ city نه cityId
+    fd.append('address', formData.address.trim());
+
+    if (formData.phone) fd.append('phone', formData.phone);
+    if (formData.workingHours) fd.append('working_hours', formData.workingHours);
+    if (formData.about) fd.append('about', formData.about);
+
+    // مختصات جغرافیایی
+    if (formData.location) {
+      fd.append('latitude', String(formData.location.latitude));
+      fd.append('longitude', String(formData.location.longitude));
+    }
+
+    // تصاویر — باید File باشند
+    if (formData.coverUrl instanceof File) {
+      fd.append('cover_image', formData.coverUrl);
+    }
+    if (formData.ownerPhoto instanceof File) {
+      fd.append('owner_photo', formData.ownerPhoto);
+    }
+    if (formData.logo instanceof File) {
+      fd.append('logo', formData.logo);
+    }
+
+    return fd;
+  };
+
+  // ═══════════════════════════════════════════════════════
+  //    ثبت نهایی
+  // ═══════════════════════════════════════════════════════
+  const handleSave = async () => {
+    // اعتبارسنجی نهایی
+    const { newErrors, isValid: currentValid } = validateAll();
+    setErrors(newErrors);
+    setTouched({
+      name: true,
+      categoryId: true,
+      provinceId: true,
+      cityId: true,
+      address: true,
+    });
+
+    if (!currentValid) return;
+
+    const fd = buildFormData();
+    onSubmit?.(fd);
+  };
+
   return (
     <div className="px-5 pt-4 pb-6 space-y-6">
-      {/* تصاویر */}
+      {/* ═══════ بخش تصاویر ═══════ */}
       <div className="space-y-3">
         <SectionHeader icon={<FiCamera size={18} />} iconColor="#E91E63" title="تصاویر" />
+
+        {/* کاور سالن */}
         <Card variant="default" padding={16} radius={20}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
@@ -198,6 +263,8 @@ export default function BasicInfoStep({
             hint="تصویر با کیفیت از محیط سالن آپلود کنید"
           />
         </Card>
+
+        {/* تصویر صاحب کسب‌وکار */}
         <Card variant="default" padding={16} radius={20}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
@@ -232,13 +299,15 @@ export default function BasicInfoStep({
         </Card>
       </div>
 
-      {/* مشخصات */}
+      {/* ═══════ بخش مشخصات ═══════ */}
       <div className="space-y-3">
         <SectionHeader
           icon={<FiInfo size={18} />}
           iconColor={colors.primary}
           title="مشخصات کسب‌وکار"
         />
+
+        {/* نام کسب‌وکار */}
         <Input
           label="نام کسب‌وکار *"
           placeholder="مثال: سالن زیبایی نیلارام"
@@ -248,6 +317,8 @@ export default function BasicInfoStep({
           error={errors.name}
           rightIcon={<FiBriefcase size={18} style={{ color: colors.textSecondary }} />}
         />
+
+        {/* نوع کسب‌وکار */}
         <Dropdown
           label="نوع کسب‌وکار *"
           placeholder="نوع کسب‌وکار خود را انتخاب کنید"
@@ -259,13 +330,15 @@ export default function BasicInfoStep({
           }}
         />
         {errors.categoryId && (
-          <p className="text-xs text-[#E53935] mt-[-8px] mb-2">{errors.categoryId}</p>
+          <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.categoryId}</p>
         )}
       </div>
 
-      {/* موقعیت مکانی */}
+      {/* ═══════ بخش موقعیت مکانی ═══════ */}
       <div className="space-y-3">
         <SectionHeader icon={<FiMapPin size={18} />} iconColor="#E53935" title="موقعیت مکانی" />
+
+        {/* استان */}
         <Dropdown
           label="استان *"
           placeholder="انتخاب استان"
@@ -274,8 +347,10 @@ export default function BasicInfoStep({
           onSelect={handleProvinceChange}
         />
         {errors.provinceId && (
-          <p className="text-xs text-[#E53935] mt-[-8px] mb-2">{errors.provinceId}</p>
+          <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.provinceId}</p>
         )}
+
+        {/* شهر */}
         <Dropdown
           label="شهر *"
           placeholder={formData.provinceId ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
@@ -286,7 +361,9 @@ export default function BasicInfoStep({
             markTouched('cityId');
           }}
         />
-        {errors.cityId && <p className="text-xs text-[#E53935] mt-[-8px] mb-2">{errors.cityId}</p>}
+        {errors.cityId && <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.cityId}</p>}
+
+        {/* آدرس */}
         <Input
           label="آدرس دقیق سالن *"
           placeholder="خیابان، کوچه، پلاک، واحد..."
@@ -297,6 +374,8 @@ export default function BasicInfoStep({
           multiline
           rightIcon={<FiMapPin size={18} style={{ color: '#E53935' }} />}
         />
+
+        {/* نقشه */}
         <Card variant="default" padding={0} radius={16}>
           <div className="p-4">
             <MapPicker
@@ -310,25 +389,28 @@ export default function BasicInfoStep({
         </Card>
       </div>
 
-      {/* فیلدهای اختیاری */}
+      {/* ═══════ بخش اطلاعات تکمیلی ═══════ */}
       <div className="space-y-3">
         <SectionHeader
           icon={<FiInfo size={18} />}
           iconColor="#2196F3"
           title="اطلاعات تکمیلی (اختیاری)"
         />
+
         <Input
           label="شماره تماس سالن"
           placeholder="مثال: ۰۲۱-۲۲۳۳۴۴۵۵"
           value={formData.phone}
           onChangeText={(t) => onUpdate('phone', t)}
         />
+
         <Input
           label="ساعات کاری"
           placeholder="مثال: شنبه تا پنج‌شنبه ۹ الی ۲۰"
           value={formData.workingHours}
           onChangeText={(t) => onUpdate('workingHours', t)}
         />
+
         <Input
           label="درباره کسب‌وکار"
           placeholder="توضیحاتی درباره خدمات و تجربه سالن..."
@@ -338,11 +420,11 @@ export default function BasicInfoStep({
         />
       </div>
 
-      {/* دکمه ثبت نهایی */}
+      {/* ═══════ دکمه ثبت نهایی ═══════ */}
       {isFinalStep && (
         <Button
           title={submitting ? 'در حال ثبت...' : 'ثبت نهایی کسب‌وکار'}
-          onPress={onSubmit}
+          onPress={handleSave}
           loading={submitting}
           disabled={!isValid || submitting}
           variant="primary"

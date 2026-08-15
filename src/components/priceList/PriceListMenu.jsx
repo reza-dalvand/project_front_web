@@ -5,15 +5,8 @@ import Image from 'next/image';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { PRICE_LIST_THEMES } from '@/data/priceList';
 
-/**
- * تبدیل قیمت به هزار تومان (برای نمایش در منو)
- * ۶۵۰,۰۰۰ → ۶۵۰
- */
 const toThousands = (price) => Math.round((price || 0) / 1000);
 
-/**
- * ایموجی بر اساس نام سکشن
- */
 const getSectionEmoji = (label = '') => {
   if (label.includes('ناخن')) return '💅';
   if (label.includes('میکاپ') || label.includes('گریم')) return '💄';
@@ -25,22 +18,10 @@ const getSectionEmoji = (label = '') => {
   return '💆‍♀️';
 };
 
-/**
- * 🏷️ منوی لیست قیمت
- *
- * @param {string} businessName - نام کسب‌وکار
- * @param {string} businessLogo - لوگوی کسب‌وکار
- * @param {object} settings - { themeId, isPublished, notes, services }
- *
- * services از بک‌اند می‌آیند:
- *   [{ id, name, typeName, originalPrice, discountPercent, finalPrice, hasDeposit, depositAmount }]
- */
 export default function PriceListMenu({ businessName, businessLogo, settings }) {
   const theme = PRICE_LIST_THEMES.find((t) => t.id === settings?.themeId) || PRICE_LIST_THEMES[0];
   const services = settings?.services || [];
-  const notes = settings?.notes || [];
 
-  // گروه‌بندی خدمات بر اساس typeName
   const sections = useMemo(() => {
     const grouped = {};
     services.forEach((s) => {
@@ -100,7 +81,6 @@ export default function PriceListMenu({ businessName, businessLogo, settings }) 
         {sections.length > 0 ? (
           sections.map((sec) => (
             <div key={sec.label} className="mb-4">
-              {/* عنوان سکشن */}
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
                 <span
@@ -112,14 +92,11 @@ export default function PriceListMenu({ businessName, businessLogo, settings }) 
                 </span>
                 <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
               </div>
-
-              {/* آیتم‌ها — دو ستونه */}
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 {sec.items.map((item) => {
                   const price = toThousands(item.finalPrice ?? item.originalPrice ?? 0);
                   const hasDeposit = item.hasDeposit && item.depositAmount > 0;
                   const depositPrice = hasDeposit ? toThousands(item.depositAmount) : 0;
-
                   return (
                     <div key={item.id} className="flex flex-col gap-1">
                       <div className="flex items-center gap-1">
@@ -158,37 +135,6 @@ export default function PriceListMenu({ businessName, businessLogo, settings }) 
             <p className="text-sm" style={{ color: theme.textSecondary }}>
               هنوز خدمتی ثبت نشده است
             </p>
-          </div>
-        )}
-
-        {/* ═══ یادداشت‌ها ═══ */}
-        {notes.length > 0 && (
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
-              <span className="text-[11px] font-[Vazir-Bold]" style={{ color: theme.accent }}>
-                یادداشت‌ها
-              </span>
-              <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
-            </div>
-            {notes.map((note) => (
-              <div
-                key={note.id}
-                className="flex items-center justify-between px-3 py-2 rounded-lg"
-                style={{ backgroundColor: theme.bg }}
-              >
-                <span className="text-[11px] font-[Vazir]" style={{ color: theme.text }}>
-                  {note.label}
-                </span>
-                {(note.min > 0 || note.max > 0) && (
-                  <span className="text-[11px] font-[Vazir-Bold]" style={{ color: theme.accent }}>
-                    {note.min > 0 && `از ${toPersianDigit(note.min)}`}
-                    {note.min > 0 && note.max > 0 && ' تا '}
-                    {note.max > 0 && `${toPersianDigit(note.max)} هزار تومان`}
-                  </span>
-                )}
-              </div>
-            ))}
           </div>
         )}
 

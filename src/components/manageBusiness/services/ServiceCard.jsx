@@ -102,6 +102,12 @@ export default function ServiceCard({ service, onEdit, onToggle, onDelete }) {
                 </span>
               )}
             </div>
+            {/* ✅ جدید: نمایش کمیسیون */}
+            {service.appFee > 0 && (
+              <p className="text-[10px] mt-0.5" style={{ color: colors.textSecondary }}>
+                کمیسیون زیبانو: {formatPrice(service.appFee)}
+              </p>
+            )}
           </div>
           {/* دکمه‌ها */}
           <div className="flex gap-2">
@@ -118,7 +124,7 @@ export default function ServiceCard({ service, onEdit, onToggle, onDelete }) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleDeleteRequest(); // ✅ تغییر
+                handleDeleteRequest();
               }}
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: '#E5393515' }}

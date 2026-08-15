@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore, useAuthModal } from '@/stores/useAuthStore';
+import { useToast } from '@/hooks/useToast';
 import Button from './Button';
 import Input from './Input';
 import { validatePhone, cleanPhone } from '@/utils/phoneUtils';
@@ -21,16 +22,19 @@ import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { authService } from '@/api';
 import { OTP_CONFIG } from '@/api/config';
 
-const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH; // 5
-const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS; // 60
+const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;
+const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS;
 
 export default function AuthModal({ variant = 'bottomsheet' }) {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const login = useAuthStore((s) => s.login);
   const { showAuthModal, closeAuthModal, cancelAuthModal } = useAuthModal();
+
   const instanceId = useRef('auth-modal');
 
-  const [stage, setStage] = useState('info'); // 'info' | 'otp' | 'success'
+  // stages: 'info' | 'otp' | 'profile' | 'success'
+  const [stage, setStage] = useState('info');
   const [phone, setPhone] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '']);
@@ -40,6 +44,11 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const inputRefs = useRef([]);
+
+  // ✅ جدید: فیلدهای پروفایل
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [profileError, setProfileError] = useState('');
 
   // Reset هنگام باز شدن
   useEffect(() => {
@@ -53,6 +62,9 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       setCanResend(false);
       setError('');
       setLoading(false);
+      setFirstName('');
+      setLastName('');
+      setProfileError('');
     }
   }, [showAuthModal]);
 
@@ -84,14 +96,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     return () => releaseScrollLock(instanceId.current);
   }, [showAuthModal]);
 
-  const handlePhoneChange = (text) => {
-    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
-    if (cleaned.length <= 11) {
-      setPhone(cleaned);
-      if (error) setError('');
-    }
-  };
-
+  // ─── ارسال OTP ───
   const handleSendOtp = async () => {
     if (!termsAccepted) {
       setError('لطفاً ابتدا قوانین را بپذیرید');
@@ -118,56 +123,38 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     }
   };
 
-  const handleChangeOtp = (text, index) => {
-    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
-    const newOtp = [...otp];
-    if (cleaned.length > 1) {
-      const digits = cleaned.slice(0, OTP_LENGTH).split('');
-      digits.forEach((digit, i) => {
-        if (index + i < OTP_LENGTH) newOtp[index + i] = digit;
-      });
-      setOtp(newOtp);
-      const nextIndex = Math.min(index + digits.length, OTP_LENGTH - 1);
-      setCurrentBox(nextIndex);
-      inputRefs.current[nextIndex]?.focus();
-      return;
-    }
-    const digit = cleaned[0] || '';
-    newOtp[index] = digit;
-    setOtp(newOtp);
-    if (error) setError('');
-    if (digit && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-      setCurrentBox(index + 1);
-    }
-  };
-
-  const handleKeyPress = (e, index) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-      setCurrentBox(index - 1);
-    }
-  };
-
+  // ─── تایید OTP ───
   const handleVerifyOtp = async () => {
     const code = otp.join('');
     if (code.length < OTP_LENGTH) {
       setError(`کد ${toPersianDigit(OTP_LENGTH)} رقمی کامل نیست`);
       return;
     }
+
     setLoading(true);
     setError('');
+
     try {
       const result = await authService.verifyOTP(cleanPhone(phone), code);
 
-      // ✅ FIX: بررسی null بودن data
       if (!result?.data?.user) {
         throw new Error('خطا در ورود. لطفاً دوباره تلاش کنید.');
       }
 
-      const { user, access_token, refresh_token, expires_in } = result.data;
-      login(user, { access_token, refresh_token, expires_in });
+      const { user, access_token, refresh_token, is_new_user, needs_profile_completion } =
+        result.data;
+
+      login(user, { access_token, refresh_token }, { is_new_user, needs_profile_completion });
+
+      // ✅ اگر پروفایل ناقص است → مرحله پروفایل
+      if (needs_profile_completion) {
+        setStage('profile');
+        setLoading(false);
+        return;
+      }
+
       setStage('success');
+      setLoading(false);
       setTimeout(() => closeAuthModal(), 1500);
     } catch (err) {
       setLoading(false);
@@ -177,6 +164,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     }
   };
 
+  // ─── ارسال مجدد ───
   const handleResend = async () => {
     try {
       await authService.sendOTP(cleanPhone(phone));
@@ -190,18 +178,57 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     }
   };
 
+  // ─── ذخیره پروفایل ───
+  const handleSaveProfile = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      setProfileError('نام و نام خانوادگی الزامی است');
+      return;
+    }
+    if (firstName.trim().length < 2 || lastName.trim().length < 2) {
+      setProfileError('نام و نام خانوادگی باید حداقل ۲ کاراکتر باشد');
+      return;
+    }
+
+    setLoading(true);
+    setProfileError('');
+
+    try {
+      const { profileService } = await import('@/api/services/profile.service');
+      await profileService.updateProfile({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+      });
+
+      // بروزرسانی store
+      const { useAuthStore } = await import('@/stores/useAuthStore');
+      useAuthStore.getState().updateUser({
+        name: `${firstName.trim()} ${lastName.trim()}`,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
+      useAuthStore.getState().completeProfile();
+
+      setStage('success');
+      setLoading(false);
+      setTimeout(() => closeAuthModal(), 1500);
+    } catch (err) {
+      setLoading(false);
+      setProfileError(err.message || 'خطا در ذخیره پروفایل');
+    }
+  };
+
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return toPersianDigit(`${m}:${s.toString().padStart(2, '0')}`);
   };
 
-  const canSubmitInfo = phone.length === 11 && validatePhone(phone) && termsAccepted && !loading;
   const maskedPhone = phone ? phone.slice(-4) + '***' + phone.slice(0, 4) : '';
 
   if (!showAuthModal) return null;
 
   const isBottomSheet = variant === 'bottomsheet';
+
   const containerClass = isBottomSheet
     ? 'fixed inset-0 z-[9999] flex items-end md:items-center justify-center'
     : 'fixed inset-0 z-[9999] flex items-center justify-center p-4';
@@ -213,6 +240,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const getTitle = () => {
     if (stage === 'info') return 'ورود / ثبت‌نام';
     if (stage === 'otp') return 'کد تایید';
+    if (stage === 'profile') return 'تکمیل پروفایل';
     return 'ورود موفق';
   };
 
@@ -241,7 +269,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
 
         {/* هدر */}
         <div
-          className="flex items-center justify-between px-6 py-4 border-b"
+          className="flex items-center justify-between px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
         >
           <h2 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
@@ -256,32 +284,33 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-5 overflow-y-auto flex-1">
           {/* ═══ مرحله ۱: شماره موبایل ═══ */}
           {stage === 'info' && (
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col items-center gap-3 mb-4">
+              <div className="flex flex-col items-center gap-3 mb-2">
                 <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center"
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: colors.primary + '15' }}
                 >
-                  <FiUser size={40} style={{ color: colors.primary }} />
+                  <FiUser size={32} style={{ color: colors.primary }} />
                 </div>
-                <div className="text-center">
-                  <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                    خوش آمدید
-                  </h3>
-                  <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-                    شماره موبایل خود را وارد کنید
-                  </p>
-                </div>
+                <p className="text-sm text-center" style={{ color: colors.textSecondary }}>
+                  شماره موبایل خود را وارد کنید
+                </p>
               </div>
 
               <Input
                 label="شماره موبایل"
                 placeholder="۰۹۱۲۳۴۵۶۷۸۹"
                 value={toPersianDigit(phone)}
-                onChangeText={handlePhoneChange}
+                onChangeText={(t) => {
+                  const cleaned = toEnglishDigits(t).replace(/[^0-9]/g, '');
+                  if (cleaned.length <= 11) {
+                    setPhone(cleaned);
+                    if (error) setError('');
+                  }
+                }}
                 type="tel"
                 maxLength={11}
                 error={error}
@@ -313,45 +342,24 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 title="دریافت کد تایید"
                 onPress={handleSendOtp}
                 loading={loading}
-                disabled={!canSubmitInfo}
+                disabled={phone.length !== 11 || !validatePhone(phone) || !termsAccepted || loading}
                 variant="primary"
                 size="lg"
                 fullWidth
               />
-
-              <div className="flex items-center justify-center gap-2 py-2">
-                <FiShield size={14} style={{ color: colors.textSecondary }} />
-                <span
-                  className="text-xs font-[Vazir-Medium]"
-                  style={{ color: colors.textSecondary }}
-                >
-                  ورود امن و رمزنگاری شده
-                </span>
-              </div>
             </div>
           )}
 
           {/* ═══ مرحله ۲: کد OTP ═══ */}
           {stage === 'otp' && (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col items-center gap-3">
-                <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: colors.primary + '15' }}
-                >
-                  <FiMessageSquare size={40} style={{ color: colors.primary }} />
-                </div>
-                <div className="text-center">
-                  <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                    کد تایید را وارد کنید
-                  </h3>
-                  <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-                    کد ارسال‌شده به{' '}
-                    <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                      {toPersianDigit(maskedPhone)}
-                    </span>
-                  </p>
-                </div>
+            <div className="flex flex-col gap-4">
+              <div className="text-center">
+                <p className="text-sm" style={{ color: colors.textSecondary }}>
+                  کد ارسال‌شده به{' '}
+                  <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                    {toPersianDigit(maskedPhone)}
+                  </span>
+                </p>
               </div>
 
               <div className="flex justify-center gap-2" dir="ltr">
@@ -363,14 +371,40 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                     inputMode="numeric"
                     maxLength={1}
                     value={toPersianDigit(digit)}
-                    onChange={(e) => handleChangeOtp(e.target.value, index)}
-                    onKeyDown={(e) => handleKeyPress(e, index)}
+                    onChange={(e) => {
+                      const cleaned = toEnglishDigits(e.target.value).replace(/[^0-9]/g, '');
+                      const newOtp = [...otp];
+                      if (cleaned.length > 1) {
+                        const digits = cleaned.slice(0, OTP_LENGTH).split('');
+                        digits.forEach((d, i) => {
+                          if (index + i < OTP_LENGTH) newOtp[index + i] = d;
+                        });
+                        setOtp(newOtp);
+                        const nextIndex = Math.min(index + digits.length, OTP_LENGTH - 1);
+                        setCurrentBox(nextIndex);
+                        inputRefs.current[nextIndex]?.focus();
+                        return;
+                      }
+                      newOtp[index] = cleaned[0] || '';
+                      setOtp(newOtp);
+                      if (error) setError('');
+                      if (cleaned && index < OTP_LENGTH - 1) {
+                        inputRefs.current[index + 1]?.focus();
+                        setCurrentBox(index + 1);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Backspace' && !otp[index] && index > 0) {
+                        inputRefs.current[index - 1]?.focus();
+                        setCurrentBox(index - 1);
+                      }
+                    }}
                     onFocus={() => setCurrentBox(index)}
                     className="outline-none"
                     style={{
-                      width: '56px',
-                      height: '64px',
-                      borderRadius: '16px',
+                      width: '52px',
+                      height: '60px',
+                      borderRadius: '14px',
                       backgroundColor: colors.cardBackground,
                       border: `2px solid ${
                         error && digit === ''
@@ -380,14 +414,13 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                             : colors.border
                       }`,
                       color: colors.textMain,
-                      fontSize: '24px',
+                      fontSize: '22px',
                       fontFamily: "'Vazir-Bold', sans-serif",
                       textAlign: 'center',
-                      lineHeight: '60px',
+                      lineHeight: '56px',
                       padding: 0,
                       direction: 'ltr',
                       boxSizing: 'border-box',
-                      transition: 'border-color 0.2s ease',
                     }}
                   />
                 ))}
@@ -399,7 +432,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                 </p>
               )}
 
-              <div className="flex justify-between items-center px-2">
+              <div className="flex justify-between items-center px-1">
                 <button
                   onClick={() => setStage('info')}
                   className="flex items-center gap-1"
@@ -410,6 +443,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
                     ویرایش شماره
                   </span>
                 </button>
+
                 {canResend ? (
                   <button onClick={handleResend} type="button">
                     <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
@@ -435,7 +469,56 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
             </div>
           )}
 
-          {/* ═══ مرحله ۳: موفقیت ═══ */}
+          {/* ═══ مرحله ۳: تکمیل پروفایل (جدید) ═══ */}
+          {stage === 'profile' && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col items-center gap-3 mb-2">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: '#4CAF5015' }}
+                >
+                  <FiCheck size={32} color="#4CAF50" />
+                </div>
+                <p className="text-sm text-center" style={{ color: colors.textSecondary }}>
+                  ورود موفق! لطفاً نام خود را وارد کنید
+                </p>
+              </div>
+
+              <Input
+                label="نام *"
+                placeholder="مثال: مریم"
+                value={firstName}
+                onChangeText={(t) => {
+                  setFirstName(t);
+                  if (profileError) setProfileError('');
+                }}
+                error={profileError && !firstName.trim() ? profileError : ''}
+              />
+
+              <Input
+                label="نام خانوادگی *"
+                placeholder="مثال: حسینی"
+                value={lastName}
+                onChangeText={(t) => {
+                  setLastName(t);
+                  if (profileError) setProfileError('');
+                }}
+                error={profileError && !lastName.trim() ? profileError : ''}
+              />
+
+              <Button
+                title="ذخیره و ادامه"
+                onPress={handleSaveProfile}
+                loading={loading}
+                disabled={loading}
+                variant="primary"
+                size="lg"
+                fullWidth
+              />
+            </div>
+          )}
+
+          {/* ═══ مرحله ۴: موفقیت ═══ */}
           {stage === 'success' && (
             <div className="flex flex-col items-center gap-4 py-6">
               <div

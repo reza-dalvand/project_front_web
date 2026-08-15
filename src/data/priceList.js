@@ -2,7 +2,6 @@
 /**
  * 🎨 تم‌های ظاهری منوی قیمت + تنظیمات اولیه (MOCK)
  */
-
 export const PRICE_LIST_THEMES = [
   {
     id: 'rose',
@@ -60,23 +59,14 @@ export const PRICE_LIST_THEMES = [
 
 // ═══════ تنظیمات اولیه لیست قیمت برای هر کسب‌وکار (MOCK) ═══════
 export const INITIAL_PRICE_LISTS = {
-  // کسب‌وکار عمومی (صفحه جزئیات مشتری)
   1: {
     businessId: '1',
     themeId: 'rose',
     isPublished: true,
-    notes: [
-      { id: 'nt1', label: 'افزانه مواد', min: 50, max: 100 },
-      { id: 'nt2', label: 'تغییر فرم', min: 80, max: 100 },
-      { id: 'nt3', label: 'ناخن شکسته', min: 25, max: 35 },
-      { id: 'nt4', label: 'ترمیم همکار', min: 50, max: 80 },
-    ],
   },
-  // کسب‌وکار صاحب‌کار (مدیریت)
   biz_1: {
     businessId: 'biz_1',
     themeId: 'rose',
     isPublished: false,
-    notes: [{ id: 'nt5', label: 'مشاوره پوست', min: 0, max: 0 }],
   },
 };

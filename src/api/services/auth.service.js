@@ -1,6 +1,6 @@
 // src/api/services/auth.service.js
 /**
- * 🔐 Auth Service — نسخه نهایی هماهنگ با بک‌اند
+ * 🔐 Auth Service — نسخه نهایی هماهنگ با بک‌اند (فاز ۲)
  *
  * Endpoints:
  *   POST /accounts/auth/otp/send/
@@ -12,16 +12,17 @@
  *   GET  /accounts/devices/
  *   POST /accounts/devices/{device_id}/revoke/
  *   POST /accounts/account/delete/
+ *   POST /accounts/account/delete/send-otp/  ← جدید
  */
 import apiClient from '../api-client';
 
 export const authService = {
   // ═══════════ OTP ═══════════
-
   /**
    * ارسال کد تایید
    * POST /accounts/auth/otp/send/
-   * @param {string} phone - شماره موبایل (مثال: "09123456789")
+   * @param {string} phone
+   * @returns {Promise} - { expires_in, resend_after, is_registered }
    */
   sendOTP: (phone) => {
     return apiClient.post('/accounts/auth/otp/send/', { phone });
@@ -31,15 +32,14 @@ export const authService = {
    * تایید کد OTP و ورود/ثبت‌نام
    * POST /accounts/auth/otp/verify/
    * @param {string} phone
-   * @param {string} code - کد ۵ رقمی
-   * @returns {Promise} - { is_new_user, access_token, refresh_token, token_type, expires_in, user }
+   * @param {string} code
+   * @returns {Promise} - { is_new_user, needs_profile_completion, access_token, refresh_token, user }
    */
   verifyOTP: (phone, code) => {
     return apiClient.post('/accounts/auth/otp/verify/', { phone, code });
   },
 
   // ═══════════ Token ═══════════
-
   /**
    * Refresh Token با چرخش خودکار
    * POST /accounts/auth/token/refresh/
@@ -60,12 +60,11 @@ export const authService = {
   },
 
   // ═══════════ Logout ═══════════
-
   /**
    * خروج از حساب
    * POST /accounts/auth/logout/
-   * @param {string|null} refreshToken - توکن refresh برای blacklist
-   * @param {boolean} allDevices - خروج از همه دستگاه‌ها
+   * @param {string|null} refreshToken
+   * @param {boolean} allDevices
    */
   logout: (refreshToken = null, allDevices = false) => {
     const payload = {};
@@ -75,43 +74,37 @@ export const authService = {
   },
 
   // ═══════════ National ID (شاهکار) ═══════════
-
   /**
    * استعلام کد ملی
    * POST /accounts/auth/national-id/verify/
-   * @param {string} nationalId - کد ملی ۱۰ رقمی
-   * @returns {Promise} - { verified_name, national_id, phone_display }
+   * @param {string} nationalId
    */
   verifyNationalId: (nationalId) => {
     return apiClient.post('/accounts/auth/national-id/verify/', { national_id: nationalId });
   },
 
   // ═══════════ Devices ═══════════
-
-  /**
-   * لیست دستگاه‌های فعال
-   * GET /accounts/devices/
-   * @returns {Promise} - لیست دستگاه‌ها
-   */
   getDevices: () => {
     return apiClient.get('/accounts/devices/');
   },
 
-  /**
-   * خروج از یک دستگاه خاص
-   * POST /accounts/devices/{device_id}/revoke/
-   * @param {number} deviceId
-   */
   revokeDevice: (deviceId) => {
     return apiClient.post(`/accounts/devices/${deviceId}/revoke/`);
   },
 
   // ═══════════ Account ═══════════
+  /**
+   * ✅ جدید: ارسال OTP برای حذف حساب
+   * POST /accounts/account/delete/send-otp/
+   */
+  sendDeleteAccountOTP: () => {
+    return apiClient.post('/accounts/account/delete/send-otp/');
+  },
 
   /**
    * حذف حساب کاربری
    * POST /accounts/account/delete/
-   * @param {string} confirmationCode - کد تایید ۵ رقمی
+   * @param {string} confirmationCode - کد ۵ رقمی OTP
    */
   deleteAccount: (confirmationCode) => {
     return apiClient.post('/accounts/account/delete/', {

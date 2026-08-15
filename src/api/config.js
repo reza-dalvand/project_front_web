@@ -72,8 +72,6 @@ export const UPLOAD_CONFIG = {
 //    تنظیمات Media (برای ساخت URL تصاویر)
 // ═══════════════════════════════════════════════
 export const MEDIA_CONFIG = {
-  // در development: http://localhost:8000
-  // در production: https://api.zibano.app یا CDN
   MEDIA_BASE_URL: env.MEDIA_BASE_URL || env.API_BASE_URL?.replace('/api/v1', '') || '',
   CDN_URL: env.ARVAN_CDN_URL || '',
 };

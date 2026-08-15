@@ -1,6 +1,6 @@
 // src/components/manageBusiness/gallery/GalleryManager.jsx
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import {
   FiImage,
@@ -9,6 +9,7 @@ import {
   FiArrowRight,
   FiArrowLeft,
   FiAlertTriangle,
+  FiUpload,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -16,6 +17,7 @@ import { useToast } from '@/hooks/useToast';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { USE_MOCK } from '@/api/config';
 
@@ -24,19 +26,22 @@ const MAX_GALLERY_IMAGES = 3; // بک‌اند: حداکثر ۳ تصویر
 export default function GalleryManager() {
   const { colors } = useTheme();
   const { showToast } = useToast();
+
+  // State از store
   const gallery = useBusinessStore((s) => s.gallery);
   const fetchGallery = useBusinessStore((s) => s.fetchGallery);
   const uploadGalleryImageApi = useBusinessStore((s) => s.uploadGalleryImageApi);
   const deleteGalleryImageApi = useBusinessStore((s) => s.deleteGalleryImageApi);
   const reorderGalleryApi = useBusinessStore((s) => s.reorderGalleryApi);
 
+  // State محلی
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const fileInputRef = useRef(null);
 
-  // دریافت گالری
+  // ═══════ دریافت گالری از API ═══════
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
@@ -46,45 +51,72 @@ export default function GalleryManager() {
         }
       } catch (e) {
         console.error('Failed to load gallery:', e);
+        showToast('خطا در بارگذاری گالری', 'error');
       } finally {
         setIsLoading(false);
       }
     };
     load();
+  }, [fetchGallery, showToast]);
+
+  // ═══════ آپلود تصویر ═══════
+  const handleFileSelect = useCallback(
+    async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      // بررسی محدودیت تعداد
+      if (gallery.length >= MAX_GALLERY_IMAGES) {
+        showToast(`حداکثر ${toPersianDigit(MAX_GALLERY_IMAGES)} تصویر مجاز است`, 'warning');
+        return;
+      }
+
+      // بررسی نوع فایل
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast('فرمت فایل مجاز نیست (JPEG, PNG, WebP)', 'error');
+        return;
+      }
+
+      // بررسی حجم فایل (حداکثر ۵ مگابایت)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('حجم تصویر نباید بیشتر از ۵ مگابایت باشد', 'error');
+        return;
+      }
+
+      setIsUploading(true);
+      try {
+        if (!USE_MOCK) {
+          await uploadGalleryImageApi(file, gallery.length);
+        } else {
+          // حالت Mock — شبیه‌سازی آپلود
+          await new Promise((r) => setTimeout(r, 1200));
+        }
+        showToast('تصویر با موفقیت به گالری اضافه شد', 'success');
+      } catch (error) {
+        showToast(error.message || 'خطا در آپلود تصویر', 'error');
+      } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    },
+    [gallery.length, uploadGalleryImageApi, showToast]
+  );
+
+  // ═══════ حذف تصویر ═══════
+  const handleDeleteRequest = useCallback((img) => {
+    setDeleteTarget(img);
+    setDeleteDialogVisible(true);
   }, []);
 
-  // آپلود تصویر
-  const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (gallery.length >= MAX_GALLERY_IMAGES) {
-      showToast(`حداکثر ${toPersianDigit(MAX_GALLERY_IMAGES)} تصویر مجاز است`, 'warning');
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      if (!USE_MOCK) {
-        await uploadGalleryImageApi(file, gallery.length);
-      } else {
-        await new Promise((r) => setTimeout(r, 1000));
-      }
-      showToast('تصویر با موفقیت به گالری اضافه شد', 'success');
-    } catch (error) {
-      showToast(error.message || 'خطا در آپلود تصویر', 'error');
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  // حذف تصویر
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (!deleteTarget) return;
+
     try {
       if (!USE_MOCK) {
         await deleteGalleryImageApi(deleteTarget.id);
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
       }
       showToast('تصویر از گالری حذف شد', 'success');
     } catch (error) {
@@ -92,24 +124,35 @@ export default function GalleryManager() {
     }
     setDeleteDialogVisible(false);
     setDeleteTarget(null);
-  };
+  }, [deleteTarget, deleteGalleryImageApi, showToast]);
 
-  // جابجایی ترتیب
-  const moveImage = async (index, direction) => {
-    const newOrder = [...gallery];
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= newOrder.length) return;
-    [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
-    const ids = newOrder.map((img) => img.id);
-    try {
-      if (!USE_MOCK) {
-        await reorderGalleryApi(ids);
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteDialogVisible(false);
+    setDeleteTarget(null);
+  }, []);
+
+  // ═══════ جابجایی ترتیب ═══════
+  const moveImage = useCallback(
+    async (index, direction) => {
+      const newOrder = [...gallery];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= newOrder.length) return;
+
+      [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
+      const ids = newOrder.map((img) => img.id);
+
+      try {
+        if (!USE_MOCK) {
+          await reorderGalleryApi(ids);
+        }
+      } catch (e) {
+        console.error('Failed to reorder:', e);
       }
-    } catch (e) {
-      console.error('Failed to reorder:', e);
-    }
-  };
+    },
+    [gallery, reorderGalleryApi]
+  );
 
+  // ═══════ رندر ═══════
   return (
     <div className="space-y-5">
       {/* هدر */}
@@ -145,19 +188,17 @@ export default function GalleryManager() {
         </div>
       )}
 
-      {/* لیست تصاویر */}
+      {/* ═══════ لیست تصاویر ═══════ */}
       {isLoading ? (
         <div className="flex justify-center py-8">
-          <div
-            className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
-            style={{ color: colors.primary }}
-          />
+          <LoadingSpinner label="در حال بارگذاری گالری..." />
         </div>
       ) : gallery.length > 0 ? (
         <div className="space-y-3">
           {gallery.map((img, index) => (
             <Card key={img.id} variant="elevated" padding={12} radius={16}>
               <div className="flex items-center gap-3">
+                {/* تصویر */}
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                   <Image
                     src={img.image_url || img.image}
@@ -167,6 +208,8 @@ export default function GalleryManager() {
                     sizes="80px"
                   />
                 </div>
+
+                {/* اطلاعات */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     تصویر {toPersianDigit(index + 1)}
@@ -180,12 +223,13 @@ export default function GalleryManager() {
                     </span>
                   )}
                 </div>
+
                 {/* دکمه‌های ترتیب */}
                 <div className="flex flex-col gap-1">
                   <button
                     onClick={() => moveImage(index, -1)}
                     disabled={index === 0}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 transition-opacity"
                     style={{ backgroundColor: colors.background }}
                   >
                     <FiArrowRight size={14} style={{ color: colors.textMain }} />
@@ -193,19 +237,17 @@ export default function GalleryManager() {
                   <button
                     onClick={() => moveImage(index, 1)}
                     disabled={index === gallery.length - 1}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 transition-opacity"
                     style={{ backgroundColor: colors.background }}
                   >
                     <FiArrowLeft size={14} style={{ color: colors.textMain }} />
                   </button>
                 </div>
+
                 {/* دکمه حذف */}
                 <button
-                  onClick={() => {
-                    setDeleteTarget(img);
-                    setDeleteDialogVisible(true);
-                  }}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  onClick={() => handleDeleteRequest(img)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105 active:scale-95"
                   style={{ backgroundColor: '#E5393515' }}
                 >
                   <FiTrash2 size={16} color="#E53935" />
@@ -215,6 +257,7 @@ export default function GalleryManager() {
           ))}
         </div>
       ) : (
+        /* حالت خالی */
         <div className="flex flex-col items-center py-12 gap-4">
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center"
@@ -231,29 +274,31 @@ export default function GalleryManager() {
         </div>
       )}
 
-      {/* دکمه آپلود */}
+      {/* ═══════ دکمه آپلود ═══════ */}
       {gallery.length < MAX_GALLERY_IMAGES && (
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+          <Button
+            title={isUploading ? 'در حال آپلود...' : 'افزودن تصویر جدید'}
+            onPress={() => fileInputRef.current?.click()}
+            loading={isUploading}
+            disabled={isUploading}
+            variant="primary"
+            size="lg"
+            fullWidth
+            icon={<FiPlus size={18} color="#fff" />}
+            iconPosition="right"
+          />
+        </>
       )}
-      <Button
-        title={isUploading ? 'در حال آپلود...' : 'افزودن تصویر جدید'}
-        onPress={() => fileInputRef.current?.click()}
-        loading={isUploading}
-        disabled={gallery.length >= MAX_GALLERY_IMAGES || isUploading}
-        variant="primary"
-        size="lg"
-        fullWidth
-        icon={<FiPlus size={18} color="#fff" />}
-        iconPosition="right"
-      />
 
-      {/* ConfirmDialog حذف */}
+      {/* ═══════ ConfirmDialog حذف ═══════ */}
       <ConfirmDialog
         visible={deleteDialogVisible}
         title="حذف تصویر گالری"
@@ -262,10 +307,7 @@ export default function GalleryManager() {
         cancelText="انصراف"
         variant="danger"
         onConfirm={handleDeleteConfirm}
-        onCancel={() => {
-          setDeleteDialogVisible(false);
-          setDeleteTarget(null);
-        }}
+        onCancel={handleDeleteCancel}
       />
     </div>
   );

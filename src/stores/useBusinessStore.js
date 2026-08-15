@@ -44,6 +44,9 @@ export const useBusinessStore = create(
         set({ businessData: INITIAL_BUSINESS_DATA, gallery: [], _version: STORAGE_VERSION });
       },
 
+      // src/stores/useBusinessStore.js
+      // فقط بخش API Sync — Businesses را پیدا و جایگزین کنید:
+
       // ═══════════════════════════════════════════
       //    🆕 API Sync — Businesses
       // ═══════════════════════════════════════════
@@ -55,6 +58,7 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.getBusinessDetail();
           const b = response.data;
+
           set((state) => ({
             businessData: {
               ...state.businessData,
@@ -77,6 +81,7 @@ export const useBusinessStore = create(
               ownerPhoto: b.owner_photo,
               ownerName: b.owner_name,
               verifiedName: b.verified_name,
+              nationalId: b.national_id,
               bankInfo: {
                 isRegistered: b.bank_info_registered,
                 isVerified: b.bank_info_verified,
@@ -86,6 +91,7 @@ export const useBusinessStore = create(
               latitude: b.latitude,
               longitude: b.longitude,
               gallery: b.gallery || [],
+              services: b.services || [],
             },
             gallery: b.gallery || [],
           }));
@@ -117,6 +123,7 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.createBusiness(formData);
           const b = response.data;
+
           set((state) => ({
             businessData: {
               ...state.businessData,
@@ -142,6 +149,7 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.updateBusiness(data);
           const b = response.data;
+
           set((state) => ({
             businessData: {
               ...state.businessData,
@@ -186,6 +194,7 @@ export const useBusinessStore = create(
             bank_card_number: bankData.cardNumber,
             bank_account_number: bankData.accountNumber,
           });
+
           set((state) => ({
             businessData: {
               ...state.businessData,

@@ -155,10 +155,8 @@ export default function ScheduleModal({
           breaks: breaks.map(({ id, ...rest }) => rest),
           slotCount: computedSlotCount,
         };
-
         await onSave(scheduleData);
       }
-
       showToast(`✓ ${toPersianDigit(selectedDates.length)} روز تنظیم شد`, 'success');
       onClose();
     } catch (error) {

@@ -48,8 +48,6 @@ export const TX_TABS = [
   { id: 'all', label: 'همه' },
   { id: 'blocked', label: 'بلوکه' },
   { id: 'settling', label: 'در حال تسویه' },
-  { id: 'settled', label: 'تسویه شده' },
-  { id: 'refunded', label: 'مسترد شده' },
 ];
 
 // اطلاعات بانکی موقت

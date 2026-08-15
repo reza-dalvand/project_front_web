@@ -95,13 +95,21 @@ const routeHandlers = {
   },
 
   'POST /accounts/auth/otp/send': () => {
-    return successResponse({ expires_in: 300, resend_after: 60 }, 'کد تایید به شماره شما ارسال شد');
+    return successResponse(
+      {
+        expires_in: 300,
+        resend_after: 60,
+        is_registered: true, // ✅ جدید
+      },
+      'کد تایید به شماره شما ارسال شد'
+    );
   },
 
   'POST /accounts/auth/otp/verify': () => {
     return successResponse(
       {
         is_new_user: false,
+        needs_profile_completion: false, // ✅ جدید
         access_token: 'mock_access_token_' + Date.now(),
         refresh_token: 'mock_refresh_token_' + Date.now(),
         token_type: 'Bearer',
@@ -109,15 +117,24 @@ const routeHandlers = {
         user: {
           id: 1,
           phone: '09121234567',
+          phone_display: '۰۹۱۲***۴۵۶۷',
           first_name: 'مریم',
           last_name: 'حسینی',
           full_name: 'مریم حسینی',
           avatar: null,
           is_verified: true,
+          is_national_id_verified: false,
+          verified_name: '',
+          date_joined: '2024-01-15T10:00:00Z',
         },
       },
       'ورود موفقیت‌آمیز'
     );
+  },
+
+  // ✅ جدید: اضافه کردن این handler
+  'POST /accounts/account/delete/send-otp': () => {
+    return successResponse({ expires_in: 300, resend_after: 60 }, 'کد تایید حذف حساب ارسال شد');
   },
 
   'POST /accounts/auth/token/refresh': () => {

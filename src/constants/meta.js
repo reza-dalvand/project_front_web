@@ -2,16 +2,16 @@
 import { FiCalendar, FiClock, FiInfo, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 
 export const APPOINTMENT_STATUS_META = {
-    reserved: { label: 'رزرو شده', color: '#2196F3', icon: FiCheckCircle, bg: '#2196F320' },
-    upcoming: { label: 'نوبت آینده', color: '#2196F3', icon: FiCalendar }, // ✅ اصلاح شد
-    done: { label: 'انجام شده', color: '#43A047', icon: FiCheckCircle, bg: '#43A04720' },
-    cancelled: { label: 'لغو شده', color: '#E53935', icon: FiXCircle },
-    // ...
+  reserved: { label: 'رزرو شده', color: '#2196F3', icon: FiCheckCircle, bg: '#2196F320' },
+  upcoming: { label: 'نوبت آینده', color: '#2196F3', icon: FiCalendar }, // ✅ اصلاح شد
+  done: { label: 'انجام شده', color: '#43A047', icon: FiCheckCircle, bg: '#43A04720' },
+  cancelled: { label: 'لغو شده', color: '#E53935', icon: FiXCircle },
+  // ...
 };
 
 export const STATUS_META = {
-    pending: { label: 'در انتظار', color: '#FFA000', icon: FiClock, bg: '#FFA00015' }, // ✅ اصلاح شد
-    // ...
+  pending: { label: 'در انتظار', color: '#FFA000', icon: FiClock, bg: '#FFA00015' }, // ✅ اصلاح شد
+  // ...
 };
 
 // روش‌های پرداخت

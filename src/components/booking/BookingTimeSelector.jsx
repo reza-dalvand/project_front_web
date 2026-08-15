@@ -4,7 +4,12 @@ import { FiClock } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-export default function BookingTimeSelector({ slots = [], selectedId, onSelect }) {
+export default function BookingTimeSelector({
+  slots = [], // ✅ از API می‌آید
+  selectedId,
+  onSelect,
+  isLoading = false, // ✅ جدید
+}) {
   const { colors } = useTheme();
 
   if (slots.length === 0) {

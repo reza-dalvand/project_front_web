@@ -32,22 +32,6 @@ export default function FinancialStatsCards({ stats }) {
       hint: 'واریز تا ۴۸ ساعت',
       color: '#2196F3',
     },
-    {
-      id: 'settled',
-      key: 'settled',
-      Icon: FiCheckCircle,
-      label: 'تسویه شده',
-      hint: 'واریز شده به حساب',
-      color: '#43A047',
-    },
-    {
-      id: 'refunded',
-      key: 'refunded',
-      Icon: FiRotateCcw,
-      label: 'مسترد شده',
-      hint: 'بازگشت به مشتری',
-      color: '#E53935',
-    },
   ];
 
   return (
@@ -97,42 +81,6 @@ export default function FinancialStatsCards({ stats }) {
           </div>
         );
       })}
-
-      {/* کل + کمیسیون */}
-      <div
-        className="col-span-2 rounded-2xl border p-4"
-        style={{
-          backgroundColor: colors.primary + '08',
-          borderColor: colors.primary + '30',
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-              مجموع کل تراکنش‌ها
-            </span>
-            <span
-              className="block text-xl font-[Vazir-Bold] mt-1"
-              style={{ color: colors.primary }}
-            >
-              {formatPrice(stats.total || 0)}
-            </span>
-          </div>
-          {stats.pending_commission > 0 && (
-            <div className="text-right">
-              <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-                کمیسیون زیبانو
-              </span>
-              <span
-                className="block text-sm font-[Vazir-Bold] mt-1"
-                style={{ color: colors.textMain }}
-              >
-                {formatPrice(stats.pending_commission)}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

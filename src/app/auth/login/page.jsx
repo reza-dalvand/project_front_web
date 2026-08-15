@@ -49,7 +49,11 @@ function LoginPageContent() {
 
     try {
       const cleanedPhone = cleanPhone(phone);
-      await authService.sendOTP(cleanedPhone);
+      const result = await authService.sendOTP(cleanedPhone);
+
+      // ✅ جدید: خواندن is_registered (برای آینده)
+      const isRegistered = result?.data?.is_registered ?? true;
+
       setPendingAuth(cleanedPhone);
       setLoading(false);
       router.push(`/auth/verify-otp?redirect=${encodeURIComponent(redirectUrl)}`);

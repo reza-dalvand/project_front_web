@@ -1,7 +1,11 @@
 // src/api/axios-instance.js
 /**
- * 🌐 Axios Instance مرکزی
- * بدون تغییر نسبت به نسخه قبلی — فقط تأیید می‌شود
+ * 🌐 Axios Instance مرکزی — فاز ۲
+ *
+ * تغییرات:
+ * - اصلاح refresh flow برای هماهنگی با CustomTokenRefreshView بک‌اند
+ * - بک‌اند در refresh برمی‌گرداند: { access, refresh } (نه access_token)
+ * - مدیریت بهتر خطاهای 401
  */
 import axios from 'axios';
 import { API_CONFIG } from './config';
@@ -53,7 +57,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // فقط برای 401 و درخواست‌های تکراری نباشد
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // اگر درخواست خود auth است (login, verify, ...) → refresh نکن
+      const isAuthEndpoint = originalRequest.url?.includes('/auth/');
+      if (isAuthEndpoint) {
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -71,29 +82,35 @@ api.interceptors.response.use(
       try {
         const { useTokenStore } = await import('@/stores/useTokenStore');
         const { getRefreshToken, setTokens, clearTokens } = useTokenStore.getState();
-        const refreshToken = getRefreshToken();
 
+        const refreshToken = getRefreshToken();
         if (!refreshToken) {
           throw new Error('No refresh token');
         }
 
+        // ✅ اصلاح: استفاده از فرمت صحیح بک‌اند
+        // بک‌اند در CustomTokenRefreshView برمی‌گرداند: { access, refresh }
         const response = await axios.post(`${API_CONFIG.baseURL}/accounts/auth/token/refresh/`, {
           refresh: refreshToken,
         });
 
         const { access, refresh } = response.data;
+
         setTokens({ access, refresh });
         processQueue(null, access);
+
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
+
         try {
           const { useAuthStore } = await import('@/stores/useAuthStore');
           useAuthStore.getState().logout();
         } catch {
           // ignore
         }
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

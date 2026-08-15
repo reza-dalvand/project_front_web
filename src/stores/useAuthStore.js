@@ -1,6 +1,12 @@
 // src/stores/useAuthStore.js
 /**
- * Store احراز هویت — نسخه نهایی هماهنگ با بک‌اند
+ * Store احراز هویت — فاز ۲ (هماهنگ با بک‌اند)
+ *
+ * تغییرات:
+ * - اضافه شدن needsProfileCompletion
+ * - اصلاح login برای مدیریت is_new_user
+ * - اصلاح checkSession
+ * - اصلاح logout
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -18,6 +24,7 @@ export const useAuthStore = create(
       user: null,
       pendingPhone: null,
       pendingName: null,
+      needsProfileCompletion: false, // ✅ جدید
       _hydrated: false,
 
       setHydrated: () => set({ _hydrated: true }),
@@ -33,11 +40,12 @@ export const useAuthStore = create(
       },
 
       /**
-       * ورود موفق — ذخیره user + توکن‌ها
-       * @param {object} userData - داده‌های کاربر از API (فرمت snake_case بک‌اند)
+       * ✅ اصلاح‌شده: ورود موفق
+       * @param {object} userData - داده‌های کاربر (فرمت بک‌اند)
        * @param {object} tokens - { access_token, refresh_token }
+       * @param {object} options - { is_new_user, needs_profile_completion }
        */
-      login: (userData, tokens) => {
+      login: (userData, tokens, options = {}) => {
         // ذخیره توکن‌ها
         if (tokens?.access_token) {
           useTokenStore.getState().setTokens({
@@ -54,7 +62,8 @@ export const useAuthStore = create(
             phoneDisplay: userData.phone_display || userData.phone,
             name:
               userData.full_name ||
-              `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
+              `${userData.first_name || ''} ${userData.last_name || ''}`.trim() ||
+              'کاربر زیبانو',
             firstName: userData.first_name || '',
             lastName: userData.last_name || '',
             avatar: userData.avatar || null,
@@ -65,6 +74,7 @@ export const useAuthStore = create(
           },
           pendingPhone: null,
           pendingName: null,
+          needsProfileCompletion: options.needs_profile_completion ?? false, // ✅ جدید
         });
       },
 
@@ -81,7 +91,13 @@ export const useAuthStore = create(
           // آفلاین یا خطای شبکه — فقط state پاک شود
         }
         useTokenStore.getState().clearTokens();
-        set({ isAuthenticated: false, user: null, pendingPhone: null, pendingName: null });
+        set({
+          isAuthenticated: false,
+          user: null,
+          pendingPhone: null,
+          pendingName: null,
+          needsProfileCompletion: false,
+        });
       },
 
       /**
@@ -95,7 +111,11 @@ export const useAuthStore = create(
           }
         } catch {}
         useTokenStore.getState().clearTokens();
-        set({ isAuthenticated: false, user: null });
+        set({
+          isAuthenticated: false,
+          user: null,
+          needsProfileCompletion: false,
+        });
       },
 
       /**
@@ -107,25 +127,37 @@ export const useAuthStore = create(
         })),
 
       /**
-       * بررسی اعتبار session
+       * ✅ جدید: تکمیل پروفایل انجام شد
+       */
+      completeProfile: () => {
+        set({ needsProfileCompletion: false });
+      },
+
+      /**
+       * ✅ اصلاح‌شده: بررسی اعتبار session
        * @returns {Promise<boolean>}
        */
       checkSession: async () => {
         const { accessToken, refreshToken } = useTokenStore.getState();
 
+        // هیچ توکنی نیست
         if (!accessToken && !refreshToken) {
           set({ isAuthenticated: false, user: null });
           return false;
         }
 
+        // Access token هنوز معتبر است
         if (accessToken && !isTokenExpired(accessToken)) {
           return true;
         }
 
+        // Access token منقضی شده — تلاش برای refresh
         if (refreshToken) {
           try {
             const result = await authService.refreshToken(refreshToken);
             const data = result.data;
+
+            // بک‌اند در CustomTokenRefreshView برمی‌گرداند: { access, refresh }
             useTokenStore.getState().setTokens({
               access: data.access,
               refresh: data.refresh,
@@ -151,6 +183,7 @@ export const useAuthStore = create(
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
         user: state.user,
+        needsProfileCompletion: state.needsProfileCompletion,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) state.setHydrated();
@@ -193,6 +226,7 @@ export const useAuthModalStore = create((set, get) => ({
 export const useAuth = () => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
+  const needsProfileCompletion = useAuthStore((s) => s.needsProfileCompletion);
   const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
   const logout = useAuthStore((s) => s.logout);
 
@@ -204,7 +238,7 @@ export const useAuth = () => {
     }
   };
 
-  return { isAuthenticated, user, requireAuth, openAuthModal, logout };
+  return { isAuthenticated, user, needsProfileCompletion, requireAuth, openAuthModal, logout };
 };
 
 // ═══════════════════════════════════════════

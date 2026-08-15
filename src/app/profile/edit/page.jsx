@@ -1,8 +1,17 @@
 // src/app/profile/edit/page.jsx
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { FiUser, FiTag, FiSmartphone, FiShield, FiTrash2 } from 'react-icons/fi';
+import {
+  FiUser,
+  FiTag,
+  FiSmartphone,
+  FiShield,
+  FiTrash2,
+  FiX,
+  FiAlertTriangle,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
@@ -11,10 +20,15 @@ import Header from '@/components/common/Header';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
-import { toPersianDigit } from '@/utils/numberUtils';
+import OTPInput from '@/components/common/OTPInput';
+import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { maskPhone } from '@/utils/phoneUtils';
 import { profileService, authService } from '@/api';
 import { USE_MOCK } from '@/api/config';
+import { OTP_CONFIG } from '@/api/config';
+
+const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;
+const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS;
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -22,6 +36,7 @@ export default function EditProfilePage() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const updateUser = useAuthStore((s) => s.updateUser);
+  const completeProfile = useAuthStore((s) => s.completeProfile);
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -30,19 +45,35 @@ export default function EditProfilePage() {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // ─── State حذف حساب با OTP ───
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteOtp, setShowDeleteOtp] = useState(false);
+  const [deleteOtp, setDeleteOtp] = useState(['', '', '', '', '']);
+  const [deleteOtpCurrentBox, setDeleteOtpCurrentBox] = useState(0);
+  const [deleteOtpError, setDeleteOtpError] = useState('');
+  const [deleteOtpLoading, setDeleteOtpLoading] = useState(false);
+  const [deleteTimer, setDeleteTimer] = useState(RESEND_SECONDS);
+  const [deleteCanResend, setDeleteCanResend] = useState(false);
 
-  const displayName = `${formData.firstName} ${formData.lastName}`.trim() || 'کاربر زیبانو';
+  // تایمر حذف
+  useEffect(() => {
+    if (!showDeleteOtp || deleteTimer <= 0) {
+      if (showDeleteOtp) setDeleteCanResend(true);
+      return;
+    }
+    const interval = setInterval(() => setDeleteTimer((t) => t - 1), 1000);
+    return () => clearInterval(interval);
+  }, [showDeleteOtp, deleteTimer]);
 
+  // ─── ذخیره پروفایل ───
   const handleSave = async () => {
     const newErrors = {};
-
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'نام الزامی است';
     } else if (formData.firstName.trim().length < 2) {
       newErrors.firstName = 'نام باید حداقل ۲ کاراکتر باشد';
     }
-
     if (!formData.lastName.trim()) {
       newErrors.lastName = 'نام خانوادگی الزامی است';
     } else if (formData.lastName.trim().length < 2) {
@@ -56,52 +87,107 @@ export default function EditProfilePage() {
 
     try {
       if (!USE_MOCK) {
-        const result = await profileService.updateProfile({
+        await profileService.updateProfile({
           first_name: formData.firstName.trim(),
           last_name: formData.lastName.trim(),
         });
-
-        const data = result.data;
-        updateUser({
-          name: data.full_name || `${data.first_name} ${data.last_name}`.trim(),
-          firstName: data.first_name,
-          lastName: data.last_name,
-          avatar: data.avatar,
-        });
-      } else {
-        // حالت Mock
-        updateUser({
-          name: displayName,
-          firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim(),
-        });
       }
+
+      updateUser({
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+      });
+      completeProfile();
 
       setLoading(false);
       showToast('اطلاعات پروفایل با موفقیت ذخیره شد', 'success');
-      setTimeout(() => router.back(), 1200);
+
+      // اگر از صفحه خوشامدگویی آمده
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('welcome') === '1') {
+          router.replace('/');
+          return;
+        }
+      }
+      router.back();
     } catch (err) {
       setLoading(false);
       showToast(err.message || 'خطا در ذخیره اطلاعات', 'error');
     }
   };
 
-  const handleDeleteAccount = async () => {
-    setLoading(true);
+  // ─── شروع فرآیند حذف ───
+  const handleStartDelete = async () => {
+    setShowDeleteConfirm(false);
+    setDeleteOtp(['', '', '', '', '']);
+    setDeleteOtpCurrentBox(0);
+    setDeleteOtpError('');
+    setDeleteOtpLoading(false);
+    setDeleteTimer(RESEND_SECONDS);
+    setDeleteCanResend(false);
+
     try {
       if (!USE_MOCK) {
-        // در production باید OTP ارسال و تایید شود
-        // فعلاً فقط logout
-        await logout();
-      } else {
-        await logout();
+        await authService.sendDeleteAccountOTP();
       }
-      setLoading(false);
-      showToast('حساب کاربری با موفقیت حذف شد', 'success');
-      router.push('/');
-    } catch {
-      setLoading(false);
+      setShowDeleteOtp(true);
+      showToast('کد تایید حذف حساب ارسال شد', 'success');
+    } catch (err) {
+      showToast(err.message || 'خطا در ارسال کد تایید', 'error');
     }
+  };
+
+  // ─── تایید حذف ───
+  const handleConfirmDelete = async () => {
+    const code = deleteOtp.join('');
+    if (code.length < OTP_LENGTH) {
+      setDeleteOtpError(`کد ${toPersianDigit(OTP_LENGTH)} رقمی را کامل وارد کنید`);
+      return;
+    }
+
+    setDeleteOtpLoading(true);
+    setDeleteOtpError('');
+
+    try {
+      if (!USE_MOCK) {
+        await authService.deleteAccount(code);
+      }
+
+      setDeleteOtpLoading(false);
+      setShowDeleteOtp(false);
+      showToast('حساب کاربری با موفقیت حذف شد', 'success');
+      await logout();
+      router.push('/');
+    } catch (err) {
+      setDeleteOtpLoading(false);
+      setDeleteOtpError(err.message || 'کد وارد شده صحیح نیست');
+      setDeleteOtp(['', '', '', '', '']);
+      setDeleteOtpCurrentBox(0);
+    }
+  };
+
+  // ─── ارسال مجدد OTP حذف ───
+  const handleResendDeleteOtp = async () => {
+    try {
+      if (!USE_MOCK) {
+        await authService.sendDeleteAccountOTP();
+      }
+      setDeleteTimer(RESEND_SECONDS);
+      setDeleteCanResend(false);
+      setDeleteOtp(['', '', '', '', '']);
+      setDeleteOtpCurrentBox(0);
+      showToast('کد جدید ارسال شد', 'success');
+    } catch (err) {
+      showToast(err.message || 'خطا در ارسال مجدد', 'error');
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return toPersianDigit(`${m}:${s.toString().padStart(2, '0')}`);
   };
 
   return (
@@ -110,7 +196,7 @@ export default function EditProfilePage() {
 
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-6">
         {/* لوگو */}
-        <div className="flex flex-col items-center gap-3 mb-6">
+        <div className="flex flex-col items-center gap-3 mb-4">
           <div
             className="w-[100px] h-[100px] rounded-full flex items-center justify-center border-[3px]"
             style={{ borderColor: colors.primary }}
@@ -123,7 +209,7 @@ export default function EditProfilePage() {
             </div>
           </div>
           <span className="text-base font-[Vazir-Bold] mt-1" style={{ color: colors.textMain }}>
-            {displayName}
+            {user?.name || 'کاربر زیبانو'}
           </span>
         </div>
 
@@ -218,19 +304,6 @@ export default function EditProfilePage() {
               تغییر شماره موبایل
             </span>
           </button>
-
-          <div className="flex items-start gap-2 mt-3 px-1">
-            <FiShield
-              size={14}
-              style={{ color: colors.textSecondary, flexShrink: 0, marginTop: 2 }}
-            />
-            <span
-              className="text-[11px] font-[Vazir] leading-5"
-              style={{ color: colors.textSecondary }}
-            >
-              برای تغییر شماره، کد تایید (OTP) به شماره جدید ارسال خواهد شد
-            </span>
-          </div>
         </Card>
 
         {/* دکمه ذخیره */}
@@ -277,53 +350,154 @@ export default function EditProfilePage() {
         </Card>
       </div>
 
-      {/* مدال تایید حذف */}
-      {showDeleteConfirm && (
-        <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center p-6"
-          style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
-          onClick={(e) => e.target === e.currentTarget && setShowDeleteConfirm(false)}
-        >
+      {/* ═══ مدال تایید حذف ═══ */}
+      {showDeleteConfirm &&
+        createPortal(
           <div
-            className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-4"
-            style={{ backgroundColor: colors.cardBackground }}
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[10000] flex items-center justify-center p-6"
+            style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
+            onClick={(e) => e.target === e.currentTarget && setShowDeleteConfirm(false)}
           >
             <div
-              className="w-20 h-20 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: '#E5393520' }}
+              className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-4"
+              style={{ backgroundColor: colors.cardBackground }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <FiShield size={40} color="#E53935" />
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: '#E5393520' }}
+              >
+                <FiShield size={40} color="#E53935" />
+              </div>
+              <h3
+                className="text-lg font-[Vazir-Bold] text-center"
+                style={{ color: colors.textMain }}
+              >
+                حذف حساب کاربری
+              </h3>
+              <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
+                آیا از حذف دائمی حساب کاربری خود مطمئن هستید؟ این عمل قابل بازگشت نیست.
+              </p>
+              <div
+                className="w-full flex items-start gap-2 p-3 rounded-xl border"
+                style={{
+                  backgroundColor: '#E5393508',
+                  borderColor: '#E5393530',
+                }}
+              >
+                <FiAlertTriangle size={14} color="#E53935" className="flex-shrink-0 mt-0.5" />
+                <span
+                  className="text-xs font-[Vazir] leading-5 flex-1"
+                  style={{ color: '#E53935' }}
+                >
+                  برای تایید حذف، کد OTP به شماره شما ارسال می‌شود
+                </span>
+              </div>
+              <div className="flex gap-3 w-full mt-2">
+                <Button
+                  title="انصراف"
+                  onPress={() => setShowDeleteConfirm(false)}
+                  variant="outline"
+                  size="lg"
+                  className="flex-1"
+                />
+                <Button
+                  title="ارسال کد تایید"
+                  onPress={handleStartDelete}
+                  variant="primary"
+                  size="lg"
+                  className="flex-1"
+                  style={{ backgroundColor: '#E53935' }}
+                />
+              </div>
             </div>
-            <h3
-              className="text-lg font-[Vazir-Bold] text-center"
-              style={{ color: colors.textMain }}
+          </div>,
+          document.body
+        )}
+
+      {/* ═══ مدال OTP حذف ═══ */}
+      {showDeleteOtp &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[10001] flex items-center justify-center p-6"
+            style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
+            onClick={(e) => e.target === e.currentTarget && setShowDeleteOtp(false)}
+          >
+            <div
+              className="w-full max-w-sm rounded-3xl p-6 flex flex-col gap-4"
+              style={{ backgroundColor: colors.cardBackground }}
+              onClick={(e) => e.stopPropagation()}
             >
-              حذف حساب کاربری
-            </h3>
-            <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
-              آیا از حذف دائمی حساب کاربری خود مطمئن هستید؟ این عمل قابل بازگشت نیست.
-            </p>
-            <div className="flex gap-3 w-full mt-2">
-              <Button
-                title="انصراف"
-                onPress={() => setShowDeleteConfirm(false)}
-                variant="outline"
-                size="lg"
-                className="flex-1"
+              {/* هدر */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                  کد تایید حذف حساب
+                </h3>
+                <button
+                  onClick={() => setShowDeleteOtp(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: colors.background }}
+                >
+                  <FiX size={16} style={{ color: colors.textMain }} />
+                </button>
+              </div>
+
+              <p className="text-xs text-center" style={{ color: colors.textSecondary }}>
+                کد ارسال‌شده به{' '}
+                <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                  {toPersianDigit(maskPhone(user?.phone || '09123456789'))}
+                </span>{' '}
+                را وارد کنید
+              </p>
+
+              {/* OTP Inputs */}
+              <OTPInput
+                value={deleteOtp}
+                onChange={(newOtp) => {
+                  setDeleteOtp(newOtp);
+                  if (deleteOtpError) setDeleteOtpError('');
+                }}
+                length={OTP_LENGTH}
+                error={deleteOtpError}
+                currentBox={deleteOtpCurrentBox}
+                onCurrentBoxChange={setDeleteOtpCurrentBox}
               />
+
+              {deleteOtpError && (
+                <p className="text-center text-sm" style={{ color: '#E57373' }}>
+                  {deleteOtpError}
+                </p>
+              )}
+
+              {/* ارسال مجدد */}
+              <div className="flex justify-center">
+                {deleteCanResend ? (
+                  <button onClick={handleResendDeleteOtp} type="button">
+                    <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                      ارسال مجدد کد
+                    </span>
+                  </button>
+                ) : (
+                  <span className="text-sm" style={{ color: colors.textSecondary }}>
+                    ارسال مجدد تا {formatTime(deleteTimer)}
+                  </span>
+                )}
+              </div>
+
               <Button
-                title="حذف دائمی"
-                onPress={handleDeleteAccount}
+                title={deleteOtpLoading ? 'در حال حذف...' : 'تایید و حذف حساب'}
+                onPress={handleConfirmDelete}
+                loading={deleteOtpLoading}
+                disabled={deleteOtp.join('').length < OTP_LENGTH || deleteOtpLoading}
                 variant="primary"
                 size="lg"
-                className="flex-1"
+                fullWidth
                 style={{ backgroundColor: '#E53935' }}
               />
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </ScreenWrapper>
   );
 }

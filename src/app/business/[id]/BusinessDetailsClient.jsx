@@ -38,13 +38,45 @@ export default function BusinessDetailsPage() {
   const [activePortfolio, setActivePortfolio] = useState(null);
 
   // ═══════ دریافت جزئیات از API ═══════
+  // src/app/business/[id]/BusinessDetailsClient.jsx
+  // فقط بخش useEffect برای دریافت داده را پیدا و جایگزین کنید:
+
+  // ═══════ دریافت جزئیات از API ═══════
   useEffect(() => {
     const fetchBusiness = async () => {
       setIsLoading(true);
       try {
         if (!USE_MOCK) {
           const response = await businessesService.getPublicBusiness(params.id);
-          setBusiness(response.data);
+          const b = response.data;
+
+          // تبدیل فرمت بک‌اند به فرمت فرانت
+          const businessData = {
+            id: b.id,
+            name: b.name,
+            category: b.category?.name || '',
+            city: b.city?.name || '',
+            address: b.address,
+            phone: b.phone,
+            workingHours: b.working_hours,
+            about: b.about,
+            rating: b.rating,
+            reviewsCount: b.reviews_count,
+            VIP: b.is_vip,
+            logo: b.logo,
+            coverUrl: b.cover_image,
+            ownerPhoto: b.owner_photo,
+            ownerName: b.owner_name,
+            verifiedName: b.verified_name,
+            bookingSlug: b.booking_slug,
+            latitude: b.latitude,
+            longitude: b.longitude,
+            gallery: (b.gallery || []).map((img) => img.image_url || img.image),
+            services: b.services || [],
+            portfolios: [], // جداگانه دریافت شود
+          };
+
+          setBusiness(businessData);
         } else {
           setBusiness(MOCK_BUSINESS);
         }
@@ -55,6 +87,7 @@ export default function BusinessDetailsPage() {
         setIsLoading(false);
       }
     };
+
     fetchBusiness();
   }, [params.id, showToast]);
 

@@ -1,14 +1,9 @@
 // src/stores/usePriceListStore.js
 /**
- * Store لیست قیمت — بازنویسی با API
+ * Store لیست قیمت — بدون یادداشت (notes حذف شد)
  *
- * هماهنگ با بک‌اند:
- *   GET  /services/price-list/  → { id, theme, is_published, notes, services }
- *   PUT  /services/price-list/  → بروزرسانی theme / is_published / notes
- *
- * تم‌های مجاز: 'rose' | 'gold' | 'mint' | 'classic'
- *
- * ⚠️ نکته مهم: notes آرایه کامل است — هر بار همه notes ارسال می‌شوند
+ * قیمت‌ها فقط از بخش «خدمات» خوانده می‌شوند.
+ * تم و وضعیت انتشار قابل تغییر هستند.
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -21,8 +16,7 @@ const DEFAULT_LIST = (businessId) => ({
   businessId,
   themeId: 'classic',
   isPublished: false,
-  notes: [],
-  services: [], // خدمات از بک‌اند می‌آیند
+  services: [],
 });
 
 // ═══════ تبدیل فرمت بک‌اند به فرمت فرانت ═══════
@@ -30,12 +24,6 @@ const mapPriceListFromApi = (data, businessId) => ({
   businessId,
   themeId: data.theme || 'classic',
   isPublished: data.is_published || false,
-  notes: (data.notes || []).map((n) => ({
-    id: n.id,
-    label: n.label,
-    min: n.min_value,
-    max: n.max_value,
-  })),
   services: (data.services || []).map((s) => ({
     id: s.id,
     name: s.name,
@@ -53,11 +41,6 @@ const mapPriceListFromApi = (data, businessId) => ({
 const mapPriceListToApi = (list) => ({
   theme: list.themeId,
   is_published: list.isPublished,
-  notes: (list.notes || []).map((n) => ({
-    label: n.label,
-    min_value: n.min,
-    max_value: n.max,
-  })),
 });
 
 export const usePriceListStore = create(
@@ -73,7 +56,6 @@ export const usePriceListStore = create(
         set({ isLoading: true, error: null });
         try {
           if (USE_MOCK) {
-            // حالت Mock: ساختار پیش‌فرض
             const defaultList = DEFAULT_LIST(businessId);
             set((s) => ({
               lists: { ...s.lists, [businessId]: defaultList },
@@ -81,7 +63,6 @@ export const usePriceListStore = create(
             }));
             return defaultList;
           }
-
           const result = await priceListService.getPriceList();
           const mapped = mapPriceListFromApi(result.data, businessId);
           set((s) => ({
@@ -91,7 +72,6 @@ export const usePriceListStore = create(
           return mapped;
         } catch (error) {
           console.error('fetchPriceList failed:', error);
-          // Fallback به لیست پیش‌فرض
           const defaultList = DEFAULT_LIST(businessId);
           set((s) => ({
             lists: { ...s.lists, [businessId]: defaultList },
@@ -129,7 +109,6 @@ export const usePriceListStore = create(
       // ─── تغییر تم ───
       setTheme: (businessId, themeId) => {
         get().updateList(businessId, { themeId });
-        // ذخیره در بک‌اند (بدون مسدود کردن UI)
         if (!USE_MOCK) {
           const list = get().lists[businessId];
           priceListService
@@ -143,7 +122,6 @@ export const usePriceListStore = create(
         const current = get().lists[businessId] || DEFAULT_LIST(businessId);
         const next = !current.isPublished;
         get().updateList(businessId, { isPublished: next });
-        // ذخیره در بک‌اند
         if (!USE_MOCK) {
           const list = get().lists[businessId];
           priceListService
@@ -151,37 +129,6 @@ export const usePriceListStore = create(
             .catch((err) => console.error('togglePublish API failed:', err));
         }
         return next;
-      },
-
-      // ─── افزودن note ───
-      addNote: (businessId, note) => {
-        const current = get().lists[businessId] || DEFAULT_LIST(businessId);
-        const newNote = { ...note, id: `nt_${Date.now()}` };
-        get().updateList(businessId, {
-          notes: [...current.notes, newNote],
-        });
-        // ذخیره در بک‌اند
-        if (!USE_MOCK) {
-          const list = get().lists[businessId];
-          priceListService
-            .updatePriceList(mapPriceListToApi(list))
-            .catch((err) => console.error('addNote API failed:', err));
-        }
-      },
-
-      // ─── حذف note ───
-      deleteNote: (businessId, noteId) => {
-        const current = get().lists[businessId] || DEFAULT_LIST(businessId);
-        get().updateList(businessId, {
-          notes: current.notes.filter((n) => n.id !== noteId),
-        });
-        // ذخیره در بک‌اند
-        if (!USE_MOCK) {
-          const list = get().lists[businessId];
-          priceListService
-            .updatePriceList(mapPriceListToApi(list))
-            .catch((err) => console.error('deleteNote API failed:', err));
-        }
       },
 
       // ─── دریافت تم ───
