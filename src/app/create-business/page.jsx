@@ -58,19 +58,50 @@ export default function CreateBusinessPage() {
   };
 
   const validateForm = () => {
-    if (!formData.name?.trim()) { showToast('نام کسب‌وکار الزامی است', 'error'); return false; }
-    if (!formData.categoryId) { showToast('نوع کسب‌وکار را انتخاب کنید', 'error'); return false; }
-    if (!formData.provinceId) { showToast('استان را انتخاب کنید', 'error'); return false; }
-    if (!formData.cityId) { showToast('شهر را انتخاب کنید', 'error'); return false; }
-    if (!formData.address?.trim() || formData.address.trim().length < 10) {
-      showToast('آدرس باید حداقل ۱۰ کاراکتر باشد', 'error'); return false;
+    if (!formData.name?.trim()) {
+      showToast('نام کسب‌وکار الزامی است', 'error');
+      return false;
     }
-    if (!formData.phone?.trim()) { showToast('شماره تماس الزامی است', 'error'); return false; }
-    if (!formData.workingHours?.trim()) { showToast('ساعات کاری الزامی است', 'error'); return false; }
-    if (!formData.about?.trim()) { showToast('توضیحات الزامی است', 'error'); return false; }
-    if (!formData.coverUrl) { showToast('تصویر کاور الزامی است', 'error'); return false; }
-    if (!formData.ownerPhoto) { showToast('تصویر صاحب کسب‌وکار الزامی است', 'error'); return false; }
-    if (!formData.location) { showToast('موقعیت روی نقشه الزامی است', 'error'); return false; }
+    if (!formData.categoryId) {
+      showToast('نوع کسب‌وکار را انتخاب کنید', 'error');
+      return false;
+    }
+    if (!formData.provinceId) {
+      showToast('استان را انتخاب کنید', 'error');
+      return false;
+    }
+    if (!formData.cityId) {
+      showToast('شهر را انتخاب کنید', 'error');
+      return false;
+    }
+    if (!formData.address?.trim() || formData.address.trim().length < 10) {
+      showToast('آدرس باید حداقل ۱۰ کاراکتر باشد', 'error');
+      return false;
+    }
+    if (!formData.phone?.trim()) {
+      showToast('شماره تماس الزامی است', 'error');
+      return false;
+    }
+    if (!formData.workingHours?.trim()) {
+      showToast('ساعات کاری الزامی است', 'error');
+      return false;
+    }
+    if (!formData.about?.trim()) {
+      showToast('توضیحات الزامی است', 'error');
+      return false;
+    }
+    if (!formData.coverUrl) {
+      showToast('تصویر کاور الزامی است', 'error');
+      return false;
+    }
+    if (!formData.ownerPhoto) {
+      showToast('تصویر صاحب کسب‌وکار الزامی است', 'error');
+      return false;
+    }
+    if (!formData.location) {
+      showToast('موقعیت روی نقشه الزامی است', 'error');
+      return false;
+    }
     return true;
   };
 
@@ -101,7 +132,10 @@ export default function CreateBusinessPage() {
     if (!termsAccepted) {
       return (
         <TermsAndConditionsStep
-          onAccept={() => { setTermsAccepted(true); setCurrentStep(1); }}
+          onAccept={() => {
+            setTermsAccepted(true);
+            setCurrentStep(1);
+          }}
           onDecline={() => router.back()}
         />
       );

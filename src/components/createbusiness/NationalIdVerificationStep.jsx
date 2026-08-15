@@ -1,7 +1,14 @@
 // src/components/createbusiness/NationalIdVerificationStep.jsx
 'use client';
 import { useState } from 'react';
-import { FiShield, FiCheckCircle, FiAlertCircle, FiArrowLeft, FiLock, FiUser } from 'react-icons/fi';
+import {
+  FiShield,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiArrowLeft,
+  FiLock,
+  FiUser,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import Button from '@/components/common/Button';
@@ -189,9 +196,7 @@ export default function NationalIdVerificationStep({
             className="flex-1 bg-transparent outline-none text-base font-[Vazir-Medium] text-center tracking-widest"
             style={{ color: colors.textMain, direction: 'ltr' }}
           />
-          {nationalId.length === 10 && isValid && (
-            <FiCheckCircle size={20} color="#4CAF50" />
-          )}
+          {nationalId.length === 10 && isValid && <FiCheckCircle size={20} color="#4CAF50" />}
         </div>
 
         {/* شمارنده رقم */}
@@ -208,7 +213,10 @@ export default function NationalIdVerificationStep({
         </div>
 
         {/* نوار پیشرفت */}
-        <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: colors.border }}>
+        <div
+          className="h-1.5 rounded-full overflow-hidden"
+          style={{ backgroundColor: colors.border }}
+        >
           <div
             className="h-full rounded-full transition-all duration-300"
             style={{

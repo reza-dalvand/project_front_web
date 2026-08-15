@@ -38,10 +38,7 @@ const BUSINESS_CATEGORIES = [
 function RequiredLabel({ children }) {
   const { colors } = useTheme();
   return (
-    <label
-      className="block text-sm font-[Vazir-Medium] mb-2"
-      style={{ color: colors.textMain }}
-    >
+    <label className="block text-sm font-[Vazir-Medium] mb-2" style={{ color: colors.textMain }}>
       {children} <span style={{ color: '#E53935' }}>*</span>
     </label>
   );
@@ -155,8 +152,17 @@ export default function BasicInfoStep({
 
   const validateAll = useCallback(() => {
     const fields = [
-      'name', 'categoryId', 'provinceId', 'cityId', 'address',
-      'phone', 'workingHours', 'about', 'coverUrl', 'ownerPhoto', 'location',
+      'name',
+      'categoryId',
+      'provinceId',
+      'cityId',
+      'address',
+      'phone',
+      'workingHours',
+      'about',
+      'coverUrl',
+      'ownerPhoto',
+      'location',
     ];
     const newErrors = {};
     let hasError = false;
@@ -184,7 +190,12 @@ export default function BasicInfoStep({
     onUpdate(key, value);
     if (errors[key]) {
       const error = validateField(key, value);
-      if (!error) setErrors((p) => { const n = { ...p }; delete n[key]; return n; });
+      if (!error)
+        setErrors((p) => {
+          const n = { ...p };
+          delete n[key];
+          return n;
+        });
     }
   };
 
@@ -223,9 +234,17 @@ export default function BasicInfoStep({
     const { newErrors, isValid } = validateAll();
     setErrors(newErrors);
     setTouched({
-      name: true, categoryId: true, provinceId: true, cityId: true,
-      address: true, phone: true, workingHours: true, about: true,
-      coverUrl: true, ownerPhoto: true, location: true,
+      name: true,
+      categoryId: true,
+      provinceId: true,
+      cityId: true,
+      address: true,
+      phone: true,
+      workingHours: true,
+      about: true,
+      coverUrl: true,
+      ownerPhoto: true,
+      location: true,
     });
     if (!isValid) return;
     onSubmit?.(buildFormData());
@@ -233,9 +252,17 @@ export default function BasicInfoStep({
 
   // ─── شمارنده فیلدهای پرشده ───
   const filledCount = [
-    formData.name, formData.categoryId, formData.provinceId, formData.cityId,
-    formData.address, formData.phone, formData.workingHours, formData.about,
-    formData.coverUrl, formData.ownerPhoto, formData.location,
+    formData.name,
+    formData.categoryId,
+    formData.provinceId,
+    formData.cityId,
+    formData.address,
+    formData.phone,
+    formData.workingHours,
+    formData.about,
+    formData.coverUrl,
+    formData.ownerPhoto,
+    formData.location,
   ].filter(Boolean).length;
   const totalCount = 11;
 
@@ -293,7 +320,10 @@ export default function BasicInfoStep({
           <RequiredLabel>تصویر کاور سالن</RequiredLabel>
           <ImageUploader
             value={formData.coverUrl}
-            onChange={(url) => { handleFieldChange('coverUrl', url); markTouched('coverUrl'); }}
+            onChange={(url) => {
+              handleFieldChange('coverUrl', url);
+              markTouched('coverUrl');
+            }}
             variant="cover"
             hint="تصویر با کیفیت از محیط سالن (۱۲۰۰×۴۰۰)"
           />
@@ -312,14 +342,20 @@ export default function BasicInfoStep({
           <div className="flex flex-col items-center gap-3">
             <ImageUploader
               value={formData.ownerPhoto}
-              onChange={(url) => { handleFieldChange('ownerPhoto', url); markTouched('ownerPhoto'); }}
+              onChange={(url) => {
+                handleFieldChange('ownerPhoto', url);
+                markTouched('ownerPhoto');
+              }}
               variant="avatar"
             />
             <div
               className="flex items-start gap-2 p-3 rounded-xl w-full"
               style={{ backgroundColor: colors.primary + '08' }}
             >
-              <FiCheckCircle size={14} style={{ color: colors.primary, flexShrink: 0, marginTop: 2 }} />
+              <FiCheckCircle
+                size={14}
+                style={{ color: colors.primary, flexShrink: 0, marginTop: 2 }}
+              />
               <span className="text-xs leading-5" style={{ color: colors.textSecondary }}>
                 عکس واقعی مدیر، اعتماد مشتریان را افزایش می‌دهد
               </span>
@@ -373,7 +409,10 @@ export default function BasicInfoStep({
               placeholder="انتخاب کنید"
               value={formData.categoryId}
               options={categories}
-              onSelect={(val) => { handleFieldChange('categoryId', val); markTouched('categoryId'); }}
+              onSelect={(val) => {
+                handleFieldChange('categoryId', val);
+                markTouched('categoryId');
+              }}
             />
             <FieldError message={errors.categoryId} />
           </div>
@@ -492,7 +531,10 @@ export default function BasicInfoStep({
                 placeholder={formData.provinceId ? 'انتخاب' : 'ابتدا استان'}
                 value={formData.cityId}
                 options={cities}
-                onSelect={(val) => { handleFieldChange('cityId', val); markTouched('cityId'); }}
+                onSelect={(val) => {
+                  handleFieldChange('cityId', val);
+                  markTouched('cityId');
+                }}
               />
               <FieldError message={errors.cityId} />
             </div>
