@@ -1,10 +1,12 @@
 // src/app/business/[id]/BusinessDetailsClient.jsx
 'use client';
-import { useState, useCallback, useEffect } from 'react';
+
+import { useState, useCallback, useEffect, useMemo } from 'react'; // ✅ useMemo اضافه شد
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
+import { usePriceListStore } from '@/stores/usePriceListStore'; // ✅ جدید
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import BusinessHero from '@/components/home/BusinessHero';
 import BusinessInfoCard from '@/components/home/BusinessInfoCard';
@@ -22,6 +24,19 @@ const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), 
 const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'), { ssr: false });
 const PriceListMenu = dynamic(() => import('@/components/priceList/PriceListMenu'), { ssr: false });
 
+// ✅ نگاشت خدمات کسب‌وکار به فرمت لیست قیمت
+const mapServiceToPriceList = (s) => ({
+  id: s.id,
+  name: s.name,
+  typeName: s.typeName || '',
+  typeId: s.typeId || '',
+  originalPrice: s.originalPrice ?? s.price ?? 0,
+  discountPercent: s.discountPercent ?? s.discount ?? 0,
+  finalPrice: s.finalPrice ?? s.price ?? 0,
+  hasDeposit: s.hasDeposit ?? false,
+  depositAmount: s.depositAmount ?? 0,
+});
+
 export default function BusinessDetailsPage() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -37,6 +52,10 @@ export default function BusinessDetailsPage() {
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
   const [activePortfolio, setActivePortfolio] = useState(null);
 
+  // ✅ جدید: لیست قیمت از استور
+  const priceListFromStore = usePriceListStore((s) => s.lists[params.id]);
+  const fetchPriceList = usePriceListStore((s) => s.fetchPriceList);
+
   // ═══════ دریافت جزئیات از API ═══════
   useEffect(() => {
     const fetchBusiness = async () => {
@@ -45,8 +64,6 @@ export default function BusinessDetailsPage() {
         if (!USE_MOCK) {
           const response = await businessesService.getPublicBusiness(params.id);
           const b = response.data;
-
-          // تبدیل فرمت بک‌اند به فرمت فرانت
           const businessData = {
             id: b.id,
             name: b.name,
@@ -69,9 +86,8 @@ export default function BusinessDetailsPage() {
             longitude: b.longitude,
             gallery: (b.gallery || []).map((img) => img.image_url || img.image),
             services: b.services || [],
-            portfolios: [], // جداگانه دریافت شود
+            portfolios: [],
           };
-
           setBusiness(businessData);
         } else {
           setBusiness(MOCK_BUSINESS);
@@ -83,10 +99,58 @@ export default function BusinessDetailsPage() {
         setIsLoading(false);
       }
     };
-
     fetchBusiness();
   }, [params.id, showToast]);
 
+  // ✅ جدید: دریافت لیست قیمت بعد از لود کسب‌وکار
+  useEffect(() => {
+    if (business?.id) {
+      fetchPriceList(business.id).catch(() => {});
+    }
+  }, [business?.id, fetchPriceList]);
+
+  // ✅ جدید: ساخت settings نهایی لیست قیمت
+  const priceListSettings = useMemo(() => {
+    const storeList = priceListFromStore;
+
+    // اگر از استور آمد
+    if (storeList) {
+      // اگر services خالی است، از services کسب‌وکار پر کن
+      if (
+        (!storeList.services || storeList.services.length === 0) &&
+        business?.services?.length
+      ) {
+        return {
+          ...storeList,
+          services: business.services
+            .filter((s) => s.isActive !== false)
+            .map(mapServiceToPriceList),
+        };
+      }
+      return storeList;
+    }
+
+    // اگر از استور نیامد، از services کسب‌وکار بساز
+    if (business?.services?.length) {
+      return {
+        businessId: business.id,
+        themeId: 'classic',
+        isPublished: true,
+        services: business.services
+          .filter((s) => s.isActive !== false)
+          .map(mapServiceToPriceList),
+      };
+    }
+
+    return null;
+  }, [priceListFromStore, business]);
+
+  // ✅ جدید: آیا تب قیمت‌ها نمایش داده شود؟
+  const showPrices =
+    priceListSettings?.isPublished === true &&
+    (priceListSettings?.services?.length ?? 0) > 0;
+
+  // ─── Handlers (بدون تغییر) ───
   const openBooking = useCallback((service) => {
     setSelectedService(service);
     setBookingModalVisible(true);
@@ -131,7 +195,6 @@ export default function BusinessDetailsPage() {
     );
   }
 
-  // تبدیل گالری از فرمت API به فرمت کامپوننت
   const gallery = (business.gallery || []).map((img) => img.image_url || img.image || img);
   const services = business.services || [];
   const portfolios = business.portfolios || [];
@@ -147,8 +210,17 @@ export default function BusinessDetailsPage() {
           isFavorite={isFavorite}
           onFavoritePress={toggleFavorite}
         />
+
         <BusinessInfoCard business={business} onMapPress={openMap} />
-        <BusinessTabs activeTab={activeTab} onTabChange={setActiveTab} colors={colors} />
+
+        {/* ✅ showPrices اضافه شد */}
+        <BusinessTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          colors={colors}
+          showPrices={showPrices}
+        />
+
         <div className="px-5 pt-1">
           {activeTab === 'services' && (
             <div className="flex flex-col gap-3 pb-2">
@@ -157,10 +229,22 @@ export default function BusinessDetailsPage() {
               ))}
             </div>
           )}
+
+          {/* ✅ جدید: تب قیمت‌ها */}
+          {activeTab === 'prices' && priceListSettings && (
+            <PriceListMenu
+              businessName={business.name}
+              businessLogo={business.logo}
+              settings={priceListSettings}
+            />
+          )}
+
           {activeTab === 'honors' && <HonorMedalsSection businessId={business.id} />}
+
           {activeTab === 'portfolio' && (
             <PortfolioGrid portfolios={portfolios} onPortfolioPress={openPortfolio} />
           )}
+
           {activeTab === 'about' && <BusinessAbout business={business} />}
         </div>
       </div>

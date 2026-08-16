@@ -1,13 +1,10 @@
 // src/stores/usePriceListStore.js
-/**
- * Store لیست قیمت — با API
- * قیمت‌ها از services کسب‌وکار خوانده می‌شوند
- */
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { priceListService } from '@/api';
 import { USE_MOCK } from '@/api/config';
-import { PRICE_LIST_THEMES } from '@/data/priceList';
+import { PRICE_LIST_THEMES, INITIAL_PRICE_LISTS } from '@/data/priceList'; // ✅ اضافه شد
 import { useBusinessStore } from './useBusinessStore';
 
 const DEFAULT_LIST = (businessId) => ({
@@ -17,7 +14,6 @@ const DEFAULT_LIST = (businessId) => ({
   services: [],
 });
 
-// ═══════ تبدیل services بیزینس‌استور به فرمت لیست قیمت ═══════
 const buildServicesFromBusiness = () => {
   const businessData = useBusinessStore.getState().businessData;
   return (businessData?.services || [])
@@ -68,13 +64,14 @@ export const usePriceListStore = create(
         set({ isLoading: true, error: null });
         try {
           if (USE_MOCK) {
-            // ✅ در حالت MOCK، services از BusinessStore خوانده می‌شود
             const services = buildServicesFromBusiness();
             const existing = get().lists[businessId];
+            // ✅ جدید: fallback به INITIAL_PRICE_LISTS
+            const initial = INITIAL_PRICE_LISTS[businessId];
             const mockList = {
               businessId,
-              themeId: existing?.themeId || 'classic',
-              isPublished: existing?.isPublished || false,
+              themeId: existing?.themeId || initial?.themeId || 'classic',
+              isPublished: existing?.isPublished ?? initial?.isPublished ?? false,
               services,
             };
             set((s) => ({
@@ -111,10 +108,17 @@ export const usePriceListStore = create(
       ensureList: (businessId) => {
         if (!get().lists[businessId]) {
           const services = buildServicesFromBusiness();
+          // ✅ جدید: از INITIAL_PRICE_LISTS به عنوان پایه
+          const initial = INITIAL_PRICE_LISTS[businessId];
           set((s) => ({
             lists: {
               ...s.lists,
-              [businessId]: { ...DEFAULT_LIST(businessId), services },
+              [businessId]: {
+                ...DEFAULT_LIST(businessId),
+                themeId: initial?.themeId || 'classic',
+                isPublished: initial?.isPublished ?? false,
+                services,
+              },
             },
           }));
         }

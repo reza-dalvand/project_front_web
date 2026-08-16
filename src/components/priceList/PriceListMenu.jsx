@@ -92,41 +92,40 @@ export default function PriceListMenu({ businessName, businessLogo, settings }) 
                 </span>
                 <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                {sec.items.map((item) => {
-                  const price = toThousands(item.finalPrice ?? item.originalPrice ?? 0);
-                  const hasDeposit = item.hasDeposit && item.depositAmount > 0;
-                  const depositPrice = hasDeposit ? toThousands(item.depositAmount) : 0;
-                  return (
-                    <div key={item.id} className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1">
-                        <span
-                          className="text-[13px] font-[Vazir-Medium] truncate"
-                          style={{ color: theme.text }}
-                        >
-                          {item.name}
-                        </span>
-                        <div
-                          className="flex-1 border-b border-dotted mx-0.5 mb-1 min-w-[8px]"
-                          style={{ borderColor: theme.dot }}
-                        />
-                        <span
-                          className="text-[13px] font-[Vazir-Bold] flex-shrink-0"
-                          style={{ color: theme.accent }}
-                        >
-                          {toPersianDigit(price)}
-                        </span>
-                        <span
-                          className="text-[10px] font-[Vazir] flex-shrink-0 mr-1"
-                          style={{ color: theme.textSecondary }}
-                        >
-                          {hasDeposit ? `بیعانه: ${toPersianDigit(depositPrice)}` : 'مبلغ کامل'}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+
+{/* ❌ قبلی: <div className="grid grid-cols-2 gap-x-4 gap-y-3"> */}
+{/* ✅ FIX: تک‌ستونه — هر آیتم تمام عرض کارت را می‌گیرد */}
+<div className="flex flex-col gap-3">
+  {sec.items.map((item) => {
+    const price = toThousands(item.finalPrice ?? item.originalPrice ?? 0);
+    const hasDeposit = item.hasDeposit && item.depositAmount > 0;
+    const depositPrice = hasDeposit ? toThousands(item.depositAmount) : 0;
+    return (
+<div key={item.id} className="flex items-center justify-between w-full min-w-0 gap-2">
+  {/* نام — سمت راست */}
+  <span
+    className="truncate text-[13px] font-[Vazir-Medium] leading-[22px]"
+    style={{ color: theme.text }}
+  >
+    {item.name}
+  </span>
+
+  {/* قیمت + بیعانه — سمت چپ */}
+  <span
+    className="whitespace-nowrap flex-shrink-0 text-[13px] font-[Vazir-Bold] leading-[22px]"
+    style={{ color: theme.accent }}
+  >
+    {toPersianDigit(price)}
+    {hasDeposit && (
+      <span className="text-[10px] font-[Vazir]" style={{ color: theme.textSecondary }}>
+        {' '}(بیعانه: {toPersianDigit(depositPrice)})
+      </span>
+    )}
+  </span>
+</div>
+    );
+  })}
+</div>
             </div>
           ))
         ) : (
