@@ -116,10 +116,7 @@ export default function BusinessDetailsPage() {
     // اگر از استور آمد
     if (storeList) {
       // اگر services خالی است، از services کسب‌وکار پر کن
-      if (
-        (!storeList.services || storeList.services.length === 0) &&
-        business?.services?.length
-      ) {
+      if ((!storeList.services || storeList.services.length === 0) && business?.services?.length) {
         return {
           ...storeList,
           services: business.services
@@ -136,9 +133,7 @@ export default function BusinessDetailsPage() {
         businessId: business.id,
         themeId: 'classic',
         isPublished: true,
-        services: business.services
-          .filter((s) => s.isActive !== false)
-          .map(mapServiceToPriceList),
+        services: business.services.filter((s) => s.isActive !== false).map(mapServiceToPriceList),
       };
     }
 
@@ -147,8 +142,7 @@ export default function BusinessDetailsPage() {
 
   // ✅ جدید: آیا تب قیمت‌ها نمایش داده شود؟
   const showPrices =
-    priceListSettings?.isPublished === true &&
-    (priceListSettings?.services?.length ?? 0) > 0;
+    priceListSettings?.isPublished === true && (priceListSettings?.services?.length ?? 0) > 0;
 
   // ─── Handlers (بدون تغییر) ───
   const openBooking = useCallback((service) => {
