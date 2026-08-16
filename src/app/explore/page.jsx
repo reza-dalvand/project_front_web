@@ -1,6 +1,7 @@
 // src/app/explore/page.jsx
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation'; // ✅ FIX: اضافه شد
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
@@ -31,9 +32,9 @@ const INITIAL_FILTERS = {
 
 export default function ExplorePage() {
   const { colors } = useTheme();
+  const router = useRouter(); // ✅ FIX: اضافه شد
   const { isAuthenticated, requireAuth } = useAuth();
   const togglePostFavorite = useFavoriteStore((s) => s.togglePostFavorite);
-
   const [allPosts, setAllPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activePost, setActivePost] = useState(null);
@@ -104,6 +105,16 @@ export default function ExplorePage() {
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
   const handleClearFilters = useCallback(() => setFilters(INITIAL_FILTERS), []);
 
+  // ═══════ ✅ FIX: هندلر ناوبری به صفحه کسب‌وکار ═══════
+  const handleNavigateToBusiness = useCallback(
+    (businessId) => {
+      if (businessId) {
+        router.push(`/business/${businessId}`);
+      }
+    },
+    [router]
+  );
+
   return (
     <ScreenWrapper scrollable={false} padding={0}>
       {/* هدر */}
@@ -152,12 +163,12 @@ export default function ExplorePage() {
         currentFilters={filters}
       />
 
-      {/* مدال پست */}
       <PostModal
         post={activePost}
         visible={!!activePost}
         onClose={handlePostClose}
         onSave={handleSave}
+        onNavigateToProfile={handleNavigateToBusiness}
       />
     </ScreenWrapper>
   );

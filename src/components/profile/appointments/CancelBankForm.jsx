@@ -5,21 +5,8 @@ import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import { toPersianDigit } from '@/utils/numberUtils';
-
-const BANKS = [
-  { id: 'meli', label: 'بانک ملی ایران' },
-  { id: 'mellat', label: 'بانک ملت' },
-  { id: 'saman', label: 'بانک سامان' },
-  { id: 'pasargad', label: 'بانک پاسارگاد' },
-  { id: 'saderat', label: 'بانک صادرات ایران' },
-  { id: 'tejarat', label: 'بانک تجارت' },
-  { id: 'sepah', label: 'بانک سپه' },
-  { id: 'keshavarzi', label: 'بانک کشاورزی' },
-  { id: 'maskan', label: 'بانک مسکن' },
-  { id: 'refah', label: 'بانک رفاه کارگران' },
-  { id: 'parsian', label: 'بانک پارسیان' },
-  { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
-];
+// ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
+import { getBankOptions } from '@/constants/banks';
 
 export default function CancelBankForm({
   bankId,
@@ -31,6 +18,9 @@ export default function CancelBankForm({
   onCardChange,
 }) {
   const { colors } = useTheme();
+
+  // ✅ FIX P2: استفاده از لیست مشترک
+  const bankOptions = getBankOptions();
 
   return (
     <>
@@ -45,13 +35,15 @@ export default function CancelBankForm({
           </p>
         </div>
       </div>
+
       <Dropdown
         label="نام بانک *"
         placeholder="بانک خود را انتخاب کنید"
         value={bankId}
-        options={BANKS}
+        options={bankOptions}
         onSelect={onBankChange}
       />
+
       <Input
         label="شماره شبا *"
         placeholder="IR000000000000000000000000"
@@ -60,6 +52,7 @@ export default function CancelBankForm({
         maxLength={26}
         hint="شماره شبا باید با IR شروع شده و ۲۶ کاراکتر باشد"
       />
+
       <Input
         label="شماره کارت *"
         placeholder="۶۰۳۷۹۹۱۸۱۲۳۴۵۶۷۸"
@@ -69,6 +62,7 @@ export default function CancelBankForm({
         maxLength={16}
         rightIcon={<FiCreditCard size={18} style={{ color: colors.textSecondary }} />}
       />
+
       {/* راهنمای مالکیت حساب */}
       <div
         className="flex items-start gap-2 p-3 rounded-xl border"

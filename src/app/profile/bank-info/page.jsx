@@ -15,22 +15,8 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { bankInfoService } from '@/api';
 import { USE_MOCK } from '@/api/config';
-
-// لیست بانک‌ها
-const BANKS = [
-  { id: 'meli', label: 'بانک ملی ایران' },
-  { id: 'mellat', label: 'بانک ملت' },
-  { id: 'saman', label: 'بانک سامان' },
-  { id: 'pasargad', label: 'بانک پاسارگاد' },
-  { id: 'saderat', label: 'بانک صادرات ایران' },
-  { id: 'tejarat', label: 'بانک تجارت' },
-  { id: 'sepah', label: 'بانک سپه' },
-  { id: 'keshavarzi', label: 'بانک کشاورزی' },
-  { id: 'maskan', label: 'بانک مسکن' },
-  { id: 'refah', label: 'بانک رفاه کارگران' },
-  { id: 'parsian', label: 'بانک پارسیان' },
-  { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
-];
+// ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
+import { getBankOptions } from '@/constants/banks';
 
 export default function BankInfoPage() {
   const router = useRouter();
@@ -48,6 +34,9 @@ export default function BankInfoPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [isComplete, setIsComplete] = useState(false);
+
+  // ✅ FIX P2: استفاده از لیست مشترک
+  const bankOptions = getBankOptions();
 
   // دریافت اطلاعات بانکی
   useEffect(() => {
@@ -79,24 +68,19 @@ export default function BankInfoPage() {
 
   const handleSave = async () => {
     const newErrors = {};
-
     if (!formData.bank_name.trim()) {
       newErrors.bank_name = 'نام بانک الزامی است';
     }
-
     if (formData.sheba && formData.sheba.length !== 26) {
       newErrors.sheba = 'شماره شبا باید ۲۶ کاراکتر باشد (IR + ۲۴ رقم)';
     }
-
     if (formData.card_number && formData.card_number.length !== 16) {
       newErrors.card_number = 'شماره کارت باید ۱۶ رقم باشد';
     }
-
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
     setIsSaving(true);
-
     try {
       if (!USE_MOCK) {
         await bankInfoService.updateBankInfo({
@@ -107,7 +91,6 @@ export default function BankInfoPage() {
           owner_name: formData.owner_name,
         });
       }
-
       setIsSaving(false);
       showToast('اطلاعات بانکی با موفقیت ذخیره شد', 'success');
     } catch (err) {
@@ -150,7 +133,6 @@ export default function BankInfoPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="اطلاعات بانکی" onBackPress={() => router.back()} />
-
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-5">
         {/* وضعیت */}
         <Card
@@ -203,7 +185,7 @@ export default function BankInfoPage() {
             label="نام بانک *"
             placeholder="بانک را انتخاب کنید"
             value={formData.bank_name}
-            options={BANKS}
+            options={bankOptions}
             onSelect={(val) => {
               setFormData((prev) => ({ ...prev, bank_name: val }));
               if (errors.bank_name) setErrors((prev) => ({ ...prev, bank_name: '' }));

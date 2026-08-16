@@ -1,12 +1,20 @@
+// src/components/booking/BookingStepIndicator.jsx
 'use client';
-
-import { FiInfo, FiCalendar, FiClock, FiCheck } from 'react-icons/fi';
+import { FiInfo, FiCalendar, FiClock, FiCheck, FiUser } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 
+// ✅ نگاشت رشته به کامپوننت آیکون
+const ICON_MAP = {
+  user: FiUser,
+  info: FiInfo,
+  calendar: FiCalendar,
+  clock: FiClock,
+};
+
 const DEFAULT_STEPS = [
-  { id: 1, label: 'بررسی', icon: FiInfo },
-  { id: 2, label: 'تاریخ', icon: FiCalendar },
-  { id: 3, label: 'ساعت', icon: FiClock },
+  { id: 1, label: 'بررسی', icon: 'info' },
+  { id: 2, label: 'تاریخ', icon: 'calendar' },
+  { id: 3, label: 'ساعت', icon: 'clock' },
 ];
 
 export default function BookingStepIndicator({ currentStep, steps = DEFAULT_STEPS }) {
@@ -17,7 +25,10 @@ export default function BookingStepIndicator({ currentStep, steps = DEFAULT_STEP
       {steps.map((step, index) => {
         const isCompleted = currentStep > step.id;
         const isActive = currentStep === step.id;
-        const Icon = step.icon;
+
+        // ✅ FIX: تبدیل رشته یا کامپوننت به کامپوننت قابل رندر
+        const IconComponent =
+          typeof step.icon === 'string' ? ICON_MAP[step.icon] || FiInfo : step.icon;
 
         return (
           <div key={step.id} className="flex items-center gap-2 flex-1">
@@ -37,7 +48,7 @@ export default function BookingStepIndicator({ currentStep, steps = DEFAULT_STEP
                 {isCompleted ? (
                   <FiCheck size={18} color="#fff" />
                 ) : (
-                  <Icon
+                  <IconComponent
                     size={16}
                     style={{
                       color: isActive ? colors.primary : colors.textSecondary,

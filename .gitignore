@@ -1,14 +1,8 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
+.yarn/install-state.gz
 
 # testing
 /coverage
@@ -30,8 +24,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# local env files
+.env*.local
+
+# ✅ اضافه شد: فایل‌های env محلی
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -40,92 +40,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# capacitor
+/android/
+/ios/
+capacitor.config.ts
 
-
-
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-
-/coverage
-
-# next.js
-
-/.next/
-/out/
-
-# production
-
-/build
-
-# Capacitor
-
-# Keep the native Android/iOS projects in Git if you want
-
-# reproducible native builds and team collaboration.
-
-# Do NOT ignore /android or /ios by default.
-
-/.capacitor/
-/.capacitor.config.*
-
-# Android
-
-# Local Android Studio / Gradle files
-
-/android/.gradle/
-/android/local.properties
-/android/**/build/
-/android/**/captures/
-/android/**/.cxx/
-/android/**/.externalNativeBuild/
-
-# Android Studio
-
-*.iml
+# IDE
+.vscode/
 .idea/
-*.hprof
-
-# iOS (if added later)
-
-/ios/Pods/
-/ios/build/
-/ios/DerivedData/
-*.xcworkspace/xcuserdata/
-*.xcodeproj/xcuserdata/
-
-# misc
-
-.DS_Store
-*.pem
-
-# debug
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-
-.env*
-
-# vercel
-
-.vercel
-
-# typescript
-
-*.tsbuildinfo
-next-env.d.ts

@@ -12,6 +12,7 @@ import BookingTimeSelector from './BookingTimeSelector';
 import BookingNameStep from './BookingNameStep';
 import BookingReviewStep from './BookingReviewStep';
 import BookingSuccessStep from './BookingSuccessStep';
+import BookingFailedStep from './BookingFailedStep'; // ✅ جدید: مدال پرداخت ناموفق
 import BookingModalFooter from './BookingModalFooter';
 import TrustToggle from './TrustToggle';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
@@ -33,11 +34,10 @@ export default function BookingModal({
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
-
   const currentService = service || {};
   const instanceId = useRef('booking-modal');
 
-  // ─── State‌ها ───
+  // ─── State‌های اصلی ───
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -48,6 +48,21 @@ export default function BookingModal({
   const [availableDates, setAvailableDates] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // ═══════ ✅ FIX فاز ۳: State‌های استپ نام ═══════
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [nameConfirmed, setNameConfirmed] = useState(false);
+  const [nameErrors, setNameErrors] = useState({
+    firstName: '',
+    lastName: '',
+    confirm: '',
+  });
+
+  // ═══════ ✅ FIX: State‌های پرداخت ناموفق ═══════
+  const [bookingFailed, setBookingFailed] = useState(false);
+  const [bookingError, setBookingError] = useState(null);
+  // ═══════════════════════════════════════════════════════
 
   // ─── تشخیص نیاز به استپ نام ───
   const needsNameStep = useMemo(() => {
@@ -77,6 +92,50 @@ export default function BookingModal({
   const dateStepId = needsNameStep ? 3 : 2;
   const timeStepId = needsNameStep ? 4 : 3;
 
+  // ═══════ ✅ FIX فاز ۳: اعتبارسنجی نام ═══════
+  const validateName = () => {
+    const errors = { firstName: '', lastName: '', confirm: '' };
+    let isValid = true;
+
+    if (!firstName.trim()) {
+      errors.firstName = 'نام الزامی است';
+      isValid = false;
+    } else if (firstName.trim().length < 2) {
+      errors.firstName = 'نام باید حداقل ۲ کاراکتر باشد';
+      isValid = false;
+    }
+
+    if (!lastName.trim()) {
+      errors.lastName = 'نام خانوادگی الزامی است';
+      isValid = false;
+    } else if (lastName.trim().length < 2) {
+      errors.lastName = 'نام خانوادگی باید حداقل ۲ کاراکتر باشد';
+      isValid = false;
+    }
+
+    if (!nameConfirmed) {
+      errors.confirm = 'لطفاً تایید کنید که اطلاعات مطابق کارت بانکی است';
+      isValid = false;
+    }
+
+    setNameErrors(errors);
+    return isValid;
+  };
+
+  // ═══════ ✅ FIX فاز ۳: پیش‌پر کردن نام از پروفایل ═══════
+  const prefillNameFromUser = () => {
+    if (user?.firstName) setFirstName(user.firstName);
+    if (user?.lastName) setLastName(user.lastName);
+    // اگر نام کامل در user.name هست و firstName/lastName خالی هستند
+    if (!user?.firstName && !user?.lastName && user?.name) {
+      const parts = user.name.trim().split(' ');
+      if (parts.length >= 2) {
+        setFirstName(parts[0]);
+        setLastName(parts.slice(1).join(' '));
+      }
+    }
+  };
+
   // ─── Effects ───
   useEffect(() => {
     setMounted(true);
@@ -94,8 +153,23 @@ export default function BookingModal({
       setTrustEnabled(false);
       setIsSubmitting(false);
       setBookingResult(null);
+      // ═══════ ✅ FIX: ریست حالت خطا ═══════
+      setBookingFailed(false);
+      setBookingError(null);
+      // ═══════ ✅ FIX فاز ۳: ریست state‌های نام ═══════
+      setFirstName('');
+      setLastName('');
+      setNameConfirmed(false);
+      setNameErrors({ firstName: '', lastName: '', confirm: '' });
       setAvailableSlots([]);
+
+      // پیش‌پر کردن نام از پروفایل کاربر
+      if (needsNameStep) {
+        prefillNameFromUser();
+      }
+
       acquireScrollLock(instanceId.current);
+
       // دریافت روزهای آزاد
       if (businessId && currentService.id && !USE_MOCK) {
         fetchAvailableDates();
@@ -129,7 +203,6 @@ export default function BookingModal({
   // ─── دریافت اسلات‌های آزاد برای تاریخ انتخابی ───
   const fetchAvailableSlots = async (date) => {
     if (USE_MOCK) {
-      // Mock: تولید اسلات‌های نمونه
       const mockSlots = [];
       for (let h = 9; h < 21; h++) {
         for (let m = 0; m < 60; m += 30) {
@@ -150,7 +223,6 @@ export default function BookingModal({
       setAvailableSlots(mockSlots.filter((s) => s.is_available));
       return;
     }
-
     setSlotsLoading(true);
     try {
       const result = await schedulesService.getAvailableSlots(
@@ -173,7 +245,6 @@ export default function BookingModal({
   const priceSummary = useMemo(() => {
     const originalPrice = currentService.originalPrice ?? currentService.price ?? 0;
     const discountPercent = currentService.discountPercent ?? currentService.discount ?? 0;
-    const depositAmount = currentService.hasDeposit ? (currentService.depositAmount ?? 0) : 0;
     return buildPriceSummary(
       originalPrice,
       discountPercent,
@@ -189,7 +260,18 @@ export default function BookingModal({
     fetchAvailableSlots(date);
   };
 
+  // ═══════ ✅ FIX فاز ۳: اعتبارسنجی در استپ نام ═══════
   const handleNext = () => {
+    if (needsNameStep && currentStep === nameStepId) {
+      if (!validateName()) return;
+      // ذخیره نام در پروفایل کاربر برای استفاده‌های بعدی
+      const fullName = `${firstName.trim()} ${lastName.trim()}`;
+      updateUser({
+        name: fullName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
+    }
     if (currentStep < timeStepId) setCurrentStep((p) => p + 1);
   };
 
@@ -197,34 +279,47 @@ export default function BookingModal({
     if (currentStep > 1) setCurrentStep((p) => p - 1);
   };
 
+  // ═══════ ✅ FIX فاز ۳ + FIX: ریست کامل در handleClose ═══════
   const handleClose = () => {
     setCurrentStep(1);
     setSelectedDate(null);
     setSelectedTime(null);
     setBookingResult(null);
+    // ریست حالت خطا
+    setBookingFailed(false);
+    setBookingError(null);
+    // ریست state‌های نام
+    setFirstName('');
+    setLastName('');
+    setNameConfirmed(false);
+    setNameErrors({ firstName: '', lastName: '', confirm: '' });
     onClose?.();
   };
 
-  // ─── تایید رزرو ───
+  // ═══════ ✅ FIX: تلاش مجدد پس از خطا ═══════
+  const handleRetry = () => {
+    setBookingFailed(false);
+    setBookingError(null);
+    // برگشت به استپ ساعت برای پرداخت مجدد
+    setCurrentStep(timeStepId);
+  };
+  // ═══════════════════════════════════════════════════════
+
+  // ─── تایید رزرو و پرداخت ───
   const handleConfirm = async () => {
     if (!selectedDate || !selectedTime) return;
-
     setIsSubmitting(true);
     try {
       let result;
-
       if (!USE_MOCK) {
-        // فراخوانی واقعی API
-        // Payload هماهنگ با AppointmentCreateSerializer
         result = await appointmentsService.createAppointment({
           service_id: currentService.id,
           jy: selectedDate.jy,
           jm: selectedDate.jm,
           jd: selectedDate.jd,
-          time_slot: selectedTime.start_time, // "HH:MM"
+          time_slot: selectedTime.start_time,
         });
       } else {
-        // حالت Mock
         await new Promise((r) => setTimeout(r, 1200));
         result = {
           data: {
@@ -239,8 +334,10 @@ export default function BookingModal({
           },
         };
       }
-
       setBookingResult(result.data);
+      // اطمینان از پاک بودن حالت خطا
+      setBookingFailed(false);
+      setBookingError(null);
       setIsSubmitting(false);
       onConfirm?.({
         ...result.data,
@@ -251,21 +348,66 @@ export default function BookingModal({
       });
     } catch (err) {
       setIsSubmitting(false);
-      showToast(err.message || 'خطا در رزرو نوبت', 'error');
+
+      // ═══════ ✅ FIX: نمایش مدال خطا به جای فقط toast ═══════
+      const isPaymentError =
+        err.code === 'PAYMENT_FAILED' ||
+        err.code === 'GATEWAY_ERROR' ||
+        err.code === 'TRANSACTION_FAILED' ||
+        err.message?.includes('پرداخت') ||
+        err.message?.includes('درگاه') ||
+        err.message?.includes('بانکی');
+
+      if (isPaymentError || !USE_MOCK) {
+        // خطای پرداخت → مدال ناموفق
+        setBookingFailed(true);
+        setBookingError({
+          message: err.message || 'ارتباط با درگاه پرداخت برقرار نشد',
+          code: err.code || 'UNKNOWN',
+          trackingCode: err.details?.tracking_code || err.details?.trackingCode || null,
+        });
+      } else {
+        // خطای غیر پرداختی → toast
+        showToast(err.message || 'خطا در رزرو نوبت', 'error');
+      }
+      // ═══════════════════════════════════════════════════════
     }
   };
 
-  // ─── canProceed ───
+  // ─── canProceed ═══
   const canProceed = useMemo(() => {
-    if (needsNameStep && currentStep === nameStepId) return true; // اعتبارسنجی در خود استپ
+    // ═══════ ✅ FIX فاز ۳: اعتبارسنجی استپ نام ═══════
+    if (needsNameStep && currentStep === nameStepId) {
+      const isFirstNameValid = firstName.trim().length >= 2;
+      const isLastNameValid = lastName.trim().length >= 2;
+      return isFirstNameValid && isLastNameValid && nameConfirmed;
+    }
     if (currentStep === reviewStepId) return true;
     if (currentStep === dateStepId) return !!selectedDate;
     if (currentStep === timeStepId) return !!selectedTime;
     return false;
-  }, [currentStep, selectedDate, selectedTime, needsNameStep]);
+  }, [currentStep, selectedDate, selectedTime, needsNameStep, firstName, lastName, nameConfirmed]);
 
   // ─── رندر استپ فعلی ───
   const renderStepContent = () => {
+    // ═══════ ✅ FIX: مدال پرداخت ناموفق ═══════
+    if (bookingFailed) {
+      return (
+        <BookingFailedStep
+          service={currentService}
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+          depositAmount={priceSummary.depositAmount}
+          errorMessage={bookingError?.message}
+          trackingCode={bookingError?.trackingCode}
+          onRetry={handleRetry}
+          onClose={handleClose}
+        />
+      );
+    }
+    // ═══════════════════════════════════════════════════════
+
+    // مدال موفقیت
     if (bookingResult) {
       return (
         <BookingSuccessStep
@@ -280,9 +422,36 @@ export default function BookingModal({
       );
     }
 
+    // ═══════ ✅ FIX فاز ۳: پاس دادن props به BookingNameStep ═══════
     if (needsNameStep && currentStep === nameStepId) {
-      return <BookingNameStep />;
+      return (
+        <BookingNameStep
+          firstName={firstName}
+          lastName={lastName}
+          nameConfirmed={nameConfirmed}
+          nameErrors={nameErrors}
+          onFirstNameChange={(text) => {
+            setFirstName(text);
+            if (nameErrors.firstName) {
+              setNameErrors((prev) => ({ ...prev, firstName: '' }));
+            }
+          }}
+          onLastNameChange={(text) => {
+            setLastName(text);
+            if (nameErrors.lastName) {
+              setNameErrors((prev) => ({ ...prev, lastName: '' }));
+            }
+          }}
+          onNameConfirmedChange={(confirmed) => {
+            setNameConfirmed(confirmed);
+            if (nameErrors.confirm) {
+              setNameErrors((prev) => ({ ...prev, confirm: '' }));
+            }
+          }}
+        />
+      );
     }
+    // ═══════════════════════════════════════════════════════
 
     if (currentStep === reviewStepId) {
       return (
@@ -326,7 +495,6 @@ export default function BookingModal({
               </span>
             </button>
           )}
-
           {slotsLoading ? (
             <div className="flex items-center justify-center py-8">
               <div
@@ -349,14 +517,12 @@ export default function BookingModal({
                   با انتخاب ساعت و تپ روی دکمه پرداخت، بیعانه پرداخت و نوبت شما ثبت می‌شود
                 </span>
               </div>
-
               <BookingTimeSelector
                 slots={availableSlots}
                 selectedId={selectedTime?.id}
                 onSelect={(slot) => setSelectedTime(slot)}
               />
-
-              {/* سوئیچ اعتماد — فقط برای کاربرانی که قبلاً نوبت داشته‌اند */}
+              {/* سوئیچ اعتماد */}
               {isAuthenticated && <TrustToggle enabled={trustEnabled} onToggle={setTrustEnabled} />}
             </>
           )}
@@ -388,15 +554,22 @@ export default function BookingModal({
           className="flex items-center gap-3 px-4 sm:px-5 py-4 border-b flex-shrink-0"
           style={{ borderColor: colors.border }}
         >
+          {/* ✅ FIX: آیکون و عنوان متفاوت در حالت خطا */}
           <div
             className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: colors.primary + '15' }}
+            style={{
+              backgroundColor: bookingFailed ? '#E5393515' : colors.primary + '15',
+            }}
           >
-            <FiCalendar size={22} style={{ color: colors.primary }} />
+            {bookingFailed ? (
+              <FiX size={22} color="#E53935" />
+            ) : (
+              <FiCalendar size={22} style={{ color: colors.primary }} />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
-              رزرو نوبت
+              {bookingFailed ? 'خطا در پرداخت' : 'رزرو نوبت'}
             </h3>
             <p className="text-xs truncate" style={{ color: colors.textSecondary }}>
               {currentService.name || 'خدمت'}
@@ -411,16 +584,18 @@ export default function BookingModal({
           </button>
         </div>
 
-        {/* Step Indicator */}
-        {!bookingResult && <BookingStepIndicator steps={STEPS} currentStep={currentStep} />}
+        {/* Step Indicator — ✅ FIX: مخفی در حالت خطا */}
+        {!bookingResult && !bookingFailed && (
+          <BookingStepIndicator steps={STEPS} currentStep={currentStep} />
+        )}
 
         {/* محتوای اسکرولی */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-2 pb-10 w-full">
           {renderStepContent()}
         </div>
 
-        {/* فوتر */}
-        {!bookingResult && (
+        {/* فوتر — ✅ FIX: مخفی در حالت خطا */}
+        {!bookingResult && !bookingFailed && (
           <div
             className="px-4 sm:px-5 py-4 border-t flex-shrink-0"
             style={{ borderColor: colors.border }}

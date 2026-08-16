@@ -1,3 +1,4 @@
+// src/components/common/PriceGuideModal.jsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -12,13 +13,9 @@ import {
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
-import {
-  formatPrice,
-  APP_FEE_TIERS,
-  getCurrentFeeTier,
-  toPersianDigit,
-  MAX_APP_FEE,
-} from '@/utils/numberUtils';
+// ✅ FIX P1: import از price-utils به جای numberUtils
+import { formatPrice, toPersianDigit } from '@/utils/numberUtils';
+import { APP_FEE_TIERS, getCurrentFeeTier, MAX_APP_FEE } from '@/utils/price-utils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 export default function PriceGuideModal({ visible, onClose, currentPrice }) {

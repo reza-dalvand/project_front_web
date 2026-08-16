@@ -1,6 +1,9 @@
 // src/utils/price-utils.js
 /**
- * 💰 محاسبات قیمت و کمیسیون
+ * 💰 محاسبات قیمت و کمیسیون — منبع اصلی (Single Source of Truth)
+ *
+ * ⚠️ FIX P1: این فایل تنها منبع توابع کمیسیون است.
+ *    numberUtils.js فقط re-export می‌کند.
  *
  * قوانین کمیسیون (نسخه نهایی):
  * - زیر ۲۵۰ هزار تومان: ۷ هزار تومان ثابت
@@ -8,18 +11,22 @@
  * - از ۵۰۰ هزار تومان به بالا: ۴ درصد ✅
  * - سقف کمیسیون: ۵۰ هزار تومان
  */
+
 /**
  * سقف کمیسیون
  */
 export const MAX_APP_FEE = 50000;
+
 /**
  * حداقل قیمت نهایی خدمت
  */
 export const MIN_FINAL_PRICE = 50000;
+
 /**
  * حداقل مبلغ بیعانه
  */
 export const MIN_DEPOSIT = 50000;
+
 /**
  * محاسبه کمیسیون اپلیکیشن بر اساس قیمت اصلی خدمت
  * @param {number} basePrice - قیمت پایه خدمت (تومان)
@@ -27,7 +34,9 @@ export const MIN_DEPOSIT = 50000;
  */
 export const calculateAppFee = (basePrice) => {
   if (!basePrice || basePrice <= 0) return 0;
+
   let fee = 0;
+
   if (basePrice < 250000) {
     fee = 7000;
   } else if (basePrice <= 500000) {
@@ -37,8 +46,10 @@ export const calculateAppFee = (basePrice) => {
     // ✅ ۴ درصد
     fee = Math.round(basePrice * 0.04);
   }
+
   return Math.min(fee, MAX_APP_FEE);
 };
+
 /**
  * لیست بازه‌های کمیسیون برای نمایش در مدال راهنما
  */
@@ -68,6 +79,7 @@ export const APP_FEE_TIERS = [
     description: '۴٪ از مبلغ خدمت',
   },
 ];
+
 /**
  * پیدا کردن ردیف فعلی کمیسیون برای هایلایت کردن
  * @param {number} basePrice
@@ -75,11 +87,15 @@ export const APP_FEE_TIERS = [
  */
 export const getCurrentFeeTier = (basePrice) => {
   if (!basePrice || basePrice <= 0) return APP_FEE_TIERS[0];
+
   const tier = APP_FEE_TIERS.find((t) => basePrice > t.min && basePrice <= t.max);
   if (tier) return tier;
+
   if (basePrice <= APP_FEE_TIERS[0].max) return APP_FEE_TIERS[0];
+
   return APP_FEE_TIERS[APP_FEE_TIERS.length - 1];
 };
+
 /**
  * محاسبه قیمت نهایی با تخفیف
  * @param {number} originalPrice - قیمت اصلی
@@ -91,6 +107,7 @@ export const calculateFinalPrice = (originalPrice, discountPercent = 0) => {
   const discount = Math.round((originalPrice * discountPercent) / 100);
   return Math.max(0, originalPrice - discount);
 };
+
 /**
  * محاسبه مبلغ تخفیف
  * @param {number} originalPrice
@@ -101,6 +118,7 @@ export const calculateDiscountAmount = (originalPrice, discountPercent = 0) => {
   if (!originalPrice || !discountPercent) return 0;
   return Math.round((originalPrice * discountPercent) / 100);
 };
+
 /**
  * محاسبه بیعانه بر اساس قوانین
  * @param {number} finalPrice - قیمت نهایی خدمت
@@ -113,6 +131,7 @@ export const calculateDeposit = (finalPrice, hasDeposit = false, depositPercent 
   const deposit = Math.round((finalPrice * depositPercent) / 100);
   return Math.max(deposit, MIN_DEPOSIT);
 };
+
 /**
  * محاسبه مبلغ باقی‌مانده (پرداخت در سالن)
  * @param {number} finalPrice
@@ -122,6 +141,7 @@ export const calculateDeposit = (finalPrice, hasDeposit = false, depositPercent 
 export const calculateRemaining = (finalPrice, depositAmount = 0) => {
   return Math.max(0, finalPrice - depositAmount);
 };
+
 /**
  * محاسبه سهم کسب‌وکار پس از کسر کمیسیون
  * @param {number} finalPrice - قیمت نهایی خدمت
@@ -131,6 +151,7 @@ export const calculateBusinessShare = (finalPrice) => {
   const fee = calculateAppFee(finalPrice);
   return Math.max(0, finalPrice - fee);
 };
+
 /**
  * ساخت خلاصه قیمت برای نمایش
  * @param {number} originalPrice
@@ -151,6 +172,7 @@ export const buildPriceSummary = (
   const depositAmount = calculateDeposit(finalPrice, hasDeposit, depositPercent);
   const remaining = calculateRemaining(finalPrice, depositAmount);
   const businessShare = calculateBusinessShare(finalPrice);
+
   return {
     originalPrice,
     discountPercent,

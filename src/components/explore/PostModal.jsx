@@ -14,13 +14,19 @@ import PostCaptionCard from './post/PostCaptionCard';
 import PostFooterHint from './post/PostFooterHint';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-export default function PostModal({ post, visible, onClose, onSave, onNavigateToProfile }) {
+export default function PostModal({
+  post,
+  visible,
+  onClose,
+  onSave,
+  onNavigateToProfile, // ✅ این پروپ باید حتماً پاس داده شود
+}) {
   const { colors } = useTheme();
   const { isAuthenticated, requireAuth } = useAuth();
+  const { showToast } = useToast();
   const [isSaved, setIsSaved] = useState(post?.saved || false);
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef('post-modal');
-  const { showToast } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -76,6 +82,7 @@ export default function PostModal({ post, visible, onClose, onSave, onNavigateTo
     ]
       .filter(Boolean)
       .join('\n');
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -86,7 +93,6 @@ export default function PostModal({ post, visible, onClose, onSave, onNavigateTo
         return;
       } catch (err) {
         if (err.name === 'AbortError') return;
-        console.log('Web Share failed, trying clipboard...');
       }
     }
     try {
@@ -112,10 +118,16 @@ export default function PostModal({ post, visible, onClose, onSave, onNavigateTo
     }, 300);
   };
 
+  // ═══════ ✅ FIX: دکمه رزرو — با fallback ═══════
   const handleBooking = () => {
     onClose();
     setTimeout(() => {
-      onNavigateToProfile?.(post.businessId);
+      if (onNavigateToProfile && post.businessId) {
+        onNavigateToProfile(post.businessId);
+      } else if (typeof window !== 'undefined') {
+        // Fallback: اگر onNavigateToProfile وجود نداشت، مستقیم ناوبری کن
+        window.location.href = `/business/${post.businessId}`;
+      }
     }, 300);
   };
 
@@ -129,7 +141,7 @@ export default function PostModal({ post, visible, onClose, onSave, onNavigateTo
     >
       <div
         className="relative w-full max-w-lg max-h-[90vh] rounded-3xl overflow-hidden
-        flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-300"
+        flex flex-col shadow-2xl"
         style={{
           backgroundColor: colors.background,
           border: `1px solid ${colors.border}`,
@@ -157,7 +169,7 @@ export default function PostModal({ post, visible, onClose, onSave, onNavigateTo
             <PostBusinessInfo
               post={post}
               onProfilePress={handleProfilePress}
-              onBooking={handleBooking}
+              onBooking={handleBooking} // ✅ FIX: handleBooking اصلاح‌شده
             />
           )}
 

@@ -7,9 +7,9 @@ import { toPersianDigit } from '@/utils/numberUtils';
 const APP_VERSION = '1.0.0';
 
 const MOCK_REMOTE_CONFIG = {
-  latestVersion: '1.2.0',
-  minRequiredVersion: '1.0.0',
-  isForceUpdate: false,
+  latestVersion: '1.0.0',
+  minRequiredVersion: '1.0.0', //اگر ورژن ها با هم برابر نباشه مدال اختیاری رو نشون میده
+  isForceUpdate: false, // اگر true بشه مدال اجباری رو نشون میده
   changelog: [
     { icon: '✨', text: 'افزوده شدن سیستم نظردهی' },
     { icon: '⚡', text: 'بهبود سرعت بارگذاری' },

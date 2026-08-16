@@ -7,7 +7,10 @@
  *
  * فرمت پاسخ:
  * { success: true, data: {...}, message: '...', meta: {...} }
+ *
+ * ✅ FIX فاز ۲: تعریف MOCK_FAVORITE_BUSINESSES و MOCK_FAVORITE_POSTS
  */
+
 // ═══════════════════════════════════════════════
 //    Import داده‌های Mock از src/data
 // ═══════════════════════════════════════════════
@@ -28,6 +31,57 @@ import { MOCK_PROFILE_APPOINTMENTS, MOCK_DONE_APPOINTMENTS } from '@/data/appoin
 import { MOCK_REMINDER_CUSTOMERS } from '@/data/reminders';
 import { MOCK_REVIEWS } from '@/data/reviews';
 import { MOCK_DEVICES } from '@/data/devices';
+
+// ═══════════════════════════════════════════════
+//    ✅ FIX فاز ۲: State محلی Favorites
+//    قبلاً MOCK_FAVORITE_BUSINESSES و MOCK_FAVORITE_POSTS
+//    تعریف نشده بودند → ReferenceError → crash
+// ═══════════════════════════════════════════════
+let MOCK_FAVORITE_BUSINESSES = [
+  {
+    id: '1',
+    name: 'سالن زیبایی نیلارام',
+    category: 'کلینیک پوست و مو',
+    city: 'تهران، سعادت‌آباد',
+    logo: 'https://picsum.photos/150?random=1',
+  },
+  {
+    id: '2',
+    name: 'ناخن گالری پریا',
+    category: 'مرکز تخصصی ناخن',
+    city: 'کرج، فردیس',
+    logo: 'https://picsum.photos/150?random=2',
+  },
+];
+
+let MOCK_FAVORITE_POSTS = [
+  {
+    id: 'p1',
+    businessName: 'کلینیک زیبایی صدف',
+    caption: 'فیشیال تخصصی VIP با استفاده از بهترین متریال روز دنیا ✨',
+    image: 'https://picsum.photos/800/800?random=1',
+    gallery: ['https://picsum.photos/800/800?random=1', 'https://picsum.photos/800/800?random=2'],
+    source: 'business',
+    mainCategory: 'skin',
+    subCategory: 'facial',
+    rating: 4.8,
+    discount: 15,
+    saved: true,
+  },
+  {
+    id: 'p2',
+    businessName: 'سالن زیبایی ماهرو',
+    caption: 'میکاپ عروس اروپایی با سبک مینیمال و طبیعی 👰‍♀️',
+    image: 'https://picsum.photos/800/800?random=4',
+    gallery: ['https://picsum.photos/800/800?random=4', 'https://picsum.photos/800/800?random=5'],
+    source: 'business',
+    mainCategory: 'makeup',
+    subCategory: 'bridal_makeup',
+    rating: 4.6,
+    discount: 0,
+    saved: true,
+  },
+];
 
 // ═══════════════════════════════════════════════
 //    Helper: ساخت Response موفق
@@ -178,7 +232,6 @@ const routeHandlers = {
       'شماره موبایل با موفقیت تغییر یافت'
     );
   },
-
   // ─── Categories ───
   'GET /categories/service-categories': () => {
     return successResponse(MOCK_CATEGORIES, null, { count: MOCK_CATEGORIES.length });
@@ -197,7 +250,6 @@ const routeHandlers = {
       { count: 6 }
     );
   },
-
   // ─── Locations ───
   'GET /locations/provinces': () => {
     return successResponse(
@@ -223,7 +275,6 @@ const routeHandlers = {
       { count: 3 }
     );
   },
-
   // ─── Businesses ───
   'POST /businesses/create': () => {
     return successResponse(
@@ -274,7 +325,6 @@ const routeHandlers = {
   'GET /businesses/public/:slug': () => {
     return successResponse(MOCK_BUSINESS);
   },
-
   // ─── Services ───
   'GET /services': () => {
     const services = MOCK_BUSINESS.services || [];
@@ -287,7 +337,6 @@ const routeHandlers = {
   'POST /services/:id/toggle-active': () => {
     return successResponse(null, 'وضعیت خدمت تغییر کرد');
   },
-
   // ─── Schedules ───
   'GET /schedules': () => {
     return successResponse([], null, { count: 0 });
@@ -295,7 +344,6 @@ const routeHandlers = {
   'GET /schedules/by-date': () => {
     return successResponse([], null, { count: 0 });
   },
-
   // ─── Appointments ───
   'POST /appointments/create': () => {
     return successResponse(
@@ -354,7 +402,6 @@ const routeHandlers = {
       'خدمت تایید شد. بیعانه به حساب شما واریز می‌شود.'
     );
   },
-
   // ─── Payments ───
   'POST /payments/initiate': () => {
     return successResponse(
@@ -401,7 +448,6 @@ const routeHandlers = {
   'GET /payments/business/settlements': () => {
     return successResponse([], null, { count: 0 });
   },
-
   // ─── Reviews ───
   'POST /reviews/create': () => {
     return successResponse(
@@ -434,30 +480,67 @@ const routeHandlers = {
       'پاسخ شما با موفقیت ثبت شد'
     );
   },
-
   // ─── Favorites ───
+  // ✅ FIX فاز ۲: استفاده از متغیرهای تعریف‌شده به جای undefined
   'GET /favorites': () => {
     return successResponse({
-      // ✅ استفاده از داده‌های موجود به جای متغیرهای ناموجود
-      businesses: MOCK_BUSINESSES_LIST.slice(0, 3),
-      posts: MOCK_POSTS.slice(0, 3),
+      businesses: MOCK_FAVORITE_BUSINESSES,
+      posts: MOCK_FAVORITE_POSTS,
     });
   },
+  'POST /favorites/toggle': (params) => {
+    const { favorite_type, object_id } = params || {};
 
-  'POST /favorites/toggle': () => {
-    return successResponse({ is_favorited: true }, 'به علاقه‌مندی‌ها اضافه شد');
+    // شبیه‌سازی toggle
+    if (favorite_type === 'business') {
+      const index = MOCK_FAVORITE_BUSINESSES.findIndex((b) => b.id === object_id);
+      if (index > -1) {
+        MOCK_FAVORITE_BUSINESSES.splice(index, 1);
+        return successResponse({ is_favorited: false }, 'از علاقه‌مندی‌ها حذف شد');
+      } else {
+        const found = MOCK_BUSINESSES_LIST.find((b) => b.id === object_id);
+        if (found) {
+          MOCK_FAVORITE_BUSINESSES.push({
+            id: found.id,
+            name: found.name,
+            category: found.category,
+            city: found.city,
+            logo: found.logo,
+          });
+        }
+        return successResponse({ is_favorited: true }, 'به علاقه‌مندی‌ها اضافه شد');
+      }
+    }
+
+    if (favorite_type === 'post') {
+      const index = MOCK_FAVORITE_POSTS.findIndex((p) => p.id === object_id);
+      if (index > -1) {
+        MOCK_FAVORITE_POSTS.splice(index, 1);
+        return successResponse({ is_favorited: false }, 'از علاقه‌مندی‌ها حذف شد');
+      } else {
+        const found = MOCK_POSTS.find((p) => p.id === object_id);
+        if (found) {
+          MOCK_FAVORITE_POSTS.push({ ...found, saved: true });
+        }
+        return successResponse({ is_favorited: true }, 'به علاقه‌مندی‌ها اضافه شد');
+      }
+    }
+
+    return successResponse({ is_favorited: false }, 'عملیات ناموفق');
   },
   'GET /favorites/count': () => {
+    // ✅ FIX فاز ۲: متغیرها الان تعریف شده‌اند
     return successResponse({
       business: MOCK_FAVORITE_BUSINESSES.length,
       post: MOCK_FAVORITE_POSTS.length,
       total: MOCK_FAVORITE_BUSINESSES.length + MOCK_FAVORITE_POSTS.length,
     });
   },
-
   // ─── Notifications ───
   'GET /notifications': () => {
-    return successResponse(MOCK_NOTIFICATIONS, null, { count: MOCK_NOTIFICATIONS.length });
+    return successResponse(MOCK_NOTIFICATIONS, null, {
+      count: MOCK_NOTIFICATIONS.length,
+    });
   },
   'GET /notifications/count': () => {
     const unread = MOCK_NOTIFICATIONS.filter((n) => !n.isRead).length;
@@ -476,7 +559,6 @@ const routeHandlers = {
   'DELETE /notifications/:id': () => {
     return successResponse(null, 'اعلان حذف شد');
   },
-
   // ─── Search ───
   'GET /search': () => {
     return successResponse({
@@ -491,7 +573,6 @@ const routeHandlers = {
   'GET /search/suggestions': () => {
     return successResponse(['فیشیال', 'کاشت ناخن', 'لیزر', 'میکاپ عروس']);
   },
-
   // ─── Explore ───
   'GET /explore/posts': () => {
     const { items, meta } = paginate(MOCK_POSTS, 1, 20);
@@ -505,14 +586,17 @@ const routeHandlers = {
   },
   'POST /explore/my-posts/create': () => {
     return successResponse(
-      { id: 'post_' + Date.now(), caption: 'پست جدید', created_at: new Date().toISOString() },
+      {
+        id: 'post_' + Date.now(),
+        caption: 'پست جدید',
+        created_at: new Date().toISOString(),
+      },
       'پست با موفقیت ایجاد شد'
     );
   },
   'DELETE /explore/my-posts/:id/delete': () => {
     return successResponse(null, 'پست حذف شد');
   },
-
   // ─── Portfolios ───
   'GET /portfolios': () => {
     const portfolios = MOCK_BUSINESS.portfolios || [];
@@ -535,16 +619,19 @@ const routeHandlers = {
   'DELETE /portfolios/my-portfolios/:id/delete': () => {
     return successResponse(null, 'نمونه‌کار حذف شد');
   },
-
   // ─── Ads: Model Requests ───
   'GET /ads/model-requests': () => {
-    return successResponse(MOCK_MODEL_REQUESTS, null, { count: MOCK_MODEL_REQUESTS.length });
+    return successResponse(MOCK_MODEL_REQUESTS, null, {
+      count: MOCK_MODEL_REQUESTS.length,
+    });
   },
   'GET /ads/model-requests/:id': () => {
     return successResponse(MOCK_MODEL_REQUESTS[0] || null);
   },
   'GET /ads/my-model-requests': () => {
-    return successResponse(MOCK_MODEL_REQUESTS, null, { count: MOCK_MODEL_REQUESTS.length });
+    return successResponse(MOCK_MODEL_REQUESTS, null, {
+      count: MOCK_MODEL_REQUESTS.length,
+    });
   },
   'POST /ads/my-model-requests/create': () => {
     return successResponse(
@@ -555,16 +642,19 @@ const routeHandlers = {
   'DELETE /ads/my-model-requests/:id/delete': () => {
     return successResponse(null, 'درخواست مدل حذف شد');
   },
-
   // ─── Ads: Line Rentals ───
   'GET /ads/line-rentals': () => {
-    return successResponse(MOCK_LINE_RENTALS, null, { count: MOCK_LINE_RENTALS.length });
+    return successResponse(MOCK_LINE_RENTALS, null, {
+      count: MOCK_LINE_RENTALS.length,
+    });
   },
   'GET /ads/line-rentals/:id': () => {
     return successResponse(MOCK_LINE_RENTALS[0] || null);
   },
   'GET /ads/my-line-rentals': () => {
-    return successResponse(MOCK_LINE_RENTALS, null, { count: MOCK_LINE_RENTALS.length });
+    return successResponse(MOCK_LINE_RENTALS, null, {
+      count: MOCK_LINE_RENTALS.length,
+    });
   },
   'POST /ads/my-line-rentals/create': () => {
     return successResponse(
@@ -575,7 +665,6 @@ const routeHandlers = {
   'DELETE /ads/my-line-rentals/:id/delete': () => {
     return successResponse(null, 'آگهی حذف شد');
   },
-
   // ─── Reminders ───
   'GET /reminders': () => {
     return successResponse(MOCK_REMINDER_CUSTOMERS, null, {
@@ -587,7 +676,6 @@ const routeHandlers = {
       count: MOCK_REMINDER_CUSTOMERS.length,
     });
   },
-
   // ─── Support ───
   'GET /support/faq': () => {
     return successResponse(
@@ -634,17 +722,14 @@ const routeHandlers = {
 // ═══════════════════════════════════════════════
 const normalizeUrl = (url) => {
   let normalized = url.startsWith('/') ? url.slice(1) : url;
-  // ✅ FIX: حذف trailing slash
+  // حذف trailing slash
   normalized = normalized.replace(/\/+$/, '');
-
   // جایگزینی IDهای عددی
   normalized = normalized.replace(/\/\d+\//g, '/:id/');
   normalized = normalized.replace(/\/\d+$/g, '/:id');
-
-  // ✅ FIX: جایگزینی IDهای رشته‌ای Mock (مثل apt_1, pay_1, stl_1, biz_1)
+  // جایگزینی IDهای رشته‌ای Mock (مثل apt_1, pay_1, stl_1, biz_1)
   normalized = normalized.replace(/\/[a-zA-Z_]+\d+\//g, '/:id/');
   normalized = normalized.replace(/\/[a-zA-Z_]+\d+$/g, '/:id');
-
   normalized = normalized.replace(/\/public\/[^/]+/, '/public/:slug');
   return normalized;
 };

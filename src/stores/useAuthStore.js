@@ -7,6 +7,13 @@
  * - اصلاح login برای مدیریت is_new_user
  * - اصلاح checkSession
  * - اصلاح logout
+ *
+ * ✅ FIX فاز ۱: camelCase در login و checkSession
+ *    response-normalizer تمام کلیدها را به camelCase تبدیل می‌کند
+ *    access_token → accessToken
+ *    refresh_token → refreshToken
+ *    is_new_user → isNewUser
+ *    needs_profile_completion → needsProfileCompletion
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -24,7 +31,7 @@ export const useAuthStore = create(
       user: null,
       pendingPhone: null,
       pendingName: null,
-      needsProfileCompletion: false, // ✅ جدید
+      needsProfileCompletion: false,
       _hydrated: false,
 
       setHydrated: () => set({ _hydrated: true }),
@@ -40,17 +47,17 @@ export const useAuthStore = create(
       },
 
       /**
-       * ✅ اصلاح‌شده: ورود موفق
-       * @param {object} userData - داده‌های کاربر (فرمت بک‌اند)
-       * @param {object} tokens - { access_token, refresh_token }
-       * @param {object} options - { is_new_user, needs_profile_completion }
+       * ✅ FIX فاز ۱: ورود موفق — camelCase
+       * @param {object} userData - داده‌های کاربر (فرمت بک‌اند، camelCase شده توسط normalizer)
+       * @param {object} tokens - { accessToken, refreshToken } ← camelCase
+       * @param {object} options - { isNewUser, needsProfileCompletion } ← camelCase
        */
       login: (userData, tokens, options = {}) => {
-        // ذخیره توکن‌ها
-        if (tokens?.access_token) {
+        // ✅ FIX: tokens.accessToken به جای tokens.access_token
+        if (tokens?.accessToken) {
           useTokenStore.getState().setTokens({
-            access: tokens.access_token,
-            refresh: tokens.refresh_token,
+            access: tokens.accessToken,
+            refresh: tokens.refreshToken,
           });
         }
 
@@ -59,22 +66,23 @@ export const useAuthStore = create(
           user: {
             id: userData.id,
             phone: userData.phone,
-            phoneDisplay: userData.phone_display || userData.phone,
+            phoneDisplay: userData.phoneDisplay || userData.phone,
             name:
-              userData.full_name ||
-              `${userData.first_name || ''} ${userData.last_name || ''}`.trim() ||
+              userData.fullName ||
+              `${userData.firstName || ''} ${userData.lastName || ''}`.trim() ||
               'کاربر زیبانو',
-            firstName: userData.first_name || '',
-            lastName: userData.last_name || '',
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
             avatar: userData.avatar || null,
-            isVerified: userData.is_verified ?? false,
-            isNationalIdVerified: userData.is_national_id_verified ?? false,
-            verifiedName: userData.verified_name || '',
-            dateJoined: userData.date_joined || '',
+            isVerified: userData.isVerified ?? false,
+            isNationalIdVerified: userData.isNationalIdVerified ?? false,
+            verifiedName: userData.verifiedName || '',
+            dateJoined: userData.dateJoined || '',
           },
           pendingPhone: null,
           pendingName: null,
-          needsProfileCompletion: options.needs_profile_completion ?? false, // ✅ جدید
+          // ✅ FIX: options.needsProfileCompletion به جای options.needs_profile_completion
+          needsProfileCompletion: options.needsProfileCompletion ?? false,
         });
       },
 
@@ -127,14 +135,16 @@ export const useAuthStore = create(
         })),
 
       /**
-       * ✅ جدید: تکمیل پروفایل انجام شد
+       * تکمیل پروفایل انجام شد
        */
       completeProfile: () => {
         set({ needsProfileCompletion: false });
       },
 
       /**
-       * ✅ اصلاح‌شده: بررسی اعتبار session
+       * ✅ FIX فاز ۱: بررسی اعتبار session — camelCase
+       * بک‌اند در refresh برمی‌گرداند: { access, refresh }
+       * normalizer تبدیل نمی‌کند چون کلید underscore ندارد
        * @returns {Promise<boolean>}
        */
       checkSession: async () => {
@@ -156,8 +166,8 @@ export const useAuthStore = create(
           try {
             const result = await authService.refreshToken(refreshToken);
             const data = result.data;
-
             // بک‌اند در CustomTokenRefreshView برمی‌گرداند: { access, refresh }
+            // این کلیدها underscore ندارند، normalizer تغییرشان نمی‌دهد
             useTokenStore.getState().setTokens({
               access: data.access,
               refresh: data.refresh,
@@ -169,7 +179,6 @@ export const useAuthStore = create(
             return false;
           }
         }
-
         return false;
       },
     }),

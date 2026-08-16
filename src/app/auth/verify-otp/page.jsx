@@ -6,33 +6,54 @@ import { FiMessageSquare, FiEdit, FiRefreshCw, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
+import { useAuthFlow } from '@/hooks/useAuthFlow'; // ✅ جدید
 import { Button } from '@/components/common';
 import OTPInput from '@/components/common/OTPInput';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
-import { authService } from '@/api';
 import { OTP_CONFIG } from '@/api/config';
 
 const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;
-const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS;
 
 function VerifyOtpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { colors } = useTheme();
   const { showToast } = useToast();
-  const login = useAuthStore((s) => s.login);
   const pendingPhone = useAuthStore((s) => s.pendingPhone);
-
   const isLoggingIn = useRef(false);
   const redirectUrl = searchParams.get('redirect') || '/';
 
-  const [otp, setOtp] = useState(['', '', '', '', '']);
+  // ─── State‌های مخصوص صفحه ───
   const [currentBox, setCurrentBox] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [timer, setTimer] = useState(RESEND_SECONDS);
-  const [canResend, setCanResend] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // ═══════ استفاده از hook مشترک ═══════
+  const {
+    otp,
+    setOtp,
+    loading,
+    error,
+    setError,
+    timer,
+    canResend,
+    otpLength,
+    verifyOtp,
+    resendOtp,
+    formatTimer,
+  } = useAuthFlow({
+    enabled: true,
+    onVerifySuccess: ({ needsProfileCompletion }) => {
+      isLoggingIn.current = true;
+      setShowSuccess(true);
+      setTimeout(() => {
+        if (needsProfileCompletion) {
+          router.replace('/profile/edit?welcome=1');
+        } else {
+          router.replace(redirectUrl);
+        }
+      }, 1500);
+    },
+  });
 
   // ریدایرکت اگر شماره‌ای در انتظار نیست
   useEffect(() => {
@@ -41,99 +62,47 @@ function VerifyOtpPageContent() {
     }
   }, [pendingPhone, router, redirectUrl]);
 
-  // تایمر
-  useEffect(() => {
-    if (timer <= 0) {
-      setCanResend(true);
-      return;
-    }
-    const interval = setInterval(() => setTimer((t) => t - 1), 1000);
-    return () => clearInterval(interval);
-  }, [timer]);
-
   const maskedPhone = pendingPhone ? pendingPhone.slice(-4) + '***' + pendingPhone.slice(0, 4) : '';
 
   // ─── تایید کد ───
   const handleVerifyOtp = async () => {
     const code = otp.join('');
-    if (code.length < OTP_LENGTH) {
-      setError(`کد ${toPersianDigit(OTP_LENGTH)} رقمی را کامل وارد کنید`);
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const result = await authService.verifyOTP(pendingPhone, code);
-
-      // ✅ بررسی null بودن data
-      if (!result?.data?.user) {
-        throw new Error('خطا در ورود. لطفاً دوباره تلاش کنید.');
-      }
-
-      const { user, access_token, refresh_token, is_new_user, needs_profile_completion } =
-        result.data;
-
-      isLoggingIn.current = true;
-
-      // ✅ اصلاح: پاس دادن options
-      login(user, { access_token, refresh_token }, { is_new_user, needs_profile_completion });
-
-      setShowSuccess(true);
-
-      // ✅ مدیریت is_new_user و needs_profile_completion
-      setTimeout(() => {
-        if (needs_profile_completion) {
-          // کاربر جدید است یا پروفایل ناقص دارد → صفحه ویرایش پروفایل
-          router.replace('/profile/edit?welcome=1');
-        } else {
-          router.replace(redirectUrl);
-        }
-      }, 1500);
-    } catch (err) {
-      setLoading(false);
-      setError(err.message || 'کد وارد شده صحیح نیست');
-      setOtp(['', '', '', '', '']);
-      setCurrentBox(0);
-    }
+    await verifyOtp(pendingPhone, code);
   };
 
   // ─── ارسال مجدد ───
   const handleResend = async () => {
-    try {
-      await authService.sendOTP(pendingPhone);
-      setTimer(RESEND_SECONDS);
-      setCanResend(false);
-      setOtp(['', '', '', '', '']);
-      setCurrentBox(0);
+    const result = await resendOtp(pendingPhone);
+    if (result.success) {
       showToast('کد جدید ارسال شد', 'success');
-    } catch (err) {
-      setError(err.message || 'خطا در ارسال مجدد');
     }
   };
 
+  // ─── مدیریت ورودی OTP ───
   const handleChange = (text, index) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     const newOtp = [...otp];
 
+    // پیست چند رقمی
     if (cleaned.length > 1) {
-      const digits = cleaned.slice(0, OTP_LENGTH).split('');
+      const digits = cleaned.slice(0, otpLength).split('');
       digits.forEach((digit, i) => {
-        if (index + i < OTP_LENGTH) newOtp[index + i] = digit;
+        if (index + i < otpLength) newOtp[index + i] = digit;
       });
       setOtp(newOtp);
-      const nextIndex = Math.min(index + digits.length, OTP_LENGTH - 1);
+      const nextIndex = Math.min(index + digits.length, otpLength - 1);
       setCurrentBox(nextIndex);
       return;
     }
 
+    // تک رقم
     const digit = cleaned[0] || '';
     newOtp[index] = digit;
     setOtp(newOtp);
+
     if (error) setError('');
 
-    if (digit && index < OTP_LENGTH - 1) {
+    if (digit && index < otpLength - 1) {
       setCurrentBox(index + 1);
     }
   };
@@ -142,12 +111,6 @@ function VerifyOtpPageContent() {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       setCurrentBox(index - 1);
     }
-  };
-
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return toPersianDigit(`${m}:${s.toString().padStart(2, '0')}`);
   };
 
   // ─── صفحه موفقیت ───
@@ -209,7 +172,7 @@ function VerifyOtpPageContent() {
             setOtp(newOtp);
             if (error) setError('');
           }}
-          length={OTP_LENGTH}
+          length={otpLength}
           error={error}
           currentBox={currentBox}
           onCurrentBoxChange={setCurrentBox}
@@ -245,7 +208,7 @@ function VerifyOtpPageContent() {
             </button>
           ) : (
             <span className="text-sm" style={{ color: colors.textSecondary }}>
-              ارسال مجدد تا {formatTime(timer)}
+              ارسال مجدد تا {toPersianDigit(formatTimer())}
             </span>
           )}
         </div>
@@ -255,7 +218,7 @@ function VerifyOtpPageContent() {
           title="تایید و ورود"
           onPress={handleVerifyOtp}
           loading={loading}
-          disabled={otp.join('').length < OTP_LENGTH || loading}
+          disabled={otp.join('').length < otpLength || loading}
           variant="primary"
           size="lg"
           fullWidth

@@ -4,32 +4,14 @@ import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import { toPersianDigit } from '@/utils/numberUtils';
-
-const IRANIAN_BANKS = [
-  { id: 'meli', label: 'بانک ملی ایران' },
-  { id: 'mellat', label: 'بانک ملت' },
-  { id: 'saman', label: 'بانک سامان' },
-  { id: 'pasargad', label: 'بانک پاسارگاد' },
-  { id: 'saderat', label: 'بانک صادرات ایران' },
-  { id: 'tejarat', label: 'بانک تجارت' },
-  { id: 'sepah', label: 'بانک سپه' },
-  { id: 'keshavarzi', label: 'بانک کشاورزی' },
-  { id: 'maskan', label: 'بانک مسکن' },
-  { id: 'refah', label: 'بانک رفاه کارگران' },
-  { id: 'parsian', label: 'بانک پارسیان' },
-  { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
-  { id: 'ansar', label: 'بانک انصار' },
-  { id: 'gardeshgari', label: 'بانک گردشگری' },
-  { id: 'ayandeh', label: 'بانک آینده' },
-  { id: 'shahr', label: 'بانک شهر' },
-  { id: 'sina', label: 'بانک سینا' },
-  { id: 'day', label: 'بانک دی' },
-  { id: 'karafarin', label: 'بانک کارآفرین' },
-  { id: 'tosee', label: 'بانک توسعه صادرات' },
-];
+// ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
+import { getBankOptions } from '@/constants/banks';
 
 export default function BankEditFormFields({ form, errors, businessOwnerName, onFieldChange }) {
   const { colors } = useTheme();
+
+  // ✅ FIX P2: استفاده از لیست مشترک
+  const bankOptions = getBankOptions();
 
   return (
     <>
@@ -75,7 +57,7 @@ export default function BankEditFormFields({ form, errors, businessOwnerName, on
           label="نام بانک *"
           placeholder="بانک را انتخاب کنید"
           value={form.bankId}
-          options={IRANIAN_BANKS}
+          options={bankOptions}
           onSelect={(val) => onFieldChange('bankId', val)}
         />
         {errors.bankId && (

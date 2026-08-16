@@ -2,7 +2,8 @@
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { act } from '@testing-library/react';
-import { calculateAppFee } from '@/utils/numberUtils';
+// ✅ FIX P1: import از price-utils به جای numberUtils
+import { calculateAppFee } from '@/utils/price-utils';
 import { toJalaaliKey } from '@/utils/date-converter';
 
 describe('Booking Flow Integration', () => {

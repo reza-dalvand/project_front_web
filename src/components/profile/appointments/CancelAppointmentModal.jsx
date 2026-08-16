@@ -20,21 +20,8 @@ import {
   formatHoursLeft,
   CANCELLATION_THRESHOLD_HOURS,
 } from '@/utils/cancellation-utils';
-
-const BANKS = [
-  { id: 'meli', label: 'بانک ملی ایران' },
-  { id: 'mellat', label: 'بانک ملت' },
-  { id: 'saman', label: 'بانک سامان' },
-  { id: 'pasargad', label: 'بانک پاسارگاد' },
-  { id: 'saderat', label: 'بانک صادرات ایران' },
-  { id: 'tejarat', label: 'بانک تجارت' },
-  { id: 'sepah', label: 'بانک سپه' },
-  { id: 'keshavarzi', label: 'بانک کشاورزی' },
-  { id: 'maskan', label: 'بانک مسکن' },
-  { id: 'refah', label: 'بانک رفاه کارگران' },
-  { id: 'parsian', label: 'بانک پارسیان' },
-  { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
-];
+// ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
+import { getBankOptions } from '@/constants/banks';
 
 const formatSheba = (text) => {
   let cleaned = toEnglishDigits(text)
@@ -55,11 +42,15 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
   const updateUser = useAuthStore((s) => s.updateUser);
   const { showToast } = useToast();
   const instanceId = useRef('cancel-appointment-modal');
+
   const [bankId, setBankId] = useState(null);
   const [sheba, setSheba] = useState('IR');
   const [cardNumber, setCardNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // ✅ FIX P2: استفاده از لیست مشترک
+  const bankOptions = getBankOptions();
 
   const bankInfo = user?.bankInfo;
   const hasCompleteBankInfo = Boolean(
@@ -98,6 +89,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
       showToast('امکان لغو این نوبت وجود ندارد', 'error');
       return;
     }
+
     if (!hasCompleteBankInfo) {
       if (!bankId) {
         setError('لطفاً نام بانک را انتخاب کنید');
@@ -113,7 +105,9 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
         setError('شماره کارت باید ۱۶ رقم باشد');
         return;
       }
-      const selectedBank = BANKS.find((b) => b.id === bankId);
+      // ✅ FIX P2: استفاده از getBankById به جای find محلی
+      const { getBankById } = await import('@/constants/banks');
+      const selectedBank = getBankById(bankId);
       updateUser({
         bankInfo: {
           bankName: selectedBank?.label || '',
@@ -123,8 +117,10 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
         },
       });
     }
+
     setLoading(true);
     setError('');
+
     try {
       if (!USE_MOCK) {
         await appointmentsService.cancelAppointment(appointment.id, '');
@@ -163,6 +159,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
         <div className="flex justify-center pt-3 pb-1 md:hidden">
           <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </div>
+
         {/* هدر */}
         <div
           className="flex items-center gap-3 px-5 py-4 border-b"
@@ -193,10 +190,12 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
             <FiX size={20} style={{ color: colors.textMain }} />
           </button>
         </div>
+
         {/* محتوا */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <CancelRefundSummary refundAmount={refundAmount} />
           <CancelPolicyBox canCancel={policy?.canCancel} hoursLeft={policy?.hoursLeft} />
+
           {policy?.canCancel && (
             <>
               {hasCompleteBankInfo ? (
@@ -223,6 +222,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
               )}
             </>
           )}
+
           {error && (
             <div
               className="flex items-center gap-2 p-3 rounded-xl border"
@@ -235,6 +235,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
             </div>
           )}
         </div>
+
         {/* فوتر */}
         <div
           className="px-5 pt-4 border-t"

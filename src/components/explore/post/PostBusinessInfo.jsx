@@ -16,35 +16,47 @@ export default function PostBusinessInfo({ post, onProfilePress, onBooking }) {
         borderColor: colors.border,
       }}
     >
-      <button onClick={onProfilePress} className="flex items-center gap-3 flex-1 text-right">
+      {/* پروفایل کسب‌وکار */}
+      <button
+        onClick={onProfilePress}
+        className="flex items-center gap-3 flex-1 text-right min-w-0"
+      >
         <Image
-          src={post.businessLogo}
+          src={post.businessLogo || 'https://picsum.photos/100/100?random=1'}
           alt={post.businessName}
           width={48}
           height={48}
-          className="rounded-full"
+          className="rounded-full flex-shrink-0"
         />
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-bold line-clamp-1" style={{ color: colors.textMain }}>
+            <span
+              className="text-sm font-[Vazir-Bold] line-clamp-1"
+              style={{ color: colors.textMain }}
+            >
               {post.businessName}
             </span>
-            <MdVerified size={14} color="#4FC3F7" />
+            <MdVerified size={14} color="#4FC3F7" className="flex-shrink-0" />
           </div>
           <span className="text-xs" style={{ color: colors.textSecondary }}>
             مشاهده پروفایل
           </span>
         </div>
       </button>
-      {/* دکمه رزرو */}
+
+      {/* ✅ FIX: دکمه رزرو — stopPropagation اضافه شد */}
       <button
-        onClick={onBooking}
+        onClick={(e) => {
+          e.stopPropagation(); // ✅ جلوگیری از بسته شدن مدال
+          onBooking?.();
+        }}
         className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl
-        shadow-md transition-all hover:shadow-lg"
+        shadow-md transition-all hover:shadow-lg hover:scale-[1.03]
+        active:scale-[0.97] flex-shrink-0"
         style={{ backgroundColor: '#43A047' }}
       >
         <FiCalendar size={14} color="#fff" />
-        <span className="text-xs font-bold text-white">رزرو</span>
+        <span className="text-xs font-[Vazir-Bold] text-white">رزرو</span>
       </button>
     </div>
   );

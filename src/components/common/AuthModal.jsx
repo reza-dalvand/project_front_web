@@ -6,36 +6,47 @@ import { FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore, useAuthModal } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
+import { useAuthFlow } from '@/hooks/useAuthFlow'; // ✅ جدید
 import { validatePhone, cleanPhone } from '@/utils/phoneUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { authService } from '@/api';
-import { OTP_CONFIG } from '@/api/config';
 import AuthInfoStep from './auth/AuthInfoStep';
 import AuthOtpStep from './auth/AuthOtpStep';
 import AuthProfileStep from './auth/AuthProfileStep';
 import AuthSuccessStep from './auth/AuthSuccessStep';
 
-const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;
-const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS;
-
 export default function AuthModal({ variant = 'bottomsheet' }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
-  const login = useAuthStore((s) => s.login);
   const { showAuthModal, closeAuthModal, cancelAuthModal } = useAuthModal();
   const instanceId = useRef('auth-modal');
 
+  // ─── State‌های مخصوص مدال ───
   const [stage, setStage] = useState('info');
   const [phone, setPhone] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [otp, setOtp] = useState(['', '', '', '', '']);
-  const [timer, setTimer] = useState(RESEND_SECONDS);
-  const [canResend, setCanResend] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [profileError, setProfileError] = useState('');
+
+  // ═══════ استفاده از hook مشترک ═══════
+  const {
+    otp,
+    setOtp,
+    loading,
+    error,
+    setError,
+    timer,
+    canResend,
+    otpLength,
+    verifyOtp,
+    resendOtp,
+    saveProfile,
+    reset,
+    formatTimer,
+  } = useAuthFlow({
+    enabled: showAuthModal && stage === 'otp',
+  });
 
   // Reset هنگام باز شدن
   useEffect(() => {
@@ -43,27 +54,12 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       setStage('info');
       setPhone('');
       setTermsAccepted(false);
-      setOtp(['', '', '', '', '']);
-      setTimer(RESEND_SECONDS);
-      setCanResend(false);
-      setError('');
-      setLoading(false);
       setFirstName('');
       setLastName('');
       setProfileError('');
+      reset(); // ✅ ریست state‌های hook
     }
-  }, [showAuthModal]);
-
-  // تایمر
-  useEffect(() => {
-    if (!showAuthModal || stage !== 'otp') return;
-    if (timer <= 0) {
-      setCanResend(true);
-      return;
-    }
-    const interval = setInterval(() => setTimer((t) => t - 1), 1000);
-    return () => clearInterval(interval);
-  }, [stage, timer, showAuthModal]);
+  }, [showAuthModal, reset]);
 
   // Escape
   useEffect(() => {
@@ -92,16 +88,12 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       setError('شماره موبایل معتبر نیست');
       return;
     }
-    setLoading(true);
-    setError('');
+
     try {
       await authService.sendOTP(cleanPhone(phone));
-      setLoading(false);
       setStage('otp');
-      setTimer(RESEND_SECONDS);
-      setCanResend(false);
+      reset(); // ریست تایمر و OTP
     } catch (err) {
-      setLoading(false);
       setError(err.message || 'خطا در ارسال کد تایید');
     }
   };
@@ -109,76 +101,35 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   // ─── تایید OTP ───
   const handleVerifyOtp = async () => {
     const code = otp.join('');
-    if (code.length < OTP_LENGTH) {
-      setError('کد ۵ رقمی کامل نیست');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      const result = await authService.verifyOTP(cleanPhone(phone), code);
-      if (!result?.data?.user) throw new Error('خطا در ورود. لطفاً دوباره تلاش کنید.');
-      const { user, access_token, refresh_token, is_new_user, needs_profile_completion } =
-        result.data;
-      login(user, { access_token, refresh_token }, { is_new_user, needs_profile_completion });
-      if (needs_profile_completion) {
+    const result = await verifyOtp(cleanPhone(phone), code);
+
+    if (result.success) {
+      const { needsProfileCompletion } = result.data;
+      if (needsProfileCompletion) {
         setStage('profile');
-        setLoading(false);
-        return;
+      } else {
+        setStage('success');
+        setTimeout(() => closeAuthModal(), 1500);
       }
-      setStage('success');
-      setLoading(false);
-      setTimeout(() => closeAuthModal(), 1500);
-    } catch (err) {
-      setLoading(false);
-      setError(err.message || 'کد وارد شده صحیح نیست');
-      setOtp(['', '', '', '', '']);
     }
   };
 
   // ─── ارسال مجدد ───
   const handleResend = async () => {
-    try {
-      await authService.sendOTP(cleanPhone(phone));
-      setTimer(RESEND_SECONDS);
-      setCanResend(false);
-      setOtp(['', '', '', '', '']);
-    } catch (err) {
-      setError(err.message || 'خطا در ارسال مجدد');
+    const result = await resendOtp(cleanPhone(phone));
+    if (result.success) {
+      showToast('کد جدید ارسال شد', 'info');
     }
   };
 
   // ─── ذخیره پروفایل ───
   const handleSaveProfile = async () => {
-    if (!firstName.trim() || !lastName.trim()) {
-      setProfileError('نام و نام خانوادگی الزامی است');
-      return;
-    }
-    if (firstName.trim().length < 2 || lastName.trim().length < 2) {
-      setProfileError('نام و نام خانوادگی باید حداقل ۲ کاراکتر باشد');
-      return;
-    }
-    setLoading(true);
-    setProfileError('');
-    try {
-      const { profileService } = await import('@/api/services/profile.service');
-      await profileService.updateProfile({
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-      });
-      const { useAuthStore: authStore } = await import('@/stores/useAuthStore');
-      authStore.getState().updateUser({
-        name: `${firstName.trim()} ${lastName.trim()}`,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-      });
-      authStore.getState().completeProfile();
+    const result = await saveProfile(firstName, lastName);
+    if (result.success) {
       setStage('success');
-      setLoading(false);
       setTimeout(() => closeAuthModal(), 1500);
-    } catch (err) {
-      setLoading(false);
-      setProfileError(err.message || 'خطا در ذخیره پروفایل');
+    } else {
+      setProfileError(result.error);
     }
   };
 
@@ -187,9 +138,11 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   if (!showAuthModal) return null;
 
   const isBottomSheet = variant === 'bottomsheet';
+
   const containerClass = isBottomSheet
     ? 'fixed inset-0 z-[9999] flex items-end md:items-center justify-center'
     : 'fixed inset-0 z-[9999] flex items-center justify-center p-4';
+
   const panelClass = isBottomSheet
     ? 'relative w-full max-w-md rounded-t-3xl md:rounded-3xl overflow-hidden flex flex-col h-[96dvh] md:h-auto md:max-h-[92dvh]'
     : 'relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[96dvh] md:h-auto md:max-h-[92dvh]';
@@ -231,7 +184,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
             onVerify={handleVerifyOtp}
             onResend={handleResend}
             onEditPhone={() => setStage('info')}
-            otpLength={OTP_LENGTH}
+            otpLength={otpLength}
           />
         );
       case 'profile':
@@ -281,6 +234,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
             <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
           </div>
         )}
+
         {/* هدر */}
         <div
           className="flex items-center justify-between px-5 py-4 border-b"
@@ -297,6 +251,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
             <FiX size={18} style={{ color: colors.textMain }} />
           </button>
         </div>
+
         <div
           className="p-5 overflow-y-auto flex-1 overscroll-contain"
           style={{

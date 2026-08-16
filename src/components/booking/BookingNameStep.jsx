@@ -103,6 +103,35 @@ export default function BookingNameStep({
         error={nameErrors.lastName}
         rightIcon={<FiUser size={18} style={{ color: colors.textSecondary }} />}
       />
+
+      {/* ═══ ✅ FIX فاز ۳: چک‌باکس تایید اطلاعات ═══ */}
+      <label className="flex items-start gap-3 cursor-pointer py-2">
+        <button
+          onClick={() => onNameConfirmedChange(!nameConfirmed)}
+          className="mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+          style={{
+            backgroundColor: nameConfirmed ? colors.primary : 'transparent',
+            borderColor: nameConfirmed ? colors.primary : colors.border,
+          }}
+          type="button"
+        >
+          {nameConfirmed && <FiCheck size={14} style={{ color: '#fff' }} />}
+        </button>
+        <span className="text-[13px] leading-5" style={{ color: colors.textMain }}>
+          تایید می‌کنم که اطلاعات وارد شده{' '}
+          <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
+            مطابق با کارت بانکی
+          </span>{' '}
+          من است
+        </span>
+      </label>
+
+      {/* ═══ ✅ FIX فاز ۳: نمایش خطای تایید ═══ */}
+      {nameErrors.confirm && (
+        <p className="text-xs" style={{ color: '#E53935' }}>
+          {nameErrors.confirm}
+        </p>
+      )}
     </div>
   );
 }
