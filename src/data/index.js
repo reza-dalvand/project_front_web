@@ -15,3 +15,6 @@ export * from './posts';
 export * from './reminders';
 export * from './reviews';
 export * from './transactions';
+export * from './banks';
+export * from './honorMedals';
+export * from './priceList';

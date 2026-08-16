@@ -8,4 +8,3 @@ export * from './collabTypes';
 export * from './appVersion';
 export * from './exploreFilters';
 export * from './categorySubServices';
-export * from './banks';

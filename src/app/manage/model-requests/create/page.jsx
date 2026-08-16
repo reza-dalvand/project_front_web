@@ -79,7 +79,7 @@ function CreateModelRequestPageContent() {
         });
         showToast('درخواست جدید ثبت شد (ویرایش مستقیم پشتیبانی نمی‌شود)', 'info');
       } else {
-        await adsService.createModelRequest({
+        await adsService.updateModelRequest({
           service: formData.serviceId,
           title: formData.title,
           description: formData.description,

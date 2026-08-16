@@ -16,7 +16,7 @@ import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { bankInfoService } from '@/api';
 import { USE_MOCK } from '@/api/config';
 // ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
-import { getBankOptions } from '@/constants/banks';
+import { getBankOptions } from '@/data/banks';
 
 export default function BankInfoPage() {
   const router = useRouter();

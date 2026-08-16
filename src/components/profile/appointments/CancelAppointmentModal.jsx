@@ -21,7 +21,7 @@ import {
   CANCELLATION_THRESHOLD_HOURS,
 } from '@/utils/cancellation-utils';
 // ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
-import { getBankOptions } from '@/constants/banks';
+import { getBankOptions } from '@/data/banks';
 
 const formatSheba = (text) => {
   let cleaned = toEnglishDigits(text)
@@ -106,7 +106,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
         return;
       }
       // ✅ FIX P2: استفاده از getBankById به جای find محلی
-      const { getBankById } = await import('@/constants/banks');
+      const { getBankById } = await import('@/data/banks');
       const selectedBank = getBankById(bankId);
       updateUser({
         bankInfo: {

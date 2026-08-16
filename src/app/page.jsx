@@ -158,7 +158,7 @@ export default function HomePage() {
     if (pendingReviews.length > 0 && !reviewVisible) {
       const timer = setTimeout(() => {
         setCurrentReviewAppointment(pendingReviews[0]);
-        setReviewVisible(false);
+        setReviewVisible(true);
       }, 3000);
       return () => clearTimeout(timer);
     }

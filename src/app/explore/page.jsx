@@ -32,7 +32,7 @@ const INITIAL_FILTERS = {
 
 export default function ExplorePage() {
   const { colors } = useTheme();
-  const router = useRouter(); // ✅ FIX: اضافه شد
+  const router = useRouter();
   const { isAuthenticated, requireAuth } = useAuth();
   const togglePostFavorite = useFavoriteStore((s) => s.togglePostFavorite);
   const [allPosts, setAllPosts] = useState([]);
