@@ -11,8 +11,8 @@ services:
     container_name: zibano-frontend
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       # برای certbot SSL
       - ./nginx/certbot/conf:/etc/letsencrypt
@@ -22,7 +22,7 @@ services:
     depends_on:
       - backend
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:80/']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -45,7 +45,7 @@ services:
     container_name: zibano-backend
     restart: always
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
       - DATABASE_URL=postgresql://user:pass@db:5432/zibano

@@ -1,7 +1,7 @@
 // src/app/explore/page.jsx
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ FIX: اضافه شد
+import { useRouter } from 'next/navigation';
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
@@ -105,7 +105,7 @@ export default function ExplorePage() {
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
   const handleClearFilters = useCallback(() => setFilters(INITIAL_FILTERS), []);
 
-  // ═══════ ✅ FIX: هندلر ناوبری به صفحه کسب‌وکار ═══════
+  // ═══════ هندلر ناوبری به صفحه کسب‌وکار ═══════
   const handleNavigateToBusiness = useCallback(
     (businessId) => {
       if (businessId) {
@@ -119,27 +119,27 @@ export default function ExplorePage() {
     <ScreenWrapper scrollable={false} padding={0}>
       {/* هدر */}
       <div
-        className="px-5 py-3.5 border-b"
+        className="px-5 pt-3.5 border-b"
         style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}
       >
-        <div className="flex items-center justify-between">
-          <SectionHeader
-            icon={<span className="text-lg">🖼️</span>}
-            title="ویترین"
-            subtitle="نمونه‌کار کسب‌وکارها"
-            centered
-          />
-          <button
-            onClick={handleFilterOpen}
-            className="w-10 h-10 rounded-xl border flex items-center justify-center relative"
-            style={{
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            }}
-          >
-            <FiFilter size={18} style={{ color: colors.textMain }} />
-          </button>
-        </div>
+        <SectionHeader
+          icon={<span className="text-lg">🖼️</span>}
+          title="ویترین"
+          subtitle="نمونه‌کار کسب‌وکارها"
+          centered
+          rightElement={
+            <button
+              onClick={handleFilterOpen}
+              className="w-10 h-10 rounded-xl border flex items-center justify-center"
+              style={{
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              }}
+            >
+              <FiFilter size={18} style={{ color: colors.textMain }} />
+            </button>
+          }
+        />
       </div>
 
       {/* چیپ‌های فیلتر فعال */}

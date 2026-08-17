@@ -17,9 +17,9 @@ export default function SectionHeader({
   if (centered) {
     return (
       <div className="relative flex items-center justify-center mb-5 min-h-[44px]">
-        {/* آیکون - سمت راست (در RTL = اول) */}
+        {/* آیکون - سمت راست */}
         {icon && (
-          <div className="absolute right-0 flex items-center gap-2">
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: `${bgColor}15`, color: bgColor }}
@@ -39,8 +39,10 @@ export default function SectionHeader({
           )}
         </div>
 
-        {/* المان سمت چپ (در RTL = آخر) */}
-        {rightElement && <div className="absolute left-0">{rightElement}</div>}
+        {/* المان سمت چپ */}
+        {rightElement && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2">{rightElement}</div>
+        )}
       </div>
     );
   }
