@@ -5,7 +5,8 @@
  */
 
 // ═══════ Jest DOM Matchers ═══════
-require('@testing-library/jest-dom');
+import '@testing-library/jest-dom';
+
 
 // ═══════ Mock کردن window.matchMedia ═══════
 // برای تست‌هایی که از useThemeStore استفاده می‌کنند

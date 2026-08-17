@@ -154,15 +154,15 @@ export default function HomePage() {
   }, [addPendingReview]);
 
   // ─── نمایش خودکار مدال نظردهی ───
-  useEffect(() => {
-    if (pendingReviews.length > 0 && !reviewVisible) {
-      const timer = setTimeout(() => {
-        setCurrentReviewAppointment(pendingReviews[0]);
-        setReviewVisible(true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [pendingReviews, reviewVisible]);
+  // useEffect(() => {
+  //   if (pendingReviews.length > 0 && !reviewVisible) {
+  //     const timer = setTimeout(() => {
+  //       setCurrentReviewAppointment(pendingReviews[0]);
+  //       setReviewVisible(true);
+  //     }, 3000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [pendingReviews, reviewVisible]);
 
   // ─── Handlers ───
   const handleThemeToggle = useCallback(

@@ -3,18 +3,27 @@ import { useAuthStore, useAuthModalStore } from '@/stores/useAuthStore';
 import { act } from '@testing-library/react';
 
 // ✅ Helper برای ساخت داده‌های تست
+// ✅ Helper برای ساخت داده‌های تست
 const createTestUser = (phone = '09123456789', firstName = 'مریم', lastName = 'حسینی') => ({
   id: 1,
   phone,
   phone_display: `${phone.slice(0, 4)}***${phone.slice(-4)}`,
+  phoneDisplay: `${phone.slice(0, 4)}***${phone.slice(-4)}`,
   first_name: firstName,
   last_name: lastName,
+  firstName,
+  lastName,
   full_name: `${firstName} ${lastName}`,
+  fullName: `${firstName} ${lastName}`,
   avatar: null,
   is_verified: true,
+  isVerified: true,
   is_national_id_verified: false,
+  isNationalIdVerified: false,
   verified_name: '',
+  verifiedName: '',
   date_joined: '2024-01-15T10:00:00Z',
+  dateJoined: '2024-01-15T10:00:00Z',
 });
 
 const createTestTokens = () => ({

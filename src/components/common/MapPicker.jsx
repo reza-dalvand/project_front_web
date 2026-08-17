@@ -175,7 +175,7 @@ export default function MapPicker({ initialLocation, onLocationSelect, readOnly 
                 موقعیت مکانی
               </p>
               <p className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
-                برای انتخاب روی نقشه، ضربه بزنید
+                روی نقشه، ضربه بزنید
               </p>
             </div>
             <div

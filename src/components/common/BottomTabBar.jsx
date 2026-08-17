@@ -14,7 +14,7 @@ export default function BottomTabBar() {
   const businessData = useBusinessStore((s) => s.businessData);
 
   const hasBusiness = Boolean(
-    businessData?.id && businessData?.name && businessData?.isActive !== true
+    businessData?.id && businessData?.name && businessData?.isActive !== false
   );
 
   const tabs = isAuthenticated
