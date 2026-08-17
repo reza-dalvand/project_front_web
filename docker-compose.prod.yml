@@ -1,0 +1,66 @@
+# ═══════════════════════════════════════════════════════════
+#   Production Environment (VPS)
+#   استفاده: docker-compose -f docker-compose.prod.yml up -d
+# ═══════════════════════════════════════════════════════════
+
+version: '3.8'
+
+services:
+  frontend:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/zibano-frontend:latest
+    container_name: zibano-frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # برای certbot SSL
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    networks:
+      - zibano-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ─── Certbot برای SSL ───
+  certbot:
+    image: certbot/certbot:latest
+    container_name: zibano-certbot
+    volumes:
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    restart: unless-stopped
+
+  # ─── Backend Django (placeholder) ───
+  # بعداً این سرویس را با Dockerfile بک‌اند جایگزین کنید
+  backend:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/zibano-backend:latest
+    container_name: zibano-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DATABASE_URL=postgresql://user:pass@db:5432/zibano
+      - REDIS_URL=redis://redis:6379/0
+    networks:
+      - zibano-network
+    # depends_on:
+    #   - db
+    #   - redis
+
+networks:
+  zibano-network:
+    driver: bridge
+
+# ─── Volumes (بعداً برای DB و Redis اضافه کنید) ───
+# volumes:
+#   postgres_data:
+#   redis_data:

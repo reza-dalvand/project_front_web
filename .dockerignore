@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment (هرگز env واقعی را در image نگذارید)
+.env
+.env.*
+!.env.example
+
+# Tests (در image نهایی نیازی نیست)
+coverage/
+__tests__/
+*.test.js
+*.test.jsx
+*.spec.js
+
+# Docs
+README.md
+docs/
+*.md
+
+# Logs
+*.log
+logs/
