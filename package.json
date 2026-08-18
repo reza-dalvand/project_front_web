@@ -37,6 +37,8 @@
     "zustand-persist": "^0.4.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/splash-screen": "^8.0.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.1",
@@ -50,6 +52,7 @@
     "jest-environment-jsdom": "^30.4.1",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "typescript": "^7.0.2"
   }
 }

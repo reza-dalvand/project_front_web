@@ -24,6 +24,8 @@ import { MOCK_ADS } from '@/data/ads';
 import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 import { MOCK_DONE_APPOINTMENTS } from '@/data/appointments';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { Capacitor } from '@capacitor/core';
 
 // ✅ Lazy Load
 const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), {
@@ -40,6 +42,13 @@ const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), {
 });
 
 export default function HomePage() {
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      SplashScreen.hide({ fadeOutDuration: 300 });
+    }
+  }, []);
+
   const router = useRouter();
   const { colors, resolvedTheme, setTheme } = useTheme();
   const { isAuthenticated, user, requireAuth } = useAuth();

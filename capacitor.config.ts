@@ -11,6 +11,14 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
   },
   plugins: {
+    SplashScreen: {
+      launchShowDuration: 2500,
+      launchAutoHide: false,   // دستی hide میکنیم
+      backgroundColor: '#ffffff',
+      androidSplashResourceName: 'splash',
+      showSpinner: false,
+    },
+
     StatusBar: {
       // ✅ استایل transparent برای استفاده از safe area
       style: 'DARK',
