@@ -57,14 +57,14 @@ export const PAGINATION_CONFIG = {
 export const OTP_CONFIG = {
   CODE_LENGTH: 5,
   EXPIRY_SECONDS: 300,
-  RESEND_COOLDOWN_SECONDS: 60,
+  RESEND_COOLDOWN_SECONDS: 120,
 };
 
 // ═══════════════════════════════════════════════
 //    تنظیمات آپلود فایل
 // ═══════════════════════════════════════════════
 export const UPLOAD_CONFIG = {
-  MAX_FILE_SIZE_MB: 10,
+  MAX_FILE_SIZE_MB: 5,
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
 };
 
