@@ -7,7 +7,7 @@ export default function RulesCard({ colors }) {
   return (
     <Card variant="default" padding={16} radius={18}>
       <a
-        href="https://zibano.app/rules/booking"
+        href="https://beau.app/rules/booking"
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-3 p-4 rounded-xl border transition-all hover:scale-[1.01] active:scale-[0.99]"

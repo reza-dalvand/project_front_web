@@ -245,7 +245,7 @@ export const useBusinessStore = create(
       },
     }),
     {
-      name: 'zibano-business-storage',
+      name: 'beau-business-storage',
       version: STORAGE_VERSION,
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'

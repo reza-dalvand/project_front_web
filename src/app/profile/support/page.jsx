@@ -66,7 +66,7 @@ export default function SupportPage() {
     );
   };
   const handleTelegram = () => {
-    window.open('https://t.me/zibano_support', '_blank', 'noopener,noreferrer');
+    window.open('https://t.me/bu_support', '_blank', 'noopener,noreferrer');
   };
 
   return (

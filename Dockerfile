@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════
-#   Zibano Frontend - Multi-stage Docker Build
+#   beau Frontend - Multi-stage Docker Build
 #   Stage 1: Build with Node.js (tests + static export)
 #   Stage 2: Serve with Nginx (production)
 # ═══════════════════════════════════════════════════════════

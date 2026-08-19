@@ -139,7 +139,7 @@ export const useFavoriteStore = create(
       },
     }),
     {
-      name: 'zibano-favorite-storage',
+      name: 'beau-favorite-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage

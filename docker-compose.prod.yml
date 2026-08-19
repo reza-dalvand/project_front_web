@@ -7,8 +7,8 @@ version: '3.8'
 
 services:
   frontend:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/zibano-frontend:latest
-    container_name: zibano-frontend
+    image: ghcr.io/YOUR_GITHUB_USERNAME/beau-frontend:latest
+    container_name: beau-frontend
     restart: always
     ports:
       - '80:80'
@@ -18,7 +18,7 @@ services:
       - ./nginx/certbot/conf:/etc/letsencrypt
       - ./nginx/certbot/www:/var/www/certbot
     networks:
-      - zibano-network
+      - beau-network
     depends_on:
       - backend
     healthcheck:
@@ -31,7 +31,7 @@ services:
   # ─── Certbot برای SSL ───
   certbot:
     image: certbot/certbot:latest
-    container_name: zibano-certbot
+    container_name: beau-certbot
     volumes:
       - ./nginx/certbot/conf:/etc/letsencrypt
       - ./nginx/certbot/www:/var/www/certbot
@@ -41,23 +41,23 @@ services:
   # ─── Backend Django (placeholder) ───
   # بعداً این سرویس را با Dockerfile بک‌اند جایگزین کنید
   backend:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/zibano-backend:latest
-    container_name: zibano-backend
+    image: ghcr.io/YOUR_GITHUB_USERNAME/beau-backend:latest
+    container_name: beau-backend
     restart: always
     ports:
       - '8000:8000'
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
-      - DATABASE_URL=postgresql://user:pass@db:5432/zibano
+      - DATABASE_URL=postgresql://user:pass@db:5432/beau
       - REDIS_URL=redis://redis:6379/0
     networks:
-      - zibano-network
+      - beau-network
     # depends_on:
     #   - db
     #   - redis
 
 networks:
-  zibano-network:
+  beau-network:
     driver: bridge
 
 # ─── Volumes (بعداً برای DB و Redis اضافه کنید) ───

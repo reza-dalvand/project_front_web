@@ -167,7 +167,7 @@ export const usePriceListStore = create(
       },
     }),
     {
-      name: 'zibano-price-list-storage',
+      name: 'beau-price-list-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage

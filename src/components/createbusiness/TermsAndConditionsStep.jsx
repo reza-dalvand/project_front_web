@@ -186,7 +186,7 @@ export default function TermsAndConditionsStep({ onAccept, onDecline }) {
             style={{ borderColor: colors.border }}
           >
             <a
-              href="https://zibano.app/terms"
+              href="https://beau.app/terms"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1"

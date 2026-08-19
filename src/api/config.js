@@ -36,8 +36,8 @@ export const API_CONFIG = {
 //    تنظیمات JWT (هماهنگ با بک‌اند)
 // ═══════════════════════════════════════════════
 export const JWT_CONFIG = {
-  ACCESS_TOKEN_KEY: 'zibano_access_token',
-  REFRESH_TOKEN_KEY: 'zibano_refresh_token',
+  ACCESS_TOKEN_KEY: 'beau_access_token',
+  REFRESH_TOKEN_KEY: 'beau_refresh_token',
   TOKEN_TYPE: 'Bearer',
   ACCESS_TOKEN_LIFETIME_SECONDS: 3600, // ۱ ساعت
   REFRESH_TOKEN_LIFETIME_DAYS: 30, // ۳۰ روز

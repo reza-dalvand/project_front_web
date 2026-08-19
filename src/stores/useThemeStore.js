@@ -68,7 +68,7 @@ export const useThemeStore = create(
       },
     }),
     {
-      name: 'zibano-theme-storage',
+      name: 'beau-theme-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage

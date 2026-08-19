@@ -79,7 +79,7 @@ export const useTokenStore = create(
       },
     }),
     {
-      name: 'zibano-token-storage',
+      name: 'beau-token-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage

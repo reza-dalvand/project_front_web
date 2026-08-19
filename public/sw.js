@@ -5,11 +5,11 @@
 // ═══════════════════════════════════════════════
 
 const CACHE_VERSION = 'v2';
-const STATIC_CACHE = `zibano-static-${CACHE_VERSION}`;
-const PAGE_CACHE = `zibano-pages-${CACHE_VERSION}`;
-const IMAGE_CACHE = `zibano-images-${CACHE_VERSION}`;
-const API_CACHE = `zibano-api-${CACHE_VERSION}`;
-const SYNC_QUEUE_CACHE = `zibano-sync-queue-${CACHE_VERSION}`;
+const STATIC_CACHE = `beau-static-${CACHE_VERSION}`;
+const PAGE_CACHE = `beau-pages-${CACHE_VERSION}`;
+const IMAGE_CACHE = `beau-images-${CACHE_VERSION}`;
+const API_CACHE = `beau-api-${CACHE_VERSION}`;
+const SYNC_QUEUE_CACHE = `beau-sync-queue-${CACHE_VERSION}`;
 
 // فایل‌های ثابت برای کش اولیه
 const STATIC_ASSETS = ['/', '/manifest.json'];
@@ -37,11 +37,11 @@ self.addEventListener('activate', (event) => {
           keys
             .filter((key) => {
               const validPrefixes = [
-                `zibano-static-${CACHE_VERSION}`,
-                `zibano-pages-${CACHE_VERSION}`,
-                `zibano-images-${CACHE_VERSION}`,
-                `zibano-api-${CACHE_VERSION}`,
-                `zibano-sync-queue-${CACHE_VERSION}`,
+                `beau-static-${CACHE_VERSION}`,
+                `beau-pages-${CACHE_VERSION}`,
+                `beau-images-${CACHE_VERSION}`,
+                `beau-api-${CACHE_VERSION}`,
+                `beau-sync-queue-${CACHE_VERSION}`,
               ];
               return !validPrefixes.some((prefix) => key.startsWith(prefix));
             })
@@ -172,7 +172,7 @@ async function saveToSyncQueue(request) {
 
 // ═══════════ Background Sync ═══════════
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'zibano-sync-queue') {
+  if (event.tag === 'beau-sync-queue') {
     event.waitUntil(processSyncQueue());
   }
 });

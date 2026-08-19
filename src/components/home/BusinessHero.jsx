@@ -27,7 +27,7 @@ export default function BusinessHero({
   const coverImage = gallery[0] || 'https://picsum.photos/800/600?random=45';
 
   // لینک رزرو اختصاصی
-  const bookingLink = `https://zibano.app/book/${businessId || 'biz_1'}`;
+  const bookingLink = `https://beau.app/book/${businessId || 'biz_1'}`;
 
   // ═══════ هندلر اشتراک‌گذاری ═══════
   const handleShare = async () => {

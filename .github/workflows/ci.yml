@@ -131,7 +131,7 @@ jobs:
         with:
           context: .
           push: false
-          tags: zibano-frontend:test
+          tags: beau-frontend:test
           build-args: |
             NEXT_PUBLIC_USE_MOCK=false
             NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1

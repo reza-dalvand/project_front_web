@@ -183,7 +183,7 @@ export const useAuthStore = create(
       },
     }),
     {
-      name: 'zibano-auth-storage',
+      name: 'beau-auth-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage

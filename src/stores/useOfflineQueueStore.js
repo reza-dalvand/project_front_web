@@ -103,7 +103,7 @@ export const useOfflineQueueStore = create(
       },
     }),
     {
-      name: 'zibano-offline-queue-storage',
+      name: 'beau-offline-queue-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage

@@ -18,8 +18,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'api.maptiler.com' },
       // ✅ Production: Arvan Storage
       { protocol: 'https', hostname: '*.arvanstorage.ir' },
-      { protocol: 'https', hostname: 'cdn.zibano.app' },
-      { protocol: 'https', hostname: '*.zibano.app' },
+      { protocol: 'https', hostname: 'cdn.beau.app' },
+      { protocol: 'https', hostname: '*.beau.app' },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200],

@@ -8,7 +8,7 @@ export const metadata = {
   title: 'بیو کلاب | رزرو آنلاین خدمات زیبایی و سلامت',
   description: 'رزرو آنلاین خدمات زیبایی، سلامت، سالن‌ها، کلینیک‌ها و متخصصان زیبایی',
   keywords: ['بیو کلاب', 'رزرو آنلاین', 'سالن زیبایی', 'کلینیک پوست'],
-  authors: [{ name: 'Zibano Team' }],
+  authors: [{ name: 'BEAU CLUB Team' }],
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
@@ -57,7 +57,7 @@ export default function RootLayout({ children }) {
             __html: `
               (function() {
                 try {
-                  const storage = localStorage.getItem('zibano-theme-storage');
+                  const storage = localStorage.getItem('beau-theme-storage');
                   if (storage) {
                     const parsed = JSON.parse(storage);
                     const theme = parsed.state?.theme || 'system';

@@ -150,7 +150,7 @@ export const useReviewStore = create(
       },
     }),
     {
-      name: 'zibano-review-storage',
+      name: 'beau-review-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage

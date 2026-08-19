@@ -21,8 +21,8 @@ export default function InviteFriendsPage() {
   const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
 
-  const referralCode = 'ZIBANO-' + (user?.phone?.slice(-4) || '0000');
-  const referralLink = `https://zibano.app/invite/${referralCode}`;
+  const referralCode = 'BU-' + (user?.phone?.slice(-4) || '0000');
+  const referralLink = `https://beau.app/invite/${referralCode}`;
 
   const handleCopy = async () => {
     try {

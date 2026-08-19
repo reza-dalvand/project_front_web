@@ -12,13 +12,13 @@ export const APP_BUILD_NUMBER = 1;
 // لینک‌های مربوط به نسخه وب
 export const STORE_URLS = {
   web: {
-    production: 'https://zibano.app',
-    staging: 'https://staging.zibano.app',
+    production: 'https://beau.app',
+    staging: 'https://staging.beau.app',
   },
 };
 
 // لینک پیش‌فرض برای وب
-export const DEFAULT_STORE_URL = 'https://zibano.app';
+export const DEFAULT_STORE_URL = 'https://beau.app';
 
 // نام استور پیش‌فرض
 export const DEFAULT_STORE_NAME = 'بیو کلاب وب';

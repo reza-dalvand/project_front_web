@@ -15,7 +15,7 @@ services:
         NEXT_PUBLIC_USE_MOCK: 'true'
         NEXT_PUBLIC_API_BASE_URL: 'http://localhost:8000/api/v1'
         NODE_ENV: 'development'
-    container_name: zibano-frontend-dev
+    container_name: beau-frontend-dev
     ports:
       - '3000:3000'
     environment:

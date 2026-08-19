@@ -123,7 +123,7 @@ export const useAppVersionStore = create(
       },
     }),
     {
-      name: 'zibano-app-version-storage',
+      name: 'beau-app-version-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage

@@ -21,7 +21,7 @@ export default function CancelPolicyBox({ canCancel, hoursLeft }) {
             به شما مسترد می‌شود.
           </p>
           <a
-            href="https://zibano.app/rules/cancellation"
+            href="https://beau.app/rules/cancellation"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-[Vazir] underline mt-1 inline-block"
@@ -46,7 +46,7 @@ export default function CancelPolicyBox({ canCancel, hoursLeft }) {
           فقط تا {toPersianDigit(CANCELLATION_THRESHOLD_HOURS)} ساعت قبل امکان‌پذیر است.
         </p>
         <a
-          href="https://zibano.app/rules/cancellation"
+          href="https://beau.app/rules/cancellation"
           target="_blank"
           rel="noopener noreferrer"
           className="text-xs font-[Vazir] underline mt-1 inline-block"

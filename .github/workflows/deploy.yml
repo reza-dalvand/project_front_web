@@ -152,7 +152,7 @@ jobs:
             docker pull ${REGISTRY}/${IMAGE_NAME}:latest || true
             
             echo "🔄 Updating docker-compose.prod.yml..."
-            cd /opt/zibano/frontend || mkdir -p /opt/zibano/frontend && cd /opt/zibano/frontend
+            cd /opt/beau/frontend || mkdir -p /opt/beau/frontend && cd /opt/beau/frontend
             
             # آپدیت image tag در docker-compose
             sed -i "s|image: .*|image: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}|g" docker-compose.prod.yml 2>/dev/null || true
@@ -165,7 +165,7 @@ jobs:
             docker image prune -f
             
             echo "✅ Deployment complete!"
-            docker ps | grep zibano
+            docker ps | grep beau
           ENDSSH
 
       - name: Verify deployment

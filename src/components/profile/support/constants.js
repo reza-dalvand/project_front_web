@@ -1,7 +1,7 @@
 // src/components/profile/support/constants.js
 export const SUPPORT_PHONE = '09121234567';
 export const SUPPORT_PHONE_DISPLAY = '۰۲۱-۹۱۰۰۱۲۳۴';
-export const SUPPORT_EMAIL = 'support@zibano.app';
+export const SUPPORT_EMAIL = 'support@beau.app';
 export const SUPPORT_HOURS_SIMPLE = 'شنبه تا پنجشنبه از ساعت ۹ الی ۱۸';
 
 export const SUPPORT_CHANNELS = [
@@ -13,7 +13,7 @@ export const SUPPORT_CHANNELS = [
     icon: 'send',
     color: '#0088cc',
     actionLabel: 'پیام در تلگرام',
-    link: 'https://t.me/zibano_support',
+    link: 'https://t.me/bu_support',
     badge: null,
   },
   {

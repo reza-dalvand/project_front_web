@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════
-#   Zibano Frontend - Manual Deployment Script
+#   beau Frontend - Manual Deployment Script
 #   استفاده روی VPS: bash scripts/deploy.sh [tag]
 # ═══════════════════════════════════════════════════════════
 
@@ -8,11 +8,11 @@ set -e
 
 # ─── Configuration ───
 REGISTRY="ghcr.io"
-IMAGE_NAME="YOUR_GITHUB_USERNAME/zibano-frontend"
+IMAGE_NAME="YOUR_GITHUB_USERNAME/beau-frontend"
 TAG="${1:-latest}"
-DEPLOY_DIR="/opt/zibano/frontend"
+DEPLOY_DIR="/opt/beau/frontend"
 
-echo "🚀 Deploying Zibano Frontend"
+echo "🚀 Deploying beau Frontend"
 echo "   Image: ${REGISTRY}/${IMAGE_NAME}:${TAG}"
 echo "   Dir:   ${DEPLOY_DIR}"
 echo ""
@@ -31,13 +31,13 @@ docker pull ${REGISTRY}/${IMAGE_NAME}:${TAG}
 
 # ─── Stop old container ───
 echo "⏹️  Stopping old container..."
-docker stop zibano-frontend 2>/dev/null || true
-docker rm zibano-frontend 2>/dev/null || true
+docker stop beau-frontend 2>/dev/null || true
+docker rm beau-frontend 2>/dev/null || true
 
 # ─── Start new container ───
 echo "▶️  Starting new container..."
 docker run -d \
-  --name zibano-frontend \
+  --name beau-frontend \
   --restart always \
   -p 80:80 \
   -p 443:443 \
@@ -49,12 +49,12 @@ docker run -d \
 echo "⏳ Waiting for container to start..."
 sleep 5
 
-if docker ps | grep -q zibano-frontend; then
+if docker ps | grep -q beau-frontend; then
   echo "✅ Container is running!"
-  docker ps | grep zibano-frontend
+  docker ps | grep beau-frontend
 else
   echo "❌ Container failed to start"
-  docker logs zibano-frontend
+  docker logs beau-frontend
   exit 1
 fi
 

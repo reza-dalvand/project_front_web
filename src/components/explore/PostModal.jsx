@@ -72,7 +72,7 @@ export default function PostModal({
     const postUrl =
       typeof window !== 'undefined'
         ? `${window.location.origin}/post/${post.id}`
-        : `https://zibano.app/post/${post.id}`;
+        : `https://beau.app/post/${post.id}`;
     const shareMessage = [
       `🌟 ${post.businessName || 'بیو کلاب'}`,
       post.caption ? post.caption : '',

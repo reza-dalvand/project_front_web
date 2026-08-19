@@ -10,16 +10,16 @@ const ENV = {
     MEDIA_BASE_URL: 'http://localhost:8000', // ← جدید
   },
   staging: {
-    API_BASE_URL: 'https://staging-api.zibano.app/api/v1',
-    SITE_DOMAIN: 'https://staging.zibano.app',
-    ARVAN_CDN_URL: 'https://cdn.staging.zibano.app',
-    MEDIA_BASE_URL: 'https://staging-api.zibano.app',
+    API_BASE_URL: 'https://staging-api.beau.app/api/v1',
+    SITE_DOMAIN: 'https://staging.beau.app',
+    ARVAN_CDN_URL: 'https://cdn.staging.beau.app',
+    MEDIA_BASE_URL: 'https://staging-api.beau.app',
   },
   production: {
-    API_BASE_URL: 'https://api.zibano.app/api/v1',
-    SITE_DOMAIN: 'https://zibano.app',
-    ARVAN_CDN_URL: 'https://cdn.zibano.app',
-    MEDIA_BASE_URL: 'https://api.zibano.app',
+    API_BASE_URL: 'https://api.beau.app/api/v1',
+    SITE_DOMAIN: 'https://beau.app',
+    ARVAN_CDN_URL: 'https://cdn.beau.app',
+    MEDIA_BASE_URL: 'https://api.beau.app',
   },
 };
 
