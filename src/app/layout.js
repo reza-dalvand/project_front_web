@@ -2,6 +2,7 @@
 import './globals.css';
 import Providers from '@/components/providers';
 import Script from 'next/script';
+import SplashScreenHider from '@/components/providers/SplashScreenHider'; // ✅ اضافه شد
 
 export const metadata = {
   title: 'زیبانو | رزرو آنلاین خدمات زیبایی و سلامت',
@@ -40,18 +41,15 @@ export default function RootLayout({ children }) {
         <meta property="og:description" content="رزرو آنلاین خدمات زیبایی و سلامت" />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="fa_IR" />
-
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="زیبانو" />
-
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://picsum.photos" />
         <link rel="preconnect" href="https://i.pravatar.cc" />
-
         <Script
           id="theme-script"
           strategy="beforeInteractive"
@@ -76,7 +74,6 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
-
         {process.env.NODE_ENV === 'production' && (
           <Script
             id="sw-register"
@@ -108,8 +105,8 @@ export default function RootLayout({ children }) {
             alignItems: 'center',
             justifyContent: 'center',
             overflow: 'hidden',
-            backgroundColor: '#F5F0EC', // رنگ پس‌زمینه fallback
-            transition: 'opacity 0.5s ease-out',
+            backgroundColor: '#F5F0EC',
+            transition: 'opacity 0.6s ease-out',
           }}
         >
           <img
@@ -118,31 +115,13 @@ export default function RootLayout({ children }) {
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'cover', // تمام صفحه کردن تصویر بدون دفرمه شدن
+              objectFit: 'cover',
             }}
           />
         </div>
 
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                // مخفی کردن اسپلش اسکرین وب پس از لود کامل با افکت محو شدن
-                window.addEventListener('load', function() {
-                  setTimeout(function() {
-                    var splash = document.getElementById('web-splash-screen');
-                    if (splash) {
-                      splash.style.opacity = '0';
-                      setTimeout(function() { 
-                        if(splash && splash.parentNode) splash.parentNode.removeChild(splash); 
-                      }, 2000);
-                    }
-                  }, 1000);
-                });
-              })();
-            `,
-          }}
-        />
+        <SplashScreenHider />
+
         <Providers>{children}</Providers>
       </body>
     </html>
