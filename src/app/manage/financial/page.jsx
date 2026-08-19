@@ -2,22 +2,20 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiCreditCard, FiRefreshCw, FiAlertTriangle } from 'react-icons/fi';
+import { FiCreditCard } from 'react-icons/fi'; // ✅ FiRefreshCw حذف شد
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
-import Button from '@/components/common/Button';
+// ✅ import Button حذف شد
 import FinancialStatsCards from '@/components/manageBusiness/financial/FinancialStatsCards';
 import BankInfoCard from '@/components/manageBusiness/financial/BankInfoCard';
 import FinancialTabs from '@/components/manageBusiness/financial/FinancialTabs';
 import TransactionItem from '@/components/manageBusiness/financial/TransactionItem';
 import { usePaymentManager } from '@/hooks/usePaymentManager';
-import { TX_STATUS_MAP } from '@/stores/usePaymentStore';
 import dynamic from 'next/dynamic';
-
 const TransactionDetailModal = dynamic(
   () => import('@/components/manageBusiness/financial/TransactionDetailModal'),
   { ssr: false, loading: () => null }
@@ -26,14 +24,13 @@ const BankEditModal = dynamic(() => import('@/components/manageBusiness/financia
   ssr: false,
   loading: () => null,
 });
-
 export default function FinancialManagementPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const businessData = useBusinessStore((s) => s.businessData);
   const { showToast } = useToast();
-
+  // ✅ handleRequestSettlement از destructuring حذف شد
   const {
     businessStats,
     transactions,
@@ -46,18 +43,13 @@ export default function FinancialManagementPage() {
     detailVisible,
     handleOpenDetail,
     handleCloseDetail,
-    handleRequestSettlement,
   } = usePaymentManager();
-
   const [bankEditVisible, setBankEditVisible] = useState(false);
   const bankInfo = businessData?.bankInfo || { isRegistered: false, isVerified: false };
-  const hasPendingMoney = (businessStats?.blocked || 0) > 0 || (businessStats?.settling || 0) > 0;
-
   const handleSaveBankInfo = (data) => {
     setBankEditVisible(false);
     showToast('اطلاعات حساب بانکی ثبت شد و وارد مرحله تایید شد', 'success');
   };
-
   if (!isAuthenticated) {
     return (
       <ScreenWrapper>
@@ -67,11 +59,9 @@ export default function FinancialManagementPage() {
       </ScreenWrapper>
     );
   }
-
   return (
     <ScreenWrapper padding={0}>
       <Header title="مدیریت مالی" onBackPress={() => router.push('/manage')} />
-
       <div className="flex-1 overflow-y-auto p-4 pb-32">
         {/* آمار مالی */}
         {isLoadingStats ? (
@@ -84,30 +74,16 @@ export default function FinancialManagementPage() {
         ) : (
           <FinancialStatsCards stats={businessStats} />
         )}
-
         {/* اطلاعات بانکی */}
         <BankInfoCard
           bankInfo={bankInfo}
           onEdit={() => setBankEditVisible(true)}
           businessOwnerName={businessData?.ownerName || ''}
-          hasActiveAppointments={hasPendingMoney}
+          hasActiveAppointments={
+            (businessStats?.blocked || 0) > 0 || (businessStats?.settling || 0) > 0
+          }
         />
-
-        {/* دکمه درخواست تسویه */}
-        {(businessStats?.settling || 0) > 0 && (
-          <div className="mb-4">
-            <Button
-              title="درخواست تسویه"
-              onPress={handleRequestSettlement}
-              variant="primary"
-              size="lg"
-              fullWidth
-              icon={<FiRefreshCw size={18} color="#fff" />}
-              iconPosition="right"
-            />
-          </div>
-        )}
-
+        {/* ❌ دکمه درخواست تسویه حذف شد — تسویه خودکار است */}
         {/* تب‌ها */}
         <div className="flex items-center gap-2 mb-3 px-0.5">
           <FiCreditCard size={20} style={{ color: colors.primary }} />
@@ -115,9 +91,7 @@ export default function FinancialManagementPage() {
             تراکنش‌های مالی
           </h3>
         </div>
-
         <FinancialTabs active={activeTab} counts={tabCounts} onChange={setActiveTab} />
-
         {/* لیست تراکنش‌ها */}
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -139,7 +113,6 @@ export default function FinancialManagementPage() {
           </div>
         )}
       </div>
-
       {/* مدال‌ها */}
       <TransactionDetailModal visible={detailVisible} tx={selectedTx} onClose={handleCloseDetail} />
       <BankEditModal

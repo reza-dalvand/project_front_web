@@ -5,8 +5,10 @@
  * هماهنگ با بک‌اند:
  * - Transaction: type (deposit/full_payment/refund/settlement)
  *                status (blocked/settling/settled/refunded/failed)
- * - Settlement:  status (pending/processing/completed/failed)
  * - Business Stats: blocked, settling, settled, refunded, total, pending_commission
+ *
+ * ⚠️ تسویه به صورت خودکار انجام می‌شود.
+ *    requestSettlement و fetchSettlements حذف شدند.
  */
 import { create } from 'zustand';
 import { paymentsService } from '@/api';
@@ -58,26 +60,19 @@ export const TX_TYPE_MAP = {
   settlement: { label: 'تسویه', color: '#43A047', icon: 'check-circle' },
 };
 
-export const SETTLEMENT_STATUS_MAP = {
-  pending: { label: 'در انتظار', color: '#FF9800' },
-  processing: { label: 'در حال واریز', color: '#2196F3' },
-  completed: { label: 'واریز شده', color: '#43A047' },
-  failed: { label: 'ناموفق', color: '#E53935' },
-};
+// ❌ SETTLEMENT_STATUS_MAP حذف شد — تسویه خودکار است
 
 // ═══════ Store ═══════
 export const usePaymentStore = create((set, get) => ({
   // ─── State ───
   businessStats: null,
   transactions: [],
-  settlements: [],
   customerPayments: [],
   isLoading: false,
   isLoadingStats: false,
   error: null,
 
   // ─── Business Stats ───
-
   /**
    * دریافت آمار مالی کسب‌وکار
    */
@@ -95,7 +90,6 @@ export const usePaymentStore = create((set, get) => ({
   },
 
   // ─── Business Transactions ───
-
   /**
    * دریافت تراکنش‌های کسب‌وکار
    * @param {object} params - { status, page, page_size }
@@ -113,42 +107,10 @@ export const usePaymentStore = create((set, get) => ({
     }
   },
 
-  // ─── Settlements ───
-
-  /**
-   * درخواست تسویه
-   * @param {number|null} amount
-   */
-  requestSettlement: async (amount = null) => {
-    try {
-      const result = await paymentsService.requestSettlement(amount);
-      // بروزرسانی لیست تسویه‌ها
-      set((state) => ({
-        settlements: [result.data, ...state.settlements],
-      }));
-      return result.data;
-    } catch (error) {
-      console.error('requestSettlement failed:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * دریافت لیست تسویه‌ها
-   */
-  fetchSettlements: async () => {
-    try {
-      const result = await paymentsService.getSettlements();
-      set({ settlements: result.data || [] });
-      return result.data;
-    } catch (error) {
-      console.error('fetchSettlements failed:', error);
-      throw error;
-    }
-  },
+  // ❌ requestSettlement حذف شد — تسویه خودکار است
+  // ❌ fetchSettlements حذف شد — تسویه خودکار است
 
   // ─── Customer Payments ───
-
   /**
    * دریافت تاریخچه پرداخت‌های مشتری
    */
@@ -166,7 +128,6 @@ export const usePaymentStore = create((set, get) => ({
   },
 
   // ─── Payment Initiation ───
-
   /**
    * شروع پرداخت بیعانه
    * @param {number} appointmentId
@@ -183,7 +144,6 @@ export const usePaymentStore = create((set, get) => ({
   },
 
   // ─── Helpers ───
-
   /**
    * فیلتر تراکنش‌ها بر اساس وضعیت
    */
@@ -210,7 +170,6 @@ export const usePaymentStore = create((set, get) => ({
     set({
       businessStats: null,
       transactions: [],
-      settlements: [],
       customerPayments: [],
       isLoading: false,
       isLoadingStats: false,
