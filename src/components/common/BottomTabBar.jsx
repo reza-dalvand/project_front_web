@@ -41,7 +41,6 @@ export default function BottomTabBar() {
     router.push(tab.path);
   };
 
-
   const isActive = (tab) => {
     if (tab.isAuthAction) return false;
     if (tab.path === '/') return pathname === '/';
