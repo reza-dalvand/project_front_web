@@ -98,7 +98,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                 className="text-[11px] font-[Vazir] mt-0.5"
                 style={{ color: colors.textSecondary }}
               >
-                سهم زیبانو از هر رزرو
+                سهم بیو کلاب از هر رزرو
               </p>
             </div>
           </div>
@@ -121,7 +121,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
               className="text-xs font-[Vazir] leading-6 flex-1"
               style={{ color: colors.textSecondary }}
             >
-              زیبانو برای ارائه خدماتی مانند پشتیبانی، پردازش پرداخت، مدیریت نوبت‌ها و اطلاع‌رسانی
+              بیو کلاب برای ارائه خدماتی مانند پشتیبانی، پردازش پرداخت، مدیریت نوبت‌ها و اطلاع‌رسانی
               خودکار، کمیسیونی از مبلغ هر رزرو دریافت می‌کند.{' '}
               <span className="font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
                 این مبلغ از قیمت کل خدمت کسر خواهد شد.
@@ -151,7 +151,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
                 className="text-[11px] font-[Vazir-Bold]"
                 style={{ color: colors.textSecondary }}
               >
-                کمیسیون زیبانو
+                کمیسیون بیو کلاب
               </span>
             </div>
             {APP_FEE_TIERS.map((tier, index) => {
@@ -236,7 +236,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
               <FiMinusCircle size={20} color="#FF9800" className="flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-[Vazir-Medium]" style={{ color: colors.textMain }}>
-                  کمیسیون زیبانو از خدمت شما
+                  کمیسیون بیو کلاب از خدمت شما
                 </p>
                 <p className="text-sm font-[Vazir-Bold] mt-1" style={{ color: '#FF9800' }}>
                   {formatPrice(currentFee)}

@@ -36,14 +36,14 @@ export default function InviteFriendsPage() {
   };
 
   const handleShare = async () => {
-    const message = `🌸 با اپلیکیشن زیبانو، خدمات زیبایی و سلامت رو آنلاین رزرو کن!
+    const message = `🌸 با اپلیکیشن بیو کلاب، خدمات زیبایی و سلامت رو آنلاین رزرو کن!
 ✨ با کد معرف من ثبت‌نام کن: ${referralCode}
 📱 لینک دانلود: ${referralLink}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'زیبانو',
+          title: 'بیو کلاب',
           text: message,
           url: referralLink,
         });
@@ -68,11 +68,11 @@ export default function InviteFriendsPage() {
     },
     {
       icon: FiUserPlus,
-      text: 'دوست شما با کد شما در زیبانو ثبت‌نام می‌کند',
+      text: 'دوست شما با کد شما در بیو کلاب ثبت‌نام می‌کند',
     },
     {
       icon: FiAward,
-      text: 'همراه با دوستانتان از خدمات زیبانو لذت ببرید',
+      text: 'همراه با دوستانتان از خدمات بیو کلاب لذت ببرید',
     },
   ];
 
@@ -103,7 +103,7 @@ export default function InviteFriendsPage() {
               دوستان خود را دعوت کنید
             </h3>
             <p className="text-sm leading-6 px-4" style={{ color: colors.textSecondary }}>
-              زیبانو را به دوستانتان معرفی کنید و همراه با آن‌ها از خدمات زیبایی لذت ببرید
+              بیو کلاب را به دوستانتان معرفی کنید و همراه با آن‌ها از خدمات زیبایی لذت ببرید
             </p>
           </div>
         </div>

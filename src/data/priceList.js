@@ -44,7 +44,7 @@ export const PRICE_LIST_THEMES = [
   },
   {
     id: 'classic',
-    label: 'کلاسیک زیبانو',
+    label: 'کلاسیک بیو کلاب',
     emoji: '🤎',
     bg: '#F5F0EC',
     card: '#FDFAF7',

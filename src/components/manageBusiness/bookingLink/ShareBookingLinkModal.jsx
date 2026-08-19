@@ -81,7 +81,7 @@ export default function ShareBookingLinkModal({ visible, onClose, bookingLink })
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'نوبت‌دهی آنلاین زیبانو',
+          title: 'نوبت‌دهی آنلاین بیو کلاب',
           text: `🌸 نوبت‌دهی آنلاین\n${bookingLink}`,
           url: bookingLink,
         });

@@ -15,7 +15,7 @@ const MOCK_REMOTE_CONFIG = {
   minRequiredVersion: '1.0.0',
   isForceUpdate: false,
   releaseDate: '۱۴۰۳/۰۵/۱۵',
-  title: 'نسخه جدید زیبانو منتشر شد!',
+  title: 'نسخه جدید بیو کلاب منتشر شد!',
   updateMessage: 'برای تجربه بهتر، لطفاً به آخرین نسخه به‌روزرسانی کنید.',
   changelog: [
     { icon: '✨', text: 'افزوده شدن سیستم نظردهی' },

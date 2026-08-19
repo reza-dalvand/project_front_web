@@ -69,18 +69,18 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
   // ═══ ساخت پیام اشتراک‌گذاری ═══
   const buildShareMessage = () =>
     [
-      '🧾 فاکتور زیبانو',
+      '🧾 فاکتور بیو کلاب',
       `📋 ${payment.businessName || 'پرداخت'}`,
       `💰 مبلغ: ${formatPrice(payment.paidAmount || payment.amount || 0)}`,
       `🔖 کد پیگیری: ${payment.trackingCode || payment.tracking_code || '—'}`,
-      '✅ زیبانو - رزرو آنلاین خدمات زیبایی',
+      '✅ بیو کلاب - رزرو آنلاین خدمات زیبایی',
     ].join('');
 
   const handleShare = async () => {
     const msg = buildShareMessage();
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'فاکتور زیبانو', text: msg });
+        await navigator.share({ title: 'فاکتور بیو کلاب', text: msg });
         return;
       } catch (err) {
         if (err?.name === 'AbortError') return;

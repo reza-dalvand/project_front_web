@@ -19,7 +19,7 @@ export default function ProfileAvatarSection({ userName }) {
         </div>
       </div>
       <span className="text-base font-[Vazir-Bold] mt-1" style={{ color: colors.textMain }}>
-        {userName || 'کاربر زیبانو'}
+        {userName || 'کاربر بیو کلاب'}
       </span>
     </div>
   );

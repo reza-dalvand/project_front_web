@@ -97,7 +97,7 @@ export default function NotFound() {
 
       {/* فوتر */}
       <span className="text-xs mt-4" style={{ color: colors.textSecondary }}>
-        زیبانو — رزرو آنلاین خدمات زیبایی و سلامت
+        بیو کلاب — رزرو آنلاین خدمات زیبایی و سلامت
       </span>
     </div>
   );

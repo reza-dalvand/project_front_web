@@ -29,7 +29,7 @@ export default function BusinessInfoCard({ business, onMapPress }) {
 
   // ═══ اشتراک‌گذاری ═══
   const handleShare = async () => {
-    const shareMessage = `🌸 ${business.name}\n📍 ${business.address}\n✨ رزرو از اپلیکیشن زیبانو`;
+    const shareMessage = `🌸 ${business.name}\n📍 ${business.address}\n✨ رزرو از اپلیکیشن بیو کلاب`;
     if (navigator.share) {
       try {
         await navigator.share({ title: business.name, text: shareMessage });

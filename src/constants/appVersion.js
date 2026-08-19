@@ -21,7 +21,7 @@ export const STORE_URLS = {
 export const DEFAULT_STORE_URL = 'https://zibano.app';
 
 // نام استور پیش‌فرض
-export const DEFAULT_STORE_NAME = 'زیبانو وب';
+export const DEFAULT_STORE_NAME = 'بیو کلاب وب';
 
 /**
  * تبدیل "1.2.3" به عدد قابل مقایسه (10203)

@@ -12,7 +12,7 @@ const REGISTRATION_STEPS = [
     id: 1,
     emoji: '📋',
     title: 'قوانین و مقررات',
-    description: 'مطالعه و پذیرش قوانین زیبانو',
+    description: 'مطالعه و پذیرش قوانین بیو کلاب',
     color: '#9C27B0',
   },
   {
@@ -174,7 +174,7 @@ export default function TermsAndConditionsStep({ onAccept, onDecline }) {
               className="text-sm font-[Vazir] leading-6 flex-1"
               style={{ color: colors.textMain }}
             >
-              تمامی قوانین و مقررات زیبانو را{' '}
+              تمامی قوانین و مقررات بیو کلاب را{' '}
               <span className="font-[Vazir-Bold]" style={{ color: colors.primary }}>
                 مطالعه کرده و می‌پذیرم.
               </span>

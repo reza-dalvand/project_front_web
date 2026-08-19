@@ -5,15 +5,15 @@ import Script from 'next/script';
 import SplashScreenHider from '@/components/providers/SplashScreenHider'; // ✅ اضافه شد
 
 export const metadata = {
-  title: 'زیبانو | رزرو آنلاین خدمات زیبایی و سلامت',
+  title: 'بیو کلاب | رزرو آنلاین خدمات زیبایی و سلامت',
   description: 'رزرو آنلاین خدمات زیبایی، سلامت، سالن‌ها، کلینیک‌ها و متخصصان زیبایی',
-  keywords: ['زیبانو', 'رزرو آنلاین', 'سالن زیبایی', 'کلینیک پوست'],
+  keywords: ['بیو کلاب', 'رزرو آنلاین', 'سالن زیبایی', 'کلینیک پوست'],
   authors: [{ name: 'Zibano Team' }],
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'زیبانو',
+    title: 'بیو کلاب',
   },
   other: {
     'apple-touch-icon': '/icons/icon-192.png',
@@ -37,14 +37,14 @@ export default function RootLayout({ children }) {
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
         <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="زیبانو | رزرو آنلاین خدمات زیبایی" />
+        <meta property="og:title" content="بیو کلاب | رزرو آنلاین خدمات زیبایی" />
         <meta property="og:description" content="رزرو آنلاین خدمات زیبایی و سلامت" />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="fa_IR" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="زیبانو" />
+        <meta name="apple-mobile-web-app-title" content="بیو کلاب" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <link rel="preconnect" href="https://images.unsplash.com" />
@@ -111,7 +111,7 @@ export default function RootLayout({ children }) {
         >
           <img
             src="/spalsh.png"
-            alt="زیبانو - رزرو آنلاین خدمات زیبایی و سلامت"
+            alt="بیو کلاب - رزرو آنلاین خدمات زیبایی و سلامت"
             style={{
               width: '100%',
               height: '100%',

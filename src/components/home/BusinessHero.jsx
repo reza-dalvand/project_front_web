@@ -34,7 +34,7 @@ export default function BusinessHero({
     const shareMessage = `🌸 ${businessName || 'سالن زیبایی'}
 📱 با این لینک می‌توانید مستقیماً از من نوبت بگیرید:
 ${bookingLink}
-✨ رزرو از اپلیکیشن زیبانو`;
+✨ رزرو از اپلیکیشن بیو کلاب`;
 
     // ۱. استفاده از Web Share API در صورت پشتیبانی
     if (navigator.share) {

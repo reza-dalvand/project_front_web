@@ -65,7 +65,7 @@ export const MOCK_POSTS = [
   },
   {
     id: 'p4',
-    businessName: 'مجله زیبانو',
+    businessName: 'مجله بیو کلاب',
     businessLogo: 'https://picsum.photos/100/100?random=10',
     businessId: 'magazine',
     rating: 0,

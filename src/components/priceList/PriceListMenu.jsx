@@ -70,7 +70,7 @@ export default function PriceListMenu({ businessName, businessLogo, settings }) 
             {businessName}
           </h3>
           <span className="text-[10px]" style={{ color: theme.textSecondary }}>
-            زیبانو | رزرو آنلاین خدمات زیبایی و سلامت
+            بیو کلاب | رزرو آنلاین خدمات زیبایی و سلامت
           </span>
           <div className="mt-1 px-5 py-1.5 rounded-full" style={{ backgroundColor: theme.accent }}>
             <span className="text-[11px] font-[Vazir-Bold] text-white">لیست قیمت خدمات</span>
@@ -152,7 +152,7 @@ export default function PriceListMenu({ businessName, businessLogo, settings }) 
           >
             <span className="text-sm">🌸</span>
             <span className="text-[11px] font-[Vazir-Bold]" style={{ color: theme.accent }}>
-              زیبانو
+              بیو کلاب
             </span>
           </div>
           <span className="text-[10px]" style={{ color: theme.textSecondary }}>

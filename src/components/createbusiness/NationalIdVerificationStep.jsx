@@ -64,7 +64,7 @@ export default function NationalIdVerificationStep({
       } else {
         await new Promise((r) => setTimeout(r, 1500));
         result = {
-          data: { verified_name: 'کاربر آزمایشی زیبانو', national_id: nationalId },
+          data: { verified_name: 'کاربر آزمایشی بیو کلاب', national_id: nationalId },
         };
       }
       const name = result.data?.verified_name || '';

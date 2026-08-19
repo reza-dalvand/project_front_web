@@ -28,7 +28,7 @@ export default function ActionButtons({ phone, shareMessage, shareUrl }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'زیبانو',
+          title: 'بیو کلاب',
           text: shareMessage,
           url: shareUrl || window.location.href,
         });

@@ -13,7 +13,7 @@ export default function ProfileHeader({ user }) {
       </h2>
 
       <div className="flex items-center gap-4">
-        {/* لوگوی گل زیبانو */}
+        {/* لوگوی گل بیو کلاب */}
         <div
           className="rounded-full flex items-center justify-center border-[3px]"
           style={{ borderColor: 'rgba(255,255,255,0.3)', width: '88px', height: '88px' }}
@@ -28,7 +28,7 @@ export default function ProfileHeader({ user }) {
 
         <div className="flex flex-col gap-1 flex-1">
           <span className="text-xl font-[Vazir-Bold]" style={{ color: '#ffffff' }}>
-            {user?.name || 'کاربر زیبانو'}
+            {user?.name || 'کاربر بیو کلاب'}
           </span>
           <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
             {user?.phone || '۰۹۱۲***۶۷۸۹'}

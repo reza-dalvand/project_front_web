@@ -18,7 +18,7 @@ export default function PostFooterHint({ isMagazine }) {
       <FiZap size={16} style={{ color: isMagazine ? '#9C27B0' : colors.primary }} />
       <span className="text-xs leading-5 flex-1" style={{ color: colors.textSecondary }}>
         {isMagazine
-          ? 'این مقاله توسط تیم تحریریه مجله زیبانو تهیه شده است'
+          ? 'این مقاله توسط تیم تحریریه مجله بیو کلاب تهیه شده است'
           : 'با رزرو نوبت از این کسب‌وکار، از تخفیف‌های ویژه بهره‌مند شوید'}
       </span>
     </div>

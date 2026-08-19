@@ -36,7 +36,7 @@ export const MOCK_NOTIFICATIONS = [
     type: 'system',
     color: '#9C27B0',
     title: 'به‌روزرسانی اپلیکیشن',
-    message: 'نسخه جدید زیبانو با قابلیت‌های بیشتر و رفع باگ‌ها منتشر شد.',
+    message: 'نسخه جدید بیو کلاب با قابلیت‌های بیشتر و رفع باگ‌ها منتشر شد.',
     time: 'دیروز',
     isRead: true,
   },

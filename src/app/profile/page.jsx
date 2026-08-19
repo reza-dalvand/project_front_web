@@ -175,7 +175,7 @@ export default function ProfilePage() {
             style={{ color: '#E53935' }}
           />
           <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-            نسخه ۱.۰.۰ - زیبانو
+            نسخه ۱.۰.۰ - بیو کلاب
           </span>
         </div>
       </div>

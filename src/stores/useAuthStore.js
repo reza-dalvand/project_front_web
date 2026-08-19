@@ -70,7 +70,7 @@ export const useAuthStore = create(
             name:
               userData.fullName ||
               `${userData.firstName || ''} ${userData.lastName || ''}`.trim() ||
-              'کاربر زیبانو',
+              'کاربر بیو کلاب',
             firstName: userData.firstName || '',
             lastName: userData.lastName || '',
             avatar: userData.avatar || null,

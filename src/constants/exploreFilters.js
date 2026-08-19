@@ -121,7 +121,7 @@ export const SUB_CATEGORIES = {
 export const SOURCE_FILTERS = [
   { id: 'all', label: 'همه', icon: 'apps' },
   { id: 'business', label: 'پست کسب‌وکارها', icon: 'store' },
-  { id: 'magazine', label: 'مجله زیبانو', icon: 'auto-awesome' },
+  { id: 'magazine', label: 'مجله بیو کلاب', icon: 'auto-awesome' },
 ];
 
 // تابع کمکی: یافتن label بر اساس id

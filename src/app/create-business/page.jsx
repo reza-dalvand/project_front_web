@@ -186,7 +186,7 @@ export default function CreateBusinessPage() {
         visible={successModalVisible}
         onClose={handleSuccessClose}
         title="ثبت‌نام با موفقیت انجام شد"
-        message="اطلاعات کسب‌وکار شما با موفقیت ثبت شد. پس از بررسی توسط کارشناسان زیبانو، نتیجه از طریق پیامک ارسال خواهد شد."
+        message="اطلاعات کسب‌وکار شما با موفقیت ثبت شد. پس از بررسی توسط کارشناسان بیو کلاب، نتیجه از طریق پیامک ارسال خواهد شد."
         confirmText="متوجه شدم"
         emoji="🎉"
       />

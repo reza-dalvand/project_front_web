@@ -6,7 +6,7 @@ import { useTheme } from '@/stores/useThemeStore';
 const MOCK_REMOTE_CONFIG = {
   isMaintenance: false,
   title: 'در حال بروزرسانی هستیم 🔧',
-  message: 'تیم فنی زیبانو در حال انجام بهبودهای لازم است. لطفاً دقایقی دیگر مراجعه فرمایید.',
+  message: 'تیم فنی بیو کلاب در حال انجام بهبودهای لازم است. لطفاً دقایقی دیگر مراجعه فرمایید.',
   estimatedEnd: 'امروز ساعت ۱۸:۰۰',
   supportPhone: '۰۲۱-۹۱۰۰۱۲۳۴',
 };

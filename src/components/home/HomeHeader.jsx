@@ -50,7 +50,7 @@ export default function HomeHeader({
             <div className="flex flex-col gap-0.5 flex-1">
               <span className="text-[12px] font-[Vazir] text-white/85">سلام، وقت بخیر 👋</span>
               <span className="text-[17px] font-[Vazir-Bold] text-white line-clamp-1">
-                {userName || 'کاربر زیبانو'}
+                {userName || 'کاربر بیو کلاب'}
               </span>
             </div>
           </div>

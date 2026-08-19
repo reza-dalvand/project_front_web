@@ -105,7 +105,7 @@ export default function ServiceCard({ service, onEdit, onToggle, onDelete }) {
             {/* ✅ جدید: نمایش کمیسیون */}
             {service.appFee > 0 && (
               <p className="text-[10px] mt-0.5" style={{ color: colors.textSecondary }}>
-                کمیسیون زیبانو: {formatPrice(service.appFee)}
+                کمیسیون بیو کلاب: {formatPrice(service.appFee)}
               </p>
             )}
           </div>

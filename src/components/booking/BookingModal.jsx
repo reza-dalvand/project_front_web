@@ -67,7 +67,7 @@ export default function BookingModal({
   // ─── تشخیص نیاز به استپ نام ───
   const needsNameStep = useMemo(() => {
     const name = user?.name?.trim();
-    return !name || name === 'کاربر زیبانو' || name.length < 3;
+    return !name || name === 'کاربر بیو کلاب' || name.length < 3;
   }, [user?.name]);
 
   // ─── ساخت داینامیک استپ‌ها ───

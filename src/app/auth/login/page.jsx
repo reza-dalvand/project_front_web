@@ -105,7 +105,7 @@ function LoginPageContent() {
             className="text-4xl font-[Vazir-Bold] tracking-wide"
             style={{ color: colors.textMain }}
           >
-            زیبانو
+            بیو کلاب
           </h1>
           <p className="text-sm text-center" style={{ color: colors.textSecondary }}>
             رزرو آنلاین خدمات زیبایی و سلامت
@@ -226,7 +226,7 @@ function LoginPageContent() {
             </span>
           </div>
           <span className="text-xs" style={{ color: colors.textSecondary }}>
-            زیبانو — نسخه ۱.۰.۰
+            بیو کلاب — نسخه ۱.۰.۰
           </span>
         </div>
       </div>

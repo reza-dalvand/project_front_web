@@ -74,11 +74,11 @@ export default function PostModal({
         ? `${window.location.origin}/post/${post.id}`
         : `https://zibano.app/post/${post.id}`;
     const shareMessage = [
-      `🌟 ${post.businessName || 'زیبانو'}`,
+      `🌟 ${post.businessName || 'بیو کلاب'}`,
       post.caption ? post.caption : '',
       '',
       `🔗 ${postUrl}`,
-      '📱 مشاهده در اپلیکیشن زیبانو',
+      '📱 مشاهده در اپلیکیشن بیو کلاب',
     ]
       .filter(Boolean)
       .join('\n');
@@ -86,7 +86,7 @@ export default function PostModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: post.businessName || 'زیبانو',
+          title: post.businessName || 'بیو کلاب',
           text: post.caption || '',
           url: postUrl,
         });
