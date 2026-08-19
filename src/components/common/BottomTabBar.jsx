@@ -34,11 +34,13 @@ export default function BottomTabBar() {
 
   const handleTabPress = (tab) => {
     if (tab.isAuthAction) {
-      openAuthModal();
+      // ✅ تغییر: به جای باز کردن مدال، به صفحه ورود ریدایرکت کن
+      router.push('/auth/login');
       return;
     }
     router.push(tab.path);
   };
+
 
   const isActive = (tab) => {
     if (tab.isAuthAction) return false;
