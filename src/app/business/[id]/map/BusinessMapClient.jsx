@@ -166,6 +166,14 @@ export default function BusinessMapPage() {
     }
   };
 
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  };
+
   const handleCopyAddress = async () => {
     try {
       await navigator.clipboard.writeText(business.address);
@@ -180,7 +188,7 @@ export default function BusinessMapPage() {
   return (
     <ScreenWrapper padding={0}>
       <div className="flex flex-col h-screen" style={{ backgroundColor: colors.background }}>
-        <BusinessMapHeader businessName={business.name} onBack={() => router.back()} />
+        <BusinessMapHeader businessName={business.name} onBack={handleBack} />
 
         <div className="flex-1 relative">
           {MapLib && !mapError ? (

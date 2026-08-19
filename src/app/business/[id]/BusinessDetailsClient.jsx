@@ -166,7 +166,13 @@ export default function BusinessDetailsPage() {
   }, []);
 
   const toggleFavorite = useCallback(() => setIsFavorite((prev) => !prev), []);
-  const goBack = useCallback(() => router.back(), [router]);
+  const goBack = useCallback(() => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  }, [router]);
   const openMap = useCallback(() => router.push(`/business/${params.id}/map`), [router, params.id]);
 
   if (isLoading) {

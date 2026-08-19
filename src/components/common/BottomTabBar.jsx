@@ -12,11 +12,9 @@ export default function BottomTabBar() {
   const router = useRouter();
   const { isAuthenticated, openAuthModal } = useAuth();
   const businessData = useBusinessStore((s) => s.businessData);
-
   const hasBusiness = Boolean(
     businessData?.id && businessData?.name && businessData?.isActive !== false
   );
-
   const tabs = isAuthenticated
     ? [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
@@ -32,19 +30,24 @@ export default function BottomTabBar() {
         { id: 'login', icon: FiLogIn, label: 'ورود و ثبت‌نام', isAuthAction: true },
       ];
 
-  const handleTabPress = (tab) => {
-    if (tab.isAuthAction) {
-      // ✅ تغییر: به جای باز کردن مدال، به صفحه ورود ریدایرکت کن
-      router.push('/auth/login');
-      return;
-    }
-    router.push(tab.path);
-  };
-
+  // ✅ FIX: تشخیص دقیق مسیر فعال
   const isActive = (tab) => {
     if (tab.isAuthAction) return false;
     if (tab.path === '/') return pathname === '/';
-    return pathname?.startsWith(tab.path);
+    return pathname === tab.path || pathname?.startsWith(tab.path + '/');
+  };
+
+  const handleTabPress = (tab) => {
+    if (tab.isAuthAction) {
+      router.push('/auth/login');
+      return;
+    }
+
+    // ✅ FIX اصلی: اگه روی تب فعال کلیک شد، هیچ ناوبری نکن
+    // این از push های تکراری و پر شدن history stack جلوگیری می‌کنه
+    if (isActive(tab)) return;
+
+    router.push(tab.path);
   };
 
   return (
@@ -61,7 +64,6 @@ export default function BottomTabBar() {
           backgroundColor: colors.cardBackground,
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           border: `1px solid ${colors.border}`,
-          /* ✅ فاصله از پایین صفحه به اندازه safe area */
           bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
         }}
       >

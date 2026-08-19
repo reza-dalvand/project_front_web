@@ -13,6 +13,7 @@ import PostRatingCard from './post/PostRatingCard';
 import PostCaptionCard from './post/PostCaptionCard';
 import PostFooterHint from './post/PostFooterHint';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { useRouter } from 'next/navigation'; // ✅ اضافه شد
 
 export default function PostModal({
   post,
@@ -23,6 +24,7 @@ export default function PostModal({
 }) {
   const { colors } = useTheme();
   const { isAuthenticated, requireAuth } = useAuth();
+  const router = useRouter(); // ✅ اضافه شد
   const { showToast } = useToast();
   const [isSaved, setIsSaved] = useState(post?.saved || false);
   const [mounted, setMounted] = useState(false);
@@ -122,11 +124,12 @@ export default function PostModal({
   const handleBooking = () => {
     onClose();
     setTimeout(() => {
-      if (onNavigateToProfile && post.businessId) {
-        onNavigateToProfile(post.businessId);
-      } else if (typeof window !== 'undefined') {
-        // Fallback: اگر onNavigateToProfile وجود نداشت، مستقیم ناوبری کن
-        window.location.href = `/business/${post.businessId}`;
+      if (post.businessId) {
+        if (onNavigateToProfile) {
+          onNavigateToProfile(post.businessId);
+        } else {
+          router.push(`/business/${post.businessId}`);
+        }
       }
     }, 300);
   };
