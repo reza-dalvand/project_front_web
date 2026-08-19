@@ -1,6 +1,5 @@
+// src/components/profile/ProfileHeader.jsx
 'use client';
-
-import { FiHeart } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 
 export default function ProfileHeader({ user }) {
@@ -11,9 +10,8 @@ export default function ProfileHeader({ user }) {
       <h2 className="text-xl text-right mb-5 font-[Vazir-Bold]" style={{ color: '#ffffff' }}>
         پروفایل من
       </h2>
-
       <div className="flex items-center gap-4">
-        {/* لوگوی گل بیو کلاب */}
+        {/* ✅ آیکون گل — یکسان با صفحه لودینگ و لاگین */}
         <div
           className="rounded-full flex items-center justify-center border-[3px]"
           style={{ borderColor: 'rgba(255,255,255,0.3)', width: '88px', height: '88px' }}
@@ -22,7 +20,7 @@ export default function ProfileHeader({ user }) {
             className="w-[72px] h-[72px] rounded-full flex items-center justify-center"
             style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
           >
-            <FiHeart size={40} color="#fff" />
+            <span style={{ fontSize: '36px', lineHeight: 1 }}>🌸</span>
           </div>
         </div>
 
