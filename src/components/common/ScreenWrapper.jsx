@@ -24,15 +24,8 @@ export default function ScreenWrapper({
   // کل صفحه از طریق window/body اسکرول می‌شود
   if (scrollable) {
     return (
-      <div
-        className={`min-h-screen min-h-dvh bg-[var(--bg)] ${className}`}
-        style={paddingStyle}
-      >
-        {contentClassName ? (
-          <div className={contentClassName}>{children}</div>
-        ) : (
-          children
-        )}
+      <div className={`min-h-screen min-h-dvh bg-[var(--bg)] ${className}`} style={paddingStyle}>
+        {contentClassName ? <div className={contentClassName}>{children}</div> : children}
       </div>
     );
   }

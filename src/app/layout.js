@@ -12,8 +12,11 @@ export const metadata = {
   // ✅ متاتگ‌های PWA
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'زیبانو',
+  },
+  other: {
+    'apple-touch-icon': '/icons/icon-192.png',
   },
 };
 
@@ -31,7 +34,6 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
-
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>

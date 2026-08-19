@@ -37,14 +37,9 @@ export default function OfflineBanner() {
       >
         <div className="flex items-center gap-2">
           <FiWifiOff size={16} color="#fff" />
-          <span className="text-sm font-[Vazir-Bold] text-white">
-            اتصال اینترنت قطع است
-          </span>
+          <span className="text-sm font-[Vazir-Bold] text-white">اتصال اینترنت قطع است</span>
         </div>
-        <button
-          onClick={dismissBanner}
-          className="px-2 py-1 rounded-lg text-xs text-white/80"
-        >
+        <button onClick={dismissBanner} className="px-2 py-1 rounded-lg text-xs text-white/80">
           ✕
         </button>
       </div>

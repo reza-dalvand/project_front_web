@@ -42,7 +42,6 @@ const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), {
 });
 
 export default function HomePage() {
-
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       SplashScreen.hide({ fadeOutDuration: 300 });

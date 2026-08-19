@@ -593,12 +593,15 @@ export default function BookingModal({
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-2 pb-10 w-full">
           {renderStepContent()}
         </div>
-
         {/* فوتر — ✅ FIX: مخفی در حالت خطا */}
         {!bookingResult && !bookingFailed && (
           <div
-            className="px-4 sm:px-5 py-4 border-t flex-shrink-0"
-            style={{ borderColor: colors.border }}
+            className="px-4 sm:px-5 pt-4 border-t flex-shrink-0"
+            style={{
+              borderColor: colors.border,
+              /* ✅ فاصله از Navigation Bar گوشی */
+              paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+            }}
           >
             <BookingModalFooter
               currentStep={currentStep}

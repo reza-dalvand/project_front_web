@@ -11,6 +11,8 @@ import {
   FiAlertTriangle,
   FiUpload,
 } from 'react-icons/fi';
+import { UPLOAD_CONFIG } from '@/api/config';
+
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useToast } from '@/hooks/useToast';
@@ -79,8 +81,12 @@ export default function GalleryManager() {
       }
 
       // بررسی حجم فایل (حداکثر ۵ مگابایت)
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('حجم تصویر نباید بیشتر از ۵ مگابایت باشد', 'error');
+      const maxBytes = UPLOAD_CONFIG.MAX_FILE_SIZE_MB * 1024 * 1024;
+      if (file.size > maxBytes) {
+        showToast(
+          `حجم تصویر نباید بیشتر از ${toPersianDigit(UPLOAD_CONFIG.MAX_FILE_SIZE_MB)} مگابایت باشد`,
+          'error'
+        );
         return;
       }
 

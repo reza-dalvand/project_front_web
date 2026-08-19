@@ -3,6 +3,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiCamera, FiEdit, FiX, FiUpload } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { UPLOAD_CONFIG } from '@/api/config';
 
 export default function ImageUploader({
   value,
@@ -31,7 +32,7 @@ export default function ImageUploader({
     onDrop,
     accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
     maxFiles: 1,
-    maxSize: 5 * 1024 * 1024,
+    maxSize: UPLOAD_CONFIG.MAX_FILE_SIZE_MB * 1024 * 1024,
   });
 
   const handleRemove = (e) => {

@@ -26,7 +26,6 @@ const createTestUser = (phone = '09123456789', firstName = 'مریم', lastName 
   dateJoined: '2024-01-15T10:00:00Z',
 });
 
-
 const createTestTokens = () => ({
   access_token: 'mock_access_token_test',
   refresh_token: 'mock_refresh_token_test',

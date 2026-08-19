@@ -6,6 +6,7 @@
  * در development از مسیر نسبی
  */
 import env from '@/config/env';
+import { UPLOAD_CONFIG } from '@/api/config';
 
 /**
  * ساخت URL کامل تصویر
@@ -104,22 +105,21 @@ export const getPostImageUrl = (imagePath) => {
  * @param {File} file
  * @returns {{ valid: boolean, error?: string }}
  */
-export const validateImageFile = (file) => {
-  const MAX_FILE_SIZE_MB = 10;
-  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const validateImageFile = (file, maxSizeMB = null) => {
+  const limit = maxSizeMB ?? UPLOAD_CONFIG.MAX_FILE_SIZE_MB;
 
   if (!file) {
     return { valid: false, error: 'فایلی انتخاب نشده است' };
   }
-
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+  if (!UPLOAD_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return { valid: false, error: 'فرمت فایل مجاز نیست (JPEG, PNG, WebP)' };
   }
-
-  if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-    return { valid: false, error: `حجم فایل نباید بیشتر از ${MAX_FILE_SIZE_MB} مگابایت باشد` };
+  if (file.size > limit * 1024 * 1024) {
+    return {
+      valid: false,
+      error: `حجم فایل نباید بیشتر از ${limit} مگابایت باشد`,
+    };
   }
-
   return { valid: true };
 };
 
