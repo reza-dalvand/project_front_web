@@ -20,6 +20,8 @@ import { appointmentsService, schedulesService } from '@/api';
 import { USE_MOCK } from '@/api/config';
 import { toJalaaliKey } from '@/utils/date-converter';
 import { buildPriceSummary } from '@/utils/price-utils';
+import { useAuth } from '@/stores/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 export default function BookingModal({
   visible,
@@ -32,11 +34,11 @@ export default function BookingModal({
   const { colors } = useTheme();
   const { showToast } = useToast();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const currentService = service || {};
   const instanceId = useRef('booking-modal');
-
   // ─── State‌های اصلی ───
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -144,6 +146,14 @@ export default function BookingModal({
       releaseScrollLock(instanceId.current);
     };
   }, []);
+
+  // ✅ FIX: محافظت اضافی — اگر مدال باز شد ولی کاربر لاگین نبود
+  useEffect(() => {
+    if (visible && !isAuthenticated) {
+      router.push(`/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      onClose?.();
+    }
+  }, [visible, isAuthenticated]);
 
   useEffect(() => {
     if (visible) {

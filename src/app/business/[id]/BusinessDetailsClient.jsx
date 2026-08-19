@@ -19,6 +19,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { businessesService } from '@/api';
 import { USE_MOCK } from '@/api/config';
 import { MOCK_BUSINESS } from '@/data/businesses';
+import { useAuth } from '@/stores/useAuthStore';
 
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), { ssr: false });
 const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'), { ssr: false });
@@ -42,7 +43,7 @@ export default function BusinessDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { showToast } = useToast();
-
+  const { requireAuth } = useAuth();
   const [business, setBusiness] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('services');
@@ -145,10 +146,15 @@ export default function BusinessDetailsPage() {
     priceListSettings?.isPublished === true && (priceListSettings?.services?.length ?? 0) > 0;
 
   // ─── Handlers (بدون تغییر) ───
-  const openBooking = useCallback((service) => {
-    setSelectedService(service);
-    setBookingModalVisible(true);
-  }, []);
+  const openBooking = useCallback(
+    (service) => {
+      requireAuth(() => {
+        setSelectedService(service);
+        setBookingModalVisible(true);
+      });
+    },
+    [requireAuth]
+  );
 
   const closeBooking = useCallback(() => {
     setBookingModalVisible(false);

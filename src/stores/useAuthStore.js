@@ -20,7 +20,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { authService } from '@/api';
 import { useTokenStore } from './useTokenStore';
 import { isTokenExpired } from '@/utils/jwt-utils';
-import { useRouter } from 'next/navigation'; // ✅ اضافه شود
+import { useRouter, usePathname } from 'next/navigation';
 
 // ═══════════════════════════════════════════
 //    ۱. Store اصلی احراز هویت
@@ -234,7 +234,8 @@ export const useAuthModalStore = create((set, get) => ({
 //    ۳. Hook ترکیبی: useAuth
 // ═══════════════════════════════════════════
 export const useAuth = () => {
-  const router = useRouter(); // ✅ اضافه شود
+  const router = useRouter();
+  const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const needsProfileCompletion = useAuthStore((s) => s.needsProfileCompletion);
@@ -245,7 +246,9 @@ export const useAuth = () => {
     if (isAuthenticated) {
       action?.();
     } else {
-      router.push('/auth/login');
+      // ✅ FIX: مسیر فعلی به عنوان redirect پاس داده می‌شود
+      // بعد از لاگین، کاربر به همین صفحه برمی‌گردد
+      router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
     }
   };
 

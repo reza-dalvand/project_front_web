@@ -122,16 +122,16 @@ export default function PostModal({
 
   // ═══════ ✅ FIX: دکمه رزرو — با fallback ═══════
   const handleBooking = () => {
-    onClose();
-    setTimeout(() => {
-      if (post.businessId) {
-        if (onNavigateToProfile) {
+    requireAuth(() => {
+      onClose();
+      setTimeout(() => {
+        if (onNavigateToProfile && post.businessId) {
           onNavigateToProfile(post.businessId);
-        } else {
-          router.push(`/business/${post.businessId}`);
+        } else if (typeof window !== 'undefined') {
+          window.location.href = `/business/${post.businessId}`;
         }
-      }
-    }, 300);
+      }, 300);
+    });
   };
 
   const content = (
