@@ -12,7 +12,6 @@ import { useMaintenanceStore } from '@/stores/useMaintenanceStore';
 import { useAppVersionStore } from '@/stores/useAppVersionStore';
 import CapacitorSplashManager from './CapacitorSplashManager'; // ✅ اضافه شد
 
-
 // ✅ Lazy load مدال‌های غیربحرانی
 import dynamic from 'next/dynamic';
 const UpdateModal = dynamic(() => import('@/components/common/UpdateModal'), {

@@ -9,7 +9,7 @@ import { SERVICE_CATEGORIES } from '@/constants/serviceTypes';
 import { toPersianDigit } from '@/utils/numberUtils';
 
 const BUSINESS_CATEGORIES = [
-  { id: '1', label: 'سالن زیبایی (چند منظوره)' },
+  { id: '1', label: 'چند منظوره' },
   { id: '2', label: 'کلینیک پوست و مو' },
   { id: '3', label: 'مرکز لیزر' },
   { id: '4', label: 'مرکز تخصصی ناخن' },

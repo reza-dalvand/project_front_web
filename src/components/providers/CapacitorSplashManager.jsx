@@ -18,7 +18,7 @@ export default function CapacitorSplashManager() {
         // در محیط وب یا خطاهای احتمالی، سکوت اختیار کن
       }
     };
-    
+
     hideSplash();
   }, []);
 

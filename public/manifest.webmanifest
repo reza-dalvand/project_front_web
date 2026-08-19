@@ -6,22 +6,13 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": [
-    "fullscreen",
-    "standalone"
-  ],
+  "display_override": ["fullscreen", "standalone"],
   "orientation": "portrait",
   "background_color": "#F5F0EC",
   "theme_color": "#A88B7D",
   "dir": "rtl",
   "lang": "fa-IR",
-  "categories": [
-    "health",
-    "beauty",
-    "lifestyle",
-    "booking",
-    "utilities"
-  ],
+  "categories": ["health", "beauty", "lifestyle", "booking", "utilities"],
   "icons": [
     {
       "src": "../icons/icon-48.webp",

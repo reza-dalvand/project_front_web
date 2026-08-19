@@ -95,8 +95,8 @@ export default function RootLayout({ children }) {
       </head>
       <body suppressHydrationWarning>
         {/* ✅ اسپلش اسکرین وب (PWA) - نمایش تصویر اسپلش */}
-        <div 
-          id="web-splash-screen" 
+        <div
+          id="web-splash-screen"
           style={{
             position: 'fixed',
             top: 0,
@@ -112,9 +112,9 @@ export default function RootLayout({ children }) {
             transition: 'opacity 0.5s ease-out',
           }}
         >
-          <img 
-            src="/spalsh.png" 
-            alt="زیبانو - رزرو آنلاین خدمات زیبایی و سلامت" 
+          <img
+            src="/spalsh.png"
+            alt="زیبانو - رزرو آنلاین خدمات زیبایی و سلامت"
             style={{
               width: '100%',
               height: '100%',
@@ -122,7 +122,7 @@ export default function RootLayout({ children }) {
             }}
           />
         </div>
-        
+
         <script
           dangerouslySetInnerHTML={{
             __html: `
