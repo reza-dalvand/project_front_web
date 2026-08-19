@@ -64,7 +64,8 @@ export const OTP_CONFIG = {
 //    تنظیمات آپلود فایل
 // ═══════════════════════════════════════════════
 export const UPLOAD_CONFIG = {
-  MAX_FILE_SIZE_MB: 5,
+  MAX_FILE_SIZE_MB: 5, // سقف نهایی بعد از فشرده‌سازی
+  MAX_INPUT_SIZE_MB: 20, // ✅ جدید: سقف فایل خام ورودی کاربر
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
 };
 

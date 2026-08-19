@@ -16,13 +16,15 @@ export default function Header({
   const isTransparent = variant === 'transparent';
 
   // ✅ FIX: fallback برای وقتی history خالیه
-  const handleBack = onBackPress || (() => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push('/');
-    }
-  });
+  const handleBack =
+    onBackPress ||
+    (() => {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        router.back();
+      } else {
+        router.push('/');
+      }
+    });
 
   return (
     <div

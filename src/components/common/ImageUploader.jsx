@@ -1,9 +1,12 @@
+// src/components/common/ImageUploader.jsx
 'use client';
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiCamera, FiEdit, FiX, FiUpload } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { UPLOAD_CONFIG } from '@/api/config';
+import { compressImage } from '@/utils/image-compression'; // ✅ جدید
+import Image from 'next/image';
 
 export default function ImageUploader({
   value,
@@ -16,23 +19,39 @@ export default function ImageUploader({
 }) {
   const { colors } = useTheme();
   const [localPreview, setLocalPreview] = useState(value);
+  const [isCompressing, setIsCompressing] = useState(false); // ✅ جدید
 
   const onDrop = useCallback(
-    (acceptedFiles) => {
+    async (acceptedFiles) => {
       const file = acceptedFiles[0];
       if (!file) return;
-      const previewUrl = URL.createObjectURL(file);
-      setLocalPreview(previewUrl);
-      onChange?.(previewUrl);
+
+      setIsCompressing(true);
+      try {
+        // ✅ فشرده‌سازی با پریست مناسب بر اساس variant
+        const compressed = await compressImage(file, variant);
+
+        const previewUrl = URL.createObjectURL(compressed);
+        setLocalPreview(previewUrl);
+
+        // ✅ FIX: به جای URL string، خود File فشرده را پاس می‌دهیم
+        // تا BasicInfoStep بتواند با instanceof File آن را به FormData اضافه کند
+        onChange?.(compressed);
+      } catch (err) {
+        console.error('Image compression failed:', err);
+      } finally {
+        setIsCompressing(false);
+      }
     },
-    [onChange]
+    [onChange, variant]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
     maxFiles: 1,
-    maxSize: UPLOAD_CONFIG.MAX_FILE_SIZE_MB * 1024 * 1024,
+    // ✅ سقف ورودی بالاتر — چون قرار است فشرده شود
+    maxSize: UPLOAD_CONFIG.MAX_INPUT_SIZE_MB * 1024 * 1024,
   });
 
   const handleRemove = (e) => {
@@ -59,15 +78,11 @@ export default function ImageUploader({
           {required && <span style={{ color: '#E53935' }}> *</span>}
         </label>
       )}
-
       <div
         {...getRootProps()}
-        className={`
-          relative overflow-hidden rounded-2xl border-2 cursor-pointer
-          transition-all duration-200 group flex items-center justify-center
-          ${isDragActive ? 'scale-[1.02]' : 'hover:scale-[1.01]'}
-          ${variant === 'avatar' ? 'mx-auto' : ''}
-        `}
+        className={`relative overflow-hidden rounded-2xl border-2 cursor-pointer transition-all duration-200 group flex items-center justify-center
+        ${isDragActive ? 'scale-[1.02]' : 'hover:scale-[1.01]'}
+        ${variant === 'avatar' ? 'mx-auto' : ''}`}
         style={{
           width: styleDim.width,
           height: styleDim.height,
@@ -83,14 +98,16 @@ export default function ImageUploader({
         }}
       >
         <input {...getInputProps()} />
-
         {localPreview ? (
           <>
-            <img src={localPreview} alt="preview" className="object-cover w-full h-full" />
-            <div
-              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100
-                transition-opacity duration-200 flex items-center justify-center z-10"
-            >
+            <Image
+              src={localPreview}
+              alt="preview"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-10">
               <div
                 className="flex items-center gap-2 px-4 py-2 rounded-xl"
                 style={{ backgroundColor: colors.primary }}
@@ -101,8 +118,7 @@ export default function ImageUploader({
             </div>
             <button
               onClick={handleRemove}
-              className="absolute top-3 left-3 w-9 h-9 rounded-full flex items-center
-                justify-center shadow-lg transition-transform hover:scale-110 z-20"
+              className="absolute top-3 left-3 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 z-20"
               style={{ backgroundColor: '#E53935' }}
             >
               <FiX size={16} color="#fff" />
@@ -114,7 +130,12 @@ export default function ImageUploader({
               className="w-16 h-16 rounded-full flex items-center justify-center"
               style={{ backgroundColor: colors.primary + '20' }}
             >
-              {isDragActive ? (
+              {isCompressing ? (
+                <div
+                  className="w-7 h-7 border-2 border-current border-t-transparent rounded-full animate-spin"
+                  style={{ color: colors.primary }}
+                />
+              ) : isDragActive ? (
                 <FiUpload size={28} style={{ color: colors.primary }} />
               ) : (
                 <FiCamera size={28} style={{ color: colors.primary }} />
@@ -122,7 +143,11 @@ export default function ImageUploader({
             </div>
             <div className="text-center">
               <p className="text-sm font-[Vazir-Bold] mb-1" style={{ color: colors.textMain }}>
-                {isDragActive ? 'تصویر را رها کنید' : 'آپلود تصویر'}
+                {isCompressing
+                  ? 'در حال فشرده‌سازی...'
+                  : isDragActive
+                    ? 'تصویر را رها کنید'
+                    : 'آپلود تصویر'}
               </p>
               {hint && (
                 <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
@@ -133,7 +158,6 @@ export default function ImageUploader({
           </div>
         )}
       </div>
-
       {error && (
         <p className="text-xs mt-2 text-right font-[Vazir]" style={{ color: '#E53935' }}>
           {error}

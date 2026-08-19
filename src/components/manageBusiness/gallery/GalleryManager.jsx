@@ -12,7 +12,6 @@ import {
   FiUpload,
 } from 'react-icons/fi';
 import { UPLOAD_CONFIG } from '@/api/config';
-
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useToast } from '@/hooks/useToast';
@@ -21,6 +20,7 @@ import Button from '@/components/common/Button';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { compressImage } from '@/utils/image-compression'; // ✅ جدید
 import { USE_MOCK } from '@/api/config';
 
 const MAX_GALLERY_IMAGES = 3; // بک‌اند: حداکثر ۳ تصویر
@@ -39,6 +39,7 @@ export default function GalleryManager() {
   // State محلی
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false); // ✅ جدید
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const fileInputRef = useRef(null);
@@ -61,7 +62,7 @@ export default function GalleryManager() {
     load();
   }, [fetchGallery, showToast]);
 
-  // ═══════ آپلود تصویر ═══════
+  // ═══════ آپلود تصویر (با فشرده‌سازی) ═══════
   const handleFileSelect = useCallback(
     async (e) => {
       const file = e.target.files?.[0];
@@ -80,20 +81,26 @@ export default function GalleryManager() {
         return;
       }
 
-      // بررسی حجم فایل (حداکثر ۵ مگابایت)
-      const maxBytes = UPLOAD_CONFIG.MAX_FILE_SIZE_MB * 1024 * 1024;
-      if (file.size > maxBytes) {
+      // ✅ بررسی حجم ورودی (قبل از فشرده‌سازی)
+      const maxInputBytes = UPLOAD_CONFIG.MAX_INPUT_SIZE_MB * 1024 * 1024;
+      if (file.size > maxInputBytes) {
         showToast(
-          `حجم تصویر نباید بیشتر از ${toPersianDigit(UPLOAD_CONFIG.MAX_FILE_SIZE_MB)} مگابایت باشد`,
+          `حجم تصویر نباید بیشتر از ${toPersianDigit(UPLOAD_CONFIG.MAX_INPUT_SIZE_MB)} مگابایت باشد`,
           'error'
         );
         return;
       }
 
-      setIsUploading(true);
+      // ─── فشرده‌سازی ───
+      setIsCompressing(true);
       try {
+        const compressed = await compressImage(file, 'gallery');
+
+        setIsCompressing(false);
+        setIsUploading(true);
+
         if (!USE_MOCK) {
-          await uploadGalleryImageApi(file, gallery.length);
+          await uploadGalleryImageApi(compressed, gallery.length);
         } else {
           // حالت Mock — شبیه‌سازی آپلود
           await new Promise((r) => setTimeout(r, 1200));
@@ -102,6 +109,7 @@ export default function GalleryManager() {
       } catch (error) {
         showToast(error.message || 'خطا در آپلود تصویر', 'error');
       } finally {
+        setIsCompressing(false);
         setIsUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
@@ -117,7 +125,6 @@ export default function GalleryManager() {
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteTarget) return;
-
     try {
       if (!USE_MOCK) {
         await deleteGalleryImageApi(deleteTarget.id);
@@ -145,8 +152,8 @@ export default function GalleryManager() {
       if (targetIndex < 0 || targetIndex >= newOrder.length) return;
 
       [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
-      const ids = newOrder.map((img) => img.id);
 
+      const ids = newOrder.map((img) => img.id);
       try {
         if (!USE_MOCK) {
           await reorderGalleryApi(ids);
@@ -291,10 +298,16 @@ export default function GalleryManager() {
             onChange={handleFileSelect}
           />
           <Button
-            title={isUploading ? 'در حال آپلود...' : 'افزودن تصویر جدید'}
+            title={
+              isCompressing
+                ? 'در حال فشرده‌سازی...'
+                : isUploading
+                  ? 'در حال آپلود...'
+                  : 'افزودن تصویر جدید'
+            }
             onPress={() => fileInputRef.current?.click()}
-            loading={isUploading}
-            disabled={isUploading}
+            loading={isUploading || isCompressing}
+            disabled={isUploading || isCompressing}
             variant="primary"
             size="lg"
             fullWidth
