@@ -8,8 +8,7 @@ export const metadata = {
   description: 'رزرو آنلاین خدمات زیبایی، سلامت، سالن‌ها، کلینیک‌ها و متخصصان زیبایی',
   keywords: ['زیبانو', 'رزرو آنلاین', 'سالن زیبایی', 'کلینیک پوست'],
   authors: [{ name: 'Zibano Team' }],
-  manifest: '/manifest.json',
-  // ✅ متاتگ‌های PWA
+  manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -25,7 +24,6 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  // ✅ برای پوشش کامل صفحه (شامل notch آیفون)
   viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#F5F0EC' },
@@ -43,7 +41,6 @@ export default function RootLayout({ children }) {
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="fa_IR" />
 
-        {/* ✅ متاتگ‌های نصب PWA */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -97,6 +94,55 @@ export default function RootLayout({ children }) {
         )}
       </head>
       <body suppressHydrationWarning>
+        {/* ✅ اسپلش اسکرین وب (PWA) - نمایش تصویر اسپلش */}
+        <div 
+          id="web-splash-screen" 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            backgroundColor: '#F5F0EC', // رنگ پس‌زمینه fallback
+            transition: 'opacity 0.5s ease-out',
+          }}
+        >
+          <img 
+            src="/spalsh.png" 
+            alt="زیبانو - رزرو آنلاین خدمات زیبایی و سلامت" 
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover', // تمام صفحه کردن تصویر بدون دفرمه شدن
+            }}
+          />
+        </div>
+        
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // مخفی کردن اسپلش اسکرین وب پس از لود کامل با افکت محو شدن
+                window.addEventListener('load', function() {
+                  setTimeout(function() {
+                    var splash = document.getElementById('web-splash-screen');
+                    if (splash) {
+                      splash.style.opacity = '0';
+                      setTimeout(function() { 
+                        if(splash && splash.parentNode) splash.parentNode.removeChild(splash); 
+                      }, 2000);
+                    }
+                  }, 1000);
+                });
+              })();
+            `,
+          }}
+        />
         <Providers>{children}</Providers>
       </body>
     </html>

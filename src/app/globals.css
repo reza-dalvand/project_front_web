@@ -152,3 +152,46 @@
     background-position: 200% 0;
   }
 }
+
+
+/* ═══════ Web Splash Screen (PWA) ═══════ */
+#web-splash-screen {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  transition: opacity 0.5s ease-out;
+}
+#web-splash-screen.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+#web-splash-screen .splash-logo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+#web-splash-screen .splash-title {
+  color: var(--color-text-main);
+  font-family: 'Vazir-Bold', sans-serif;
+  font-size: 28px;
+  margin: 0;
+  letter-spacing: 1px;
+}
+#web-splash-screen .splash-subtitle {
+  color: var(--color-text-secondary);
+  font-family: 'Vazir', sans-serif;
+  font-size: 14px;
+  margin-top: 8px;
+}

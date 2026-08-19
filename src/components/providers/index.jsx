@@ -10,6 +10,8 @@ import OfflineBanner from '@/components/common/OfflineBanner';
 import { useNetworkStore } from '@/stores/useNetworkStore';
 import { useMaintenanceStore } from '@/stores/useMaintenanceStore';
 import { useAppVersionStore } from '@/stores/useAppVersionStore';
+import CapacitorSplashManager from './CapacitorSplashManager'; // ✅ اضافه شد
+
 
 // ✅ Lazy load مدال‌های غیربحرانی
 import dynamic from 'next/dynamic';
@@ -59,6 +61,7 @@ export default function Providers({ children }) {
   return (
     <ErrorBoundary>
       <ThemeProvider>
+        <CapacitorSplashManager /> {/* ✅ اینجا اضافه شود */}
         <StoreInitializers />
         <ToastProvider />
         <OfflineBanner />
