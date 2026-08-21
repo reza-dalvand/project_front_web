@@ -1,4 +1,4 @@
-name: CI/CD Pipeline (Test, Build, Deploy Static)
+name: CI/CD Pipeline - Beau Front
 
 on:
   push:
@@ -6,27 +6,36 @@ on:
       - main
 
 jobs:
-  test-and-build:
-    name: Test & Build Static Export
+  test-build-deploy:
+    name: Test, Build and Deploy
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
+      - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Enable Corepack
+        run: corepack enable
 
-      - name: Run Tests
-        run: npm run test:ci
+      - name: Prepare Yarn
+        run: corepack prepare yarn@1.22.22 --activate
 
-      - name: Build Static Export
-        run: npm run build
+      - name: Check Yarn version
+        run: yarn --version
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
+        run: yarn test:ci
+
+      - name: Build static export
+        run: yarn build
         env:
           NEXT_PUBLIC_API_BASE_URL: https://api.beauclub.ir/api/v1
           NEXT_PUBLIC_SITE_DOMAIN: https://beauclub.ir
@@ -34,51 +43,46 @@ jobs:
           NEXT_PUBLIC_MEDIA_BASE_URL: https://api.beauclub.ir
           NEXT_PUBLIC_USE_MOCK: false
 
-      - name: Upload 'out' folder as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: static-out
-          path: out/
+      - name: Check out directory
+        run: |
+          if [ ! -d "out" ]; then
+            echo "❌ out directory not found. Static export was not generated."
+            exit 1
+          fi
+          echo "✅ out directory exists"
 
-  deploy:
-    name: Deploy to Server (Zero Downtime)
-    needs: test-and-build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download 'out' artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: static-out
-          path: out/
-
-      - name: Copy files to server via SCP
+      - name: Upload out directory to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "out/"
+          source: "out/*"
           target: "/home/deploy/beau-front/out_new"
           strip_components: 1
           overwrite: true
 
-      - name: Swap folders and Reload Nginx
-        uses: appleboy/ssh-action@master
+      - name: Activate new release
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Zero Downtime Swap
-            rm -rf /home/deploy/beau-front/out_old
-            if [ -d "/home/deploy/beau-front/out" ]; then
-              mv /home/deploy/beau-front/out /home/deploy/beau-front/out_old
+            set -e
+
+            cd /home/deploy/beau-front
+
+            rm -rf out_old
+
+            if [ -d "out" ]; then
+              mv out out_old
             fi
-            mv /home/deploy/beau-front/out_new /home/deploy/beau-front/out
-            
-            # Fix permissions just in case
-            chmod -R 755 /home/deploy/beau-front/out
-            
-            # Reload Nginx
+
+            mv out_new out
+
+            chmod -R 755 out
+
             sudo systemctl reload nginx
-            echo "✅ Deployment successful!"
+
+            echo "✅ Beau Front deployed successfully"
