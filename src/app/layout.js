@@ -5,6 +5,7 @@ import Script from 'next/script';
 import SplashScreenHider from '@/components/providers/SplashScreenHider'; // ✅ اضافه شد
 
 export const metadata = {
+  metadataBase: new URL('https://beauclub.ir'),
   title: 'بیو کلاب | رزرو آنلاین خدمات زیبایی و سلامت',
   description: 'رزرو آنلاین خدمات زیبایی، سلامت، سالن‌ها، کلینیک‌ها و متخصصان زیبایی',
   keywords: ['بیو کلاب', 'رزرو آنلاین', 'سالن زیبایی', 'کلینیک پوست'],

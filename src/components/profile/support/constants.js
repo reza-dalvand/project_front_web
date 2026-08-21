@@ -1,7 +1,7 @@
 // src/components/profile/support/constants.js
 export const SUPPORT_PHONE = '09121234567';
 export const SUPPORT_PHONE_DISPLAY = '۰۲۱-۹۱۰۰۱۲۳۴';
-export const SUPPORT_EMAIL = 'support@beau.app';
+export const SUPPORT_EMAIL = 'support@beauclub.ir';
 export const SUPPORT_HOURS_SIMPLE = 'شنبه تا پنجشنبه از ساعت ۹ الی ۱۸';
 
 export const SUPPORT_CHANNELS = [

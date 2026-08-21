@@ -7,19 +7,19 @@ const ENV = {
     API_BASE_URL: 'http://localhost:8000/api/v1',
     SITE_DOMAIN: 'http://localhost:3000',
     ARVAN_CDN_URL: '',
-    MEDIA_BASE_URL: 'http://localhost:8000', // ← جدید
+    MEDIA_BASE_URL: 'http://localhost:8000',
   },
   staging: {
-    API_BASE_URL: 'https://staging-api.beau.app/api/v1',
-    SITE_DOMAIN: 'https://staging.beau.app',
-    ARVAN_CDN_URL: 'https://cdn.staging.beau.app',
-    MEDIA_BASE_URL: 'https://staging-api.beau.app',
+    API_BASE_URL: 'https://staging-api.beauclub.ir/api/v1',
+    SITE_DOMAIN: 'https://staging.beauclub.ir',
+    ARVAN_CDN_URL: 'https://cdn.staging.beauclub.ir',
+    MEDIA_BASE_URL: 'https://staging-api.beauclub.ir',
   },
   production: {
-    API_BASE_URL: 'https://api.beau.app/api/v1',
-    SITE_DOMAIN: 'https://beau.app',
-    ARVAN_CDN_URL: 'https://cdn.beau.app',
-    MEDIA_BASE_URL: 'https://api.beau.app',
+    API_BASE_URL: 'https://api.beauclub.ir/api/v1',
+    SITE_DOMAIN: 'https://beauclub.ir',
+    ARVAN_CDN_URL: 'https://cdn.beauclub.ir',
+    MEDIA_BASE_URL: 'https://api.beauclub.ir',
   },
 };
 

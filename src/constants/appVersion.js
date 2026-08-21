@@ -12,13 +12,13 @@ export const APP_BUILD_NUMBER = 1;
 // لینک‌های مربوط به نسخه وب
 export const STORE_URLS = {
   web: {
-    production: 'https://beau.app',
-    staging: 'https://staging.beau.app',
+    production: 'https://beauclub.ir',
+    staging: 'https://staging.beauclub.ir',
   },
 };
 
 // لینک پیش‌فرض برای وب
-export const DEFAULT_STORE_URL = 'https://beau.app';
+export const DEFAULT_STORE_URL = 'https://beauclub.ir';
 
 // نام استور پیش‌فرض
 export const DEFAULT_STORE_NAME = 'بیو کلاب وب';

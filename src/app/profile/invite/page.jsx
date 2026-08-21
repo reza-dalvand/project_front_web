@@ -22,8 +22,8 @@ export default function InviteFriendsPage() {
   const [copied, setCopied] = useState(false);
 
   const referralCode = 'BU-' + (user?.phone?.slice(-4) || '0000');
-  const referralLink = `https://beau.app/invite/${referralCode}`;
-
+  const referralLink = `https://beauclub.ir/invite/${referralCode}`;
+  
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(referralCode);

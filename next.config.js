@@ -18,8 +18,11 @@ const nextConfig = {
       { protocol: 'https', hostname: 'api.maptiler.com' },
       // ✅ Production: Arvan Storage
       { protocol: 'https', hostname: '*.arvanstorage.ir' },
-      { protocol: 'https', hostname: 'cdn.beau.app' },
-      { protocol: 'https', hostname: '*.beau.app' },
+      // ✅ Production: BeauClub Domains
+      { protocol: 'https', hostname: 'api.beauclub.ir' },
+      { protocol: 'https', hostname: 'beauclub.ir' },
+      { protocol: 'https', hostname: 'cdn.beauclub.ir' },
+      { protocol: 'https', hostname: '*.beauclub.ir' },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200],

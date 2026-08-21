@@ -229,7 +229,7 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
                   امکان لغو این نوبت وجود دارد.
                 </p>
                 <a
-                  href="https://beau.app/rules/cancellation"
+                  href="https://beauclub.ir/rules/cancellation"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] font-[Vazir] underline mt-1 inline-block"

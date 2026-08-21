@@ -4,7 +4,7 @@
 //   کش آفلاین + Sync Queue + Cache Strategies
 // ═══════════════════════════════════════════════
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `beau-static-${CACHE_VERSION}`;
 const PAGE_CACHE = `beau-pages-${CACHE_VERSION}`;
 const IMAGE_CACHE = `beau-images-${CACHE_VERSION}`;
