@@ -2282,7 +2282,7 @@ b4a@^1.6.4, b4a@^1.8.1:
 
 babel-jest@30.4.1, babel-jest@^30.4.2:
   version "30.4.1"
-  resolved "https://registry.npmjs.org/babel-jest/-/babel-jest-30.4.1.tgz#63cba904438bbe64c4cf0acdea87b0a45cb809fc"
+  resolved "https://registry.yarnpkg.com/babel-jest/-/babel-jest-30.4.1.tgz#63cba904438bbe64c4cf0acdea87b0a45cb809fc"
   integrity sha512-fATAbM8piYxkiXQp3RBXmZHxZVNJZAVXXfyeyCN2Tida3+qJ8ea9UxhiJ2y4fLO90ZImKt6k9FlcH2+rLkJGhw==
   dependencies:
     "@jest/transform" "30.4.1"
