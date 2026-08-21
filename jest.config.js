@@ -8,7 +8,7 @@ const createJestConfig = nextJest({
 
 /** @type {import('jest').Config} */
 const customJestConfig = {
-  // ═══════ فایل‌های Setup ═══════
+  // ═══════ فایل‌های Setup ═══════##
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   
   // ═══════ محیط تست ═══════
