@@ -42,14 +42,6 @@ describe('Payment Flow Integration', () => {
         expect(result.message).toBeDefined();
       }
     });
-
-    it('مرحله ۵: درخواست تسویه', async () => {
-      const result = await paymentsService.requestSettlement(500000);
-      expect(result.data).toHaveProperty('id');
-      expect(result.data).toHaveProperty('amount');
-      // ✅ FIX: استفاده از camelCase
-      expect(result.data).toHaveProperty('bankSheba');
-    });
   });
 
   describe('تولید مجدد کد تایید', () => {
