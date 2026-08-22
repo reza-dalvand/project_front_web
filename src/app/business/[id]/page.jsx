@@ -1,14 +1,10 @@
 // src/app/business/[id]/page.jsx
 import BusinessDetailsClient from './BusinessDetailsClient';
 
-// ✅ این تابع Server-side است و باید اینجا بماند
-export async function generateStaticParams() {
-  const allIds = [...MOCK_BUSINESSES_LIST.map((b) => b.id), ...Object.keys(MOCK_BUSINESSES_MAP)];
-  const uniqueIds = [...new Set(allIds)];
-  return uniqueIds.map((id) => ({ id: id.toString() }));
-}
+// ✅ در حالت production با بک‌اند، دیگر generateStaticParams
+// بر اساس ماک دیتا نداریم. صفحه کاملاً داینامیک رندر می‌شود.
+// در صورت نیاز به SSG، لیست اسلاگ‌ها باید از بک‌اند گرفته شود.
 
-// ✅ این فایل "use client" ندارد، پس می‌تواند generateStaticParams داشته باشد
 export default function BusinessDetailsPage() {
   return <BusinessDetailsClient />;
 }

@@ -5,21 +5,8 @@ import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
-import { SERVICE_CATEGORIES } from '@/constants/serviceTypes';
 import { toPersianDigit } from '@/utils/numberUtils';
-
-const BUSINESS_CATEGORIES = [
-  { id: '1', label: 'چند منظوره' },
-  { id: '2', label: 'کلینیک پوست و مو' },
-  { id: '3', label: 'مرکز لیزر' },
-  { id: '4', label: 'مرکز تخصصی ناخن' },
-  { id: '5', label: 'مرکز کراتین و رنگ مو' },
-  { id: '6', label: 'استودیو میکاپ و گریم' },
-  { id: '7', label: 'آرایشگاه مردانه' },
-  { id: '8', label: 'اسپا و ماساژ' },
-  { id: '9', label: 'مرکز تخصصی مژه و ابرو' },
-  { id: '10', label: 'استودیو تتو و هاشور' },
-];
+import { useBusinessCategories } from '@/hooks/useCategoryOptions';
 
 export default function BusinessInfoSection({
   name,
@@ -40,6 +27,8 @@ export default function BusinessInfoSection({
   onAboutTouched,
 }) {
   const { colors } = useTheme();
+  // ✅ دریافت دسته‌بندی‌ها از بک‌اند
+  const { categories: businessCategories } = useBusinessCategories();
 
   return (
     <div className="space-y-3">
@@ -81,12 +70,12 @@ export default function BusinessInfoSection({
           {errors.name && <p className="text-xs text-[#E53935] mt-1.5">{errors.name}</p>}
         </div>
 
-        {/* نوع کسب‌وکار */}
+        {/* نوع کسب‌وکار — ✅ از بک‌اند */}
         <Dropdown
           label="نوع کسب‌وکار *"
           placeholder="انتخاب کنید"
           value={categoryId}
-          options={BUSINESS_CATEGORIES}
+          options={businessCategories}
           onSelect={(val) => {
             onCategoryChange(val);
             onCategoryTouched();

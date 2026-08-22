@@ -1,5 +1,6 @@
 // src/app/profile/edit/page.jsx
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
@@ -36,7 +37,6 @@ export default function EditProfilePage() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // ─── State حذف حساب با OTP ───
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteOtp, setShowDeleteOtp] = useState(false);
   const [deleteOtp, setDeleteOtp] = useState(['', '', '', '', '']);
@@ -45,7 +45,6 @@ export default function EditProfilePage() {
   const [deleteTimer, setDeleteTimer] = useState(RESEND_SECONDS);
   const [deleteCanResend, setDeleteCanResend] = useState(false);
 
-  // تایمر حذف
   useEffect(() => {
     if (!showDeleteOtp || deleteTimer <= 0) {
       if (showDeleteOtp) setDeleteCanResend(true);
@@ -55,7 +54,7 @@ export default function EditProfilePage() {
     return () => clearInterval(interval);
   }, [showDeleteOtp, deleteTimer]);
 
-  // ─── ذخیره پروفایل ───
+  // ✅ حذف USE_MOCK — فقط API
   const handleSave = async () => {
     const newErrors = {};
     if (!formData.firstName.trim()) {
@@ -73,12 +72,11 @@ export default function EditProfilePage() {
 
     setLoading(true);
     try {
-      if (!USE_MOCK) {
-        await profileService.updateProfile({
-          first_name: formData.firstName.trim(),
-          last_name: formData.lastName.trim(),
-        });
-      }
+      await profileService.updateProfile({
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+      });
+
       updateUser({
         name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
         firstName: formData.firstName.trim(),
@@ -87,6 +85,7 @@ export default function EditProfilePage() {
       completeProfile();
       setLoading(false);
       showToast('اطلاعات پروفایل با موفقیت ذخیره شد', 'success');
+
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         if (params.get('welcome') === '1') {
@@ -101,7 +100,7 @@ export default function EditProfilePage() {
     }
   };
 
-  // ─── شروع فرآیند حذف ───
+  // ✅ حذف USE_MOCK — فقط API
   const handleStartDelete = async () => {
     setShowDeleteConfirm(false);
     setDeleteOtp(['', '', '', '', '']);
@@ -109,10 +108,9 @@ export default function EditProfilePage() {
     setDeleteOtpLoading(false);
     setDeleteTimer(RESEND_SECONDS);
     setDeleteCanResend(false);
+
     try {
-      if (!USE_MOCK) {
-        await authService.sendDeleteAccountOTP();
-      }
+      await authService.sendDeleteAccountOTP();
       setShowDeleteOtp(true);
       showToast('کد تایید حذف حساب ارسال شد', 'success');
     } catch (err) {
@@ -120,19 +118,19 @@ export default function EditProfilePage() {
     }
   };
 
-  // ─── تایید حذف ───
+  // ✅ حذف USE_MOCK — فقط API
   const handleConfirmDelete = async () => {
     const code = deleteOtp.join('');
     if (code.length < OTP_LENGTH) {
       setDeleteOtpError(`کد ${OTP_LENGTH} رقمی را کامل وارد کنید`);
       return;
     }
+
     setDeleteOtpLoading(true);
     setDeleteOtpError('');
+
     try {
-      if (!USE_MOCK) {
-        await authService.deleteAccount(code);
-      }
+      await authService.deleteAccount(code);
       setDeleteOtpLoading(false);
       setShowDeleteOtp(false);
       showToast('حساب کاربری با موفقیت حذف شد', 'success');
@@ -145,12 +143,9 @@ export default function EditProfilePage() {
     }
   };
 
-  // ─── ارسال مجدد OTP حذف ───
   const handleResendDeleteOtp = async () => {
     try {
-      if (!USE_MOCK) {
-        await authService.sendDeleteAccountOTP();
-      }
+      await authService.sendDeleteAccountOTP();
       setDeleteTimer(RESEND_SECONDS);
       setDeleteCanResend(false);
       setDeleteOtp(['', '', '', '', '']);
@@ -163,11 +158,10 @@ export default function EditProfilePage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="ویرایش پروفایل" onBackPress={() => router.back()} />
+
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-6">
-        {/* لوگو */}
         <ProfileAvatarSection userName={user?.name} />
 
-        {/* فرم اطلاعات شخصی */}
         <ProfileFormSection
           firstName={formData.firstName}
           lastName={formData.lastName}
@@ -182,13 +176,11 @@ export default function EditProfilePage() {
           }}
         />
 
-        {/* شماره موبایل */}
         <PhoneSection
           phone={user?.phone}
           onChangePhonePress={() => router.push('/profile/change-phone')}
         />
 
-        {/* دکمه ذخیره */}
         <Button
           title="ذخیره تغییرات"
           onPress={handleSave}
@@ -199,18 +191,15 @@ export default function EditProfilePage() {
           fullWidth
         />
 
-        {/* ناحیه خطرناک */}
         <DangerZone onDeletePress={() => setShowDeleteConfirm(true)} />
       </div>
 
-      {/* مدال تایید حذف */}
       <DeleteConfirmModal
         visible={showDeleteConfirm}
         onConfirm={handleStartDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />
 
-      {/* مدال OTP حذف */}
       <DeleteOtpModal
         visible={showDeleteOtp}
         otp={deleteOtp}

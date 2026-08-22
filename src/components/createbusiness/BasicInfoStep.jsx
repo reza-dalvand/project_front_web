@@ -8,8 +8,7 @@ import ProgressCard from './basicinfo/ProgressCard';
 import ImageUploadSection from './basicinfo/ImageUploadSection';
 import BusinessInfoSection from './basicinfo/BusinessInfoSection';
 import LocationSection from './basicinfo/LocationSection';
-import { locationsService, categoriesService } from '@/api';
-import { PROVINCES, CITIES } from '@/constants/exploreFilters';
+import { categoriesService } from '@/api';
 
 export default function BasicInfoStep({
   formData,
@@ -22,46 +21,6 @@ export default function BasicInfoStep({
   const { colors } = useTheme();
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
-  const [categories, setCategories] = useState([]);
-  const [provinces, setProvinces] = useState(PROVINCES);
-  const [cities, setCities] = useState([]);
-
-  // ─── دریافت داده‌ها از API ───
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [catRes, provRes] = await Promise.all([
-          categoriesService.getBusinessCategories(),
-          locationsService.getProvinces(),
-        ]);
-        if (catRes.data?.length) {
-          setCategories(catRes.data.map((c) => ({ id: String(c.id), label: c.name })));
-        }
-        if (provRes.data?.length) {
-          setProvinces(provRes.data.map((p) => ({ id: String(p.id), label: p.name })));
-        }
-      } catch (e) {
-        console.error('Failed to fetch:', e);
-      }
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const fetchCities = async () => {
-      if (!formData.provinceId) {
-        setCities([]);
-        return;
-      }
-      try {
-        const res = await locationsService.getCities(formData.provinceId);
-        setCities((res.data || []).map((c) => ({ id: String(c.id), label: c.name })));
-      } catch (e) {
-        setCities(CITIES[formData.provinceId] || []);
-      }
-    };
-    fetchCities();
-  }, [formData.provinceId]);
 
   // ─── اعتبارسنجی ───
   const validateField = useCallback((field, value) => {
@@ -115,6 +74,7 @@ export default function BasicInfoStep({
     ];
     const newErrors = {};
     let hasError = false;
+
     fields.forEach((field) => {
       const error = validateField(field, formData[field]);
       if (error) {
@@ -122,6 +82,7 @@ export default function BasicInfoStep({
         hasError = true;
       }
     });
+
     return { newErrors, isValid: !hasError };
   }, [formData, validateField]);
 
@@ -169,13 +130,16 @@ export default function BasicInfoStep({
     fd.append('phone', formData.phone);
     fd.append('working_hours', formData.workingHours);
     fd.append('about', formData.about);
+
     if (formData.location) {
       fd.append('latitude', String(formData.location.latitude));
       fd.append('longitude', String(formData.location.longitude));
     }
+
     if (formData.coverUrl instanceof File) fd.append('cover_image', formData.coverUrl);
     if (formData.ownerPhoto instanceof File) fd.append('owner_photo', formData.ownerPhoto);
     if (formData.logo instanceof File) fd.append('logo', formData.logo);
+
     return fd;
   };
 
@@ -195,6 +159,7 @@ export default function BasicInfoStep({
       ownerPhoto: true,
       location: true,
     });
+
     if (!isValid) return;
     onSubmit?.(buildFormData());
   };
@@ -213,6 +178,7 @@ export default function BasicInfoStep({
     formData.ownerPhoto,
     formData.location,
   ].filter(Boolean).length;
+
   const totalCount = 11;
 
   return (

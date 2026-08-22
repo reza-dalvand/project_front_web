@@ -1,5 +1,6 @@
 // src/stores/useAppVersionStore.js
 'use client';
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import {
@@ -8,24 +9,28 @@ import {
   DEFAULT_STORE_URL,
   DEFAULT_STORE_NAME,
 } from '@/constants/appVersion';
+import apiClient from '@/api/api-client';
 
-// شبیه‌سازی تنظیمات ریموت نسخه
-const MOCK_REMOTE_CONFIG = {
-  latestVersion: '1.2.0',
-  minRequiredVersion: '1.0.0',
-  isForceUpdate: false,
-  releaseDate: '۱۴۰۳/۰۵/۱۵',
-  title: 'نسخه جدید بیو کلاب منتشر شد!',
-  updateMessage: 'برای تجربه بهتر، لطفاً به آخرین نسخه به‌روزرسانی کنید.',
-  changelog: [
-    { icon: '✨', text: 'افزوده شدن سیستم نظردهی' },
-    { icon: '⚡', text: 'بهبود سرعت بارگذاری' },
-    { icon: '🛡️', text: 'ارتقای امنیت حساب کاربری' },
-  ],
-  storeUrl: DEFAULT_STORE_URL,
-  storeName: DEFAULT_STORE_NAME,
-};
-
+/**
+ * 📦 Store نسخه اپلیکیشن
+ *
+ * ✅ فاز ۵: MOCK_REMOTE_CONFIG حذف شد.
+ * اطلاعات نسخه فقط از API دریافت می‌شود.
+ *
+ * Endpoint پیشنهادی بک‌اند:
+ *   GET /config/app-version/
+ *   Response: {
+ *     latest_version: string,
+ *     min_required_version: string,
+ *     is_force_update: boolean,
+ *     release_date: string,
+ *     title: string,
+ *     update_message: string,
+ *     changelog: [{ icon: string, text: string }],
+ *     store_url: string,
+ *     store_name: string
+ *   }
+ */
 export const useAppVersionStore = create(
   persist(
     (set, get) => ({
@@ -34,18 +39,24 @@ export const useAppVersionStore = create(
       dismissed: false,
       dismissedVersion: null,
 
-      // بررسی نسخه جدید
+      /**
+       * بررسی نسخه جدید از API
+       * ✅ فقط از بک‌اند می‌خواند — بدون fallback ماک
+       */
       checkForUpdate: async (silent = false) => {
         if (!silent) set({ checking: true });
 
         try {
-          // شبیه‌سازی درخواست API
-          await new Promise((r) => setTimeout(r, 800));
+          const response = await apiClient.get('/config/app-version/');
+          const config = response.data;
 
-          const config = MOCK_REMOTE_CONFIG;
+          if (!config?.latest_version) {
+            set({ updateInfo: null, checking: false });
+            return;
+          }
 
-          const compareLatest = compareVersions(APP_VERSION, config.latestVersion);
-          const compareMin = compareVersions(APP_VERSION, config.minRequiredVersion);
+          const compareLatest = compareVersions(APP_VERSION, config.latest_version);
+          const compareMin = compareVersions(APP_VERSION, config.min_required_version);
 
           // اگر نسخه فعلی آخرین نسخه است، آپدیتی وجود ندارد
           if (compareLatest >= 0) {
@@ -54,12 +65,12 @@ export const useAppVersionStore = create(
           }
 
           // بررسی آپدیت اجباری
-          const isForce = compareMin < 0 || config.isForceUpdate === true;
+          const isForce = compareMin < 0 || config.is_force_update === true;
 
           // اگر آپدیت اختیاری است و کاربر قبلاً رد کرده
           if (!isForce) {
             const { dismissedVersion } = get();
-            if (dismissedVersion === config.latestVersion) {
+            if (dismissedVersion === config.latest_version) {
               set({ dismissed: true, updateInfo: null, checking: false });
               return;
             }
@@ -68,23 +79,27 @@ export const useAppVersionStore = create(
           set({
             updateInfo: {
               currentVersion: APP_VERSION,
-              latestVersion: config.latestVersion,
+              latestVersion: config.latest_version,
               isForceUpdate: isForce,
-              title: config.title,
-              updateMessage: config.updateMessage,
+              title: config.title || 'نسخه جدید بیو کلاب منتشر شد!',
+              updateMessage:
+                config.update_message || 'برای تجربه بهتر، لطفاً به آخرین نسخه به‌روزرسانی کنید.',
               changelog: config.changelog || [],
-              storeUrl: config.storeUrl || DEFAULT_STORE_URL,
-              storeName: config.storeName || DEFAULT_STORE_NAME,
+              storeUrl: config.store_url || DEFAULT_STORE_URL,
+              storeName: config.store_name || DEFAULT_STORE_NAME,
             },
             checking: false,
           });
         } catch (error) {
-          console.log('Update check failed:', error);
+          // ✅ در صورت خطای API، مدال آپدیت نمایش داده نمی‌شود
+          console.log('Version check failed (non-critical):', error);
           set({ checking: false });
         }
       },
 
-      // رد کردن آپدیت اختیاری
+      /**
+       * رد کردن آپدیت اختیاری
+       */
       dismissOptionalUpdate: () => {
         const { updateInfo } = get();
         if (!updateInfo || updateInfo.isForceUpdate) return;
@@ -96,16 +111,20 @@ export const useAppVersionStore = create(
         });
       },
 
-      // باز کردن لینک آپدیت (در وب = ریلود صفحه)
+      /**
+       * باز کردن لینک آپدیت (در وب = ریلود صفحه)
+       */
       openStore: async () => {
         const { updateInfo } = get();
         if (!updateInfo) return;
 
-        // در وب، می‌توان صفحه را ریلود کرد
+        // در وب، صفحه را ریلود کن
         window.location.reload();
       },
 
-      // گوش دادن به تغییر visibility صفحه
+      /**
+       * گوش دادن به تغییر visibility صفحه
+       */
       initVisibilityListener: () => {
         if (typeof window === 'undefined') return null;
 
@@ -116,7 +135,6 @@ export const useAppVersionStore = create(
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
-
         return () => {
           document.removeEventListener('visibilitychange', handleVisibilityChange);
         };

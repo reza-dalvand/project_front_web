@@ -1,12 +1,31 @@
 // src/components/profile/appointments/CancelBankForm.jsx
 'use client';
+
 import { FiAlertTriangle, FiInfo, FiCreditCard } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import { toPersianDigit } from '@/utils/numberUtils';
-// ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
-import { getBankOptions } from '@/data/banks';
+
+// ═══════ ثابت محلی: لیست بانک‌ها ═══════
+const IRANIAN_BANKS = [
+  { id: 'meli', label: 'بانک ملی ایران' },
+  { id: 'mellat', label: 'بانک ملت' },
+  { id: 'saman', label: 'بانک سامان' },
+  { id: 'pasargad', label: 'بانک پاسارگاد' },
+  { id: 'saderat', label: 'بانک صادرات ایران' },
+  { id: 'tejarat', label: 'بانک تجارت' },
+  { id: 'sepah', label: 'بانک سپه' },
+  { id: 'keshavarzi', label: 'بانک کشاورزی' },
+  { id: 'maskan', label: 'بانک مسکن' },
+  { id: 'refah', label: 'بانک رفاه کارگران' },
+  { id: 'parsian', label: 'بانک پارسیان' },
+  { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
+  { id: 'karafarin', label: 'بانک کارآفرین' },
+  { id: 'tosee', label: 'بانک توسعه صادرات' },
+  { id: 'post_bank', label: 'پست بانک ایران' },
+  { id: 'shahr', label: 'بانک شهر' },
+];
 
 export default function CancelBankForm({
   bankId,
@@ -18,9 +37,6 @@ export default function CancelBankForm({
   onCardChange,
 }) {
   const { colors } = useTheme();
-
-  // ✅ FIX P2: استفاده از لیست مشترک
-  const bankOptions = getBankOptions();
 
   return (
     <>
@@ -40,7 +56,7 @@ export default function CancelBankForm({
         label="نام بانک *"
         placeholder="بانک خود را انتخاب کنید"
         value={bankId}
-        options={bankOptions}
+        options={IRANIAN_BANKS}
         onSelect={onBankChange}
       />
 

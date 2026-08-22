@@ -6,7 +6,7 @@ import Card from '@/components/common/Card';
 import Dropdown from '@/components/common/Dropdown';
 import MapPicker from '@/components/common/MapPicker';
 import SectionHeader from '@/components/common/SectionHeader';
-import { PROVINCES, CITIES } from '@/constants/exploreFilters';
+import { useProvinces, useCities } from '@/hooks/useLocationOptions';
 
 export default function BusinessLocationSection({
   provinceId,
@@ -20,10 +20,13 @@ export default function BusinessLocationSection({
   onLocationSelect,
 }) {
   const { colors } = useTheme();
+  const { provinces } = useProvinces();
+  const { cities } = useCities(provinceId);
 
   return (
     <div className="space-y-3">
       <SectionHeader icon={<FiMapPin size={18} />} iconColor="#E53935" title="موقعیت مکانی" />
+
       <Card variant="elevated" padding={16} radius={18}>
         {/* استان و شهر */}
         <div className="grid grid-cols-2 gap-3">
@@ -32,7 +35,7 @@ export default function BusinessLocationSection({
               label="استان *"
               placeholder="انتخاب استان"
               value={provinceId}
-              options={PROVINCES}
+              options={provinces}
               onSelect={onProvinceChange}
             />
           </div>
@@ -41,7 +44,7 @@ export default function BusinessLocationSection({
               label="شهر *"
               placeholder={provinceId ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
               value={cityId}
-              options={provinceId ? CITIES[provinceId] || [] : []}
+              options={cities}
               onSelect={onCityChange}
               disabled={!provinceId}
             />

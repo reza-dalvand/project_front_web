@@ -1,5 +1,9 @@
 // src/hooks/useAppointmentsManager.js
+/**
+ * ✅ حذف USE_MOCK — فقط API
+ */
 'use client';
+
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useToast } from '@/hooks/useToast';
@@ -32,7 +36,6 @@ export const useAppointmentsManager = () => {
     [today]
   );
 
-  // ═══════ دریافت نوبت‌ها از API ═══════
   useEffect(() => {
     const fetchAppointments = async () => {
       setIsLoading(true);
@@ -43,7 +46,6 @@ export const useAppointmentsManager = () => {
           search: searchQuery || undefined,
           date_filter: dateFilter || undefined,
         });
-        // در آینده: آپدیت store با داده‌های API
       } catch (err) {
         setError(err.message);
         showToast('خطا در دریافت نوبت‌ها', 'error');
@@ -54,7 +56,6 @@ export const useAppointmentsManager = () => {
     fetchAppointments();
   }, [activeFilter, searchQuery, dateFilter]);
 
-  // ═══════ فیلتر + جستجو ═══════
   const filteredAppointments = useMemo(() => {
     let result = appointments.filter((apt) => {
       if (!apt.date) return false;
@@ -100,7 +101,6 @@ export const useAppointmentsManager = () => {
     return result;
   }, [appointments, activeFilter, searchQuery, dateFilter, today, threeMonthsAgoNumber]);
 
-  // ═══════ آمار ═══════
   const counts = useMemo(() => {
     const base = appointments.filter((apt) => {
       if (!apt.date) return false;
@@ -116,16 +116,14 @@ export const useAppointmentsManager = () => {
     };
   }, [appointments, threeMonthsAgoNumber]);
 
-  // ═══════ اکشن‌ها ═══════
+  // ✅ حذف USE_MOCK — فقط API
   const handleVerify = useCallback(
     async (appointmentId, code) => {
-      if (!USE_MOCK) {
-        try {
-          await appointmentsService.verifyServiceCode(appointmentId, code);
-        } catch (err) {
-          showToast(err.message || 'خطا در تایید کد', 'error');
-          return false;
-        }
+      try {
+        await appointmentsService.verifyServiceCode(appointmentId, code);
+      } catch (err) {
+        showToast(err.message || 'خطا در تایید کد', 'error');
+        return false;
       }
       verifyAppointment(appointmentId);
       showToast('✓ کد تایید شد • بیعانه به حساب شما واریز می‌شود', 'success');
@@ -134,15 +132,14 @@ export const useAppointmentsManager = () => {
     [verifyAppointment, showToast]
   );
 
+  // ✅ حذف USE_MOCK — فقط API
   const handleTrustConfirm = useCallback(
     async (appointmentId) => {
-      if (!USE_MOCK) {
-        try {
-          await appointmentsService.verifyServiceCode(appointmentId, '0000');
-        } catch (err) {
-          showToast(err.message || 'خطا در تایید', 'error');
-          return false;
-        }
+      try {
+        await appointmentsService.verifyServiceCode(appointmentId, '0000');
+      } catch (err) {
+        showToast(err.message || 'خطا در تایید', 'error');
+        return false;
       }
       confirmTrustAppointment(appointmentId);
       showToast('✓ خدمت تایید شد (بدون نیاز به کد) • بیعانه آزاد شد', 'success');
@@ -151,15 +148,14 @@ export const useAppointmentsManager = () => {
     [confirmTrustAppointment, showToast]
   );
 
+  // ✅ حذف USE_MOCK — فقط API
   const handleCancel = useCallback(
     async (appointmentId, reason) => {
-      if (!USE_MOCK) {
-        try {
-          await appointmentsService.cancelByBusiness(appointmentId, reason);
-        } catch (err) {
-          showToast(err.message || 'خطا در لغو نوبت', 'error');
-          return false;
-        }
+      try {
+        await appointmentsService.cancelByBusiness(appointmentId, reason);
+      } catch (err) {
+        showToast(err.message || 'خطا در لغو نوبت', 'error');
+        return false;
       }
       cancelAppointment(appointmentId, reason);
       showToast('نوبت لغو شد • بیعانه به مشتری مسترد می‌شود', 'info');

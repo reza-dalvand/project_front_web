@@ -11,7 +11,7 @@ import FixedPriceFields from './FixedPriceFields';
 import HourlyPriceFields from './HourlyPriceFields';
 import { toPersianDigit, parseNumber, formatPriceInput } from '@/utils/numberUtils';
 import { COLLAB_TYPES } from '@/constants/collabTypes';
-import { SERVICE_CATEGORIES, getSubServicesByCategory } from '@/constants/serviceTypes';
+import { useServiceCategories, useSubServices } from '@/hooks/useCategoryOptions';
 
 const MAX_TITLE = 100;
 const MAX_DESCRIPTION = 500;
@@ -33,7 +33,10 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
   const [fixedDeposit, setFixedDeposit] = useState('');
   const [hourlyRate, setHourlyRate] = useState('');
 
-  const availableSubServices = categoryId ? getSubServicesByCategory(categoryId) : [];
+  // ✅ دریافت دسته‌بندی خدمات از بک‌اند
+  const { categories: serviceCategories } = useServiceCategories();
+  // ✅ دریافت زیرخدمات بر اساس دسته انتخاب‌شده
+  const { subServices: availableSubServices } = useSubServices(categoryId);
 
   useEffect(() => {
     if (visible) {
@@ -46,12 +49,8 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
         setContactPhone(editingAd.contactPhone || '');
         setPercentSalon(editingAd.percentSalon ? String(editingAd.percentSalon) : '');
         setPercentPartner(editingAd.percentPartner ? String(editingAd.percentPartner) : '');
-        setFixedAmount(
-          editingAd.fixedAmount ? formatPriceInput(String(editingAd.fixedAmount)) : ''
-        );
-        setFixedDeposit(
-          editingAd.fixedDeposit ? formatPriceInput(String(editingAd.fixedDeposit)) : ''
-        );
+        setFixedAmount(editingAd.fixedAmount ? formatPriceInput(String(editingAd.fixedAmount)) : '');
+        setFixedDeposit(editingAd.fixedDeposit ? formatPriceInput(String(editingAd.fixedDeposit)) : '');
         setHourlyRate(editingAd.hourlyRate ? formatPriceInput(String(editingAd.hourlyRate)) : '');
       } else {
         setTitle('');
@@ -98,35 +97,26 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
 
   const validate = () => {
     const newErrors = {};
-    if (!title.trim()) {
-      newErrors.title = 'عنوان آگهی الزامی است';
-    } else if (title.trim().length > MAX_TITLE) {
+    if (!title.trim()) newErrors.title = 'عنوان آگهی الزامی است';
+    else if (title.trim().length > MAX_TITLE)
       newErrors.title = `عنوان نمی‌تواند بیشتر از ${toPersianDigit(MAX_TITLE)} کاراکتر باشد`;
-    }
     if (!categoryId) newErrors.categoryId = 'دسته‌بندی خدمات را انتخاب کنید';
     if (!subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
     if (!collabType) newErrors.collabType = 'نوع همکاری را انتخاب کنید';
-    if (!description.trim()) {
-      newErrors.description = 'توضیحات الزامی است';
-    } else if (description.trim().length > MAX_DESCRIPTION) {
+    if (!description.trim()) newErrors.description = 'توضیحات الزامی است';
+    else if (description.trim().length > MAX_DESCRIPTION)
       newErrors.description = `توضیحات نمی‌تواند بیشتر از ${toPersianDigit(MAX_DESCRIPTION)} کاراکتر باشد`;
-    }
-    if (!contactPhone.trim()) {
-      newErrors.contactPhone = 'شماره تماس الزامی است';
-    } else if (contactPhone.trim().length !== MAX_PHONE) {
+    if (!contactPhone.trim()) newErrors.contactPhone = 'شماره تماس الزامی است';
+    else if (contactPhone.trim().length !== MAX_PHONE)
       newErrors.contactPhone = `شماره تماس باید دقیقاً ${toPersianDigit(MAX_PHONE)} رقم باشد`;
-    }
     if (collabType === 'percent') {
-      const s = parseNumber(percentSalon),
-        p = parseNumber(percentPartner);
+      const s = parseNumber(percentSalon), p = parseNumber(percentPartner);
       if (!s || !p) newErrors.price = 'درصد سالن و همکار را وارد کنید';
       else if (s + p !== 100) newErrors.price = 'مجموع درصدها باید ۱۰۰٪ باشد';
     } else if (collabType === 'fixed') {
-      const f = parseNumber(fixedAmount);
-      if (!f) newErrors.price = 'مبلغ اجاره ماهانه را وارد کنید';
+      if (!parseNumber(fixedAmount)) newErrors.price = 'مبلغ اجاره ماهانه را وارد کنید';
     } else if (collabType === 'hourly') {
-      const h = parseNumber(hourlyRate);
-      if (!h) newErrors.price = 'نرخ ساعتی را وارد کنید';
+      if (!parseNumber(hourlyRate)) newErrors.price = 'نرخ ساعتی را وارد کنید';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -139,16 +129,10 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     let priceData = {};
     let priceDisplay = '';
     if (collabType === 'percent') {
-      priceData = {
-        percentSalon: parseNumber(percentSalon),
-        percentPartner: parseNumber(percentPartner),
-      };
+      priceData = { percentSalon: parseNumber(percentSalon), percentPartner: parseNumber(percentPartner) };
       priceDisplay = `${toPersianDigit(priceData.percentSalon)}-${toPersianDigit(priceData.percentPartner)}`;
     } else if (collabType === 'fixed') {
-      priceData = {
-        fixedAmount: parseNumber(fixedAmount),
-        fixedDeposit: parseNumber(fixedDeposit),
-      };
+      priceData = { fixedAmount: parseNumber(fixedAmount), fixedDeposit: parseNumber(fixedDeposit) };
       priceDisplay =
         priceData.fixedDeposit > 0
           ? `${toPersianDigit(priceData.fixedAmount.toLocaleString('en-US'))} + ${toPersianDigit(priceData.fixedDeposit.toLocaleString('en-US'))} رهن`
@@ -189,6 +173,8 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
           description={description}
           contactPhone={contactPhone}
           errors={errors}
+          serviceCategories={serviceCategories}
+          availableSubServices={availableSubServices}
           onTitleChange={(t) => {
             if (t.length <= MAX_TITLE) setTitle(t);
             setErrors((p) => ({ ...p, title: '' }));
@@ -216,13 +202,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
             }
           }}
         />
-
-        <CollabTypeSelector
-          collabType={collabType}
-          onSelect={handleCollabChange}
-          error={errors.collabType}
-        />
-
+        <CollabTypeSelector collabType={collabType} onSelect={handleCollabChange} error={errors.collabType} />
         {collabType === 'percent' && (
           <PercentPriceFields
             percentSalon={percentSalon}
@@ -231,7 +211,6 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
             onPercentPartnerChange={handlePercentPartner}
           />
         )}
-
         {collabType === 'fixed' && (
           <FixedPriceFields
             fixedAmount={fixedAmount}
@@ -243,7 +222,6 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
             onFixedDepositChange={(t) => setFixedDeposit(formatPriceInput(t))}
           />
         )}
-
         {collabType === 'hourly' && (
           <HourlyPriceFields
             hourlyRate={hourlyRate}
@@ -253,9 +231,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
             }}
           />
         )}
-
         {errors.price && <p className="text-xs text-[#E53935]">{errors.price}</p>}
-
         <Button
           title={isEditMode ? 'ذخیره تغییرات' : 'ثبت آگهی رایگان'}
           onPress={handleSave}

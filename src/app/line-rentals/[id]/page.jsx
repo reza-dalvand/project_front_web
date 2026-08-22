@@ -1,8 +1,7 @@
+// src/app/line-rentals/[id]/page.jsx
 import LineRentalDetailClient from './LineRentalDetailClient';
 
-export async function generateStaticParams() {
-  return MOCK_LINE_RENTALS.map((ad) => ({ id: ad.id.toString() }));
-}
+// ✅ generateStaticParams حذف شد — صفحه کاملاً داینامیک است
 
 export default function LineRentalDetailPage() {
   return <LineRentalDetailClient />;

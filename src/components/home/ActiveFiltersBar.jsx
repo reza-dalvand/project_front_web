@@ -1,7 +1,8 @@
+// src/components/home/ActiveFiltersBar.jsx
 'use client';
 import { FiX, FiMapPin, FiStar, FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { PROVINCES, CITIES } from '@/constants/exploreFilters';
+import { useProvinces, useCities } from '@/hooks/useLocationOptions';
 
 const SORT_LABELS = {
   top_rated: 'بیشترین امتیاز',
@@ -12,6 +13,8 @@ const SORT_LABELS = {
 
 export default function ActiveFiltersBar({ filters, onChange, onClearAll }) {
   const { colors } = useTheme();
+  const { provinces } = useProvinces();
+  const { cities } = useCities(filters.province);
 
   const hasActive =
     filters.province ||
@@ -24,17 +27,19 @@ export default function ActiveFiltersBar({ filters, onChange, onClearAll }) {
   const chips = [];
 
   if (filters.province) {
-    const provinceLabel = PROVINCES.find((p) => p.id === filters.province)?.label;
-    chips.push({
-      id: 'province',
-      label: provinceLabel,
-      icon: <FiMapPin size={14} />,
-      onRemove: () => onChange({ ...filters, province: null, city: null }),
-    });
+    const provinceLabel = provinces.find((p) => p.id === filters.province)?.label;
+    if (provinceLabel) {
+      chips.push({
+        id: 'province',
+        label: provinceLabel,
+        icon: <FiMapPin size={14} />,
+        onRemove: () => onChange({ ...filters, province: null, city: null }),
+      });
+    }
   }
 
   if (filters.city && filters.province) {
-    const cityLabel = CITIES[filters.province]?.find((c) => c.id === filters.city)?.label;
+    const cityLabel = cities.find((c) => c.id === filters.city)?.label;
     if (cityLabel) {
       chips.push({
         id: 'city',

@@ -5,7 +5,7 @@ import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
 import Dropdown from '@/components/common/Dropdown';
 import MapPicker from '@/components/common/MapPicker';
-import { PROVINCES, CITIES } from '@/constants/exploreFilters';
+import { useProvinces, useCities } from '@/hooks/useLocationOptions';
 
 export default function LocationSection({
   provinceId,
@@ -20,6 +20,8 @@ export default function LocationSection({
   onAddressTouched,
 }) {
   const { colors } = useTheme();
+  const { provinces } = useProvinces();
+  const { cities } = useCities(provinceId);
 
   return (
     <div className="space-y-3">
@@ -44,7 +46,7 @@ export default function LocationSection({
               label="استان *"
               placeholder="انتخاب استان"
               value={provinceId}
-              options={PROVINCES}
+              options={provinces}
               onSelect={onProvinceChange}
             />
           </div>
@@ -53,7 +55,7 @@ export default function LocationSection({
               label="شهر *"
               placeholder={provinceId ? 'انتخاب شهر' : 'ابتدا استان'}
               value={cityId}
-              options={provinceId ? CITIES[provinceId] || [] : []}
+              options={cities}
               onSelect={onCityChange}
               disabled={!provinceId}
             />

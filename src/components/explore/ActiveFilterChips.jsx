@@ -1,19 +1,17 @@
+// src/components/explore/ActiveFilterChips.jsx
 'use client';
-
-import { FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Chip from '@/components/common/Chip';
-import {
-  PROVINCES,
-  CITIES,
-  BUSINESS_TYPES,
-  MAIN_CATEGORIES,
-  SUB_CATEGORIES,
-  SOURCE_FILTERS,
-} from '@/constants/exploreFilters';
+import { SOURCE_FILTERS } from '@/constants/exploreFilters';
+import { useProvinces, useCities } from '@/hooks/useLocationOptions';
+import { useBusinessCategories, useServiceCategories } from '@/hooks/useCategoryOptions';
 
 export default function ActiveFilterChips({ filters, onChange }) {
   const { colors } = useTheme();
+  const { provinces } = useProvinces();
+  const { cities } = useCities(filters.province);
+  const { categories: businessTypes } = useBusinessCategories();
+  const { categories: serviceCategories } = useServiceCategories();
 
   const hasActive =
     filters.province ||
@@ -28,11 +26,11 @@ export default function ActiveFilterChips({ filters, onChange }) {
   const getSourceLabel = (sourceId) => SOURCE_FILTERS.find((s) => s.id === sourceId)?.label;
 
   const getMainCategoryLabel = (categoryId) =>
-    MAIN_CATEGORIES.find((c) => c.id === categoryId)?.label;
+    serviceCategories.find((c) => c.id === categoryId)?.label;
 
   const getSubCategoryLabel = (mainCat, subCat) => {
-    const subs = SUB_CATEGORIES[mainCat] || [];
-    return subs.find((c) => c.id === subCat)?.label;
+    const cat = serviceCategories.find((c) => c.id === mainCat);
+    return cat?.subServices?.find((s) => s.id === subCat)?.label;
   };
 
   return (
@@ -59,11 +57,7 @@ export default function ActiveFilterChips({ filters, onChange }) {
             label={getMainCategoryLabel(filters.mainCategory)}
             selected
             onRemove={() =>
-              onChange({
-                ...filters,
-                mainCategory: 'all',
-                subCategory: 'all',
-              })
+              onChange({ ...filters, mainCategory: 'all', subCategory: 'all' })
             }
           />
         )}
@@ -80,7 +74,7 @@ export default function ActiveFilterChips({ filters, onChange }) {
         {/* فیلتر استان */}
         {filters.province && (
           <Chip
-            label={PROVINCES.find((p) => p.id === filters.province)?.label}
+            label={provinces.find((p) => p.id === filters.province)?.label}
             selected
             onRemove={() => onChange({ ...filters, province: null, city: null })}
           />
@@ -89,7 +83,7 @@ export default function ActiveFilterChips({ filters, onChange }) {
         {/* فیلتر شهر */}
         {filters.city && (
           <Chip
-            label={CITIES[filters.province]?.find((c) => c.id === filters.city)?.label}
+            label={cities.find((c) => c.id === filters.city)?.label}
             selected
             onRemove={() => onChange({ ...filters, city: null })}
           />
@@ -98,7 +92,7 @@ export default function ActiveFilterChips({ filters, onChange }) {
         {/* فیلتر نوع کسب‌وکار */}
         {filters.businessType && (
           <Chip
-            label={BUSINESS_TYPES.find((t) => t.id === filters.businessType)?.label}
+            label={businessTypes.find((t) => t.id === filters.businessType)?.label}
             selected
             onRemove={() => onChange({ ...filters, businessType: null })}
           />

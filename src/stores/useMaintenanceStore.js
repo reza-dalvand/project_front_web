@@ -1,54 +1,69 @@
 // src/stores/useMaintenanceStore.js
 'use client';
+
 import { create } from 'zustand';
+import apiClient from '@/api/api-client';
 
-// شبیه‌سازی تنظیمات ریموت
-const MOCK_REMOTE_CONFIG = {
-  isMaintenance: false, // در production از API دریافت شود
-  title: 'در حال بروزرسانی هستیم 🔧',
-  message: 'تیم فنی بیو کلاب در حال انجام بهبودهای لازم است. لطفاً دقایقی دیگر مراجعه فرمایید.',
-  estimatedEnd: 'امروز ساعت ۱۸:۰۰',
-  reason: 'بروزرسانی سرورها',
-  supportPhone: '۰۲۱-۹۱۰۰۱۲۳۴',
-};
-
+/**
+ * 🔧 Store حالت تعمیرات
+ *
+ * ✅ فاز ۵: MOCK_REMOTE_CONFIG حذف شد.
+ * وضعیت تعمیرات فقط از API دریافت می‌شود.
+ *
+ * Endpoint پیشنهادی بک‌اند:
+ *   GET /config/maintenance-status/
+ *   Response: {
+ *     is_maintenance: boolean,
+ *     title: string,
+ *     message: string,
+ *     estimated_end: string,
+ *     reason: string,
+ *     support_phone: string
+ *   }
+ */
 export const useMaintenanceStore = create((set) => ({
   maintenanceInfo: null,
   checking: false,
 
-  // بررسی حالت تعمیرات
+  /**
+   * بررسی حالت تعمیرات از API
+   * ✅ فقط از بک‌اند می‌خواند — بدون fallback ماک
+   */
   checkMaintenance: async () => {
     set({ checking: true });
     try {
-      // شبیه‌سازی درخواست API
-      await new Promise((r) => setTimeout(r, 600));
+      const response = await apiClient.get('/config/maintenance-status/');
+      const config = response.data;
 
-      // در production:
-      // const response = await fetch('/api/maintenance-status');
-      // const config = await response.json();
-
-      if (!MOCK_REMOTE_CONFIG.isMaintenance) {
+      if (!config?.is_maintenance) {
         set({ maintenanceInfo: null, checking: false });
         return;
       }
 
       set({
         maintenanceInfo: {
-          title: MOCK_REMOTE_CONFIG.title,
-          message: MOCK_REMOTE_CONFIG.message,
-          estimatedEnd: MOCK_REMOTE_CONFIG.estimatedEnd,
-          reason: MOCK_REMOTE_CONFIG.reason,
-          supportPhone: MOCK_REMOTE_CONFIG.supportPhone,
+          title: config.title || 'در حال بروزرسانی هستیم 🔧',
+          message:
+            config.message ||
+            'تیم فنی بیو کلاب در حال انجام بهبودهای لازم است. لطفاً دقایقی دیگر مراجعه فرمایید.',
+          estimatedEnd: config.estimated_end || '',
+          reason: config.reason || '',
+          supportPhone: config.support_phone || '',
         },
         checking: false,
       });
     } catch (error) {
-      console.log('Maintenance check failed:', error);
-      set({ checking: false });
+      // ✅ در صورت خطای API، حالت تعمیرات فعال نمی‌شود
+      // کاربر نباید به خاطر خطای شبکه، صفحه تعمیرات ببیند
+      console.log('Maintenance check failed (non-critical):', error);
+      set({ maintenanceInfo: null, checking: false });
     }
   },
 
-  // گوش دادن به تغییر visibility صفحه (معادل AppState در RN)
+  /**
+   * گوش دادن به تغییر visibility صفحه
+   * وقتی کاربر به تب برمی‌گردد، دوباره چک کن
+   */
   initVisibilityListener: () => {
     if (typeof window === 'undefined') return null;
 
@@ -59,7 +74,6 @@ export const useMaintenanceStore = create((set) => ({
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };

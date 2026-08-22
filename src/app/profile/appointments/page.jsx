@@ -1,5 +1,6 @@
 // src/app/profile/appointments/page.jsx
 'use client';
+
 import { useState, useMemo, useEffect } from 'react';
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -14,6 +15,7 @@ const AppointmentDetailModal = dynamic(
   () => import('@/components/profile/appointments/AppointmentDetailModal'),
   { ssr: false, loading: () => null }
 );
+
 const CancelAppointmentModal = dynamic(
   () => import('@/components/profile/appointments/CancelAppointmentModal'),
   { ssr: false, loading: () => null }
@@ -22,6 +24,7 @@ const CancelAppointmentModal = dynamic(
 export default function AppointmentsPage() {
   const { colors } = useTheme();
   const { showToast } = useToast();
+
   const [activeTab, setActiveTab] = useState('upcoming');
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +34,6 @@ export default function AppointmentsPage() {
   const [cancelVisible, setCancelVisible] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
 
-  // ═══════ دریافت نوبت‌ها از API ═══════
   useEffect(() => {
     const fetchAppointments = async () => {
       setIsLoading(true);
@@ -86,15 +88,15 @@ export default function AppointmentsPage() {
     setTimeout(() => setCancelVisible(true), 200);
   };
 
+  // ✅ حذف USE_MOCK — فقط API
   const handleConfirmCancel = async (aptId) => {
-    if (!USE_MOCK) {
-      try {
-        await appointmentsService.cancelAppointment(aptId);
-      } catch (err) {
-        showToast(err.message || 'خطا در لغو نوبت', 'error');
-        return;
-      }
+    try {
+      await appointmentsService.cancelAppointment(aptId);
+    } catch (err) {
+      showToast(err.message || 'خطا در لغو نوبت', 'error');
+      return;
     }
+
     setAppointments((prev) =>
       prev.map((a) => (a.id === aptId ? { ...a, status: 'cancelled', isUpcoming: false } : a))
     );
@@ -106,7 +108,6 @@ export default function AppointmentsPage() {
 
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: colors.background }}>
-      {/* Tabs */}
       <div className="px-4 pt-3 pb-2">
         <div
           className="flex p-1 rounded-xl border gap-1"
@@ -133,7 +134,6 @@ export default function AppointmentsPage() {
         </div>
       </div>
 
-      {/* لیست */}
       <div className="p-4 flex flex-col gap-3">
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -162,7 +162,6 @@ export default function AppointmentsPage() {
         )}
       </div>
 
-      {/* مدال‌ها */}
       <AppointmentDetailModal
         visible={detailVisible}
         appointment={selectedAppointment}
@@ -172,6 +171,7 @@ export default function AppointmentsPage() {
         }}
         onCancelRequest={handleCancelRequest}
       />
+
       <CancelAppointmentModal
         visible={cancelVisible}
         appointment={cancelTarget}

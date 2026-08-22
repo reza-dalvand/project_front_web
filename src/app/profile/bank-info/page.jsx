@@ -1,5 +1,6 @@
 // src/app/profile/bank-info/page.jsx
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiCreditCard, FiCheckCircle, FiClock } from 'react-icons/fi';
@@ -13,9 +14,29 @@ import Card from '@/components/common/Card';
 import Dropdown from '@/components/common/Dropdown';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
+import { validateNationalId, validateSheba } from '@/utils/validators';
 import { bankInfoService } from '@/api';
-// ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
-import { getBankOptions } from '@/data/banks';
+
+// ═══════ ثابت محلی: لیست بانک‌ها ═══════
+// ⚠️ بک‌اند اندپوینت لیست بانک‌ها ندارد — این ثابت محلی باقی می‌ماند
+const IRANIAN_BANKS = [
+  { id: 'meli', label: 'بانک ملی ایران' },
+  { id: 'mellat', label: 'بانک ملت' },
+  { id: 'saman', label: 'بانک سامان' },
+  { id: 'pasargad', label: 'بانک پاسارگاد' },
+  { id: 'saderat', label: 'بانک صادرات ایران' },
+  { id: 'tejarat', label: 'بانک تجارت' },
+  { id: 'sepah', label: 'بانک سپه' },
+  { id: 'keshavarzi', label: 'بانک کشاورزی' },
+  { id: 'maskan', label: 'بانک مسکن' },
+  { id: 'refah', label: 'بانک رفاه کارگران' },
+  { id: 'parsian', label: 'بانک پارسیان' },
+  { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
+  { id: 'karafarin', label: 'بانک کارآفرین' },
+  { id: 'tosee', label: 'بانک توسعه صادرات' },
+  { id: 'post_bank', label: 'پست بانک ایران' },
+  { id: 'shahr', label: 'بانک شهر' },
+];
 
 export default function BankInfoPage() {
   const router = useRouter();
@@ -34,10 +55,7 @@ export default function BankInfoPage() {
   const [errors, setErrors] = useState({});
   const [isComplete, setIsComplete] = useState(false);
 
-  // ✅ FIX P2: استفاده از لیست مشترک
-  const bankOptions = getBankOptions();
-
-  // دریافت اطلاعات بانکی
+  // دریافت اطلاعات بانکی از بک‌اند
   useEffect(() => {
     const fetchBankInfo = async () => {
       setIsLoading(true);
@@ -66,10 +84,10 @@ export default function BankInfoPage() {
     if (!formData.bank_name.trim()) {
       newErrors.bank_name = 'نام بانک الزامی است';
     }
-    if (formData.sheba && formData.sheba.length !== 26) {
-      newErrors.sheba = 'شماره شبا باید ۲۶ کاراکتر باشد (IR + ۲۴ رقم)';
+    if (formData.sheba && !validateSheba(formData.sheba)) {
+      newErrors.sheba = 'شماره شبا باید با IR شروع شده و ۲۶ کاراکتر باشد';
     }
-    if (formData.card_number && formData.card_number.length !== 16) {
+    if (formData.card_number && formData.card_number.replace(/[^0-9]/g, '').length !== 16) {
       newErrors.card_number = 'شماره کارت باید ۱۶ رقم باشد';
     }
     setErrors(newErrors);
@@ -77,17 +95,16 @@ export default function BankInfoPage() {
 
     setIsSaving(true);
     try {
-      if (!USE_MOCK) {
-        await bankInfoService.updateBankInfo({
-          bank_name: formData.bank_name,
-          bank_id: formData.bank_id,
-          sheba: formData.sheba,
-          card_number: formData.card_number,
-          owner_name: formData.owner_name,
-        });
-      }
+      await bankInfoService.updateBankInfo({
+        bank_name: formData.bank_name,
+        bank_id: formData.bank_id,
+        sheba: formData.sheba,
+        card_number: formData.card_number,
+        owner_name: formData.owner_name,
+      });
       setIsSaving(false);
       showToast('اطلاعات بانکی با موفقیت ذخیره شد', 'success');
+      setIsComplete(true);
     } catch (err) {
       setIsSaving(false);
       showToast(err.message || 'خطا در ذخیره اطلاعات', 'error');
@@ -180,7 +197,7 @@ export default function BankInfoPage() {
             label="نام بانک *"
             placeholder="بانک را انتخاب کنید"
             value={formData.bank_name}
-            options={bankOptions}
+            options={IRANIAN_BANKS}
             onSelect={(val) => {
               setFormData((prev) => ({ ...prev, bank_name: val }));
               if (errors.bank_name) setErrors((prev) => ({ ...prev, bank_name: '' }));

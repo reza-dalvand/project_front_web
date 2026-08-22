@@ -1,66 +1,29 @@
+// src/components/common/UpdateModal.jsx
 'use client';
-import { useState, useEffect } from 'react';
+
 import { FiDownload, FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useAppVersionStore } from '@/stores/useAppVersionStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-const APP_VERSION = '1.0.0';
-
-const MOCK_REMOTE_CONFIG = {
-  latestVersion: '1.0.0',
-  minRequiredVersion: '1.0.0', //اگر ورژن ها با هم برابر نباشه مدال اختیاری رو نشون میده
-  isForceUpdate: false, // اگر true بشه مدال اجباری رو نشون میده
-  changelog: [
-    { icon: '✨', text: 'افزوده شدن سیستم نظردهی' },
-    { icon: '⚡', text: 'بهبود سرعت بارگذاری' },
-    { icon: '🛡️', text: 'ارتقای امنیت حساب کاربری' },
-  ],
-};
-
+/**
+ * ✅ فاز ۵: دیگر MOCK_REMOTE_CONFIG داخلی ندارد.
+ * داده‌ها فقط از useAppVersionStore خوانده می‌شوند.
+ */
 export default function UpdateModal() {
   const { colors } = useTheme();
-  const [visible, setVisible] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState(null);
+  const updateInfo = useAppVersionStore((s) => s.updateInfo);
+  const dismissOptionalUpdate = useAppVersionStore((s) => s.dismissOptionalUpdate);
+  const openStore = useAppVersionStore((s) => s.openStore);
 
-  useEffect(() => {
-    const checkUpdate = () => {
-      const compareVersions = (a, b) => {
-        const numA = a.split('.').map(Number);
-        const numB = b.split('.').map(Number);
-        for (let i = 0; i < 3; i++) {
-          if (numA[i] < numB[i]) return -1;
-          if (numA[i] > numB[i]) return 1;
-        }
-        return 0;
-      };
-
-      const compareLatest = compareVersions(APP_VERSION, MOCK_REMOTE_CONFIG.latestVersion);
-      const compareMin = compareVersions(APP_VERSION, MOCK_REMOTE_CONFIG.minRequiredVersion);
-
-      if (compareLatest < 0) {
-        const isForce = compareMin < 0 || MOCK_REMOTE_CONFIG.isForceUpdate;
-        setUpdateInfo({
-          ...MOCK_REMOTE_CONFIG,
-          currentVersion: APP_VERSION,
-          isForceUpdate: isForce,
-        });
-        setVisible(true);
-      }
-    };
-
-    const timer = setTimeout(checkUpdate, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleUpdate = () => {
-    window.location.reload();
-  };
+  // اگر آپدیتی وجود ندارد، چیزی نمایش نده
+  if (!updateInfo) return null;
 
   const handleLater = () => {
-    if (!updateInfo?.isForceUpdate) setVisible(false);
+    if (!updateInfo.isForceUpdate) {
+      dismissOptionalUpdate();
+    }
   };
-
-  if (!visible || !updateInfo) return null;
 
   return (
     <div
@@ -73,17 +36,18 @@ export default function UpdateModal() {
         style={{ backgroundColor: colors.cardBackground }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* دکمه بستن (فقط برای آپدیت اختیاری) */}
         {!updateInfo.isForceUpdate && (
           <button
             onClick={handleLater}
-            className="absolute top-4 left-4 w-8 h-8 rounded-full
-              flex items-center justify-center"
+            className="absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center"
             style={{ backgroundColor: colors.background }}
           >
             <FiX size={18} style={{ color: colors.textMain }} />
           </button>
         )}
 
+        {/* آیکون */}
         <div className="flex justify-center mb-4">
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center"
@@ -91,10 +55,14 @@ export default function UpdateModal() {
               backgroundColor: updateInfo.isForceUpdate ? '#E5393520' : colors.primary + '20',
             }}
           >
-            <FiDownload size={40} color={updateInfo.isForceUpdate ? '#E53935' : colors.primary} />
+            <FiDownload
+              size={40}
+              color={updateInfo.isForceUpdate ? '#E53935' : colors.primary}
+            />
           </div>
         </div>
 
+        {/* عنوان */}
         <h2
           className="text-xl text-center mb-2"
           style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}
@@ -102,6 +70,7 @@ export default function UpdateModal() {
           {updateInfo.isForceUpdate ? 'به‌روزرسانی اجباری' : 'نسخه جدید در دسترس است'}
         </h2>
 
+        {/* مقایسه نسخه‌ها */}
         <div
           className="flex items-center justify-between p-3 rounded-xl mb-4"
           style={{
@@ -110,10 +79,7 @@ export default function UpdateModal() {
           }}
         >
           <div className="text-center flex-1">
-            <p
-              className="text-xs mb-1"
-              style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
-            >
+            <p className="text-xs mb-1" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
               فعلی
             </p>
             <p className="text-base" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
@@ -124,10 +90,7 @@ export default function UpdateModal() {
             ←
           </div>
           <div className="text-center flex-1">
-            <p
-              className="text-xs mb-1"
-              style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
-            >
+            <p className="text-xs mb-1" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
               جدید
             </p>
             <p
@@ -142,6 +105,7 @@ export default function UpdateModal() {
           </div>
         </div>
 
+        {/* Changelog */}
         {updateInfo.changelog && updateInfo.changelog.length > 0 && (
           <div
             className="p-4 rounded-xl mb-4"
@@ -150,20 +114,14 @@ export default function UpdateModal() {
               border: `1px solid ${colors.border}`,
             }}
           >
-            <h3
-              className="text-sm mb-3"
-              style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}
-            >
+            <h3 className="text-sm mb-3" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
               تغییرات این نسخه:
             </h3>
             <div className="space-y-2">
               {updateInfo.changelog.slice(0, 3).map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <span className="text-base">{item.icon}</span>
-                  <span
-                    className="text-xs"
-                    style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
-                  >
+                  <span className="text-xs" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
                     {item.text}
                   </span>
                 </div>
@@ -172,10 +130,10 @@ export default function UpdateModal() {
           </div>
         )}
 
+        {/* دکمه به‌روزرسانی */}
         <button
-          onClick={handleUpdate}
-          className="w-full py-4 rounded-2xl flex items-center justify-center gap-2
-            transition-all hover:scale-[1.02] active:scale-[0.98] mb-2"
+          onClick={openStore}
+          className="w-full py-4 rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] mb-2"
           style={{
             backgroundColor: updateInfo.isForceUpdate ? '#E53935' : colors.primary,
             color: '#fff',
@@ -187,6 +145,7 @@ export default function UpdateModal() {
           <span>{updateInfo.isForceUpdate ? 'به‌روزرسانی اجباری' : 'به‌روزرسانی'}</span>
         </button>
 
+        {/* دکمه بعداً (فقط اختیاری) */}
         {!updateInfo.isForceUpdate && (
           <button
             onClick={handleLater}

@@ -1,8 +1,8 @@
+// src/app/category/[id]/page.jsx
 import CategoryBusinessesClient from './CategoryBusinessesClient';
 
-export async function generateStaticParams() {
-  return MOCK_CATEGORIES.map((c) => ({ id: c.id.toString() }));
-}
+// ✅ generateStaticParams حذف شد — صفحه کاملاً داینامیک است
+// دسته‌بندی‌ها از بک‌اند در زمان رندر گرفته می‌شوند
 
 export default function CategoryPage() {
   return <CategoryBusinessesClient />;

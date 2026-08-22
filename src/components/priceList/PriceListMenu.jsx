@@ -1,9 +1,58 @@
 // src/components/priceList/PriceListMenu.jsx
 'use client';
+
 import { useMemo } from 'react';
 import Image from 'next/image';
 import { toPersianDigit } from '@/utils/numberUtils';
-import { PRICE_LIST_THEMES } from '@/data/priceList';
+
+// ═══════ ثابت محلی: تم‌های ظاهری لیست قیمت ═══════
+// این فقط پیکربندی نمایش است — بک‌اند فقط نام تم را ذخیره می‌کند
+const PRICE_LIST_THEMES = [
+  {
+    id: 'classic',
+    label: 'کلاسیک',
+    emoji: '📋',
+    bg: '#FFFFFF',
+    card: '#F9F6F2',
+    accent: '#A88B7D',
+    text: '#2C2521',
+    textSecondary: '#5A504B',
+    border: '#DCD1CB',
+  },
+  {
+    id: 'rose',
+    label: 'گلابی',
+    emoji: '🌸',
+    bg: '#FFF0F3',
+    card: '#FFF7F8',
+    accent: '#E91E63',
+    text: '#3B1023',
+    textSecondary: '#8D6E7A',
+    border: '#F5C6D6',
+  },
+  {
+    id: 'gold',
+    label: 'طلایی',
+    emoji: '✨',
+    bg: '#FFFDF5',
+    card: '#FFFBEF',
+    accent: '#D4A017',
+    text: '#3D2B10',
+    textSecondary: '#8D7A55',
+    border: '#EEDFAC',
+  },
+  {
+    id: 'mint',
+    label: 'نعنایی',
+    emoji: '🌿',
+    bg: '#F0FFF5',
+    card: '#F7FFF9',
+    accent: '#43A047',
+    text: '#1B3B22',
+    textSecondary: '#5A8D62',
+    border: '#C6E8C9',
+  },
+];
 
 const toThousands = (price) => Math.round((price || 0) / 1000);
 
@@ -19,7 +68,8 @@ const getSectionEmoji = (label = '') => {
 };
 
 export default function PriceListMenu({ businessName, businessLogo, settings }) {
-  const theme = PRICE_LIST_THEMES.find((t) => t.id === settings?.themeId) || PRICE_LIST_THEMES[0];
+  const theme =
+    PRICE_LIST_THEMES.find((t) => t.id === settings?.themeId) || PRICE_LIST_THEMES[0];
   const services = settings?.services || [];
 
   const sections = useMemo(() => {
@@ -92,9 +142,7 @@ export default function PriceListMenu({ businessName, businessLogo, settings }) 
                 </span>
                 <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
               </div>
-
-              {/* ❌ قبلی: <div className="grid grid-cols-2 gap-x-4 gap-y-3"> */}
-              {/* ✅ FIX: تک‌ستونه — هر آیتم تمام عرض کارت را می‌گیرد */}
+              {/* ✅ تک‌ستونه */}
               <div className="flex flex-col gap-3">
                 {sec.items.map((item) => {
                   const price = toThousands(item.finalPrice ?? item.originalPrice ?? 0);
@@ -112,7 +160,6 @@ export default function PriceListMenu({ businessName, businessLogo, settings }) 
                       >
                         {item.name}
                       </span>
-
                       {/* قیمت + بیعانه — سمت چپ */}
                       <span
                         className="whitespace-nowrap flex-shrink-0 text-[13px] font-[Vazir-Bold] leading-[22px]"

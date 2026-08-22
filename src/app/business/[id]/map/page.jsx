@@ -1,9 +1,8 @@
+// src/app/business/[id]/map/page.jsx
 import BusinessMapClient from './BusinessMapClient';
 
-export async function generateStaticParams() {
-  const ids = Object.keys(MOCK_BUSINESSES_MAP);
-  return ids.map((id) => ({ id: id.toString() }));
-}
+// ✅ generateStaticParams حذف شد — صفحه کاملاً داینامیک است
+// و اطلاعات از بک‌اند در زمان رندر گرفته می‌شود
 
 export default function BusinessMapPage() {
   return <BusinessMapClient />;

@@ -1,10 +1,12 @@
+// src/components/home/CategoryFilterModal.jsx
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { FiX, FiCheck, FiTrash2, FiStar, FiTrendingUp, FiTag, FiGrid } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import BottomSheet from '@/components/common/BottomSheet';
 import Button from '@/components/common/Button';
-import { getSubServicesForCategory, SORT_OPTIONS } from '@/constants/categorySubServices';
+import { useSubServices } from '@/hooks/useCategoryOptions';
+import { SORT_OPTIONS } from '@/constants/categorySubServices';
 
 const SORT_ICONS = {
   all: FiGrid,
@@ -24,11 +26,8 @@ export default function CategoryFilterModal({
   const [serviceType, setServiceType] = useState(null);
   const [sortBy, setSortBy] = useState('all');
 
-  // زیرخدمات مربوط به این دسته
-  const subServices = useMemo(() => {
-    const subs = getSubServicesForCategory(categoryId);
-    return [{ id: 'all', label: 'همه خدمات' }, ...subs];
-  }, [categoryId]);
+  // ✅ دریافت زیرخدمات از بک‌اند
+  const { subServices } = useSubServices(categoryId);
 
   useEffect(() => {
     if (visible && currentFilters) {
@@ -51,10 +50,13 @@ export default function CategoryFilterModal({
 
   const activeCount = (serviceType && serviceType !== 'all' ? 1 : 0) + (sortBy !== 'all' ? 1 : 0);
 
+  // افزودن گزینه "همه خدمات" به لیست
+  const serviceOptions = [{ id: 'all', label: 'همه خدمات' }, ...subServices];
+
   return (
     <BottomSheet visible={visible} onClose={onClose} title="فیلتر و مرتب‌سازی" snapPoint={0.75}>
       <div className="flex flex-col gap-6 pb-4">
-        {/* ═══════ بخش ۱: نوع خدمت (Dropdown ساده) ═══════ */}
+        {/* بخش ۱: نوع خدمت */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <div
@@ -67,10 +69,8 @@ export default function CategoryFilterModal({
               نوع خدمت
             </span>
           </div>
-
-          {/* لیست زیرخدمات به صورت Chip */}
           <div className="flex flex-wrap gap-2">
-            {subServices.map((sub) => {
+            {serviceOptions.map((sub) => {
               const isSelected = serviceType === sub.id;
               return (
                 <button
@@ -90,10 +90,9 @@ export default function CategoryFilterModal({
           </div>
         </div>
 
-        {/* خط جداکننده */}
         <div className="h-px" style={{ backgroundColor: colors.border }} />
 
-        {/* ═══════ بخش ۲: مرتب‌سازی ═══════ */}
+        {/* بخش ۲: مرتب‌سازی */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <div
@@ -106,7 +105,6 @@ export default function CategoryFilterModal({
               مرتب‌سازی بر اساس
             </span>
           </div>
-
           <div className="flex flex-wrap gap-2">
             {SORT_OPTIONS.map((option) => {
               const isSelected = sortBy === option.id;
@@ -122,10 +120,7 @@ export default function CategoryFilterModal({
                     color: isSelected ? colors.primary : colors.textMain,
                   }}
                 >
-                  <IconComponent
-                    size={14}
-                    color={isSelected ? colors.primary : colors.textSecondary}
-                  />
+                  <IconComponent size={14} color={isSelected ? colors.primary : colors.textSecondary} />
                   {option.label}
                 </button>
               );
@@ -133,10 +128,8 @@ export default function CategoryFilterModal({
           </div>
         </div>
 
-        {/* خط جداکننده */}
         <div className="h-px" style={{ backgroundColor: colors.border }} />
 
-        {/* ═══════ شمارنده فیلترهای فعال ═══════ */}
         {activeCount > 0 && (
           <div
             className="flex items-center gap-2 px-4 py-3 rounded-[14px] border"
@@ -152,7 +145,6 @@ export default function CategoryFilterModal({
           </div>
         )}
 
-        {/* ═══════ دکمه‌ها ═══════ */}
         <div className="flex gap-3">
           <Button
             title="حذف همه"
@@ -169,7 +161,6 @@ export default function CategoryFilterModal({
             variant="primary"
             size="lg"
             className="flex-1"
-            // icon={<FiCheck size={16} color="#fff" />}
             iconPosition="right"
           />
         </div>

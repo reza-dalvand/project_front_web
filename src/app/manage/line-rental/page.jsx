@@ -1,5 +1,6 @@
 // src/app/manage/line-rental/page.jsx
 'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiPlus, FiHome } from 'react-icons/fi';
@@ -22,19 +23,13 @@ export default function LineRentalPage() {
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
 
-  // ═══════ State‌ها ═══════
   const [ads, setAds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // ✅ state فرم ایجاد/ویرایش
   const [formVisible, setFormVisible] = useState(false);
   const [editingAd, setEditingAd] = useState(null);
-
-  // ✅ state مدال جزئیات
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedAd, setSelectedAd] = useState(null);
 
-  // ═══════ دریافت لیست من از API ═══════
   useEffect(() => {
     const fetchMyAds = async () => {
       setIsLoading(true);
@@ -51,57 +46,42 @@ export default function LineRentalPage() {
     fetchMyAds();
   }, [showToast]);
 
-  // ═══════ باز کردن فرم ایجاد (جدید) ═══════
   const handleCreate = useCallback(() => {
     setEditingAd(null);
     setFormVisible(true);
   }, []);
 
-  // ═══════ باز کردن فرم ویرایش ═══════
   const handleEdit = useCallback((ad) => {
     setEditingAd(ad);
     setFormVisible(true);
   }, []);
 
-  // ═══════ بستن فرم ═══════
   const handleCloseForm = useCallback(() => {
     setFormVisible(false);
     setEditingAd(null);
   }, []);
 
-  // ═══════ باز کردن مدال جزئیات ═══════
   const handleAdPress = useCallback((ad) => {
     setSelectedAd(ad);
     setDetailVisible(true);
   }, []);
 
-  // ═══════ بستن مدال جزئیات ═══════
   const handleCloseDetail = useCallback(() => {
     setDetailVisible(false);
     setSelectedAd(null);
   }, []);
 
-  // ═══════ ذخیره آگهی (ایجاد یا ویرایش) ═══════
+  // ✅ حذف USE_MOCK — فقط API
   const handleSave = useCallback(
     async (adData) => {
       try {
-        if (!USE_MOCK) {
-          if (editingAd) {
-            await adsService.updateLineRental(editingAd.id, adData);
-          } else {
-            await adsService.createLineRental(adData);
-          }
-          // بروزرسانی لیست
-          const result = await adsService.getMyLineRentals();
-          setAds(result.data || []);
+        if (editingAd) {
+          await adsService.updateLineRental(editingAd.id, adData);
         } else {
-          // حالت Mock
-          if (editingAd) {
-            setAds((prev) => prev.map((a) => (a.id === editingAd.id ? { ...a, ...adData } : a)));
-          } else {
-            setAds((prev) => [{ ...adData, id: `lr_${Date.now()}` }, ...prev]);
-          }
+          await adsService.createLineRental(adData);
         }
+        const result = await adsService.getMyLineRentals();
+        setAds(result.data || []);
         showToast(
           editingAd ? '✓ آگهی با موفقیت ویرایش شد' : '✓ آگهی لاین با موفقیت ایجاد شد',
           'success'
@@ -114,17 +94,13 @@ export default function LineRentalPage() {
     [editingAd, showToast]
   );
 
-  // ═══════ حذف آگهی ═══════
+  // ✅ حذف USE_MOCK — فقط API
   const handleDelete = useCallback(
     async (ad) => {
       try {
-        if (!USE_MOCK) {
-          await adsService.deleteLineRental(ad.id);
-          const result = await adsService.getMyLineRentals();
-          setAds(result.data || []);
-        } else {
-          setAds((prev) => prev.filter((a) => a.id !== ad.id));
-        }
+        await adsService.deleteLineRental(ad.id);
+        const result = await adsService.getMyLineRentals();
+        setAds(result.data || []);
         showToast('✓ آگهی لاین حذف شد', 'success');
       } catch (error) {
         console.error('Delete failed:', error);
@@ -134,7 +110,6 @@ export default function LineRentalPage() {
     [showToast]
   );
 
-  // ═══════ رندر ═══════
   if (!isAuthenticated) {
     return (
       <ScreenWrapper>
@@ -150,7 +125,6 @@ export default function LineRentalPage() {
       <Header title="اجاره لاین" onBackPress={() => router.push('/manage')} />
 
       <div className="flex-1 overflow-y-auto p-4 pb-32">
-        {/* هدر آیکونی */}
         <div className="flex flex-col items-center gap-2 py-4 mb-4">
           <div
             className="w-[72px] h-[72px] rounded-3xl flex items-center justify-center"
@@ -169,14 +143,12 @@ export default function LineRentalPage() {
           </div>
         ) : (
           <>
-            {/* آمار */}
             {ads.length > 0 && (
               <div className="mb-4">
                 <LineRentalStats ads={ads} />
               </div>
             )}
 
-            {/* دکمه ایجاد آگهی جدید */}
             <button
               onClick={handleCreate}
               className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-4 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg"
@@ -194,15 +166,9 @@ export default function LineRentalPage() {
               </div>
             </button>
 
-            {/* لیست آگهی‌ها */}
             {ads.length > 0 ? (
               ads.map((ad) => (
-                <LineRentalAdCard
-                  key={ad.id}
-                  ad={ad}
-                  onPress={handleAdPress}
-                  onDelete={handleDelete}
-                />
+                <LineRentalAdCard key={ad.id} ad={ad} onPress={handleAdPress} onDelete={handleDelete} />
               ))
             ) : (
               <EmptyState
@@ -217,7 +183,6 @@ export default function LineRentalPage() {
         )}
       </div>
 
-      {/* ✅ فرم ایجاد / ویرایش آگهی */}
       <CreateLineRentalAdSheet
         visible={formVisible}
         onClose={handleCloseForm}
@@ -225,7 +190,6 @@ export default function LineRentalPage() {
         editingAd={editingAd}
       />
 
-      {/* ✅ مدال جزئیات آگهی */}
       <LineRentalDetailModal
         visible={detailVisible}
         ad={selectedAd}

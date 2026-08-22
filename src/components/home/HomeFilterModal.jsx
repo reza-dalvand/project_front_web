@@ -1,3 +1,4 @@
+// src/components/home/HomeFilterModal.jsx
 'use client';
 import { useState, useEffect } from 'react';
 import { FiMapPin, FiInfo, FiCheck, FiTrash2 } from 'react-icons/fi';
@@ -5,12 +6,16 @@ import { useTheme } from '@/stores/useThemeStore';
 import BottomSheet from '@/components/common/BottomSheet';
 import Dropdown from '@/components/common/Dropdown';
 import Button from '@/components/common/Button';
-import { PROVINCES, CITIES } from '@/constants/exploreFilters';
+import { useProvinces, useCities } from '@/hooks/useLocationOptions';
 
 export default function HomeFilterModal({ visible, onClose, onApply, currentFilters }) {
   const { colors } = useTheme();
   const [province, setProvince] = useState(null);
   const [city, setCity] = useState(null);
+
+  // ✅ دریافت از بک‌اند
+  const { provinces } = useProvinces();
+  const { cities } = useCities(province);
 
   useEffect(() => {
     if (visible && currentFilters) {
@@ -30,8 +35,6 @@ export default function HomeFilterModal({ visible, onClose, onApply, currentFilt
     onApply({});
     onClose();
   };
-
-  const hasActiveFilter = province || city;
 
   return (
     <BottomSheet visible={visible} onClose={onClose} title="فیلتر موقعیت مکانی" snapPoint={0.8}>
@@ -58,7 +61,7 @@ export default function HomeFilterModal({ visible, onClose, onApply, currentFilt
           label="استان"
           placeholder="انتخاب استان"
           value={province}
-          options={PROVINCES}
+          options={provinces}
           onSelect={(val) => {
             setProvince(val);
             setCity(null);
@@ -70,7 +73,7 @@ export default function HomeFilterModal({ visible, onClose, onApply, currentFilt
           label="شهر"
           placeholder={province ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
           value={city}
-          options={province ? CITIES[province] || [] : []}
+          options={cities}
           onSelect={setCity}
           disabled={!province}
         />
@@ -91,7 +94,7 @@ export default function HomeFilterModal({ visible, onClose, onApply, currentFilt
             variant="primary"
             size="lg"
             className="flex-1"
-            // icon={<FiCheck size={16} color="#fff" />}
+            icon={<FiCheck size={16} color="#fff" />}
             iconPosition="right"
           />
         </div>

@@ -1,10 +1,58 @@
 // src/stores/usePriceListStore.js
-
+/**
+ * ✅ حذف USE_MOCK — فقط API
+ */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { priceListService } from '@/api';
-import { PRICE_LIST_THEMES, INITIAL_PRICE_LISTS } from '@/data/priceList'; // ✅ اضافه شد
 import { useBusinessStore } from './useBusinessStore';
+
+export const PRICE_LIST_THEMES = [
+  {
+    id: 'classic',
+    label: 'کلاسیک',
+    emoji: '📋',
+    bg: '#FFFFFF',
+    card: '#F9F6F2',
+    accent: '#A88B7D',
+    text: '#2C2521',
+    textSecondary: '#5A504B',
+    border: '#DCD1CB',
+  },
+  {
+    id: 'rose',
+    label: 'گلابی',
+    emoji: '🌸',
+    bg: '#FFF0F3',
+    card: '#FFF7F8',
+    accent: '#E91E63',
+    text: '#3B1023',
+    textSecondary: '#8D6E7A',
+    border: '#F5C6D6',
+  },
+  {
+    id: 'gold',
+    label: 'طلایی',
+    emoji: '✨',
+    bg: '#FFFDF5',
+    card: '#FFFBEF',
+    accent: '#D4A017',
+    text: '#3D2B10',
+    textSecondary: '#8D7A55',
+    border: '#EEDFAC',
+  },
+  {
+    id: 'mint',
+    label: 'نعنایی',
+    emoji: '🌿',
+    bg: '#F0FFF5',
+    card: '#F7FFF9',
+    accent: '#43A047',
+    text: '#1B3B22',
+    textSecondary: '#5A8D62',
+    border: '#C6E8C9',
+  },
+];
 
 const DEFAULT_LIST = (businessId) => ({
   businessId,
@@ -90,15 +138,11 @@ export const usePriceListStore = create(
       ensureList: (businessId) => {
         if (!get().lists[businessId]) {
           const services = buildServicesFromBusiness();
-          // ✅ جدید: از INITIAL_PRICE_LISTS به عنوان پایه
-          const initial = INITIAL_PRICE_LISTS[businessId];
           set((s) => ({
             lists: {
               ...s.lists,
               [businessId]: {
                 ...DEFAULT_LIST(businessId),
-                themeId: initial?.themeId || 'classic',
-                isPublished: initial?.isPublished ?? false,
                 services,
               },
             },
@@ -119,26 +163,24 @@ export const usePriceListStore = create(
           },
         })),
 
+      // ✅ حذف USE_MOCK — همیشه API
       setTheme: (businessId, themeId) => {
         get().updateList(businessId, { themeId });
-        if (!USE_MOCK) {
-          const list = get().lists[businessId];
-          priceListService
-            .updatePriceList(mapPriceListToApi(list))
-            .catch((err) => console.error('setTheme API failed:', err));
-        }
+        const list = get().lists[businessId];
+        priceListService
+          .updatePriceList(mapPriceListToApi(list))
+          .catch((err) => console.error('setTheme API failed:', err));
       },
 
+      // ✅ حذف USE_MOCK — همیشه API
       togglePublish: (businessId) => {
         const current = get().lists[businessId] || DEFAULT_LIST(businessId);
         const next = !current.isPublished;
         get().updateList(businessId, { isPublished: next });
-        if (!USE_MOCK) {
-          const list = get().lists[businessId];
-          priceListService
-            .updatePriceList(mapPriceListToApi(list))
-            .catch((err) => console.error('togglePublish API failed:', err));
-        }
+        const list = get().lists[businessId];
+        priceListService
+          .updatePriceList(mapPriceListToApi(list))
+          .catch((err) => console.error('togglePublish API failed:', err));
         return next;
       },
 

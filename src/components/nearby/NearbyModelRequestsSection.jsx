@@ -1,5 +1,6 @@
 // src/components/nearby/NearbyModelRequestsSection.jsx
 'use client';
+
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
 import SectionHeader from '@/components/common/SectionHeader';
@@ -19,10 +20,7 @@ export default function NearbyModelRequestsSection({ nearbyModelRequests, onMode
         iconColor="#E91E63"
         title="فرصت‌های مدلینگ نزدیک"
         rightElement={
-          <SeeAllButton
-            onPress={() => router.push('/model-requests?nearby=true')}
-            count={MOCK_MODEL_REQUESTS.filter((m) => m.status === 'active').length}
-          />
+          <SeeAllButton onPress={() => router.push('/model-requests')} count={nearbyModelRequests.length} />
         }
       />
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">

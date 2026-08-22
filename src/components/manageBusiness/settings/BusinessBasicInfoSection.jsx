@@ -6,19 +6,7 @@ import Card from '@/components/common/Card';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import SectionHeader from '@/components/common/SectionHeader';
-
-const BUSINESS_CATEGORIES = [
-  { id: '1', label: 'سالن زیبایی (چند منظوره)' },
-  { id: '2', label: 'کلینیک پوست و مو' },
-  { id: '3', label: 'مرکز لیزر' },
-  { id: '4', label: 'مرکز تخصصی ناخن' },
-  { id: '5', label: 'مرکز کراتین و رنگ مو' },
-  { id: '6', label: 'استودیو میکاپ و گریم' },
-  { id: '7', label: 'آرایشگاه مردانه' },
-  { id: '8', label: 'اسپا و ماساژ' },
-  { id: '9', label: 'مرکز تخصصی مژه و ابرو' },
-  { id: '10', label: 'استودیو تتو و هاشور' },
-];
+import { useBusinessCategories } from '@/hooks/useCategoryOptions';
 
 export default function BusinessBasicInfoSection({
   name,
@@ -34,6 +22,8 @@ export default function BusinessBasicInfoSection({
   onAboutChange,
 }) {
   const { colors } = useTheme();
+  // ✅ دریافت دسته‌بندی‌ها از بک‌اند
+  const { categories: businessCategories } = useBusinessCategories();
 
   return (
     <div className="space-y-3">
@@ -42,6 +32,7 @@ export default function BusinessBasicInfoSection({
         iconColor={colors.primary}
         title="اطلاعات پایه"
       />
+
       <Card variant="elevated" padding={16} radius={18}>
         {/* نام */}
         <div>
@@ -66,12 +57,12 @@ export default function BusinessBasicInfoSection({
           {errors.name && <p className="text-xs text-[#E53935] mt-1.5">{errors.name}</p>}
         </div>
 
-        {/* نوع کسب‌وکار */}
+        {/* نوع کسب‌وکار — ✅ از بک‌اند */}
         <Dropdown
           label="نوع کسب‌وکار *"
           placeholder="انتخاب کنید"
           value={categoryId}
-          options={BUSINESS_CATEGORIES}
+          options={businessCategories}
           onSelect={onCategoryChange}
         />
         {errors.categoryId && (

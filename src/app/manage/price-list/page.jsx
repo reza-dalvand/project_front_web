@@ -1,5 +1,6 @@
 // src/app/manage/price-list/page.jsx
 'use client';
+
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiTag, FiEye, FiEyeOff, FiEdit2, FiInfo } from 'react-icons/fi';
@@ -14,7 +15,14 @@ import Card from '@/components/common/Card';
 import SectionHeader from '@/components/common/SectionHeader';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import PriceListMenu from '@/components/priceList/PriceListMenu';
-import { PRICE_LIST_THEMES } from '@/data/priceList';
+
+// ═══════ ثابت محلی: تم‌ها (همان ساختار قبلی) ═══════
+const PRICE_LIST_THEMES = [
+  { id: 'classic', label: 'کلاسیک', emoji: '📋', accent: '#A88B7D', bg: '#FFFFFF', border: '#DCD1CB' },
+  { id: 'rose', label: 'گلابی', emoji: '🌸', accent: '#E91E63', bg: '#FFF0F3', border: '#F5C6D6' },
+  { id: 'gold', label: 'طلایی', emoji: '✨', accent: '#D4A017', bg: '#FFFDF5', border: '#EEDFAC' },
+  { id: 'mint', label: 'نعنایی', emoji: '🌿', accent: '#43A047', bg: '#F0FFF5', border: '#C6E8C9' },
+];
 
 export default function ManagePriceListPage() {
   const { colors } = useTheme();
@@ -23,6 +31,7 @@ export default function ManagePriceListPage() {
   const { showToast } = useToast();
   const businessData = useBusinessStore((s) => s.businessData);
   const businessId = businessData?.id || 'biz_1';
+
   const list = usePriceListStore((s) => s.lists[businessId]);
   const isLoading = usePriceListStore((s) => s.isLoading);
   const fetchPriceList = usePriceListStore((s) => s.fetchPriceList);
@@ -70,6 +79,7 @@ export default function ManagePriceListPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="لیست قیمت خدمات" onBackPress={() => router.push('/manage')} />
+
       <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-5">
         {/* ═══ لودینگ ═══ */}
         {isLoading && (

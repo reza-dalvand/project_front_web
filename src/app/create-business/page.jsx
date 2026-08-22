@@ -1,5 +1,6 @@
 // src/app/create-business/page.jsx
 'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiShield } from 'react-icons/fi';
@@ -16,6 +17,7 @@ import BasicInfoStep from '@/components/createbusiness/BasicInfoStep';
 import NationalIdVerificationStep from '@/components/createbusiness/NationalIdVerificationStep';
 import SuccessModal from '@/components/common/SuccessModal';
 import { businessesService } from '@/api';
+
 export default function CreateBusinessPage() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -103,15 +105,13 @@ export default function CreateBusinessPage() {
     return true;
   };
 
+  // ✅ حذف USE_MOCK — فقط API
   const handleFinalSubmit = async (fd) => {
     if (!validateForm()) return;
+
     setSubmitting(true);
     try {
-      if (!USE_MOCK) {
-        await businessesService.createBusiness(fd);
-      } else {
-        await new Promise((r) => setTimeout(r, 1500));
-      }
+      await businessesService.createBusiness(fd);
       setSubmitting(false);
       setSuccessModalVisible(true);
     } catch (error) {
@@ -138,6 +138,7 @@ export default function CreateBusinessPage() {
         />
       );
     }
+
     if (needsNationalId && currentStep === 1) {
       return (
         <NationalIdVerificationStep
@@ -151,6 +152,7 @@ export default function CreateBusinessPage() {
         />
       );
     }
+
     return (
       <BasicInfoStep
         formData={formData}
@@ -177,9 +179,12 @@ export default function CreateBusinessPage() {
     <ScreenWrapper padding={0}>
       <div className="flex flex-col h-screen" style={{ backgroundColor: colors.background }}>
         <Header title="ثبت کسب‌وکار جدید" onBackPress={() => router.back()} />
+
         {termsAccepted && <StepProgress currentStep={currentStep} totalSteps={totalSteps} />}
+
         <div className="flex-1 overflow-y-auto">{renderCurrentStep()}</div>
       </div>
+
       <SuccessModal
         visible={successModalVisible}
         onClose={handleSuccessClose}

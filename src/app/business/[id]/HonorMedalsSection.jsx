@@ -1,14 +1,57 @@
 // src/app/business/[id]/HonorMedalsSection.jsx
 'use client';
-import { useMemo } from 'react';
+
+import { useMemo, useState, useEffect } from 'react';
 import { FiAward } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
-import { HONOR_MEDALS, getTagCounts } from '@/data/honorMedals';
+import { reviewsService } from '@/api';
+
+// ═══════ ثابت محلی: ساختار مدال‌ها ═══════
+// این ساختار ثابت است — فقط تعداد هر تگ از بک‌اند خوانده می‌شود
+const HONOR_MEDALS = [
+  { id: 1, tagId: 'clean', label: 'مکان تمیز', emoji: '🧹', threshold: 1 },
+  { id: 2, tagId: 'punctual', label: 'وقت‌شناسی', emoji: '⏰', threshold: 1 },
+  { id: 3, tagId: 'quality', label: 'کیفیت عالی', emoji: '💎', threshold: 1 },
+  { id: 4, tagId: 'polite', label: 'رفتار محترمانه', emoji: '🙏', threshold: 1 },
+  { id: 5, tagId: 'fair_price', label: 'قیمت مناسب', emoji: '💰', threshold: 1 },
+  { id: 6, tagId: 'recommend', label: 'پیشنهاد می‌کنم', emoji: '👍', threshold: 1 },
+];
 
 export default function HonorMedalsSection({ businessId }) {
   const { colors } = useTheme();
-  const tagCounts = getTagCounts(businessId);
+  const [tagCounts, setTagCounts] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ═══════ دریافت نظرات و شمارش تگ‌ها از بک‌اند ═══════
+  useEffect(() => {
+    if (!businessId) return;
+
+    const fetchReviews = async () => {
+      setIsLoading(true);
+      try {
+        const result = await reviewsService.getBusinessReviews(businessId);
+        const reviews = result.data?.reviews || [];
+
+        // شمارش هر تگ در تمام نظرات
+        const counts = {};
+        reviews.forEach((review) => {
+          const tags = review.tags || [];
+          tags.forEach((tag) => {
+            counts[tag] = (counts[tag] || 0) + 1;
+          });
+        });
+
+        setTagCounts(counts);
+      } catch (error) {
+        console.error('Failed to fetch reviews for honor medals:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, [businessId]);
 
   // ساخت لیست مدال‌ها + مرتب‌سازی (فعال‌ها اول)
   const medals = useMemo(() => {
@@ -25,6 +68,17 @@ export default function HonorMedalsSection({ businessId }) {
   }, [tagCounts]);
 
   const activeCount = medals.filter((m) => m.isActive).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <div
+          className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+          style={{ color: colors.primary }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 pb-2">
@@ -77,6 +131,7 @@ export default function HonorMedalsSection({ businessId }) {
             >
               {medal.emoji}
             </div>
+
             {/* لیبل مدال */}
             <span
               className="text-[11px] font-[Vazir-Bold] leading-4 min-h-[32px]"
@@ -84,6 +139,7 @@ export default function HonorMedalsSection({ businessId }) {
             >
               {medal.label}
             </span>
+
             {/* تعداد نفرات */}
             <span className="text-[10px] font-[Vazir]" style={{ color: colors.textSecondary }}>
               {toPersianDigit(medal.count)} نفر نظر داده

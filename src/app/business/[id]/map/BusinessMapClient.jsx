@@ -1,14 +1,18 @@
+// src/app/business/[id]/map/BusinessMapClient.jsx
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import { useToast } from '@/hooks/useToast';
 import { cleanPhone } from '@/utils/phoneUtils';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import BusinessMapHeader from '@/components/businessMap/BusinessMapHeader';
 import BusinessMapPanel from '@/components/businessMap/BusinessMapPanel';
 import NavigationModal from '@/components/businessMap/NavigationModal';
 import MapErrorState from '@/components/businessMap/MapErrorState';
+import { businessesService } from '@/api';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 const MAP_STYLE = {
@@ -51,15 +55,45 @@ export default function BusinessMapPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { showToast } = useToast();
+
   const [MapLib, setMapLib] = useState(null);
   const [mapLoading, setMapLoading] = useState(true);
   const [mapError, setMapError] = useState(false);
   const [copied, setCopied] = useState(false);
   const [navModalVisible, setNavModalVisible] = useState(false);
   const [navLoading, setNavLoading] = useState(null);
+  const [business, setBusiness] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navTimerRef = useRef(null);
-  const businessId = params.id || '1';
-  const business = MOCK_BUSINESSES_MAP[businessId] || MOCK_BUSINESSES_MAP['1'];
+
+  // ═══════ دریافت اطلاعات کسب‌وکار از API ═══════
+  useEffect(() => {
+    const fetchBusiness = async () => {
+      setIsLoading(true);
+      try {
+        const response = await businessesService.getPublicBusiness(params.id);
+        const b = response.data;
+        setBusiness({
+          id: b.id,
+          name: b.name,
+          category: b.category?.name || b.category_name || '',
+          address: b.address,
+          phone: b.phone,
+          location: {
+            latitude: b.latitude || 35.6892,
+            longitude: b.longitude || 51.389,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to fetch business for map:', error);
+        showToast('خطا در بارگذاری موقعیت کسب‌وکار', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBusiness();
+  }, [params.id, showToast]);
 
   useEffect(() => {
     import('react-map-gl/maplibre')
@@ -88,6 +122,7 @@ export default function BusinessMapPage() {
   const openNavigationApp = (app) => {
     const { latitude, longitude } = business.location;
     setNavLoading(app.id);
+
     const deepLink = NAVIGATION_DEEP_LINKS[app.id](latitude, longitude);
     const webUrl = NAVIGATION_WEB_URLS[app.id](latitude, longitude);
 
@@ -97,11 +132,12 @@ export default function BusinessMapPage() {
     document.body.appendChild(iframe);
 
     let isHandled = false;
+
     const cleanup = () => {
       if (isHandled) return;
       isHandled = true;
       clearTimeout(navTimerRef.current);
-      removeIframeSafely(iframe);
+      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
       document.removeEventListener('visibilitychange', handleVisibility);
       setNavLoading(null);
       setNavModalVisible(false);
@@ -124,21 +160,13 @@ export default function BusinessMapPage() {
     document.addEventListener('visibilitychange', handleVisibility);
   };
 
-  const removeIframeSafely = (iframe) => {
-    if (iframe && iframe.parentNode) {
-      iframe.parentNode.removeChild(iframe);
-    }
-  };
-
   const handleNavigation = () => {
     setNavModalVisible(true);
   };
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/business/${business.id}`;
-    const shareMessage = `📍 موقعیت ${business.name}
-🏠 ${business.address}
-🔗 ${shareUrl}`;
+    const shareMessage = `📍 موقعیت ${business.name}\n🏠 ${business.address}\n🔗 ${shareUrl}`;
 
     if (navigator.share) {
       try {
@@ -184,6 +212,16 @@ export default function BusinessMapPage() {
     }
   };
 
+  if (isLoading || !business) {
+    return (
+      <ScreenWrapper>
+        <div className="flex items-center justify-center min-h-screen">
+          <LoadingSpinner label="در حال بارگذاری..." />
+        </div>
+      </ScreenWrapper>
+    );
+  }
+
   return (
     <ScreenWrapper padding={0}>
       <div className="flex flex-col h-screen" style={{ backgroundColor: colors.background }}>
@@ -212,9 +250,7 @@ export default function BusinessMapPage() {
                   viewBox="0 0 36 48"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
-                  style={{
-                    filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))',
-                  }}
+                  style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))' }}
                 >
                   <path
                     d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z"

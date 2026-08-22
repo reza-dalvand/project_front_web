@@ -1,5 +1,6 @@
 // src/app/manage/schedule/page.jsx
 'use client';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiClock, FiCalendar, FiPlus } from 'react-icons/fi';
@@ -16,16 +17,19 @@ import ServiceTypeIcon from '@/components/manageBusiness/services/ServiceTypeIco
 import { ScheduleModal } from '@/components/manageBusiness/schedule';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { timeToMinutes } from '@/utils/dateUtils';
+
 const calculateSlotCount = (schedule) => {
   const { workStart, workEnd, slotDuration, breaks = [] } = schedule;
   const startMin = timeToMinutes(workStart);
   const endMin = timeToMinutes(workEnd);
   if (!startMin || !endMin || endMin <= startMin || !slotDuration || slotDuration <= 0) return 0;
+
   const occupiedRanges = breaks.map((b) => {
     const bStart = Math.max(timeToMinutes(b.start), startMin);
     const bEnd = Math.min(timeToMinutes(b.end), endMin);
     return { start: bStart, end: Math.max(bStart, bEnd) };
   });
+
   let count = 0;
   let currentMin = startMin;
   while (currentMin + slotDuration <= endMin) {
@@ -50,19 +54,17 @@ export default function ManageSchedulePage() {
   const schedulesLoading = useBusinessStore((s) => s.schedulesLoading);
   const services = (businessData?.services || []).filter((s) => s.isActive !== false);
   const schedules = businessData?.schedules || {};
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState(null);
 
+  // ✅ حذف USE_MOCK — همیشه از API بگیر
   useEffect(() => {
-    if (!USE_MOCK) {
-      fetchSchedules().catch(() => {});
-    }
+    fetchSchedules().catch(() => {});
   }, []);
 
-  // ✅ اصلاح: استخراج existingDates برای سرویس انتخاب‌شده
   const existingDates = useMemo(() => {
     if (!selectedServiceId || !schedules) return [];
-    // ساختار: schedules[ownerId][serviceId][dateKey] = scheduleData
     const dates = [];
     Object.values(schedules).forEach((ownerSchedules) => {
       const serviceSchedules = ownerSchedules?.[selectedServiceId];
@@ -113,6 +115,7 @@ export default function ManageSchedulePage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="مدیریت زمان‌بندی" onBackPress={() => router.push('/manage')} />
+
       <div className="overflow-y-auto pb-32 px-5 pt-4 space-y-4">
         <div className="flex flex-col items-center gap-2 py-3">
           <div
@@ -220,7 +223,6 @@ export default function ManageSchedulePage() {
         )}
       </div>
 
-      {/* ✅ اصلاح: existingDates به جای [] */}
       <ScheduleModal
         visible={modalVisible}
         onClose={() => {

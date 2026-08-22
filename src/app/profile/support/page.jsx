@@ -8,16 +8,14 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import EmptyState from '@/components/common/EmptyState';
 import { supportService } from '@/api';
 import {
-  FAQ_ITEMS,
-  FAQ_CATEGORIES,
+  SUPPORT_PHONE,
+  SUPPORT_PHONE_DISPLAY,
+  SUPPORT_EMAIL,
   SUPPORT_HOURS_SIMPLE,
+  SUPPORT_CHANNELS,
 } from '@/components/profile/support/constants';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { useRouter } from 'next/navigation';
-
-// ❌ حذف شد: import TicketCreateModal
-// ❌ حذف شد: TICKET_STATUS_META
-// ❌ حذف شد: TICKET_PRIORITY_META
 
 export default function SupportPage() {
   const { colors } = useTheme();
@@ -25,34 +23,47 @@ export default function SupportPage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
   const [faqs, setFaqs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // ═══ دریافت FAQ از API ═══
+  // ✅ دریافت FAQ از بک‌اند
   useEffect(() => {
     const fetchFaqs = async () => {
+      setIsLoading(true);
       try {
         const result = await supportService.getFAQ();
         setFaqs(result.data || []);
       } catch (error) {
         console.error('Failed to fetch FAQs:', error);
-        setFaqs(FAQ_ITEMS);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchFaqs();
   }, []);
 
-  // ═══ فیلتر FAQ ═══
+  // ✅ ساخت لیست دسته‌بندی‌ها از داده‌های FAQ
+  const faqCategories = useMemo(() => {
+    const cats = new Map();
+    cats.set('all', { id: 'all', label: 'همه', color: '#607D8B' });
+    faqs.forEach((faq) => {
+      const catId = faq.category || 'general';
+      if (!cats.has(catId)) {
+        cats.set(catId, { id: catId, label: catId, color: '#607D8B' });
+      }
+    });
+    return Array.from(cats.values());
+  }, [faqs]);
+
+  // فیلتر بر اساس دسته‌بندی
   const filteredFaqs = useMemo(() => {
     if (activeCategory === 'all') return faqs;
-    return faqs.filter(
-      (item) => item.category === activeCategory || item.categoryId === activeCategory
-    );
+    return faqs.filter((f) => f.category === activeCategory);
   }, [faqs, activeCategory]);
 
   const toggleFaq = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // ═══ هندلرهای دکمه‌های تماس ═══
   const handleWhatsApp = () => {
     window.open(
       'https://wa.me/989123456789?text=' + encodeURIComponent('سلام، نیاز به پشتیبانی دارم'),
@@ -60,13 +71,14 @@ export default function SupportPage() {
       'noopener,noreferrer'
     );
   };
+
   const handleTelegram = () => {
     window.open('https://t.me/bu_support', '_blank', 'noopener,noreferrer');
   };
 
   return (
     <ScreenWrapper padding={0}>
-      {/* ═══════ هدر ═══════ */}
+      {/* هدر */}
       <div className="rounded-b-3xl pb-7 px-5 pt-8" style={{ backgroundColor: colors.primary }}>
         <div className="flex items-center gap-4">
           <button
@@ -83,26 +95,18 @@ export default function SupportPage() {
         </div>
       </div>
 
-      {/* ═══════ دکمه‌های واتساپ و تلگرام ═══════ */}
+      {/* دکمه‌های واتساپ و تلگرام */}
       <div className="grid grid-cols-2 gap-3 px-5 pt-5 pb-2">
         <button
           onClick={handleWhatsApp}
           className="flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
           style={{ backgroundColor: '#25D36608', borderColor: '#25D36640' }}
         >
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: '#25D36620' }}
-          >
+          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#25D36620' }}>
             <FaWhatsapp size={28} color="#25D366" />
           </div>
-          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#25D366' }}>
-            واتساپ
-          </span>
-          <span
-            className="text-[10px] font-[Vazir] text-center leading-4"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#25D366' }}>واتساپ</span>
+          <span className="text-[10px] font-[Vazir] text-center leading-4" style={{ color: colors.textSecondary }}>
             پاسخگویی سریع
           </span>
         </button>
@@ -111,19 +115,11 @@ export default function SupportPage() {
           className="flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
           style={{ backgroundColor: '#0088cc08', borderColor: '#0088cc40' }}
         >
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: '#0088cc20' }}
-          >
+          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#0088cc20' }}>
             <FaTelegramPlane size={28} color="#0088cc" />
           </div>
-          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#0088cc' }}>
-            تلگرام
-          </span>
-          <span
-            className="text-[10px] font-[Vazir] text-center leading-4"
-            style={{ color: colors.textSecondary }}
-          >
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#0088cc' }}>تلگرام</span>
+          <span className="text-[10px] font-[Vazir] text-center leading-4" style={{ color: colors.textSecondary }}>
             ارسال پیام و تصویر
           </span>
         </button>
@@ -135,16 +131,11 @@ export default function SupportPage() {
           className="flex items-center gap-3 p-3.5 rounded-2xl border"
           style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
         >
-          <div
-            className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: '#FF980020' }}
-          >
+          <div className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FF980020' }}>
             <span className="text-lg">🕐</span>
           </div>
           <div className="flex-1 gap-1">
-            <p className="text-xs" style={{ color: colors.textSecondary }}>
-              ساعات پاسخگویی
-            </p>
+            <p className="text-xs" style={{ color: colors.textSecondary }}>ساعات پاسخگویی</p>
             <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               {SUPPORT_HOURS_SIMPLE}
             </p>
@@ -152,16 +143,13 @@ export default function SupportPage() {
         </div>
       </div>
 
-      {/* ═══════ سوالات متداول ═══════ */}
+      {/* سوالات متداول */}
       <div className="px-5 pt-2 pb-32">
         {/* فیلتر دسته‌بندی */}
         <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide">
-          {FAQ_CATEGORIES.map((cat) => {
+          {faqCategories.map((cat) => {
             const isActive = activeCategory === cat.id;
-            const count =
-              cat.id === 'all'
-                ? faqs.length
-                : faqs.filter((f) => f.category === cat.id || f.categoryId === cat.id).length;
+            const count = cat.id === 'all' ? faqs.length : filteredFaqs.length;
             return (
               <button
                 key={cat.id}
@@ -193,11 +181,15 @@ export default function SupportPage() {
 
         {/* لیست سوالات */}
         <div className="space-y-2.5 mt-4">
-          {filteredFaqs.length > 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div
+                className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+                style={{ color: colors.primary }}
+              />
+            </div>
+          ) : filteredFaqs.length > 0 ? (
             filteredFaqs.map((item) => {
-              const category = FAQ_CATEGORIES.find(
-                (c) => c.id === item.category || c.id === item.categoryId
-              );
               const isExpanded = expandedId === item.id;
               return (
                 <div
@@ -214,9 +206,9 @@ export default function SupportPage() {
                   >
                     <div
                       className="w-8 h-8 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: (category?.color || '#607D8B') + '20' }}
+                      style={{ backgroundColor: colors.primary + '15' }}
                     >
-                      <FiHelpCircle size={16} color={category?.color || '#607D8B'} />
+                      <FiHelpCircle size={16} style={{ color: colors.primary }} />
                     </div>
                     <span
                       className="flex-1 text-[13px] font-[Vazir-Bold] leading-[21px] text-right"
@@ -225,9 +217,9 @@ export default function SupportPage() {
                       {item.question}
                     </span>
                     {isExpanded ? (
-                      <FiChevronUp size={18} color={colors.primary} />
+                      <FiChevronUp size={18} style={{ color: colors.primary }} />
                     ) : (
-                      <FiChevronDown size={18} color={colors.textSecondary} />
+                      <FiChevronDown size={18} style={{ color: colors.textSecondary }} />
                     )}
                   </button>
                   {isExpanded && (
@@ -241,30 +233,13 @@ export default function SupportPage() {
                       >
                         {item.answer}
                       </p>
-                      {category && (
-                        <div
-                          className="flex items-center gap-1.5 mt-3 self-start inline-flex px-2.5 py-1 rounded-lg"
-                          style={{ backgroundColor: (category?.color || '#607D8B') + '15' }}
-                        >
-                          <span
-                            className="text-[10px] font-[Vazir-Bold]"
-                            style={{ color: category?.color || '#607D8B' }}
-                          >
-                            {category?.label}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
               );
             })
           ) : (
-            <EmptyState
-              icon="🔍"
-              title="نتیجه‌ای یافت نشد"
-              description="دسته‌بندی دیگری را انتخاب کنید"
-            />
+            <EmptyState icon="🔍" title="نتیجه‌ای یافت نشد" description="دسته‌بندی دیگری را انتخاب کنید" />
           )}
         </div>
       </div>

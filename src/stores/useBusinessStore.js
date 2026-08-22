@@ -1,4 +1,13 @@
 // src/stores/useBusinessStore.js
+/**
+ * 🏪 Store کسب‌وکار — فاز ۵
+ *
+ * ✅ تغییرات فاز ۵:
+ * - INITIAL_BUSINESS_DATA کاملاً خالی است
+ * - migrate برای نسخه < 5 ریست کامل انجام می‌دهد
+ * - fetchBusinessDetail تنها منبع پر کردن داده‌هاست
+ * - Selector‌های اختصاصی برای جلوگیری از re-render
+ */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { businessesService } from '@/api';
@@ -12,7 +21,7 @@ import { createSchedulesSlice } from './business/slices/schedulesSlice';
 export const useBusinessStore = create(
   persist(
     (set, get) => ({
-      // ─── State اصلی ───
+      // ─── State اصلی (خالی در شروع) ───
       businessData: INITIAL_BUSINESS_DATA,
       gallery: [],
       _version: STORAGE_VERSION,
@@ -38,53 +47,70 @@ export const useBusinessStore = create(
       },
 
       // ─── Selectors ───
-      getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
+      getActiveServices: () =>
+        get().businessData.services.filter((s) => s.isActive !== false),
 
       resetToDefaults: () => {
-        set({ businessData: INITIAL_BUSINESS_DATA, gallery: [], _version: STORAGE_VERSION });
+        set({
+          businessData: INITIAL_BUSINESS_DATA,
+          gallery: [],
+          _version: STORAGE_VERSION,
+        });
       },
 
-      // ═══════ API Sync — Businesses ═══════
+      // ═══════════════════════════════════════════
+      //    API Sync — Businesses
+      // ═══════════════════════════════════════════
+
+      /**
+       * دریافت جزئیات کامل کسب‌وکار از API
+       * ✅ تنها منبع معتبر پر کردن businessData
+       */
       fetchBusinessDetail: async () => {
         try {
           const response = await businessesService.getBusinessDetail();
           const b = response.data;
+
           set((state) => ({
             businessData: {
               ...state.businessData,
               id: b.id,
-              name: b.name,
+              name: b.name || '',
               category: b.category?.name || '',
-              categoryId: b.category?.id || '',
-              address: b.address,
+              categoryId: b.category?.id || null,
+              address: b.address || '',
               city: b.city?.name || '',
-              cityId: b.city?.id || '',
-              provinceId: b.province?.id || '',
-              phone: b.phone,
-              workingHours: b.working_hours,
-              about: b.about,
-              rating: b.rating,
-              reviewsCount: b.reviews_count,
-              VIP: b.is_vip,
-              logo: b.logo,
-              coverUrl: b.cover_image,
-              ownerPhoto: b.owner_photo,
-              ownerName: b.owner_name,
-              verifiedName: b.verifiedName,
-              nationalId: b.nationalId,
+              cityId: b.city?.id || null,
+              provinceId: b.province?.id || null,
+              phone: b.phone || '',
+              workingHours: b.working_hours || '',
+              about: b.about || '',
+              rating: b.rating || 0,
+              reviewsCount: b.reviews_count || 0,
+              VIP: b.is_vip || false,
+              logo: b.logo || null,
+              coverUrl: b.cover_image || null,
+              ownerPhoto: b.owner_photo || null,
+              ownerName: b.owner_name || '',
+              verifiedName: b.verifiedName || '',
+              nationalId: b.nationalId || '',
               bankInfo: {
-                isRegistered: b.bankInfoRegistered,
-                isVerified: b.bankInfoVerified,
+                isRegistered: b.bankInfoRegistered || false,
+                isVerified: b.bankInfoVerified || false,
               },
-              bookingSlug: b.bookingSlug,
+              bookingSlug: b.bookingSlug || '',
               isActive: b.status === 'approved',
-              latitude: b.latitude,
-              longitude: b.longitude,
-              gallery: b.gallery || [],
+              status: b.status || null,
+              latitude: b.latitude || null,
+              longitude: b.longitude || null,
               services: b.services || [],
+              team: b.team || [],
+              appointments: b.appointments || [],
+              portfolios: b.portfolios || [],
             },
             gallery: b.gallery || [],
           }));
+
           return response.data;
         } catch (error) {
           console.error('fetchBusinessDetail failed:', error);
@@ -92,6 +118,9 @@ export const useBusinessStore = create(
         }
       },
 
+      /**
+       * بررسی وضعیت کسب‌وکار
+       */
       fetchBusinessStatus: async () => {
         try {
           const response = await businessesService.getBusinessStatus();
@@ -102,21 +131,27 @@ export const useBusinessStore = create(
         }
       },
 
+      /**
+       * ثبت کسب‌وکار جدید
+       */
       createBusinessApi: async (formData) => {
         try {
           const response = await businessesService.createBusiness(formData);
           const b = response.data;
+
           set((state) => ({
             businessData: {
               ...state.businessData,
               id: b.id,
-              name: b.name,
+              name: b.name || '',
               category: b.category?.name || '',
-              address: b.address,
-              bookingSlug: b.booking_slug,
+              address: b.address || '',
+              bookingSlug: b.booking_slug || '',
               isActive: b.status === 'approved',
+              status: b.status || null,
             },
           }));
+
           return response.data;
         } catch (error) {
           console.error('createBusinessApi failed:', error);
@@ -124,20 +159,25 @@ export const useBusinessStore = create(
         }
       },
 
+      /**
+       * بروزرسانی اطلاعات کسب‌وکار
+       */
       updateBusinessApi: async (data) => {
         try {
           const response = await businessesService.updateBusiness(data);
           const b = response.data;
+
           set((state) => ({
             businessData: {
               ...state.businessData,
-              name: b.name,
-              address: b.address,
-              phone: b.phone,
-              workingHours: b.working_hours,
-              about: b.about,
+              name: b.name || state.businessData.name,
+              address: b.address || state.businessData.address,
+              phone: b.phone || state.businessData.phone,
+              workingHours: b.working_hours || state.businessData.workingHours,
+              about: b.about || state.businessData.about,
             },
           }));
+
           return response.data;
         } catch (error) {
           console.error('updateBusinessApi failed:', error);
@@ -145,6 +185,9 @@ export const useBusinessStore = create(
         }
       },
 
+      /**
+       * دریافت اطلاعات بانکی
+       */
       fetchBankInfo: async () => {
         try {
           const response = await businessesService.getBankInfo();
@@ -155,6 +198,9 @@ export const useBusinessStore = create(
         }
       },
 
+      /**
+       * ثبت/بروزرسانی اطلاعات بانکی
+       */
       updateBankInfoApi: async (bankData) => {
         try {
           const response = await businessesService.updateBankInfo({
@@ -166,12 +212,14 @@ export const useBusinessStore = create(
             bank_card_number: bankData.cardNumber,
             bank_account_number: bankData.accountNumber,
           });
+
           set((state) => ({
             businessData: {
               ...state.businessData,
               bankInfo: { isRegistered: true, isVerified: false },
             },
           }));
+
           return response.data;
         } catch (error) {
           console.error('updateBankInfoApi failed:', error);
@@ -179,6 +227,9 @@ export const useBusinessStore = create(
         }
       },
 
+      /**
+       * حذف کسب‌وکار
+       */
       deleteBusinessApi: async () => {
         try {
           await businessesService.deleteBusiness();
@@ -191,7 +242,10 @@ export const useBusinessStore = create(
         }
       },
 
-      // ═══════ API Sync — Gallery ═══════
+      // ═══════════════════════════════════════════
+      //    API Sync — Gallery
+      // ═══════════════════════════════════════════
+
       fetchGallery: async () => {
         try {
           const response = await businessesService.getGallery();
@@ -257,9 +311,21 @@ export const useBusinessStore = create(
         gallery: state.gallery,
         _version: STORAGE_VERSION,
       }),
+      /**
+       * ✅ فاز ۵: مهاجرت از نسخه‌های قدیمی
+       * هر نسخه‌ای کمتر از ۵ → ریست کامل به داده‌های خالی
+       * چون نسخه‌های قبلی داده‌های هاردکد داشتند که دیگر معتبر نیستند
+       */
       migrate: (persistedState, version) => {
         if (version < STORAGE_VERSION) {
-          return { businessData: INITIAL_BUSINESS_DATA, gallery: [], _version: STORAGE_VERSION };
+          console.log(
+            `[BusinessStore] Migrating from v${version} to v${STORAGE_VERSION} — resetting to empty state`
+          );
+          return {
+            businessData: INITIAL_BUSINESS_DATA,
+            gallery: [],
+            _version: STORAGE_VERSION,
+          };
         }
         return persistedState;
       },
@@ -268,7 +334,7 @@ export const useBusinessStore = create(
 );
 
 // ═══════════════════════════════════════════════════════
-//    ✅ FIX (فاز ۴): Selector‌های اختصاصی
+//    Selector‌های اختصاصی
 //    جلوگیری از re-render کل store در هر کامپوننت
 // ═══════════════════════════════════════════════════════
 export const useBusinessName = () => useBusinessStore((s) => s.businessData?.name);
@@ -281,3 +347,5 @@ export const useBusinessGallery = () => useBusinessStore((s) => s.gallery);
 export const useBusinessIsActive = () => useBusinessStore((s) => s.businessData?.isActive);
 export const useBusinessBankInfo = () => useBusinessStore((s) => s.businessData?.bankInfo);
 export const useBusinessBookingSlug = () => useBusinessStore((s) => s.businessData?.bookingSlug);
+export const useBusinessHasData = () =>
+  useBusinessStore((s) => Boolean(s.businessData?.id && s.businessData?.name));

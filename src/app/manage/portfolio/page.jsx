@@ -1,5 +1,6 @@
 // src/app/manage/portfolio/page.jsx
 'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import { FiPlus, FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -33,7 +34,6 @@ export default function ManagePortfolioPage() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [activePortfolio, setActivePortfolio] = useState(null);
 
-  // ─── دریافت نمونه‌کارها از API ───
   useEffect(() => {
     const fetchPortfolios = async () => {
       setIsLoading(true);
@@ -50,28 +50,17 @@ export default function ManagePortfolioPage() {
     fetchPortfolios();
   }, [showToast, businessData?.portfolios]);
 
-  // ─── ایجاد/ویرایش نمونه‌کار ───
+  // ✅ حذف USE_MOCK — فقط API
   const handleSave = useCallback(
     async (portfolioData, editingId) => {
       try {
-        if (!USE_MOCK) {
-          if (editingId) {
-            await portfoliosService.updatePortfolio(editingId, portfolioData);
-          } else {
-            await portfoliosService.createPortfolio(portfolioData);
-          }
-          // بروزرسانی لیست
-          const result = await portfoliosService.getMyPortfolios();
-          setPortfolios(result.data || []);
+        if (editingId) {
+          await portfoliosService.updatePortfolio(editingId, portfolioData);
         } else {
-          if (editingId) {
-            setPortfolios((prev) =>
-              prev.map((p) => (p.id === editingId ? { ...p, ...portfolioData } : p))
-            );
-          } else {
-            setPortfolios((prev) => [{ ...portfolioData, id: `pf_${Date.now()}` }, ...prev]);
-          }
+          await portfoliosService.createPortfolio(portfolioData);
         }
+        const result = await portfoliosService.getMyPortfolios();
+        setPortfolios(result.data || []);
         showToast(editingId ? '✓ نمونه‌کار ویرایش شد' : '✓ نمونه‌کار جدید اضافه شد', 'success');
         setFormVisible(false);
         setEditingPortfolio(null);
@@ -83,17 +72,13 @@ export default function ManagePortfolioPage() {
     [showToast]
   );
 
-  // ─── حذف نمونه‌کار ───
+  // ✅ حذف USE_MOCK — فقط API
   const handleDelete = useCallback(
     async (portfolio) => {
       try {
-        if (!USE_MOCK) {
-          await portfoliosService.deletePortfolio(portfolio.id);
-          const result = await portfoliosService.getMyPortfolios();
-          setPortfolios(result.data || []);
-        } else {
-          setPortfolios((prev) => prev.filter((p) => p.id !== portfolio.id));
-        }
+        await portfoliosService.deletePortfolio(portfolio.id);
+        const result = await portfoliosService.getMyPortfolios();
+        setPortfolios(result.data || []);
         showToast('✓ نمونه‌کار حذف شد', 'success');
         setDetailVisible(false);
         setActivePortfolio(null);
@@ -140,7 +125,6 @@ export default function ManagePortfolioPage() {
       <Header title="نمونه‌کارها" onBackPress={() => router.back()} />
 
       <div className="p-4 pb-32">
-        {/* هدر + دکمه افزودن */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <FiImage size={20} style={{ color: colors.primary }} />
@@ -148,24 +132,11 @@ export default function ManagePortfolioPage() {
               گالری نمونه‌کارها
             </span>
           </div>
-          <span className="text-xs" style={{ color: colors.textSecondary }}>
+          <span className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
             {toPersianDigit(portfolios.length)} نمونه‌کار
           </span>
         </div>
 
-        {/* دکمه افزودن */}
-        <button
-          onClick={openAddForm}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-dashed mb-4 transition-all hover:scale-[1.01] active:scale-[0.99]"
-          style={{ borderColor: colors.primary + '50', backgroundColor: colors.primary + '05' }}
-        >
-          <FiPlus size={18} style={{ color: colors.primary }} />
-          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
-            افزودن نمونه‌کار جدید
-          </span>
-        </button>
-
-        {/* لیست نمونه‌کارها */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div
@@ -196,7 +167,6 @@ export default function ManagePortfolioPage() {
         )}
       </div>
 
-      {/* مدال فرم */}
       <PortfolioFormSheet
         visible={formVisible}
         onClose={() => {
@@ -208,7 +178,6 @@ export default function ManagePortfolioPage() {
         services={services}
       />
 
-      {/* مدال جزئیات */}
       <PortfolioDetailModal
         visible={detailVisible}
         portfolio={activePortfolio}

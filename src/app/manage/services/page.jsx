@@ -1,5 +1,6 @@
 // src/app/manage/services/page.jsx
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiPlus, FiBox, FiCheckCircle } from 'react-icons/fi';
@@ -19,28 +20,26 @@ import {
   ServiceEmptyState,
 } from '@/components/manageBusiness/services';
 import { toPersianDigit } from '@/utils/numberUtils';
+
 export default function ManageServicesPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
-
   const businessData = useBusinessStore((s) => s.businessData);
   const fetchServices = useBusinessStore((s) => s.fetchServices);
   const deleteServiceApi = useBusinessStore((s) => s.deleteServiceApi);
   const toggleServiceActiveApi = useBusinessStore((s) => s.toggleServiceActiveApi);
   const servicesLoading = useBusinessStore((s) => s.servicesLoading);
-
   const services = businessData?.services || [];
+
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // ═══ دریافت خدمات از API هنگام mount ═══
+  // ✅ حذف USE_MOCK — همیشه از API بگیر
   useEffect(() => {
-    if (!USE_MOCK) {
-      fetchServices().catch((err) => {
-        showToast('خطا در دریافت خدمات', 'error');
-      });
-    }
+    fetchServices().catch((err) => {
+      showToast('خطا در دریافت خدمات', 'error');
+    });
   }, []);
 
   const handleEdit = (service) => {
@@ -95,7 +94,6 @@ export default function ManageServicesPage() {
           <>
             {services.length > 0 && <ServiceStats services={services} />}
 
-            {/* دکمه افزودن */}
             {services.length > 0 && (
               <div className="px-5 mb-4">
                 <Button
@@ -111,7 +109,6 @@ export default function ManageServicesPage() {
               </div>
             )}
 
-            {/* لیست خدمات */}
             <div className="px-5 flex flex-col gap-3">
               {services.length === 0 ? (
                 <ServiceEmptyState onAdd={handleAdd} />

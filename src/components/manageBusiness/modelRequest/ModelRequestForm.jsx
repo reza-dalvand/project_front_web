@@ -11,9 +11,8 @@ import SectionHeader from '@/components/common/SectionHeader';
 import CostTypeBadge from '@/components/common/CostTypeBadge';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { COST_TYPE_OPTIONS } from '@/constants/collabTypes';
-import { SERVICE_CATEGORIES, getSubServicesByCategory } from '@/constants/serviceTypes';
+import { useServiceCategories, useSubServices } from '@/hooks/useCategoryOptions';
 
-// ═══════ محدودیت‌های بک‌اند ═══════
 const MAX_TITLE = 100;
 const MAX_DESCRIPTION = 500;
 const MAX_PHONE = 11;
@@ -32,56 +31,43 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
   });
   const [errors, setErrors] = useState({});
 
-  // زیرخدمات بر اساس دسته‌بندی انتخاب شده
-  const availableSubServices = formData.categoryId
-    ? getSubServicesByCategory(formData.categoryId)
-    : [];
+  // ✅ دریافت دسته‌بندی خدمات از بک‌اند
+  const { categories: serviceCategories } = useServiceCategories();
+  // ✅ دریافت زیرخدمات بر اساس دسته انتخاب‌شده
+  const { subServices: availableSubServices } = useSubServices(formData.categoryId);
 
   const updateField = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: '' }));
   };
 
-  // ═══════ اعتبارسنجی ═══════
   const validate = () => {
     const newErrors = {};
-
     if (!formData.title.trim()) {
       newErrors.title = 'عنوان درخواست الزامی است';
     } else if (formData.title.trim().length > MAX_TITLE) {
       newErrors.title = `عنوان نمی‌تواند بیشتر از ${toPersianDigit(MAX_TITLE)} کاراکتر باشد`;
     }
-
-    if (!formData.categoryId) {
-      newErrors.categoryId = 'دسته‌بندی خدمات را انتخاب کنید';
-    }
-
-    if (!formData.subServiceId) {
-      newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
-    }
-
+    if (!formData.categoryId) newErrors.categoryId = 'دسته‌بندی خدمات را انتخاب کنید';
+    if (!formData.subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
     if (!formData.description.trim()) {
       newErrors.description = 'توضیحات الزامی است';
     } else if (formData.description.trim().length > MAX_DESCRIPTION) {
       newErrors.description = `توضیحات نمی‌تواند بیشتر از ${toPersianDigit(MAX_DESCRIPTION)} کاراکتر باشد`;
     }
-
     if (!formData.contactPhone.trim()) {
       newErrors.contactPhone = 'شماره تماس الزامی است';
     } else if (formData.contactPhone.trim().length !== MAX_PHONE) {
       newErrors.contactPhone = `شماره تماس باید دقیقاً ${toPersianDigit(MAX_PHONE)} رقم باشد`;
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = () => {
     if (!validate()) return;
-
     const subService = availableSubServices.find((s) => s.id === formData.subServiceId);
-    const category = SERVICE_CATEGORIES.find((c) => c.id === formData.categoryId);
-
+    const category = serviceCategories.find((c) => c.id === formData.categoryId);
     onSave({
       ...formData,
       categoryLabel: category?.label || '',
@@ -91,15 +77,10 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
 
   return (
     <div className="p-5 space-y-6 pb-32">
-      {/* ═══════ بخش ۱: اطلاعات درخواست ═══════ */}
+      {/* بخش ۱: اطلاعات درخواست */}
       <div className="space-y-3">
-        <SectionHeader
-          icon={<FiFileText size={18} />}
-          iconColor={colors.primary}
-          title="اطلاعات درخواست"
-        />
+        <SectionHeader icon={<FiFileText size={18} />} iconColor={colors.primary} title="اطلاعات درخواست" />
         <Card variant="elevated" padding={16} radius={18}>
-          {/* ✅ ۱. عنوان درخواست — اول */}
           <Input
             label="عنوان درخواست *"
             placeholder="مثال: مدل برای فیشیال VIP عروس"
@@ -110,29 +91,22 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
             error={errors.title}
             hint={`${toPersianDigit(formData.title.length)} از ${toPersianDigit(MAX_TITLE)} کاراکتر`}
           />
-
-          {/* ✅ ۲. دسته‌بندی خدمات */}
           <Dropdown
             label="دسته‌بندی خدمات *"
             placeholder="دسته‌بندی را انتخاب کنید"
             value={formData.categoryId}
-            options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
+            options={serviceCategories}
             onSelect={(val) => {
               updateField('categoryId', val);
-              // ریست نوع خدمت هنگام تغییر دسته‌بندی
               setFormData((prev) => ({ ...prev, categoryId: val, subServiceId: null }));
             }}
           />
           {errors.categoryId && (
             <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.categoryId}</p>
           )}
-
-          {/* ✅ ۳. نوع خدمت */}
           <Dropdown
             label="نوع خدمت *"
-            placeholder={
-              formData.categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'
-            }
+            placeholder={formData.categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
             value={formData.subServiceId}
             options={availableSubServices}
             onSelect={(val) => updateField('subServiceId', val)}
@@ -141,8 +115,6 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
           {errors.subServiceId && (
             <p className="text-xs text-[#E53935] mt-[-8px] mb-3">{errors.subServiceId}</p>
           )}
-
-          {/* توضیحات */}
           <Input
             label="توضیحات *"
             placeholder="توضیحات کامل درباره نیاز به مدل..."
@@ -154,8 +126,6 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
             error={errors.description}
             hint={`${toPersianDigit(formData.description.length)} از ${toPersianDigit(MAX_DESCRIPTION)} کاراکتر`}
           />
-
-          {/* شماره تماس */}
           <Input
             label="شماره تماس برای مدل‌ها *"
             placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹"
@@ -171,7 +141,7 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
         </Card>
       </div>
 
-      {/* ═══════ بخش ۲: نوع هزینه ═══════ */}
+      {/* بخش ۲: نوع هزینه */}
       <div className="space-y-3">
         <SectionHeader icon={<FiDollarSign size={18} />} iconColor="#4CAF50" title="نوع هزینه" />
         <div className="space-y-2.5">
@@ -189,21 +159,13 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
               >
                 <CostTypeBadge type={option.id} variant="default" />
                 <div className="flex-1">
-                  <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                    {option.label}
-                  </p>
-                  <p
-                    className="text-xs font-[Vazir] mt-0.5"
-                    style={{ color: colors.textSecondary }}
-                  >
+                  <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>{option.label}</p>
+                  <p className="text-xs font-[Vazir] mt-0.5" style={{ color: colors.textSecondary }}>
                     {option.subtitle}
                   </p>
                 </div>
                 {isSelected && (
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: colors.primary }}
-                  >
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.primary }}>
                     <FiCheck size={14} color="#fff" />
                   </div>
                 )}
@@ -213,7 +175,7 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
         </div>
       </div>
 
-      {/* ═══════ دکمه‌ها ═══════ */}
+      {/* دکمه‌ها */}
       <div className="flex gap-3 pt-4">
         <Button title="انصراف" onPress={onClose} variant="outline" size="lg" className="flex-1" />
         <Button

@@ -1,5 +1,6 @@
 // src/app/manage/settings/page.jsx
 'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSave } from 'react-icons/fi';
@@ -16,13 +17,13 @@ import BusinessImagesSection from '@/components/manageBusiness/settings/Business
 import BusinessBasicInfoSection from '@/components/manageBusiness/settings/BusinessBasicInfoSection';
 import BusinessLocationSection from '@/components/manageBusiness/settings/BusinessLocationSection';
 import BusinessDangerZone from '@/components/manageBusiness/settings/BusinessDangerZone';
+
 export default function BusinessSettingsPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
 
-  // Store
   const businessData = useBusinessStore((s) => s.businessData);
   const updateBusinessInfo = useBusinessStore((s) => s.updateBusinessInfo);
   const deleteBusiness = useBusinessStore((s) => s.deleteBusiness);
@@ -30,7 +31,6 @@ export default function BusinessSettingsPage() {
   const updateBusinessApi = useBusinessStore((s) => s.updateBusinessApi);
   const deleteBusinessApi = useBusinessStore((s) => s.deleteBusinessApi);
 
-  // State فرم
   const [formData, setFormData] = useState({
     name: '',
     categoryId: null,
@@ -49,14 +49,12 @@ export default function BusinessSettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  // ═══════ بارگذاری اولیه داده‌ها ═══════
+  // ✅ حذف USE_MOCK — همیشه از API
   useEffect(() => {
     const loadBusinessData = async () => {
       setIsLoading(true);
       try {
-        if (!USE_MOCK) {
-          await fetchBusinessDetail();
-        }
+        await fetchBusinessDetail();
         const data = useBusinessStore.getState().businessData;
         setFormData({
           name: data.name || '',
@@ -81,7 +79,6 @@ export default function BusinessSettingsPage() {
     loadBusinessData();
   }, [fetchBusinessDetail, showToast]);
 
-  // ═══════ آپدیت فیلد ═══════
   const updateField = useCallback((key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => {
@@ -97,7 +94,6 @@ export default function BusinessSettingsPage() {
     updateField('location', null);
   };
 
-  // ═══════ اعتبارسنجی ═══════
   const validate = useCallback(() => {
     const newErrors = {};
     if (!formData.name.trim() || formData.name.trim().length < 3) {
@@ -113,21 +109,21 @@ export default function BusinessSettingsPage() {
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  // ═══════ ذخیره تغییرات ═══════
+  // ✅ حذف USE_MOCK — فقط API
   const handleSave = async () => {
     if (!validate()) return;
+
     setSaving(true);
     try {
-      if (!USE_MOCK) {
-        await updateBusinessApi({
-          name: formData.name.trim(),
-          category: formData.categoryId,
-          address: formData.address.trim(),
-          phone: formData.phone,
-          working_hours: formData.workingHours,
-          about: formData.about,
-        });
-      }
+      await updateBusinessApi({
+        name: formData.name.trim(),
+        category: formData.categoryId,
+        address: formData.address.trim(),
+        phone: formData.phone,
+        working_hours: formData.workingHours,
+        about: formData.about,
+      });
+
       updateBusinessInfo({
         name: formData.name.trim(),
         categoryId: formData.categoryId,
@@ -136,6 +132,7 @@ export default function BusinessSettingsPage() {
         workingHours: formData.workingHours,
         about: formData.about,
       });
+
       setSaving(false);
       showToast('✓ تغییرات با موفقیت ذخیره شد', 'success');
     } catch (error) {
@@ -144,15 +141,11 @@ export default function BusinessSettingsPage() {
     }
   };
 
-  // ═══════ حذف کسب‌وکار ═══════
+  // ✅ حذف USE_MOCK — فقط API
   const handleDeleteConfirm = async () => {
     setDeleteModalVisible(false);
     try {
-      if (!USE_MOCK) {
-        await deleteBusinessApi();
-      } else {
-        deleteBusiness();
-      }
+      await deleteBusinessApi();
       showToast('کسب‌وکار حذف شد', 'info');
       router.push('/create-business');
     } catch (error) {
@@ -160,7 +153,6 @@ export default function BusinessSettingsPage() {
     }
   };
 
-  // ═══════ رندر ═══════
   if (!isAuthenticated) {
     return (
       <ScreenWrapper>
@@ -185,8 +177,8 @@ export default function BusinessSettingsPage() {
   return (
     <ScreenWrapper padding={0}>
       <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.push('/manage')} />
+
       <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
-        {/* تصاویر */}
         <BusinessImagesSection
           coverUrl={formData.coverUrl}
           ownerPhoto={formData.ownerPhoto}
@@ -194,7 +186,6 @@ export default function BusinessSettingsPage() {
           onOwnerPhotoChange={(url) => updateField('ownerPhoto', url)}
         />
 
-        {/* اطلاعات پایه */}
         <BusinessBasicInfoSection
           name={formData.name}
           categoryId={formData.categoryId}
@@ -209,7 +200,6 @@ export default function BusinessSettingsPage() {
           onAboutChange={(t) => updateField('about', t)}
         />
 
-        {/* موقعیت مکانی */}
         <BusinessLocationSection
           provinceId={formData.provinceId}
           cityId={formData.cityId}
@@ -222,7 +212,6 @@ export default function BusinessSettingsPage() {
           onLocationSelect={(location) => updateField('location', location)}
         />
 
-        {/* دکمه ذخیره */}
         <Button
           title={saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
           onPress={handleSave}
@@ -235,11 +224,9 @@ export default function BusinessSettingsPage() {
           iconPosition="right"
         />
 
-        {/* ناحیه خطرناک */}
         <BusinessDangerZone onDeletePress={() => setDeleteModalVisible(true)} />
       </div>
 
-      {/* ConfirmDialog حذف */}
       <ConfirmDialog
         visible={deleteModalVisible}
         title="حذف کسب و کار"

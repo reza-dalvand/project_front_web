@@ -1,224 +1,72 @@
 // src/stores/business/initialData.js
-import { todayJalaali, toJalaaliKey } from '@/utils/dateUtils';
+/**
+ * 📦 داده‌های اولیه کسب‌وکار
+ *
+ * ✅ فاز ۵: تمام داده‌های هاردکد حذف شدند.
+ * State اولیه کاملاً خالی است و فقط از API پر می‌شود.
+ *
+ * ⚠️ توجه: اگر کاربر لاگین نباشد یا کسب‌وکاری نداشته باشد،
+ * تمام فیلدها null/خالی خواهند بود. کامپوننت‌ها باید
+ * حالت خالی را به درستی مدیریت کنند.
+ */
 
-// ✅ تاریخ امروز به صورت داینامیک (هر بار که اپ لود شود)
-const today = todayJalaali();
-const todayKey = toJalaaliKey(today.jy, today.jm, today.jd);
+export const STORAGE_VERSION = 5; // ✅ افزایش نسخه به دلیل حذف داده‌های هاردکد
 
-export const STORAGE_VERSION = 4; // ✅ افزایش نسخه به دلیل تغییرات API
-
+/**
+ * ساختار خالی اولیه کسب‌وکار
+ * هیچ داده‌ی پیش‌فرضی وجود ندارد — همه چیز از API می‌آید
+ */
 export const INITIAL_BUSINESS_DATA = {
-  id: 'biz_1',
-  isActive: true,
-  name: 'سالن زیبایی نیلارام',
-  category: 'کلینیک پوست و مو',
-  categoryId: '2',
-  address: 'تهران، سعادت‌آباد، خیابان سرو غربی',
-  city: 'تهران، سعادت‌آباد',
-  phone: '۰۲۱-۲۲۳۳۴۴۵۵',
-  rating: 4.9,
-  reviewsCount: 142,
-  VIP: true,
-  logo: 'https://picsum.photos/150?random=1',
-  coverUrl: 'https://picsum.photos/800/400?random=10',
-  ownerName: 'مریم حسینی',
-  verifiedName: 'مریم حسینی',
-  // ✅ فیلد جدید: وضعیت حساب بانکی
+  // ─── شناسه و وضعیت ───
+  id: null,
+  isActive: false,
+  status: null, // 'pending' | 'approved' | 'rejected'
+
+  // ─── اطلاعات پایه ───
+  name: '',
+  category: '',
+  categoryId: null,
+  address: '',
+  city: '',
+  cityId: null,
+  provinceId: null,
+  phone: '',
+  workingHours: '',
+  about: '',
+
+  // ─── آمار و رتبه ───
+  rating: 0,
+  reviewsCount: 0,
+  VIP: false,
+
+  // ─── تصاویر ───
+  logo: null,
+  coverUrl: null,
+  ownerPhoto: null,
+
+  // ─── مالک ───
+  ownerName: '',
+  verifiedName: '',
+  nationalId: '',
+
+  // ─── حساب بانکی ───
   bankInfo: {
     isRegistered: false,
     isVerified: false,
   },
-  // ✅ فیلد جدید: booking_slug برای لینک رزرو
-  bookingSlug: 'nilaram-salon',
-  services: [
-    {
-      id: 'svc_1',
-      name: 'فیشیال تخصصی پوست',
-      typeId: 'facial',
-      typeName: 'فیشیال و پاکسازی پوست',
-      originalPrice: 750000,
-      discountPercent: 10,
-      finalPrice: 675000,
-      duration: 60,
-      hasDeposit: true,
-      depositAmount: 200000,
-      isActive: true,
-    },
-    {
-      id: 'svc_2',
-      name: 'کاشت ناخن ژلیش',
-      typeId: 'nail',
-      typeName: 'کاشت و طراحی ناخن',
-      originalPrice: 450000,
-      discountPercent: 0,
-      finalPrice: 450000,
-      duration: 90,
-      hasDeposit: true,
-      depositAmount: 100000,
-      isActive: true,
-    },
-    {
-      id: 'svc_3',
-      name: 'لیزر فول بادی',
-      typeId: 'laser',
-      typeName: 'لیزر موهای زائد',
-      originalPrice: 2500000,
-      discountPercent: 15,
-      finalPrice: 2125000,
-      duration: 120,
-      hasDeposit: true,
-      depositAmount: 500000,
-      isActive: true,
-    },
-  ],
+
+  // ─── لینک رزرو ───
+  bookingSlug: '',
+
+  // ─── موقعیت مکانی ───
+  latitude: null,
+  longitude: null,
+
+  // ─── داده‌های رابطه‌ای (همیشه از API پر می‌شوند) ───
+  services: [],
   team: [],
   schedules: {},
   portfolios: [],
-  appointments: [
-    {
-      id: 'apt_1',
-      customerName: 'نازنین کریمی',
-      customerPhone: '09121112233',
-      serviceName: 'فیشیال تخصصی پوست',
-      employeeName: 'سارا احمدی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید: date_key برای API
-      time: '۰۸:۳۰',
-      status: 'done',
-      price: 675000,
-      depositPaid: 200000,
-      verificationCode: '5892',
-    },
-    {
-      id: 'apt_2',
-      customerName: 'الهام محمدی',
-      customerPhone: '09124445566',
-      serviceName: 'کاشت ناخن ژلیش',
-      employeeName: 'مریم رضایی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید
-      time: '۰۹:۳۰',
-      status: 'done',
-      price: 450000,
-      depositPaid: 100000,
-      verificationCode: '2571',
-    },
-    {
-      id: 'apt_3',
-      customerName: 'زهرا حسینی',
-      customerPhone: '09127778899',
-      serviceName: 'لیزر فول بادی',
-      employeeName: 'دکتر رضایی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید
-      time: '۱۰:۳۰',
-      status: 'reserved',
-      price: 2125000,
-      depositPaid: 500000,
-      verificationCode: null,
-      trustBased: true,
-    },
-    {
-      id: 'apt_4',
-      customerName: 'مریم احمدی',
-      customerPhone: '09123334455',
-      serviceName: 'فیشیال تخصصی پوست',
-      employeeName: 'سارا احمدی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید
-      time: '۱۱:۳۰',
-      status: 'reserved',
-      price: 675000,
-      depositPaid: 200000,
-      verificationCode: '3841',
-    },
-    {
-      id: 'apt_5',
-      customerName: 'سمیرا قاسمی',
-      customerPhone: '09126665544',
-      serviceName: 'کاشت ناخن ژلیش',
-      employeeName: 'مریم رضایی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید
-      time: '۱۲:۳۰',
-      status: 'cancelled_by_salon',
-      price: 450000,
-      depositPaid: 100000,
-      cancellationReason: 'سالن در این ساعت تعطیل است',
-      refundAmount: 100000,
-    },
-    {
-      id: 'apt_6',
-      customerName: 'پریسا نوری',
-      customerPhone: '09128889900',
-      serviceName: 'لیزر فول بادی',
-      employeeName: 'دکتر رضایی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید
-      time: '۱۴:۰۰',
-      status: 'reserved',
-      price: 2125000,
-      depositPaid: 500000,
-      verificationCode: null,
-      trustBased: true,
-    },
-    {
-      id: 'apt_7',
-      customerName: 'فاطمه رضوی',
-      customerPhone: '09121234567',
-      serviceName: 'فیشیال تخصصی پوست',
-      employeeName: 'سارا احمدی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید
-      time: '۱۵:۳۰',
-      status: 'reserved',
-      price: 675000,
-      depositPaid: 200000,
-      verificationCode: '6174',
-    },
-    {
-      id: 'apt_8',
-      customerName: 'شیما کاظمی',
-      customerPhone: '09129876543',
-      serviceName: 'کاشت ناخن ژلیش',
-      employeeName: 'مریم رضایی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید
-      time: '۱۶:۳۰',
-      status: 'reserved',
-      price: 450000,
-      depositPaid: 100000,
-      verificationCode: '4528',
-    },
-    {
-      id: 'apt_9',
-      customerName: 'نگار موسوی',
-      customerPhone: '09125556677',
-      serviceName: 'لیزر فول بادی',
-      employeeName: 'دکتر رضایی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید
-      time: '۱۷:۳۰',
-      status: 'cancelled_by_salon',
-      price: 2125000,
-      depositPaid: 500000,
-      cancellationReason: 'دستگاه لیزر در تعمیر است',
-      refundAmount: 500000,
-    },
-    {
-      id: 'apt_10',
-      customerName: 'آیدا شریفی',
-      customerPhone: '09124443322',
-      serviceName: 'فیشیال تخصصی پوست',
-      employeeName: 'سارا احمدی',
-      date: today,
-      dateKey: todayKey, // ✅ فیلد جدید
-      time: '۱۹:۰۰',
-      status: 'reserved',
-      price: 675000,
-      depositPaid: 200000,
-      verificationCode: null,
-      trustBased: true,
-    },
-  ],
+  appointments: [],
+  gallery: [],
 };

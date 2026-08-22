@@ -1,28 +1,20 @@
 // src/stores/useFavoriteStore.js
 /**
  * Store علاقه‌مندی‌ها — هماهنگ با بک‌اند
- *
- * مدل‌ها:
- *   FavoriteBusiness: user + business (unique_together)
- *   FavoritePost: user + post (unique_together)
- *
- * API:
- *   POST /favorites/toggle/ → { favorite_type, object_id }
- *   GET  /favorites/count/  → { business, post, total }
+ * ✅ حذف USE_MOCK — فقط API
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { favoritesService } from '@/api';
+
 export const useFavoriteStore = create(
   persist(
     (set, get) => ({
-      // ─── State ───
       favoriteBusinesses: [],
       favoritePosts: [],
       isLoading: false,
       error: null,
 
-      // ─── دریافت لیست از API ───
       fetchFavorites: async () => {
         set({ isLoading: true, error: null });
         try {
@@ -38,7 +30,7 @@ export const useFavoriteStore = create(
         }
       },
 
-      // ─── Toggle علاقه‌مندی به کسب‌وکار ───
+      // ✅ حذف USE_MOCK — فقط API
       toggleBusinessFavorite: async (businessId, businessData = null) => {
         const { favoriteBusinesses } = get();
         const isFavorited = favoriteBusinesses.some((b) => b.id === businessId);
@@ -55,11 +47,7 @@ export const useFavoriteStore = create(
         }
 
         try {
-          if (!USE_MOCK) {
-            await favoritesService.toggleFavorite('business', businessId);
-          } else {
-            await new Promise((r) => setTimeout(r, 300));
-          }
+          await favoritesService.toggleFavorite('business', businessId);
           return !isFavorited;
         } catch (error) {
           console.error('toggleBusinessFavorite failed:', error);
@@ -69,7 +57,7 @@ export const useFavoriteStore = create(
         }
       },
 
-      // ─── Toggle علاقه‌مندی به پست ───
+      // ✅ حذف USE_MOCK — فقط API
       togglePostFavorite: async (postId, postData = null) => {
         const { favoritePosts } = get();
         const isFavorited = favoritePosts.some((p) => p.id === postId);
@@ -86,11 +74,7 @@ export const useFavoriteStore = create(
         }
 
         try {
-          if (!USE_MOCK) {
-            await favoritesService.toggleFavorite('post', postId);
-          } else {
-            await new Promise((r) => setTimeout(r, 300));
-          }
+          await favoritesService.toggleFavorite('post', postId);
           return !isFavorited;
         } catch (error) {
           console.error('togglePostFavorite failed:', error);
@@ -99,13 +83,11 @@ export const useFavoriteStore = create(
         }
       },
 
-      // ─── بررسی علاقه‌مندی ───
       isBusinessFavorited: (businessId) =>
         get().favoriteBusinesses.some((b) => b.id === businessId),
 
       isPostFavorited: (postId) => get().favoritePosts.some((p) => p.id === postId),
 
-      // ─── تعداد علاقه‌مندی‌ها ───
       getFavoriteCounts: () => {
         const { favoriteBusinesses, favoritePosts } = get();
         return {
@@ -115,7 +97,6 @@ export const useFavoriteStore = create(
         };
       },
 
-      // ─── دریافت تعداد از API ───
       fetchFavoriteCounts: async () => {
         try {
           const result = await favoritesService.getFavoritesCount();
@@ -126,7 +107,6 @@ export const useFavoriteStore = create(
         }
       },
 
-      // ─── پاک کردن (خروج از حساب) ───
       clearFavorites: () => {
         set({
           favoriteBusinesses: [],

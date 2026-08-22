@@ -1,5 +1,6 @@
 // src/components/nearby/NearbyBusinessList.jsx
 'use client';
+
 import { FiNavigation } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import SectionHeader from '@/components/common/SectionHeader';
@@ -9,6 +10,7 @@ import { toPersianDigit } from '@/utils/numberUtils';
 
 export default function NearbyBusinessList({
   selectedCategoryId,
+  categories = [], // ✅ categories از پروپ می‌آید
   paginatedBusinesses,
   filteredBusinesses,
   hasMore,
@@ -18,7 +20,7 @@ export default function NearbyBusinessList({
   onClearFilter,
 }) {
   const { colors } = useTheme();
-  const categoryName = MOCK_CATEGORIES.find((c) => c.id === selectedCategoryId)?.name || '';
+  const categoryName = categories.find((c) => c.id === selectedCategoryId)?.name || '';
 
   return (
     <section>
@@ -28,15 +30,11 @@ export default function NearbyBusinessList({
         title={`نزدیک‌ترین ${categoryName}`}
         subtitle={`${toPersianDigit(filteredBusinesses.length)} کسب‌وکار یافت شد`}
       />
+
       {paginatedBusinesses.length > 0 ? (
         <div className="space-y-3">
           {paginatedBusinesses.map((biz) => (
-            <BusinessListCard
-              key={biz.id}
-              business={biz}
-              categoryIcon="💆‍♀️"
-              onPress={onBusinessPress}
-            />
+            <BusinessListCard key={biz.id} business={biz} categoryIcon="💆‍♀️" onPress={onBusinessPress} />
           ))}
           {hasMore && (
             <button

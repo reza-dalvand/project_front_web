@@ -1,5 +1,6 @@
 // src/app/manage/model-requests/page.jsx
 'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiPlus, FiUser } from 'react-icons/fi';
@@ -21,10 +22,9 @@ export default function ModelRequestsPage() {
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
 
-  const [requests, setRequests] = useState(MOCK_MODEL_REQUESTS);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // ✅ state مدال جزئیات
+  // ✅ State اولیه خالی — داده فقط از API می‌آید
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
@@ -42,6 +42,7 @@ export default function ModelRequestsPage() {
         setIsLoading(false);
       }
     };
+
     fetchMyRequests();
   }, [showToast]);
 
@@ -52,13 +53,11 @@ export default function ModelRequestsPage() {
     [router]
   );
 
-  // ✅ هندلر باز کردن مدال جزئیات
   const handleAdPress = useCallback((request) => {
     setSelectedRequest(request);
     setDetailVisible(true);
   }, []);
 
-  // ✅ هندلر بستن مدال جزئیات
   const handleCloseDetail = useCallback(() => {
     setDetailVisible(false);
     setSelectedRequest(null);
@@ -67,9 +66,7 @@ export default function ModelRequestsPage() {
   const handleDelete = useCallback(
     async (request) => {
       try {
-        if (!USE_MOCK) {
-          await adsService.deleteModelRequest(request.id);
-        }
+        await adsService.deleteModelRequest(request.id);
         setRequests((prev) => prev.filter((r) => r.id !== request.id));
         showToast('درخواست مدل با موفقیت حذف شد', 'success');
         setDetailVisible(false);
@@ -163,7 +160,7 @@ export default function ModelRequestsPage() {
         )}
       </div>
 
-      {/* ✅ مدال جزئیات درخواست مدل */}
+      {/* مدال جزئیات درخواست مدل */}
       <ModelRequestDetailModal
         visible={detailVisible}
         request={selectedRequest}

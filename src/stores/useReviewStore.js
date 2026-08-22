@@ -1,17 +1,12 @@
 // src/stores/useReviewStore.js
 /**
  * Store نظردهی — هماهنگ با بک‌اند
- *
- * مدل Review بک‌اند:
- *   rating: 1-5
- *   comment: max 300
- *   tags: ['clean', 'punctual', 'quality', 'polite', 'fair_price', 'recommend']
- *   reply: پاسخ سالن
+ * ✅ حذف USE_MOCK — فقط API
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { reviewsService } from '@/api';
-// تگ‌های مجاز (هماهنگ با بک‌اند)
+
 export const REVIEW_TAGS = [
   { id: 'clean', label: 'مکان تمیز بود' },
   { id: 'punctual', label: 'سر وقت انجام شد' },
@@ -24,13 +19,11 @@ export const REVIEW_TAGS = [
 export const useReviewStore = create(
   persist(
     (set, get) => ({
-      // ─── State ───
-      reviews: [], // نظرات ثبت‌شده
-      pendingReviews: [], // نوبت‌های در انتظار نظردهی
+      reviews: [],
+      pendingReviews: [],
       isLoading: false,
       error: null,
 
-      // ─── افزودن نوبت در انتظار نظردهی ───
       addPendingReview: (appointment) =>
         set((state) => {
           if (state.pendingReviews.some((p) => p.appointmentId === appointment.id)) {
@@ -53,7 +46,6 @@ export const useReviewStore = create(
           };
         }),
 
-      // ─── بررسی امکان نظردهی از API ───
       checkCanReview: async (appointmentId) => {
         try {
           const result = await reviewsService.canReview(appointmentId);
@@ -64,22 +56,16 @@ export const useReviewStore = create(
         }
       },
 
-      // ─── ثبت نظر — هماهنگ با بک‌اند ───
+      // ✅ حذف USE_MOCK — فقط API
       submitReview: async (appointmentId, reviewData) => {
         set({ isLoading: true, error: null });
         try {
-          if (!USE_MOCK) {
-            // فراخوانی واقعی API
-            await reviewsService.createReview({
-              appointment_id: appointmentId,
-              rating: reviewData.rating,
-              comment: reviewData.comment || '',
-              tags: reviewData.tags || [],
-            });
-          } else {
-            // شبیه‌سازی
-            await new Promise((r) => setTimeout(r, 800));
-          }
+          await reviewsService.createReview({
+            appointment_id: appointmentId,
+            rating: reviewData.rating,
+            comment: reviewData.comment || '',
+            tags: reviewData.tags || [],
+          });
 
           const newReview = {
             id: `rev_${Date.now()}`,
@@ -90,7 +76,9 @@ export const useReviewStore = create(
 
           set((state) => ({
             reviews: [...state.reviews, newReview],
-            pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
+            pendingReviews: state.pendingReviews.filter(
+              (p) => p.appointmentId !== appointmentId
+            ),
             isLoading: false,
           }));
 
@@ -102,16 +90,16 @@ export const useReviewStore = create(
         }
       },
 
-      // ─── رد کردن نوبت در انتظار ───
       dismissPendingReview: (appointmentId) =>
         set((state) => ({
-          pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
+          pendingReviews: state.pendingReviews.filter(
+            (p) => p.appointmentId !== appointmentId
+          ),
         })),
 
-      // ─── بررسی نظر ثبت‌شده ───
-      hasReviewFor: (appointmentId) => get().reviews.some((r) => r.appointmentId === appointmentId),
+      hasReviewFor: (appointmentId) =>
+        get().reviews.some((r) => r.appointmentId === appointmentId),
 
-      // ─── دریافت نظرات کسب‌وکار ───
       fetchBusinessReviews: async (businessId) => {
         try {
           const result = await reviewsService.getBusinessReviews(businessId);
@@ -122,7 +110,6 @@ export const useReviewStore = create(
         }
       },
 
-      // ─── دریافت نظرات من ───
       fetchMyReviews: async () => {
         try {
           const result = await reviewsService.getMyReviews();
@@ -133,7 +120,6 @@ export const useReviewStore = create(
         }
       },
 
-      // ─── پاسخ کسب‌وکار به نظر ───
       replyToReview: async (reviewId, reply) => {
         try {
           await reviewsService.createReply(reviewId, reply);
