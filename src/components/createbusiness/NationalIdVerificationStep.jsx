@@ -15,8 +15,6 @@ import Button from '@/components/common/Button';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { validateNationalId } from '@/utils/validators';
 import { authService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 export default function NationalIdVerificationStep({
   formData,
   onUpdate,

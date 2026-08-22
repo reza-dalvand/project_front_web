@@ -17,8 +17,6 @@ import BusinessAbout from '@/components/home/BusinessAbout';
 import HonorMedalsSection from './HonorMedalsSection';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { businessesService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_BUSINESS } from '@/data/businesses';
 import { useAuth } from '@/stores/useAuthStore';
 
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), { ssr: false });

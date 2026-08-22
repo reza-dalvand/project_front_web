@@ -1,6 +1,6 @@
 // src/components/providers/index.jsx
 'use client';
-import { useEffect, Suspense } from 'react';
+import { useEffect } from 'react';
 import ThemeProvider from './ThemeProvider';
 import ToastProvider from './ToastProvider';
 import AuthProvider from './AuthProvider';
@@ -10,7 +10,7 @@ import OfflineBanner from '@/components/common/OfflineBanner';
 import { useNetworkStore } from '@/stores/useNetworkStore';
 import { useMaintenanceStore } from '@/stores/useMaintenanceStore';
 import { useAppVersionStore } from '@/stores/useAppVersionStore';
-import CapacitorSplashManager from './CapacitorSplashManager'; // ✅ اضافه شد
+import CapacitorSplashManager from './CapacitorSplashManager';
 
 // ✅ Lazy load مدال‌های غیربحرانی
 import dynamic from 'next/dynamic';
@@ -47,7 +47,6 @@ function StoreInitializers() {
   return null;
 }
 
-// ✅ Fallback برای Suspense
 function LoadingFallback() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-app">

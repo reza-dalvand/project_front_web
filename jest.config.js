@@ -10,7 +10,7 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   // ═══════ فایل‌های Setup ═══════##
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  
+
   // ═══════ محیط تست ═══════
   testEnvironment: 'jest-environment-jsdom',
 

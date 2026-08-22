@@ -11,8 +11,6 @@ import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { remindersService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_REMINDER_CUSTOMERS } from '@/data/reminders';
 
 const REMINDER_THRESHOLD_DAYS = 2;
 
@@ -31,12 +29,8 @@ export default function RemindersPage() {
     const fetchReminders = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setCustomers(MOCK_REMINDER_CUSTOMERS);
-        } else {
-          const result = await remindersService.getBusinessReminders();
-          setCustomers(result.data || []);
-        }
+        const result = await remindersService.getBusinessReminders();
+        setCustomers(result.data || []);
       } catch (error) {
         console.error('Failed to fetch reminders:', error);
         showToast('خطا در بارگذاری یادآوری‌ها', 'error');
@@ -94,11 +88,7 @@ export default function RemindersPage() {
 
     setSending(true);
     try {
-      if (USE_MOCK) {
-        await new Promise((r) => setTimeout(r, 1500));
-      } else {
-        await remindersService.sendReminders(selectedIds);
-      }
+      await remindersService.sendReminders(selectedIds);
 
       // بروزرسانی محلی
       setCustomers((prev) =>

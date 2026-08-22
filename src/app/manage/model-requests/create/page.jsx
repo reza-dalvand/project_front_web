@@ -11,8 +11,6 @@ import Header from '@/components/common/Header';
 import ModelRequestForm from '@/components/manageBusiness/modelRequest/ModelRequestForm';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 // ═══════════ کامپوننت داخلی با useSearchParams ═══════════
 function CreateModelRequestPageContent() {
   const { colors } = useTheme();
@@ -34,12 +32,6 @@ function CreateModelRequestPageContent() {
     if (!requestId) return;
 
     const fetchExisting = async () => {
-      if (USE_MOCK) {
-        const { MOCK_MODEL_REQUESTS } = await import('@/data/modelRequests');
-        const found = MOCK_MODEL_REQUESTS.find((r) => r.id === requestId);
-        if (found) setExistingRequest(found);
-        return;
-      }
       setIsLoadingExisting(true);
       try {
         const result = await adsService.getModelRequestDetail(requestId);
@@ -57,15 +49,6 @@ function CreateModelRequestPageContent() {
 
   // ═══ ذخیره ═══
   const handleSave = async (formData) => {
-    if (USE_MOCK) {
-      showToast(
-        isEditMode ? 'درخواست مدل با موفقیت ویرایش شد' : 'درخواست مدل با موفقیت ایجاد شد',
-        'success'
-      );
-      setTimeout(() => router.push('/manage/model-requests'), 1200);
-      return;
-    }
-
     try {
       if (isEditMode) {
         await adsService.createModelRequest({

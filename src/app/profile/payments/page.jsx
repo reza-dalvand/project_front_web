@@ -10,7 +10,6 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import PaymentCompactCard from '@/components/profile/paymentHistory/PaymentCompactCard';
 import PaymentStatsCard from '@/components/profile/paymentHistory/PaymentStatsCard';
 import { paymentsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import { usePaymentStore, TX_STATUS_MAP } from '@/stores/usePaymentStore';
 import dynamic from 'next/dynamic';
 

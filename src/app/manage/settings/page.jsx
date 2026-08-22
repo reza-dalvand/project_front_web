@@ -16,8 +16,6 @@ import BusinessImagesSection from '@/components/manageBusiness/settings/Business
 import BusinessBasicInfoSection from '@/components/manageBusiness/settings/BusinessBasicInfoSection';
 import BusinessLocationSection from '@/components/manageBusiness/settings/BusinessLocationSection';
 import BusinessDangerZone from '@/components/manageBusiness/settings/BusinessDangerZone';
-import { USE_MOCK } from '@/api/config';
-
 export default function BusinessSettingsPage() {
   const router = useRouter();
   const { colors } = useTheme();

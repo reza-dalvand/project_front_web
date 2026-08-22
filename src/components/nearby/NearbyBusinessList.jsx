@@ -6,7 +6,6 @@ import SectionHeader from '@/components/common/SectionHeader';
 import BusinessListCard from '@/components/home/BusinessListCard';
 import EmptyState from '@/components/common/EmptyState';
 import { toPersianDigit } from '@/utils/numberUtils';
-import { MOCK_CATEGORIES } from '@/data/businesses';
 
 export default function NearbyBusinessList({
   selectedCategoryId,

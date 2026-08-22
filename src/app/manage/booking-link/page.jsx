@@ -25,7 +25,7 @@ export default function BookingLinkPage() {
   const [shareModalVisible, setShareModalVisible] = useState(false);
 
   const bookingLink = `https://beauclub.ir/book/${businessData?.id || 'biz_1'}`;
-  
+
   const linkStats = {
     clicks: 245,
     bookings: 18,

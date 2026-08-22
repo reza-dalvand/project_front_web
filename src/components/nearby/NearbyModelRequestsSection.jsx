@@ -5,7 +5,6 @@ import { useTheme } from '@/stores/useThemeStore';
 import SectionHeader from '@/components/common/SectionHeader';
 import SeeAllButton from '@/components/home/SeeAllButton';
 import AllModelRequestsCard from '@/components/home/AllModelRequestsCard';
-import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 
 export default function NearbyModelRequestsSection({ nearbyModelRequests, onModelPress }) {
   const { colors } = useTheme();

@@ -4,7 +4,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import { useToast } from '@/hooks/useToast';
-import { MOCK_BUSINESSES_MAP } from '@/data/businesses';
 import { cleanPhone } from '@/utils/phoneUtils';
 import BusinessMapHeader from '@/components/businessMap/BusinessMapHeader';
 import BusinessMapPanel from '@/components/businessMap/BusinessMapPanel';

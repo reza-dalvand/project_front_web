@@ -19,8 +19,6 @@ import {
   ServiceEmptyState,
 } from '@/components/manageBusiness/services';
 import { toPersianDigit } from '@/utils/numberUtils';
-import { USE_MOCK } from '@/api/config';
-
 export default function ManageServicesPage() {
   const router = useRouter();
   const { colors } = useTheme();

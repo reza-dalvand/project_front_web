@@ -9,8 +9,6 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import SectionHeader from '@/components/common/SectionHeader';
 import { PostGrid, ActiveFilterChips, FilterModal, PostModal } from '@/components/explore';
 import { exploreService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_POSTS } from '@/data/posts';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
 import {
   PROVINCES,
@@ -46,12 +44,8 @@ export default function ExplorePage() {
     const fetchPosts = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setAllPosts(MOCK_POSTS);
-        } else {
-          const result = await exploreService.getPosts();
-          setAllPosts(result.data || []);
-        }
+        const result = await exploreService.getPosts();
+        setAllPosts(result.data || []);
       } catch (error) {
         console.error('Failed to fetch posts:', error);
       } finally {

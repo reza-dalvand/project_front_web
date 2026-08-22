@@ -15,8 +15,6 @@ import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_MODEL_REQUEST_DETAIL } from '@/data/modelRequests';
 
 export default function ModelRequestDetailPage() {
   const params = useParams();
@@ -31,12 +29,8 @@ export default function ModelRequestDetailPage() {
     const fetchDetail = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setRequest(MOCK_MODEL_REQUEST_DETAIL);
-        } else {
-          const result = await adsService.getModelRequestDetail(params.id);
-          setRequest(result.data);
-        }
+        const result = await adsService.getModelRequestDetail(params.id);
+        setRequest(result.data);
       } catch (error) {
         console.error('Failed to fetch model request detail:', error);
         showToast('خطا در بارگذاری جزئیات', 'error');

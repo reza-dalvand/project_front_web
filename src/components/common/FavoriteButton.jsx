@@ -5,8 +5,6 @@ import { FiBookmark } from 'react-icons/fi';
 import { useAuth } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
 import { favoritesService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 export default function FavoriteButton({
   isFavorite = false,
   onPress,
@@ -36,11 +34,6 @@ export default function FavoriteButton({
       // ✅ فراخوانی API (در حالت mock فقط state آپدیت می‌شود)
       if (!USE_MOCK && objectId) {
         await favoritesService.toggleFavorite(favoriteType, objectId);
-      }
-
-      // در حالت mock، شبیه‌سازی تأخیر
-      if (USE_MOCK) {
-        await new Promise((r) => setTimeout(r, 300));
       }
 
       showToast(newState ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد', 'success');

@@ -9,7 +9,6 @@ import ImageUploadSection from './basicinfo/ImageUploadSection';
 import BusinessInfoSection from './basicinfo/BusinessInfoSection';
 import LocationSection from './basicinfo/LocationSection';
 import { locationsService, categoriesService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import { PROVINCES, CITIES } from '@/constants/exploreFilters';
 
 export default function BasicInfoStep({
@@ -30,7 +29,6 @@ export default function BasicInfoStep({
   // ─── دریافت داده‌ها از API ───
   useEffect(() => {
     const fetchData = async () => {
-      if (USE_MOCK) return;
       try {
         const [catRes, provRes] = await Promise.all([
           categoriesService.getBusinessCategories(),
@@ -53,10 +51,6 @@ export default function BasicInfoStep({
     const fetchCities = async () => {
       if (!formData.provinceId) {
         setCities([]);
-        return;
-      }
-      if (USE_MOCK) {
-        setCities(CITIES[formData.provinceId] || []);
         return;
       }
       try {

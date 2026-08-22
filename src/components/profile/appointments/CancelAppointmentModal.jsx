@@ -14,7 +14,6 @@ import CancelBankForm from './CancelBankForm';
 import { formatPrice, toEnglishDigits, toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { appointmentsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import {
   getCancellationPolicy,
   formatHoursLeft,

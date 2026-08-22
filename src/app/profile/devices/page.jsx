@@ -14,8 +14,6 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { authService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_DEVICES } from '@/data/devices';
 
 export default function ActiveDevicesPage() {
   const router = useRouter();
@@ -32,12 +30,8 @@ export default function ActiveDevicesPage() {
     const fetchDevices = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setDevices(MOCK_DEVICES);
-        } else {
-          const result = await authService.getDevices();
-          setDevices(result.data || []);
-        }
+        const result = await authService.getDevices();
+        setDevices(result.data || []);
       } catch (error) {
         showToast('خطا در دریافت دستگاه‌ها', 'error');
       } finally {

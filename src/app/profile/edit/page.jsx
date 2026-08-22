@@ -15,7 +15,6 @@ import DangerZone from '@/components/profile/edit/DangerZone';
 import DeleteConfirmModal from '@/components/profile/edit/DeleteConfirmModal';
 import DeleteOtpModal from '@/components/profile/edit/DeleteOtpModal';
 import { profileService, authService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import { OTP_CONFIG } from '@/api/config';
 
 const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;

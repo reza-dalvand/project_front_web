@@ -11,8 +11,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { reviewsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 // تگ‌های مجاز (هماهنگ با بک‌اند)
 export const REVIEW_TAGS = [
   { id: 'clean', label: 'مکان تمیز بود' },
@@ -57,7 +55,6 @@ export const useReviewStore = create(
 
       // ─── بررسی امکان نظردهی از API ───
       checkCanReview: async (appointmentId) => {
-        if (USE_MOCK) return { can_review: true };
         try {
           const result = await reviewsService.canReview(appointmentId);
           return result.data;
@@ -116,7 +113,6 @@ export const useReviewStore = create(
 
       // ─── دریافت نظرات کسب‌وکار ───
       fetchBusinessReviews: async (businessId) => {
-        if (USE_MOCK) return [];
         try {
           const result = await reviewsService.getBusinessReviews(businessId);
           return result.data;
@@ -128,7 +124,6 @@ export const useReviewStore = create(
 
       // ─── دریافت نظرات من ───
       fetchMyReviews: async () => {
-        if (USE_MOCK) return get().reviews;
         try {
           const result = await reviewsService.getMyReviews();
           return result.data;
@@ -140,7 +135,6 @@ export const useReviewStore = create(
 
       // ─── پاسخ کسب‌وکار به نظر ───
       replyToReview: async (reviewId, reply) => {
-        if (USE_MOCK) return;
         try {
           await reviewsService.createReply(reviewId, reply);
         } catch (error) {

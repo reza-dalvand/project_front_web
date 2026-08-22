@@ -10,8 +10,6 @@ import Button from '@/components/common/Button';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { appointmentsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 const CODE_LENGTH = 4;
 
 export default function VerifyCodeModal({

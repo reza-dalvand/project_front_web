@@ -1,6 +1,5 @@
 // src/app/business/[id]/page.jsx
 import BusinessDetailsClient from './BusinessDetailsClient';
-import { MOCK_BUSINESSES_LIST, MOCK_BUSINESSES_MAP } from '@/data/businesses';
 
 // ✅ این تابع Server-side است و باید اینجا بماند
 export async function generateStaticParams() {

@@ -16,8 +16,6 @@ import ServiceDepositSection from '@/components/manageBusiness/services/edit/Ser
 import ServiceDurationSection from '@/components/manageBusiness/services/edit/ServiceDurationSection';
 import { toPersianDigit, formatPriceInput, parseNumber } from '@/utils/numberUtils';
 import { MIN_FINAL_PRICE, MIN_DEPOSIT } from '@/utils/price-utils';
-import { USE_MOCK } from '@/api/config';
-
 const MAX_DESCRIPTION_LENGTH = 300;
 
 function EditServicePageContent() {

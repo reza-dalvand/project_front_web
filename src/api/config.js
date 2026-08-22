@@ -15,10 +15,7 @@ import env from '@/config/env';
 //    سوئیچ اصلی: Mock یا Real API
 // ═══════════════════════════════════════════════
 // از متغیر محیطی خوانده می‌شود؛ پیش‌فرض: true (حالت توسعه)
-export const USE_MOCK =
-  typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_USE_MOCK !== undefined
-    ? process.env.NEXT_PUBLIC_USE_MOCK === 'true'
-    : true; // ← برای اتصال به بک‌اند: false
+
 
 // ═══════════════════════════════════════════════
 //    تنظیمات Axios

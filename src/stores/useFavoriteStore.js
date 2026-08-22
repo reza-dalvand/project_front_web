@@ -13,8 +13,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { favoritesService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 export const useFavoriteStore = create(
   persist(
     (set, get) => ({
@@ -26,7 +24,6 @@ export const useFavoriteStore = create(
 
       // ─── دریافت لیست از API ───
       fetchFavorites: async () => {
-        if (USE_MOCK) return;
         set({ isLoading: true, error: null });
         try {
           const result = await favoritesService.getFavorites();
@@ -120,7 +117,6 @@ export const useFavoriteStore = create(
 
       // ─── دریافت تعداد از API ───
       fetchFavoriteCounts: async () => {
-        if (USE_MOCK) return get().getFavoriteCounts();
         try {
           const result = await favoritesService.getFavoritesCount();
           return result.data;

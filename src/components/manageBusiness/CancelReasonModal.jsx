@@ -9,8 +9,6 @@ import Input from '@/components/common/Input';
 import Avatar from '@/components/common/Avatar';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { appointmentsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 const REASON_SUGGESTIONS = [
   'سالن در این تاریخ تعطیل است',
   'کارمند مربوطه در دسترس نیست',

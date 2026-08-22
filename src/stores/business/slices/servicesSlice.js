@@ -9,8 +9,6 @@
  * - sub_service به صورت nested: { id, name, slug, type_id, category }
  */
 import { servicesService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 /**
  * تبدیل فرمت بک‌اند به فرمت فرانت
  */
@@ -64,7 +62,6 @@ export const createServicesSlice = (set, get) => ({
    * دریافت لیست خدمات از API
    */
   fetchServices: async () => {
-    if (USE_MOCK) return get().businessData.services;
     set({ servicesLoading: true, servicesError: null });
     try {
       const response = await servicesService.getServices();
@@ -85,10 +82,6 @@ export const createServicesSlice = (set, get) => ({
    * ایجاد خدمت جدید در API
    */
   createServiceApi: async (serviceData) => {
-    if (USE_MOCK) {
-      get().addService(serviceData);
-      return { id: `svc_${Date.now()}`, ...serviceData };
-    }
     try {
       const payload = mapServiceToApi(serviceData);
       const response = await servicesService.createService(payload);
@@ -105,10 +98,6 @@ export const createServicesSlice = (set, get) => ({
    * بروزرسانی خدمت در API
    */
   updateServiceApi: async (serviceId, serviceData) => {
-    if (USE_MOCK) {
-      get().updateService(serviceId, serviceData);
-      return serviceData;
-    }
     try {
       const payload = mapServiceToApi(serviceData);
       const response = await servicesService.updateService(serviceId, payload);
@@ -124,10 +113,6 @@ export const createServicesSlice = (set, get) => ({
    * حذف خدمت در API
    */
   deleteServiceApi: async (serviceId) => {
-    if (USE_MOCK) {
-      get().deleteService(serviceId);
-      return;
-    }
     try {
       await servicesService.deleteService(serviceId);
       get().deleteService(serviceId);
@@ -141,10 +126,6 @@ export const createServicesSlice = (set, get) => ({
    * فعال/غیرفعال کردن خدمت در API
    */
   toggleServiceActiveApi: async (serviceId) => {
-    if (USE_MOCK) {
-      get().toggleServiceActive(serviceId);
-      return;
-    }
     try {
       await servicesService.toggleServiceActive(serviceId);
       get().toggleServiceActive(serviceId);

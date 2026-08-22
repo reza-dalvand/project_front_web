@@ -9,7 +9,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { usePaymentStore, TX_STATUS_MAP, TX_TYPE_MAP } from '@/stores/usePaymentStore';
 import { paymentsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import { useToast } from '@/hooks/useToast';
 export const usePaymentManager = () => {
   const { showToast } = useToast();

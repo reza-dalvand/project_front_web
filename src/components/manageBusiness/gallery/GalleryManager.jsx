@@ -21,8 +21,6 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { compressImage } from '@/utils/image-compression'; // ✅ جدید
-import { USE_MOCK } from '@/api/config';
-
 const MAX_GALLERY_IMAGES = 3; // بک‌اند: حداکثر ۳ تصویر
 
 export default function GalleryManager() {

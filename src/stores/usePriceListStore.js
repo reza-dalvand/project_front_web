@@ -3,7 +3,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { priceListService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import { PRICE_LIST_THEMES, INITIAL_PRICE_LISTS } from '@/data/priceList'; // ✅ اضافه شد
 import { useBusinessStore } from './useBusinessStore';
 
@@ -63,23 +62,6 @@ export const usePriceListStore = create(
       fetchPriceList: async (businessId) => {
         set({ isLoading: true, error: null });
         try {
-          if (USE_MOCK) {
-            const services = buildServicesFromBusiness();
-            const existing = get().lists[businessId];
-            // ✅ جدید: fallback به INITIAL_PRICE_LISTS
-            const initial = INITIAL_PRICE_LISTS[businessId];
-            const mockList = {
-              businessId,
-              themeId: existing?.themeId || initial?.themeId || 'classic',
-              isPublished: existing?.isPublished ?? initial?.isPublished ?? false,
-              services,
-            };
-            set((s) => ({
-              lists: { ...s.lists, [businessId]: mockList },
-              isLoading: false,
-            }));
-            return mockList;
-          }
           const result = await priceListService.getPriceList();
           const mapped = mapPriceListFromApi(result.data, businessId);
           set((s) => ({

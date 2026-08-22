@@ -1,5 +1,4 @@
 // src/constants/exploreFilters.js
-import { MOCK_POSTS } from '@/data/posts';
 
 export const PROVINCES = [
   { id: 'tehran', label: 'تهران' },

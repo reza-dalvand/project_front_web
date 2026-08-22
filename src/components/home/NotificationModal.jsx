@@ -18,8 +18,6 @@ import Button from '@/components/common/Button';
 import EmptyState from '@/components/common/EmptyState';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { notificationsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_NOTIFICATIONS } from '@/data/notifications';
 
 // ═══════ نگاشت نوع اعلان به آیکون و رنگ ═══════
 const NOTIFICATION_TYPE_META = {
@@ -61,12 +59,8 @@ export default function NotificationModal({ visible, onClose }) {
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
-      if (USE_MOCK) {
-        setNotifications(MOCK_NOTIFICATIONS);
-      } else {
-        const result = await notificationsService.getNotifications();
-        setNotifications(result.data || []);
-      }
+      const result = await notificationsService.getNotifications();
+      setNotifications(result.data || []);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {

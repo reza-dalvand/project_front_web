@@ -16,8 +16,6 @@ import ServiceTypeIcon from '@/components/manageBusiness/services/ServiceTypeIco
 import { ScheduleModal } from '@/components/manageBusiness/schedule';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { timeToMinutes } from '@/utils/dateUtils';
-import { USE_MOCK } from '@/api/config';
-
 const calculateSlotCount = (schedule) => {
   const { workStart, workEnd, slotDuration, breaks = [] } = schedule;
   const startMin = timeToMinutes(workStart);

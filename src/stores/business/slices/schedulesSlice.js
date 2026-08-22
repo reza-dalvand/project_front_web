@@ -10,8 +10,6 @@
  * - AvailableDates: GET /schedules/available-dates/
  */
 import { schedulesService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 /**
  * تبدیل فرمت بک‌اند به فرمت فرانت
  */
@@ -58,7 +56,6 @@ export const createSchedulesSlice = (set, get) => ({
    * دریافت لیست زمان‌بندی‌ها از API
    */
   fetchSchedules: async (serviceId = null) => {
-    if (USE_MOCK) return [];
     set({ schedulesLoading: true, schedulesError: null });
     try {
       const params = serviceId ? { service_id: serviceId } : {};
@@ -77,16 +74,6 @@ export const createSchedulesSlice = (set, get) => ({
    * ایجاد زمان‌بندی در API
    */
   createScheduleApi: async (scheduleData) => {
-    if (USE_MOCK) {
-      const dateKey = `${scheduleData.jy}/${String(scheduleData.jm).padStart(2, '0')}/${String(scheduleData.jd).padStart(2, '0')}`;
-      get().saveSchedule(
-        scheduleData.ownerId || 'owner',
-        scheduleData.serviceId,
-        dateKey,
-        scheduleData
-      );
-      return { id: `sch_${Date.now()}`, ...scheduleData };
-    }
     try {
       const payload = mapScheduleToApi(scheduleData);
       const response = await schedulesService.createSchedule(payload);
@@ -108,7 +95,6 @@ export const createSchedulesSlice = (set, get) => ({
    * بروزرسانی زمان‌بندی در API
    */
   updateScheduleApi: async (scheduleId, scheduleData) => {
-    if (USE_MOCK) return scheduleData;
     try {
       const payload = {};
       if (scheduleData.workStart !== undefined) payload.work_start = scheduleData.workStart;
@@ -130,7 +116,6 @@ export const createSchedulesSlice = (set, get) => ({
    * حذف زمان‌بندی در API
    */
   deleteScheduleApi: async (scheduleId) => {
-    if (USE_MOCK) return;
     try {
       await schedulesService.deleteSchedule(scheduleId);
     } catch (error) {
@@ -143,30 +128,6 @@ export const createSchedulesSlice = (set, get) => ({
    * 🆕 دریافت اسلات‌های آزاد
    */
   fetchAvailableSlots: async (businessId, serviceId, jy, jm, jd) => {
-    if (USE_MOCK) {
-      // Mock: تولید اسلات‌های نمونه
-      const mockSlots = [];
-      for (let h = 9; h < 21; h++) {
-        for (let m = 0; m < 60; m += 30) {
-          const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-          const endTime = `${String(h).padStart(2, '0')}:${String(Math.min(m + 30, 59)).padStart(2, '0')}`;
-          mockSlots.push({
-            id: `${jy}${String(jm).padStart(2, '0')}${String(jd).padStart(2, '0')}_${time.replace(':', '')}`,
-            jy,
-            jm,
-            jd,
-            date_key: `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`,
-            start_time: time,
-            end_time: endTime,
-            is_available: Math.random() > 0.3,
-            display_time: time,
-          });
-        }
-      }
-      const available = mockSlots.filter((s) => s.is_available);
-      set({ availableSlots: available, slotsLoading: false });
-      return available;
-    }
     set({ slotsLoading: true });
     try {
       const response = await schedulesService.getAvailableSlots(businessId, serviceId, jy, jm, jd);
@@ -184,33 +145,6 @@ export const createSchedulesSlice = (set, get) => ({
    * 🆕 دریافت روزهای دارای اسلات آزاد
    */
   fetchAvailableDates: async (businessId, serviceId, daysAhead = 30) => {
-    if (USE_MOCK) {
-      // Mock: تولید روزهای نمونه
-      const mockDates = [];
-      const today = new Date();
-      for (let i = 0; i < daysAhead; i++) {
-        const d = new Date(today);
-        d.setDate(d.getDate() + i);
-        if (d.getDay() === 5) continue; // جمعه‌ها رد شوند
-        const jm = ((d.getMonth() + 3) % 12) + 1; // تقریبی
-        const jd = d.getDate();
-        mockDates.push({
-          jy: 1405,
-          jm,
-          jd,
-          date_key: `1405/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`,
-          day_of_week: (d.getDay() + 1) % 7,
-          weekday_name: ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'][
-            (d.getDay() + 1) % 7
-          ],
-          available_slots_count: Math.floor(Math.random() * 10) + 2,
-          is_today: i === 0,
-          is_friday: false,
-        });
-      }
-      set({ availableDates: mockDates, datesLoading: false });
-      return mockDates;
-    }
     set({ datesLoading: true });
     try {
       const response = await schedulesService.getAvailableDates(businessId, serviceId, daysAhead);

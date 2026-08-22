@@ -19,11 +19,6 @@ import NearbyToggle from '@/components/home/NearbyToggle';
 import RegisterBanner from '@/components/home/RegisterBanner';
 import { useToast } from '@/hooks/useToast';
 import { getCurrentLocation, calculateDistance } from '@/utils/geo-utils';
-import { MOCK_CATEGORIES } from '@/data/businesses';
-import { MOCK_ADS } from '@/data/ads';
-import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
-import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
-import { MOCK_DONE_APPOINTMENTS } from '@/data/appointments';
 
 // ✅ Lazy Load
 const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), {

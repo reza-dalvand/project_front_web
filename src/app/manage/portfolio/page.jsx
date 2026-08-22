@@ -14,7 +14,6 @@ import {
   PortfolioDetailModal,
 } from '@/components/manageBusiness/portfolio';
 import { portfoliosService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { useRouter } from 'next/navigation';
@@ -39,12 +38,8 @@ export default function ManagePortfolioPage() {
     const fetchPortfolios = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setPortfolios(businessData?.portfolios || []);
-        } else {
-          const result = await portfoliosService.getMyPortfolios();
-          setPortfolios(result.data || []);
-        }
+        const result = await portfoliosService.getMyPortfolios();
+        setPortfolios(result.data || []);
       } catch (error) {
         console.error('Failed to fetch portfolios:', error);
         showToast('خطا در بارگذاری نمونه‌کارها', 'error');

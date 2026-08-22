@@ -8,7 +8,6 @@ import CategoryHeader from '@/components/home/CategoryHeader';
 import BusinessListCard from '@/components/home/BusinessListCard';
 import EmptyState from '@/components/common/EmptyState';
 import dynamic from 'next/dynamic';
-import { MOCK_BUSINESSES_LIST, CATEGORY_NAMES } from '@/data/businesses';
 
 // ✅ Lazy Load
 const CategoryFilterModal = dynamic(() => import('@/components/home/CategoryFilterModal'), {

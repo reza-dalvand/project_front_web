@@ -14,7 +14,6 @@ import Dropdown from '@/components/common/Dropdown';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { bankInfoService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 // ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
 import { getBankOptions } from '@/data/banks';
 
@@ -43,10 +42,6 @@ export default function BankInfoPage() {
     const fetchBankInfo = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setIsLoading(false);
-          return;
-        }
         const result = await bankInfoService.getBankInfo();
         const data = result.data;
         setFormData({

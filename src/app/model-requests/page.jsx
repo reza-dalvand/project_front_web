@@ -8,8 +8,6 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { adsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 import ModelRequestHeader from '@/components/modelRequests/ModelRequestHeader';
 import ModelRequestFilter from '@/components/modelRequests/ModelRequestFilter';
 import ModelRequestCard from '@/components/modelRequests/ModelRequestCard';
@@ -27,18 +25,14 @@ export default function ModelRequestsPage() {
     const fetchRequests = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setRequests(MOCK_MODEL_REQUESTS.filter((r) => r.status === 'active'));
-        } else {
-          const params = {};
-          if (nearbyEnabled && userLocation) {
-            params.lat = userLocation.latitude;
-            params.lng = userLocation.longitude;
-            params.radius = 10;
-          }
-          const result = await adsService.getModelRequests(params);
-          setRequests(result.data || []);
+        const params = {};
+        if (nearbyEnabled && userLocation) {
+          params.lat = userLocation.latitude;
+          params.lng = userLocation.longitude;
+          params.radius = 10;
         }
+        const result = await adsService.getModelRequests(params);
+        setRequests(result.data || []);
       } catch (error) {
         console.error('Failed to fetch model requests:', error);
       } finally {

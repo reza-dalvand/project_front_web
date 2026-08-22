@@ -9,8 +9,6 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { AppointmentCompactCard } from '@/components/profile/appointments';
 import dynamic from 'next/dynamic';
 import { appointmentsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_PROFILE_APPOINTMENTS } from '@/data/appointments';
 
 const AppointmentDetailModal = dynamic(
   () => import('@/components/profile/appointments/AppointmentDetailModal'),
@@ -38,12 +36,8 @@ export default function AppointmentsPage() {
     const fetchAppointments = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setAppointments(MOCK_PROFILE_APPOINTMENTS);
-        } else {
-          const result = await appointmentsService.getMyAppointments(activeTab);
-          setAppointments(result.data || []);
-        }
+        const result = await appointmentsService.getMyAppointments(activeTab);
+        setAppointments(result.data || []);
       } catch (err) {
         console.error('Failed to fetch appointments:', err);
         showToast('خطا در دریافت نوبت‌ها', 'error');

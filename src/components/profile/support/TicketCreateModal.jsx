@@ -8,7 +8,6 @@ import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import { supportService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 const PRIORITY_OPTIONS = [
@@ -74,25 +73,12 @@ export default function TicketCreateModal({ visible, onClose, onTicketCreated })
     setError('');
 
     try {
-      if (USE_MOCK) {
-        await new Promise((r) => setTimeout(r, 1000));
-        const ticket = {
-          id: `ticket_${Date.now()}`,
-          subject: subject.trim(),
-          message: message.trim(),
-          priority,
-          status: 'open',
-          created_at: 'الان',
-        };
-        onTicketCreated?.(ticket);
-      } else {
-        const result = await supportService.createTicket({
-          subject: subject.trim(),
-          message: message.trim(),
-          priority,
-        });
-        onTicketCreated?.(result.data);
-      }
+      const result = await supportService.createTicket({
+        subject: subject.trim(),
+        message: message.trim(),
+        priority,
+      });
+      onTicketCreated?.(result.data);
     } catch (err) {
       setError(err.message || 'خطا در ایجاد تیکت');
     } finally {

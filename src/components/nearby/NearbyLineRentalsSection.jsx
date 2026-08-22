@@ -5,7 +5,6 @@ import { useTheme } from '@/stores/useThemeStore';
 import SectionHeader from '@/components/common/SectionHeader';
 import SeeAllButton from '@/components/home/SeeAllButton';
 import AllLineRentalsCard from '@/components/home/AllLineRentalsCard';
-import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 
 export default function NearbyLineRentalsSection({ nearbyLineRentals, onLinePress }) {
   const { colors } = useTheme();

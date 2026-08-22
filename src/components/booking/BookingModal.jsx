@@ -17,7 +17,6 @@ import BookingModalFooter from './BookingModalFooter';
 import TrustToggle from './TrustToggle';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { appointmentsService, schedulesService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import { toJalaaliKey } from '@/utils/date-converter';
 import { buildPriceSummary } from '@/utils/price-utils';
 import { useAuth } from '@/stores/useAuthStore';
@@ -201,7 +200,6 @@ export default function BookingModal({
 
   // ─── دریافت روزهای آزاد ───
   const fetchAvailableDates = async () => {
-    if (USE_MOCK) return;
     try {
       const result = await schedulesService.getAvailableDates(businessId, currentService.id, 30);
       setAvailableDates(result.data || []);
@@ -212,27 +210,6 @@ export default function BookingModal({
 
   // ─── دریافت اسلات‌های آزاد برای تاریخ انتخابی ───
   const fetchAvailableSlots = async (date) => {
-    if (USE_MOCK) {
-      const mockSlots = [];
-      for (let h = 9; h < 21; h++) {
-        for (let m = 0; m < 60; m += 30) {
-          const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-          mockSlots.push({
-            id: `${date.jy}${String(date.jm).padStart(2, '0')}${String(date.jd).padStart(2, '0')}_${time.replace(':', '')}`,
-            jy: date.jy,
-            jm: date.jm,
-            jd: date.jd,
-            date_key: toJalaaliKey(date.jy, date.jm, date.jd),
-            start_time: time,
-            end_time: `${String(h).padStart(2, '0')}:${String((m + 30) % 60).padStart(2, '0')}`,
-            is_available: Math.random() > 0.3,
-            display_time: time,
-          });
-        }
-      }
-      setAvailableSlots(mockSlots.filter((s) => s.is_available));
-      return;
-    }
     setSlotsLoading(true);
     try {
       const result = await schedulesService.getAvailableSlots(

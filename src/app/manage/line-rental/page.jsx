@@ -15,8 +15,6 @@ import LineRentalStats from '@/components/manageBusiness/lineRental/LineRentalSt
 import CreateLineRentalAdSheet from '@/components/manageBusiness/lineRental/CreateLineRentalAdSheet';
 import LineRentalDetailModal from '@/components/manageBusiness/lineRental/LineRentalDetailModal';
 import { adsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 
 export default function LineRentalPage() {
   const { colors } = useTheme();
@@ -41,12 +39,8 @@ export default function LineRentalPage() {
     const fetchMyAds = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setAds(MOCK_LINE_RENTALS);
-        } else {
-          const result = await adsService.getMyLineRentals();
-          setAds(result.data || []);
-        }
+        const result = await adsService.getMyLineRentals();
+        setAds(result.data || []);
       } catch (error) {
         console.error('Failed to fetch my line rentals:', error);
         showToast('خطا در بارگذاری آگهی‌ها', 'error');

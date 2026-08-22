@@ -12,8 +12,6 @@ import Card from '@/components/common/Card';
 import EmptyState from '@/components/common/EmptyState';
 import ReviewCard from '@/components/customer/ReviewCard';
 import { reviewsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_REVIEWS } from '@/data/reviews';
 import { toPersianDigit } from '@/utils/numberUtils';
 
 const FILTER_OPTIONS = [
@@ -40,12 +38,8 @@ export default function ReviewsPage() {
     const fetchReviews = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setReviews(MOCK_REVIEWS);
-        } else {
-          const result = await reviewsService.getBusinessReviews(1);
-          setReviews(result.data?.reviews || []);
-        }
+        const result = await reviewsService.getBusinessReviews(1);
+        setReviews(result.data?.reviews || []);
       } catch (error) {
         console.error('Failed to fetch reviews:', error);
         showToast('خطا در بارگذاری نظرات', 'error');

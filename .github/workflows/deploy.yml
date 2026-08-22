@@ -57,8 +57,8 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "out/*"
-          target: "/home/deploy/beau-front/out_new"
+          source: 'out/*'
+          target: '/home/deploy/beau-front/out_new'
           strip_components: 1
           overwrite: true
 

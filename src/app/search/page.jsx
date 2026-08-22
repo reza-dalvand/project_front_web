@@ -10,8 +10,6 @@ import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { searchService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_BUSINESSES_LIST } from '@/data/businesses';
 
 const TAB_OPTIONS = [
   { id: 'all', label: 'همه' },
@@ -31,12 +29,8 @@ export default function SearchPage() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        if (USE_MOCK) {
-          setSearchHistory([]);
-        } else {
-          const result = await searchService.getSearchHistory();
-          setSearchHistory(result.data || []);
-        }
+        const result = await searchService.getSearchHistory();
+        setSearchHistory(result.data || []);
       } catch (error) {
         console.error('Failed to fetch search history:', error);
       }
@@ -57,26 +51,13 @@ export default function SearchPage() {
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          const q = searchQuery.trim().toLowerCase();
-          const businesses = MOCK_BUSINESSES_LIST.filter(
-            (b) =>
-              b.name.toLowerCase().includes(q) ||
-              b.serviceType.toLowerCase().includes(q) ||
-              b.category.toLowerCase().includes(q)
-          );
-          if (!cancelled) {
-            setSearchResults({ businesses, services: [], total: businesses.length });
-          }
-        } else {
-          const result = await searchService.search(searchQuery, activeTab, 20);
-          if (!cancelled) {
-            setSearchResults({
-              businesses: result.data.businesses || [],
-              services: result.data.services || [],
-              total: result.data.total || 0,
-            });
-          }
+        const result = await searchService.search(searchQuery, activeTab, 20);
+        if (!cancelled) {
+          setSearchResults({
+            businesses: result.data.businesses || [],
+            services: result.data.services || [],
+            total: result.data.total || 0,
+          });
         }
       } catch (error) {
         if (!cancelled) {

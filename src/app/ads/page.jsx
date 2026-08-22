@@ -11,9 +11,6 @@ import AllAdsCard from '@/components/home/AllAdsCard';
 import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { adsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
-import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 
 export default function AllAdsPage() {
   const router = useRouter();
@@ -27,29 +24,22 @@ export default function AllAdsPage() {
     const fetchAds = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setAds([
-            ...MOCK_MODEL_REQUESTS.map((r) => ({ ...r, adType: 'model' })),
-            ...MOCK_LINE_RENTALS.map((l) => ({ ...l, adType: 'line' })),
-          ]);
-        } else {
-          // دریافت همزمان مدلینگ و لاین
-          const [modelRes, lineRes] = await Promise.all([
-            adsService.getModelRequests(
-              nearbyEnabled && userLocation
-                ? { lat: userLocation.latitude, lng: userLocation.longitude }
-                : {}
-            ),
-            adsService.getLineRentals(
-              nearbyEnabled && userLocation
-                ? { lat: userLocation.latitude, lng: userLocation.longitude }
-                : {}
-            ),
-          ]);
-          const models = (modelRes.data || []).map((r) => ({ ...r, adType: 'model' }));
-          const lines = (lineRes.data || []).map((l) => ({ ...l, adType: 'line' }));
-          setAds([...models, ...lines]);
-        }
+        // دریافت همزمان مدلینگ و لاین
+        const [modelRes, lineRes] = await Promise.all([
+          adsService.getModelRequests(
+            nearbyEnabled && userLocation
+              ? { lat: userLocation.latitude, lng: userLocation.longitude }
+              : {}
+          ),
+          adsService.getLineRentals(
+            nearbyEnabled && userLocation
+              ? { lat: userLocation.latitude, lng: userLocation.longitude }
+              : {}
+          ),
+        ]);
+        const models = (modelRes.data || []).map((r) => ({ ...r, adType: 'model' }));
+        const lines = (lineRes.data || []).map((l) => ({ ...l, adType: 'line' }));
+        setAds([...models, ...lines]);
       } catch (error) {
         console.error('Failed to fetch ads:', error);
       } finally {

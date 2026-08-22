@@ -7,7 +7,6 @@ import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import EmptyState from '@/components/common/EmptyState';
 import { supportService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import {
   FAQ_ITEMS,
   FAQ_CATEGORIES,
@@ -31,12 +30,8 @@ export default function SupportPage() {
   useEffect(() => {
     const fetchFaqs = async () => {
       try {
-        if (USE_MOCK) {
-          setFaqs(FAQ_ITEMS);
-        } else {
-          const result = await supportService.getFAQ();
-          setFaqs(result.data || []);
-        }
+        const result = await supportService.getFAQ();
+        setFaqs(result.data || []);
       } catch (error) {
         console.error('Failed to fetch FAQs:', error);
         setFaqs(FAQ_ITEMS);

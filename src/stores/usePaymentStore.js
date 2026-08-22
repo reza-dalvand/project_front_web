@@ -12,8 +12,6 @@
  */
 import { create } from 'zustand';
 import { paymentsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 // ═══════ نگاشت وضعیت‌های بک‌اند به متادیتای فرانت ═══════
 export const TX_STATUS_MAP = {
   blocked: {

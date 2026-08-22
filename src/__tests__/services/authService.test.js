@@ -1,7 +1,5 @@
 // src/__tests__/services/authService.test.js
 import { authService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 // اطمینان از حالت mock
 jest.mock('@/api/config', () => ({
   USE_MOCK: true,

@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useToast } from '@/hooks/useToast';
 import { appointmentsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
 import {
   todayJalaali,
   jalaaliToNumber,
@@ -36,7 +35,6 @@ export const useAppointmentsManager = () => {
   // ═══════ دریافت نوبت‌ها از API ═══════
   useEffect(() => {
     const fetchAppointments = async () => {
-      if (USE_MOCK) return;
       setIsLoading(true);
       setError(null);
       try {

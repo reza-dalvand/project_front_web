@@ -8,8 +8,6 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { adsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_LINE_RENTALS } from '@/data/lineRentals';
 import LineRentalHeader from '@/components/lineRentals/LineRentalHeader';
 import LineRentalFilter from '@/components/lineRentals/LineRentalFilter';
 import LineRentalCard from '@/components/lineRentals/LineRentalCard';
@@ -27,15 +25,11 @@ export default function LineRentalsPage() {
     const fetchRentals = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setRentals(MOCK_LINE_RENTALS.filter((r) => r.status === 'active'));
-        } else {
-          const params = {};
-          if (nearbyEnabled && userLocation) {
-            params.lat = userLocation.latitude;
-            params.lng = userLocation.longitude;
-            params.radius = 10;
-          }
+        const params = {};
+        if (nearbyEnabled && userLocation) {
+          params.lat = userLocation.latitude;
+          params.lng = userLocation.longitude;
+          params.radius = 10;
           const result = await adsService.getLineRentals(params);
           setRentals(result.data || []);
         }

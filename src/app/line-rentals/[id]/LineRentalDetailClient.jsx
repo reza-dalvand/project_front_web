@@ -16,8 +16,6 @@ import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_LINE_RENTAL_DETAIL } from '@/data/lineRentals';
 
 export default function LineRentalDetailPage() {
   const params = useParams();
@@ -32,12 +30,8 @@ export default function LineRentalDetailPage() {
     const fetchDetail = async () => {
       setIsLoading(true);
       try {
-        if (USE_MOCK) {
-          setRental(MOCK_LINE_RENTAL_DETAIL);
-        } else {
-          const result = await adsService.getLineRentalDetail(params.id);
-          setRental(result.data);
-        }
+        const result = await adsService.getLineRentalDetail(params.id);
+        setRental(result.data);
       } catch (error) {
         console.error('Failed to fetch line rental detail:', error);
         showToast('خطا در بارگذاری جزئیات', 'error');

@@ -23,7 +23,7 @@ export default function InviteFriendsPage() {
 
   const referralCode = 'BU-' + (user?.phone?.slice(-4) || '0000');
   const referralLink = `https://beauclub.ir/invite/${referralCode}`;
-  
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(referralCode);

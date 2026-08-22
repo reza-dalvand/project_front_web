@@ -10,7 +10,6 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import EmptyState from '@/components/common/EmptyState';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
-import { USE_MOCK } from '@/api/config';
 import { toPersianDigit } from '@/utils/numberUtils';
 
 export default function FavoritesPage() {

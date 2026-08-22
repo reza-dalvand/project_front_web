@@ -16,8 +16,6 @@ import BasicInfoStep from '@/components/createbusiness/BasicInfoStep';
 import NationalIdVerificationStep from '@/components/createbusiness/NationalIdVerificationStep';
 import SuccessModal from '@/components/common/SuccessModal';
 import { businessesService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-
 export default function CreateBusinessPage() {
   const router = useRouter();
   const { colors } = useTheme();

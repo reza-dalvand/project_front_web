@@ -14,8 +14,6 @@ import ModelRequestCard from '@/components/manageBusiness/modelRequest/ModelRequ
 import ModelRequestStats from '@/components/manageBusiness/modelRequest/ModelRequestStats';
 import ModelRequestDetailModal from '@/components/manageBusiness/modelRequest/ModelRequestDetailModal';
 import { adsService } from '@/api';
-import { USE_MOCK } from '@/api/config';
-import { MOCK_MODEL_REQUESTS } from '@/data/modelRequests';
 
 export default function ModelRequestsPage() {
   const { colors } = useTheme();
@@ -33,7 +31,6 @@ export default function ModelRequestsPage() {
   // ═══════ دریافت لیست من از API ═══════
   useEffect(() => {
     const fetchMyRequests = async () => {
-      if (USE_MOCK) return;
       setIsLoading(true);
       try {
         const result = await adsService.getMyModelRequests();
