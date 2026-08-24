@@ -39,7 +39,21 @@ export default function AppointmentsPage() {
       setIsLoading(true);
       try {
         const result = await appointmentsService.getMyAppointments(activeTab);
-        setAppointments(result.data || []);
+        // ✅ فاز ۳: نگاشت فیلدهای camelCase + ساخت فیلدهای مورد نیاز کامپوننت‌ها
+        const mapped = (result.data || []).map((a) => ({
+          ...a,
+          date: a.dateKey || '',
+          time: a.timeSlot || '',
+          dateObj: a.jm && a.jd ? { jy: a.jy, jm: a.jm, jd: a.jd } : null,
+          totalPrice: a.totalPrice || 0,
+          paidAmount: a.depositPaid || a.totalPrice || 0,
+          depositPaid: a.depositPaid || 0,
+          verificationCode: a.verificationCode || null,
+          isUpcoming: a.isUpcoming || false,
+          canCancel: a.canCancel || false,
+          hoursLeft: a.hoursLeft ?? null,
+        }));
+        setAppointments(mapped);
       } catch (err) {
         console.error('Failed to fetch appointments:', err);
         showToast('خطا در دریافت نوبت‌ها', 'error');
@@ -88,15 +102,13 @@ export default function AppointmentsPage() {
     setTimeout(() => setCancelVisible(true), 200);
   };
 
-  // ✅ حذف USE_MOCK — فقط API
-  const handleConfirmCancel = async (aptId) => {
+  const handleConfirmCancel = async (aptId, reason = '') => {
     try {
-      await appointmentsService.cancelAppointment(aptId);
+      await appointmentsService.cancelAppointment(aptId, reason);
     } catch (err) {
       showToast(err.message || 'خطا در لغو نوبت', 'error');
       return;
     }
-
     setAppointments((prev) =>
       prev.map((a) => (a.id === aptId ? { ...a, status: 'cancelled', isUpcoming: false } : a))
     );

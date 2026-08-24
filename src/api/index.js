@@ -3,7 +3,7 @@
  * 📦 Export مرکزی لایه API
  */
 // ═══════════ Config ═══════════
-export { USE_MOCK, API_CONFIG, JWT_CONFIG, PAGINATION_CONFIG, OTP_CONFIG } from './config';
+export { API_CONFIG, JWT_CONFIG, PAGINATION_CONFIG, OTP_CONFIG } from './config';
 
 // ═══════════ Core ═══════════
 export { default as apiClient } from './api-client';

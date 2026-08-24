@@ -68,8 +68,7 @@ const getSectionEmoji = (label = '') => {
 };
 
 export default function PriceListMenu({ businessName, businessLogo, settings }) {
-  const theme =
-    PRICE_LIST_THEMES.find((t) => t.id === settings?.themeId) || PRICE_LIST_THEMES[0];
+  const theme = PRICE_LIST_THEMES.find((t) => t.id === settings?.themeId) || PRICE_LIST_THEMES[0];
   const services = settings?.services || [];
 
   const sections = useMemo(() => {

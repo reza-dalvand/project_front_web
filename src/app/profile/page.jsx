@@ -1,6 +1,6 @@
 // src/app/profile/page.jsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FiCalendar,
@@ -10,7 +10,6 @@ import {
   FiSmartphone,
   FiHelpCircle,
   FiLogOut,
-  FiGift, // ← اضافه شد
   FiShield,
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -24,6 +23,7 @@ import ProfileStatsCard from '@/components/profile/ProfileStatsCard';
 import ProfileMenuList from '@/components/profile/ProfileMenuList';
 import ThemeToggleItem from '@/components/profile/ThemeToggleItem';
 import { Button } from '@/components/common';
+import { appointmentsService, favoritesService } from '@/api';
 
 export default function ProfilePage() {
   const { colors, resolvedTheme, setTheme } = useTheme();
@@ -35,15 +35,35 @@ export default function ProfilePage() {
   const isDark = resolvedTheme === 'dark';
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+  // ✅ FIX: آمار از بک‌اند می‌آید نه هاردکد
+  const [userStats, setUserStats] = useState([
+    { id: 1, label: 'نوبت‌ها', value: 0, icon: FiCalendar, color: '#2196F3' },
+    { id: 2, label: 'علاقه‌مندی', value: 0, icon: FiHeart, color: '#E91E63' },
+  ]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fetchStats = async () => {
+      try {
+        const [apptRes, favRes] = await Promise.allSettled([
+          appointmentsService.getMyAppointments('all'),
+          favoritesService.getFavoritesCount(),
+        ]);
+        const apptCount = apptRes.status === 'fulfilled' ? (apptRes.value.data || []).length : 0;
+        const favCount = favRes.status === 'fulfilled' ? favRes.value.data?.total || 0 : 0;
+        setUserStats([
+          { id: 1, label: 'نوبت‌ها', value: apptCount, icon: FiCalendar, color: '#2196F3' },
+          { id: 2, label: 'علاقه‌مندی', value: favCount, icon: FiHeart, color: '#E91E63' },
+        ]);
+      } catch (err) {
+        console.error('Failed to fetch profile stats:', err);
+      }
+    };
+    fetchStats();
+  }, [isAuthenticated]);
+
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
-  // ─── آمار کاربر ───
-  const userStats = [
-    { id: 1, label: 'نوبت‌ها', value: 12, icon: FiCalendar, color: '#2196F3' },
-    { id: 2, label: 'علاقه‌مندی', value: 28, icon: FiHeart, color: '#E91E63' },
-  ];
-
-  // ─── منوی دسترسی سریع ───
   const quickMenuItems = [
     {
       id: 'appointments',
@@ -51,7 +71,7 @@ export default function ProfilePage() {
       subtitle: 'نوبت‌های آینده و گذشته',
       icon: FiCalendar,
       color: '#2196F3',
-      badge: 2,
+      badge: 0,
       route: '/profile/appointments',
     },
     {
@@ -78,28 +98,9 @@ export default function ProfilePage() {
       color: '#FF9800',
       route: '/profile/edit',
     },
-    // ✅ آیتم جدید: دعوت از دوستان
-    // {
-    //   id: 'invite',
-    //   title: 'دعوت از دوستان',
-    //   subtitle: 'کد معرف خود را به اشتراک بگذارید',
-    //   icon: FiGift,
-    //   color: '#9C27B0',
-    //   route: '/profile/invite',
-    // },
   ];
 
-  // ─── منوی تنظیمات ───
   const settingsMenuItems = [
-    // {
-    //   id: 'devices',
-    //   title: 'دستگاه‌های فعال',
-    //   subtitle: 'مدیریت نشست‌های فعال',
-    //   icon: FiSmartphone,
-    //   color: '#2196F3',
-    //   badge: 4,
-    //   route: '/profile/devices',
-    // },
     {
       id: 'support',
       title: 'پشتیبانی و راهنما',
@@ -110,7 +111,6 @@ export default function ProfilePage() {
     },
   ];
 
-  // ─── هندلرها ───
   const handleMenuPress = (item) => {
     router.push(item.route);
   };
@@ -119,7 +119,6 @@ export default function ProfilePage() {
     try {
       await logout();
     } catch (err) {
-      // حتی اگر API خطا داد، state محلی پاک می‌شود
       console.error('Logout API error:', err);
     }
     setShowLogoutConfirm(false);
@@ -139,18 +138,10 @@ export default function ProfilePage() {
 
   return (
     <ScreenWrapper scrollable padding={0}>
-      {/* هدر پروفایل */}
       <ProfileHeader user={user} />
-
-      {/* محتوای اصلی */}
       <div className="px-5 pt-6">
-        {/* آمار */}
         <ProfileStatsCard stats={userStats} />
-
-        {/* دسترسی سریع */}
         <ProfileMenuList title="دسترسی سریع" items={quickMenuItems} onItemPress={handleMenuPress} />
-
-        {/* تنظیمات */}
         <div className="mb-6">
           <h3 className="text-base font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
             تنظیمات
@@ -160,8 +151,6 @@ export default function ProfilePage() {
           </div>
           <ProfileMenuList title="" items={settingsMenuItems} onItemPress={handleMenuPress} />
         </div>
-
-        {/* دکمه خروج */}
         <div className="mt-4 flex flex-col gap-3 items-center pb-4">
           <Button
             title="خروج از حساب کاربری"
@@ -179,11 +168,7 @@ export default function ProfilePage() {
           </span>
         </div>
       </div>
-
-      {/* Bottom Tab Bar */}
       <BottomTabBar />
-
-      {/* مدال تایید خروج */}
       {showLogoutConfirm && (
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center p-6"

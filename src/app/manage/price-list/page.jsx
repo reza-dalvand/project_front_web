@@ -18,7 +18,14 @@ import PriceListMenu from '@/components/priceList/PriceListMenu';
 
 // ═══════ ثابت محلی: تم‌ها (همان ساختار قبلی) ═══════
 const PRICE_LIST_THEMES = [
-  { id: 'classic', label: 'کلاسیک', emoji: '📋', accent: '#A88B7D', bg: '#FFFFFF', border: '#DCD1CB' },
+  {
+    id: 'classic',
+    label: 'کلاسیک',
+    emoji: '📋',
+    accent: '#A88B7D',
+    bg: '#FFFFFF',
+    border: '#DCD1CB',
+  },
   { id: 'rose', label: 'گلابی', emoji: '🌸', accent: '#E91E63', bg: '#FFF0F3', border: '#F5C6D6' },
   { id: 'gold', label: 'طلایی', emoji: '✨', accent: '#D4A017', bg: '#FFFDF5', border: '#EEDFAC' },
   { id: 'mint', label: 'نعنایی', emoji: '🌿', accent: '#43A047', bg: '#F0FFF5', border: '#C6E8C9' },

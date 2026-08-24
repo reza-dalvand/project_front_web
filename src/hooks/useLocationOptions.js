@@ -1,33 +1,34 @@
 // src/hooks/useLocationOptions.js
 /**
-* هوک دریافت استان‌ها و شهرها از بک‌اند با کش
-*
-* جایگزین ثابت‌های هاردکد PROVINCES و CITIES در exploreFilters
-*/
+ * هوک دریافت استان‌ها و شهرها از بک‌اند
+ *
+ * ✅ فاز ۵: کاملاً از بک‌اند می‌خواند.
+ * - استان‌ها: GET /locations/provinces/
+ * - شهرها: GET /locations/provinces/{province_id}/cities/
+ */
 import { useState, useEffect } from 'react';
 import { locationsService } from '@/api';
-import { useApiCacheStore } from '@/stores/useApiCacheStore';
-
-// کلیدهای کش
-const PROVINCES_KEY = 'locations_provinces';
-const CITY_PREFIX = 'locations_cities_';
 
 /**
-* دریافت لیست استان‌ها از بک‌اند
-* @returns {{ provinces: Array<{id, label}>, isLoading, error }}
-*/
+ * دریافت لیست استان‌ها از بک‌اند
+ */
 export const useProvinces = () => {
   const [provinces, setProvinces] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProvinces = async () => {
-      setIsLoading(true);
+    setIsLoading(true);
+    setError(null);
+
+    const fetch = async () => {
       try {
         const result = await locationsService.getProvinces();
         setProvinces(
-          (result.data || []).map((p) => ({ id: String(p.id), label: p.name }))
+          (result.data || []).map((p) => ({
+            id: String(p.id),
+            label: p.name,
+          }))
         );
       } catch (err) {
         setError(err.message);
@@ -35,17 +36,16 @@ export const useProvinces = () => {
         setIsLoading(false);
       }
     };
-    fetchProvinces();
+
+    fetch();
   }, []);
 
   return { provinces, isLoading, error };
 };
 
 /**
-* دریافت لیست شهرهای یک استان از بک‌اند
-* @param {string} provinceId - شناسه استان
-* @returns {{ cities: Array<{id, label}>, isLoading, error }}
-*/
+ * دریافت لیست شهرهای یک استان از بک‌اند
+ */
 export const useCities = (provinceId) => {
   const [cities, setCities] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,12 +57,17 @@ export const useCities = (provinceId) => {
       return;
     }
 
-    const fetchCities = async () => {
-      setIsLoading(true);
+    setIsLoading(true);
+    setError(null);
+
+    const fetch = async () => {
       try {
         const result = await locationsService.getCities(provinceId);
         setCities(
-          (result.data || []).map((c) => ({ id: String(c.id), label: c.name }))
+          (result.data || []).map((c) => ({
+            id: String(c.id),
+            label: c.name,
+          }))
         );
       } catch (err) {
         setError(err.message);
@@ -71,7 +76,7 @@ export const useCities = (provinceId) => {
       }
     };
 
-    fetchCities();
+    fetch();
   }, [provinceId]);
 
   return { cities, isLoading, error };

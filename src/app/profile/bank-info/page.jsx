@@ -1,6 +1,5 @@
 // src/app/profile/bank-info/page.jsx
 'use client';
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiCreditCard, FiCheckCircle, FiClock } from 'react-icons/fi';
@@ -42,7 +41,6 @@ export default function BankInfoPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { showToast } = useToast();
-
   const [formData, setFormData] = useState({
     bank_name: '',
     bank_id: '',
@@ -119,7 +117,6 @@ export default function BankInfoPage() {
     cleaned = cleaned.replace(/[^0-9IR]/g, '');
     if (cleaned.length <= 26) {
       setFormData((prev) => ({ ...prev, sheba: cleaned }));
-      if (errors.sheba) setErrors((prev) => ({ ...prev, sheba: '' }));
     }
   };
 
@@ -127,7 +124,6 @@ export default function BankInfoPage() {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     if (cleaned.length <= 16) {
       setFormData((prev) => ({ ...prev, card_number: cleaned }));
-      if (errors.card_number) setErrors((prev) => ({ ...prev, card_number: '' }));
     }
   };
 
@@ -165,7 +161,7 @@ export default function BankInfoPage() {
             )}
             <div className="flex-1">
               <p
-                className="text-sm font-[Vazir-Bold]"
+                className="text-sm font-[Vazir-Bold] mb-1"
                 style={{ color: isComplete ? '#43A047' : '#FF9800' }}
               >
                 {isComplete ? 'اطلاعات بانکی کامل است' : 'اطلاعات بانکی ناقص است'}
@@ -220,8 +216,8 @@ export default function BankInfoPage() {
             value={formData.sheba}
             onChangeText={handleShebaChange}
             maxLength={26}
-            error={errors.sheba}
             hint="شماره شبا باید با IR شروع شده و ۲۶ کاراکتر باشد"
+            error={errors.sheba}
           />
 
           <Input
@@ -231,8 +227,8 @@ export default function BankInfoPage() {
             onChangeText={handleCardChange}
             type="tel"
             maxLength={16}
-            error={errors.card_number}
             rightIcon={<FiCreditCard size={18} style={{ color: colors.textSecondary }} />}
+            error={errors.card_number}
           />
         </Card>
 

@@ -97,16 +97,16 @@ export default function ModelRequestDetailPage() {
     );
   }
 
-  const costType = request.cost_type || request.costType;
+  const costType = request.costType;
   const discount = request.discount || 0;
-  const isUrgent = request.is_urgent || request.isUrgent;
-  const businessName = request.business_name || request.businessName;
-  const serviceName = request.service_name || request.serviceName;
+  const isUrgent = request.isUrgent;
+  const businessName = request.businessName;
+  const serviceName = request.serviceName;
   const city = request.city || '';
   const description = request.description || '';
-  const contactPhone = request.contact_phone || request.contactPhone;
-  const createdAt = request.created_jalali || request.createdAt || '';
-  const expiresAt = request.expires_jalali || request.expiresAt || '';
+  const contactPhone = request.contactPhone;
+  const createdAt = request.createdJalali || '';
+  const expiresAt = request.expiresJalali || '';
 
   return (
     <ScreenWrapper scrollable padding={0}>

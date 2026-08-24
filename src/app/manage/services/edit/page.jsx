@@ -58,14 +58,14 @@ function EditServicePageContent() {
   const [loading, setLoading] = useState(false);
 
   // ═══ در حالت ویرایش، اگر سرویس در store نبود از API بگیر ═══
-  useState(() => {
-    if (serviceId && !existingService && !USE_MOCK) {
+  useEffect(() => {
+    if (serviceId && !existingService) {
       setLoading(true);
       fetchServices()
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
     }
-  });
+  }, [serviceId, existingService, fetchServices]);
 
   // ═══ محاسبات قیمت ═══
   const originalNum = parseNumber(originalPrice);

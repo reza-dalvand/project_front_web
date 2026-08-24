@@ -1,14 +1,14 @@
 // src/constants/exploreFilters.js
 /**
-* ✅ فاز ۴: ثابت‌های هاردکد حذف شدند
-*
-* به جای ثابت‌های هاردکد، از هوک‌های داینامیک استفاده کنید:
-* - useProvinces() از '@/hooks/useLocationOptions'
-* - useCities(provinceId) از '@/hooks/useLocationOptions'
-* - useBusinessCategories() از '@/hooks/useCategoryOptions'
-* - useServiceCategories() از '@/hooks/useCategoryOptions'
-* - useSubServices(categoryId) از '@/hooks/useCategoryOptions'
-*/
+ * ✅ فاز ۴: ثابت‌های هاردکد حذف شدند
+ *
+ * به جای ثابت‌های هاردکد، از هوک‌های داینامیک استفاده کنید:
+ * - useProvinces() از '@/hooks/useLocationOptions'
+ * - useCities(provinceId) از '@/hooks/useLocationOptions'
+ * - useBusinessCategories() از '@/hooks/useCategoryOptions'
+ * - useServiceCategories() از '@/hooks/useCategoryOptions'
+ * - useSubServices(categoryId) از '@/hooks/useCategoryOptions'
+ */
 
 // فیلتر منبع پست — اینها ثابت هستند و نیاز به بک‌اند ندارند
 export const SOURCE_FILTERS = [

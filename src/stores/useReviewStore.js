@@ -76,9 +76,7 @@ export const useReviewStore = create(
 
           set((state) => ({
             reviews: [...state.reviews, newReview],
-            pendingReviews: state.pendingReviews.filter(
-              (p) => p.appointmentId !== appointmentId
-            ),
+            pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
             isLoading: false,
           }));
 
@@ -92,13 +90,10 @@ export const useReviewStore = create(
 
       dismissPendingReview: (appointmentId) =>
         set((state) => ({
-          pendingReviews: state.pendingReviews.filter(
-            (p) => p.appointmentId !== appointmentId
-          ),
+          pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
         })),
 
-      hasReviewFor: (appointmentId) =>
-        get().reviews.some((r) => r.appointmentId === appointmentId),
+      hasReviewFor: (appointmentId) => get().reviews.some((r) => r.appointmentId === appointmentId),
 
       fetchBusinessReviews: async (businessId) => {
         try {

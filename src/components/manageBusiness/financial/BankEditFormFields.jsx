@@ -1,33 +1,14 @@
 // src/components/manageBusiness/financial/BankEditFormFields.jsx
 'use client';
-
 import { useTheme } from '@/stores/useThemeStore';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
+import { getBankOptions } from '@/constants/banks';
 import { toPersianDigit } from '@/utils/numberUtils';
-
-// ═══════ ثابت محلی: لیست بانک‌ها ═══════
-const IRANIAN_BANKS = [
-  { id: 'meli', label: 'بانک ملی ایران' },
-  { id: 'mellat', label: 'بانک ملت' },
-  { id: 'saman', label: 'بانک سامان' },
-  { id: 'pasargad', label: 'بانک پاسارگاد' },
-  { id: 'saderat', label: 'بانک صادرات ایران' },
-  { id: 'tejarat', label: 'بانک تجارت' },
-  { id: 'sepah', label: 'بانک سپه' },
-  { id: 'keshavarzi', label: 'بانک کشاورزی' },
-  { id: 'maskan', label: 'بانک مسکن' },
-  { id: 'refah', label: 'بانک رفاه کارگران' },
-  { id: 'parsian', label: 'بانک پارسیان' },
-  { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
-  { id: 'karafarin', label: 'بانک کارآفرین' },
-  { id: 'tosee', label: 'بانک توسعه صادرات' },
-  { id: 'post_bank', label: 'پست بانک ایران' },
-  { id: 'shahr', label: 'بانک شهر' },
-];
 
 export default function BankEditFormFields({ form, errors, businessOwnerName, onFieldChange }) {
   const { colors } = useTheme();
+  const bankOptions = getBankOptions();
 
   return (
     <>
@@ -44,7 +25,6 @@ export default function BankEditFormFields({ form, errors, businessOwnerName, on
           صاحب حساب باید حتماً همان شخصی باشد که کد ملی‌اش در مرحله ثبت کسب‌وکار تایید شده است.
         </p>
       </div>
-
       {/* نام صاحب حساب */}
       <Input
         label="نام و نام خانوادگی کامل *"
@@ -54,7 +34,6 @@ export default function BankEditFormFields({ form, errors, businessOwnerName, on
         error={errors.ownerName}
         hint={businessOwnerName ? `نام تایید شده احراز هویت: ${businessOwnerName}` : undefined}
       />
-
       {/* کد ملی */}
       <Input
         label="کد ملی صاحب حساب *"
@@ -66,14 +45,13 @@ export default function BankEditFormFields({ form, errors, businessOwnerName, on
         maxLength={10}
         hint={`${toPersianDigit(form.nationalId.length)} از ۱۰ رقم`}
       />
-
       {/* نام بانک */}
       <div>
         <Dropdown
           label="نام بانک *"
           placeholder="بانک را انتخاب کنید"
           value={form.bankId}
-          options={IRANIAN_BANKS}
+          options={bankOptions}
           onSelect={(val) => onFieldChange('bankId', val)}
         />
         {errors.bankId && (
@@ -84,7 +62,6 @@ export default function BankEditFormFields({ form, errors, businessOwnerName, on
           </div>
         )}
       </div>
-
       {/* شماره شبا */}
       <Input
         label="شماره شبا *"
@@ -94,7 +71,6 @@ export default function BankEditFormFields({ form, errors, businessOwnerName, on
         error={errors.sheba}
         maxLength={26}
       />
-
       {/* شماره کارت */}
       <Input
         label="شماره کارت *"
@@ -104,9 +80,7 @@ export default function BankEditFormFields({ form, errors, businessOwnerName, on
         error={errors.cardNumber}
         type="tel"
         maxLength={16}
-        hint={`${toPersianDigit(form.cardNumber.length)} از ۱۶ رقم`}
       />
-
       {/* نکات */}
       <div className="p-4 rounded-xl" style={{ backgroundColor: colors.background }}>
         <p className="text-xs font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>

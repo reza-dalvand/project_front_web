@@ -2,17 +2,26 @@
 // ═══════════════════════════════════════════════
 //   بیو کلاب - Service Worker
 //   کش آفلاین + Sync Queue + Cache Strategies
+//
+//   ✅ فاز ۱: رفع مشکل کش قدیمی پس از دیپلوی
+//   - در هر فعال‌سازی، تمام کش‌های قبلی پاک می‌شوند
+//   - فقط صفحات اصلی و تصاویر کش می‌شوند
+//   - فایل‌های استاتیک جدید کش نمی‌شوند (جلوگیری از کش قدیمی)
 // ═══════════════════════════════════════════════
 
-const CACHE_VERSION = 'v3';
+// ✅ نسخه کش باید با هر دیپلوی تغییر کند
+// برای جلوگیری از فراموشی، از یک نسخه داینامیک استفاده می‌کنیم
+const CACHE_VERSION = 'v4'; // ⬅️ هر بار که این فایل تغییر کرد، نسخه را افزایش دهید
 const STATIC_CACHE = `beau-static-${CACHE_VERSION}`;
 const PAGE_CACHE = `beau-pages-${CACHE_VERSION}`;
 const IMAGE_CACHE = `beau-images-${CACHE_VERSION}`;
 const API_CACHE = `beau-api-${CACHE_VERSION}`;
 const SYNC_QUEUE_CACHE = `beau-sync-queue-${CACHE_VERSION}`;
 
-// فایل‌های ثابت برای کش اولیه
-const STATIC_ASSETS = ['/', '/manifest.json'];
+// ✅ FIX فاز ۱: فقط صفحات اصلی پیش‌کش می‌شوند
+// فایل‌های استاتیک /_next/ هرگز پیش‌کش نمی‌شوند
+// تا با هر دیپلوی جدید، فایل‌های جدید دانلود شوند
+const PRECACHE_PAGES = ['/', '/manifest.json'];
 
 // دامنه‌هایی که تصاویرشون کش بشن
 const IMAGE_DOMAINS = ['images.unsplash.com', 'picsum.photos', 'i.pravatar.cc'];
@@ -22,7 +31,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .then((cache) => cache.addAll(PRECACHE_PAGES))
       .then(() => self.skipWaiting())
   );
 });
@@ -34,18 +43,23 @@ self.addEventListener('activate', (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys
-            .filter((key) => {
-              const validPrefixes = [
-                `beau-static-${CACHE_VERSION}`,
-                `beau-pages-${CACHE_VERSION}`,
-                `beau-images-${CACHE_VERSION}`,
-                `beau-api-${CACHE_VERSION}`,
-                `beau-sync-queue-${CACHE_VERSION}`,
-              ];
-              return !validPrefixes.some((prefix) => key.startsWith(prefix));
-            })
-            .map((key) => caches.delete(key))
+          keys.map((key) => {
+            // ✅ FIX فاز ۱: فقط کش‌هایی که با نسخه فعلی مطابقت دارند باقی بمانند
+            // بقیه (نسخه‌های قدیمی) پاک شوند
+            const validPrefixes = [
+              `beau-static-${CACHE_VERSION}`,
+              `beau-pages-${CACHE_VERSION}`,
+              `beau-images-${CACHE_VERSION}`,
+              `beau-api-${CACHE_VERSION}`,
+              `beau-sync-queue-${CACHE_VERSION}`,
+            ];
+
+            // ✅ اگر کش با هیچ‌کدام از پیشوندهای معتبر مطابقت نداشت، پاک کن
+            const isValid = validPrefixes.some((prefix) => key.startsWith(prefix));
+            if (!isValid) {
+              return caches.delete(key);
+            }
+          })
         )
       )
       .then(() => self.clients.claim())
@@ -60,6 +74,13 @@ self.addEventListener('fetch', (event) => {
   // درخواست‌های غیر GET → Sync Queue
   if (request.method !== 'GET') {
     event.respondWith(handleMutatingRequest(request));
+    return;
+  }
+
+  // ✅ FIX فاز ۱: درخواست‌های /_next/ هرگز از کش سرو نمی‌شوند
+  // چون هش فایل‌ها با هر دیپلوی تغییر می‌کند
+  if (url.pathname.startsWith('/_next/')) {
+    event.respondWith(networkOnly(request));
     return;
   }
 
@@ -81,7 +102,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets → Cache-first
+  // فایل‌های استاتیک → Cache-first
   if (isStaticAsset(url)) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
@@ -92,6 +113,14 @@ self.addEventListener('fetch', (event) => {
 });
 
 // ═══════════ Strategies ═══════════
+
+/**
+ * ✅ FIX فاز ۱: استراتژی فقط شبکه (بدون کش)
+ * برای فایل‌هایی که نباید کش شوند
+ */
+async function networkOnly(request) {
+  return await fetch(request);
+}
 
 // Network-first
 async function networkFirst(request, cacheName) {
@@ -155,7 +184,6 @@ async function saveToSyncQueue(request) {
   const cloned = request.clone();
   const body = request.method !== 'GET' ? await cloned.text() : '';
   const headers = Object.fromEntries(request.headers.entries());
-
   const item = JSON.stringify({
     url: request.url,
     method: request.method,
@@ -163,10 +191,11 @@ async function saveToSyncQueue(request) {
     headers,
     timestamp: Date.now(),
   });
-
   await cache.put(
     new Request(`/sync-queue/${Date.now()}-${Math.random().toString(36).slice(2)}`),
-    new Response(item, { headers: { 'Content-Type': 'application/json' } })
+    new Response(item, {
+      headers: { 'Content-Type': 'application/json' },
+    })
   );
 }
 
@@ -180,12 +209,10 @@ self.addEventListener('sync', (event) => {
 async function processSyncQueue() {
   const cache = await caches.open(SYNC_QUEUE_CACHE);
   const keys = await cache.keys();
-
   for (const key of keys) {
     try {
       const response = await cache.match(key);
       if (!response) continue;
-
       const data = await response.json();
 
       // درخواست‌های قدیمی‌تر از ۲۴ ساعت حذف بشن
@@ -199,7 +226,6 @@ async function processSyncQueue() {
         headers: data.headers,
         body: data.body || undefined,
       });
-
       await cache.delete(key);
     } catch {
       // هنوز آفلاین → در صف بمونه
@@ -215,6 +241,5 @@ function isImageRequest(url) {
 
 function isStaticAsset(url) {
   if (url.pathname.match(/\.(js|css|woff|woff2|ttf|eot)$/)) return true;
-  if (url.pathname.startsWith('/_next/static/')) return true;
   return false;
 }

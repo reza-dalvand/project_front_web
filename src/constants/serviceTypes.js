@@ -1,14 +1,14 @@
 // src/constants/serviceTypes.js
 /**
-* ✅ فاز ۴: ثابت‌های هاردکد حذف شدند
-*
-* به جای ثابت‌های هاردکد، از هوک‌های داینامیک استفاده کنید:
-* - useServiceCategories() از '@/hooks/useCategoryOptions'
-* - useSubServices(categoryId) از '@/hooks/useCategoryOptions'
-*
-* برای دسترسی همگام (سینکرون) در فایل‌های غیرکامپوننت،
-* از useServiceCategories در کامپوننت استفاده کنید.
-*/
+ * ✅ فاز ۴: ثابت‌های هاردکد حذف شدند
+ *
+ * به جای ثابت‌های هاردکد، از هوک‌های داینامیک استفاده کنید:
+ * - useServiceCategories() از '@/hooks/useCategoryOptions'
+ * - useSubServices(categoryId) از '@/hooks/useCategoryOptions'
+ *
+ * برای دسترسی همگام (سینکرون) در فایل‌های غیرکامپوننت،
+ * از useServiceCategories در کامپوننت استفاده کنید.
+ */
 import {
   FiHeart,
   FiEdit3,
@@ -40,9 +40,24 @@ export const SERVICE_TYPE_CONFIG = {
   skincare: { icon: FiDroplet, color: '#00695C', gradient: ['#B2DFDB', '#4DB6AC'], bg: '#B2DFDB' },
   hair_cut: { icon: FiScissors, color: '#5D4037', gradient: ['#D7CCC8', '#A1887F'], bg: '#D7CCC8' },
   bridal: { icon: FiStar, color: '#880E4F', gradient: ['#F8BBD0', '#F06292'], bg: '#F8BBD0' },
-  hair_extensions: { icon: FiEdit3, color: '#4E342E', gradient: ['#BCAAA4', '#8D6E63'], bg: '#BCAAA4' },
-  other: { icon: FiMoreHorizontal, color: '#455A64', gradient: ['#CFD8DC', '#90A4AE'], bg: '#CFD8DC' },
-  default: { icon: FiMoreHorizontal, color: '#455A64', gradient: ['#CFD8DC', '#90A4AE'], bg: '#CFD8DC' },
+  hair_extensions: {
+    icon: FiEdit3,
+    color: '#4E342E',
+    gradient: ['#BCAAA4', '#8D6E63'],
+    bg: '#BCAAA4',
+  },
+  other: {
+    icon: FiMoreHorizontal,
+    color: '#455A64',
+    gradient: ['#CFD8DC', '#90A4AE'],
+    bg: '#CFD8DC',
+  },
+  default: {
+    icon: FiMoreHorizontal,
+    color: '#455A64',
+    gradient: ['#CFD8DC', '#90A4AE'],
+    bg: '#CFD8DC',
+  },
 };
 
 // ═══════════════════════════════════════

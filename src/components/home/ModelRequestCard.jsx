@@ -1,10 +1,20 @@
 // src/components/home/ModelRequestCard.jsx
 'use client';
-import { FiMapPin } from 'react-icons/fi';
+import { FiMapPin, FiTag } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { toPersianDigit } from '@/utils/numberUtils';
 import CostTypeBadge from '@/components/common/CostTypeBadge';
+import { toPersianDigit } from '@/utils/numberUtils';
 
+/**
+ * کارت درخواست مدل — هماهنگ با بک‌اند
+ *
+ * فیلدهای بک‌اند (بعد از نرمال‌ساز):
+ *   costType, discount, isUrgent, businessName,
+ *   serviceName, createdJalali, expiresJalali,
+ *   distance, title
+ */
+
+// ═══ ایموجی بر اساس نام خدمت ═══
 const getServiceEmoji = (serviceName = '') => {
   if (serviceName.includes('ناخن')) return '💅';
   if (serviceName.includes('میکاپ') || serviceName.includes('گریم')) return '💄';
@@ -25,19 +35,25 @@ const getServiceEmoji = (serviceName = '') => {
 export default function ModelRequestCard({ request, onPress }) {
   const { colors } = useTheme();
 
+  // ✅ فقط فیلدهای سازگار با بک‌اند (بعد از نرمال‌ساز)
+  const costType = request.costType;
+  const discount = request.discount || 0;
+  const isUrgent = request.isUrgent || false;
+  const businessName = request.businessName || '';
+  const serviceName = request.serviceName || '';
+  const city = request.city || '';
+  const distance = request.distance;
+
   return (
     <button
       onClick={() => onPress?.(request)}
-      className="flex-shrink-0 w-[230px] rounded-[20px] overflow-hidden text-right
-        transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-      style={{
-        backgroundColor: colors.cardBackground,
-        border: `1px solid ${colors.border}`,
-      }}
+      className="w-full rounded-2xl border overflow-hidden text-right transition-all
+hover:shadow-md active:scale-[0.99]"
+      style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
     >
       {/* ═══ هدر گرادیانی ═══ */}
       <div
-        className="relative h-[130px] overflow-hidden"
+        className="relative w-full h-[160px] overflow-hidden"
         style={{
           background: 'linear-gradient(135deg, #E91E63 0%, #AD1457 60%, #880E4F 100%)',
         }}
@@ -59,70 +75,101 @@ export default function ModelRequestCard({ request, onPress }) {
           className="absolute bottom-4 right-6 w-6 h-6 rounded-full"
           style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
         />
+
         {/* ایموجی خدمت */}
         <div className="absolute inset-0 flex items-center justify-center">
           <span
             className="text-[48px]"
             style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.25))' }}
           >
-            {getServiceEmoji(request.serviceName)}
+            {getServiceEmoji(serviceName)}
           </span>
         </div>
+
         {/* بج فوری */}
-        {request.isUrgent && (
+        {isUrgent && (
           <div
-            className="absolute top-3 left-3 px-2.5 py-1 rounded-lg backdrop-blur-sm"
-            style={{ backgroundColor: 'rgba(255,152,0,0.9)' }}
+            className="absolute top-3 left-3 px-2.5 py-1 rounded-lg shadow-md"
+            style={{ backgroundColor: '#FF9800' }}
           >
-            <span className="text-[10px] font-[Vazir-Bold] text-white">🔥 فوری</span>
+            <span className="text-[11px] font-[Vazir-Bold] text-white">🔥 فوری</span>
           </div>
         )}
+
         {/* بج نوع هزینه */}
         <div className="absolute top-3 right-3">
-          <CostTypeBadge type={request.costType} variant="solid" />
+          <CostTypeBadge type={costType} variant="solid" />
         </div>
+
         {/* نوار شیشه‌ای پایین هدر */}
         <div
           className="absolute bottom-0 left-0 right-0 h-[36px] flex items-center px-3 gap-2"
           style={{ backgroundColor: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
         >
           <span className="text-[11px] font-[Vazir-Medium] text-white/90 truncate flex-1">
-            {request.serviceName}
+            {serviceName}
           </span>
-          {request.discount > 0 && (
+          {discount > 0 && (
             <span
               className="text-[10px] font-[Vazir-Bold] px-1.5 py-0.5 rounded-md flex-shrink-0"
               style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: '#fff' }}
             >
-              {toPersianDigit(request.discount)}٪ تخفیف
+              {toPersianDigit(discount)}٪ تخفیف
             </span>
           )}
         </div>
       </div>
+
       {/* ═══ بدنه کارت ═══ */}
-      <div className="p-3.5 space-y-2">
-        <h4
-          className="text-[13px] font-[Vazir-Bold] leading-[20px] line-clamp-2 min-h-[40px]"
+      <div className="p-3.5 space-y-2.5">
+        {/* عنوان */}
+        <h3
+          className="text-base font-[Vazir-Bold] leading-6 line-clamp-2"
           style={{ color: colors.textMain }}
         >
           {request.title}
-        </h4>
-        {/* کسب‌وکار */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[13px]">🏪</span>
-          <span
-            className="text-[11px] font-[Vazir-Medium] truncate flex-1"
-            style={{ color: colors.primary }}
-          >
-            {request.businessName}
-          </span>
+        </h3>
+
+        {/* کسب‌وکار + شهر */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs">🏪</span>
+            <span
+              className="text-[11px] font-[Vazir-Medium] line-clamp-1"
+              style={{ color: colors.primary }}
+            >
+              {businessName}
+            </span>
+          </div>
+          {city && (
+            <div className="flex items-center gap-1">
+              <FiMapPin size={11} color={colors.textSecondary} />
+              <span className="text-[10px]" style={{ color: colors.textSecondary }}>
+                {city}
+              </span>
+            </div>
+          )}
+          {distance !== null && distance !== undefined && (
+            <div className="flex items-center gap-1">
+              <FiMapPin size={11} color="#2196F3" />
+              <span className="text-[10px] font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
+                {distance < 1
+                  ? `${Math.round(distance * 1000)} متر`
+                  : `${distance.toFixed(1)} کیلومتر`}
+              </span>
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-1.5">
-          <FiMapPin size={11} style={{ color: colors.textSecondary }} />
-          <span className="text-[10px]" style={{ color: colors.textSecondary }}>
-            {request.city}
-          </span>
-        </div>
+
+        {/* تخفیف */}
+        {discount > 0 && (
+          <div className="flex items-center gap-1.5">
+            <FiTag size={12} color="#E53935" />
+            <span className="text-[11px] font-[Vazir-Bold]" style={{ color: '#E53935' }}>
+              {toPersianDigit(discount)}٪ تخفیف مدل‌ها
+            </span>
+          </div>
+        )}
       </div>
     </button>
   );

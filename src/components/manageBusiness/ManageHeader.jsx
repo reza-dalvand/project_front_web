@@ -13,10 +13,8 @@ export default function ManageHeader() {
   const user = useAuthStore((s) => s.user);
   const businessData = useBusinessStore((s) => s.businessData);
 
-  // ✅ بررسی وضعیت حساب بانکی
   const needsBankRegistration = !businessData?.bankInfo?.isRegistered;
 
-  // خوشامدگویی بر اساس ساعت
   const hour = new Date().getHours();
   const greeting =
     hour < 12
@@ -32,7 +30,6 @@ export default function ManageHeader() {
         background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
       }}
     >
-      {/* دایره‌های تزئینی */}
       <div
         className="absolute -top-10 -left-10 w-44 h-44 rounded-full border-2 pointer-events-none"
         style={{ borderColor: 'rgba(255,255,255,0.15)' }}
@@ -66,7 +63,7 @@ export default function ManageHeader() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <h3 className="text-[15px] font-[Vazir-Bold] text-white truncate">
-                {businessData?.name}
+                {businessData?.name || '—'}
               </h3>
               {businessData?.VIP && (
                 <div className="w-5 h-5 rounded-full flex items-center justify-center bg-yellow-400/25">
@@ -74,13 +71,12 @@ export default function ManageHeader() {
                 </div>
               )}
             </div>
-            <p className="text-[11px] text-white/85 mt-0.5">{businessData?.category}</p>
+            <p className="text-[11px] text-white/85 mt-0.5">{businessData?.category || '—'}</p>
             <div className="flex items-center gap-1 mt-1">
               <FiMapPin size={11} className="text-white/75" />
-              <span className="text-[10px] text-white/75">{businessData?.city}</span>
+              <span className="text-[10px] text-white/75">{businessData?.city || '—'}</span>
             </div>
           </div>
-
           {/* باکس امتیاز */}
           <div
             className="flex flex-col items-center px-3 py-2 rounded-2xl border"
@@ -90,7 +86,8 @@ export default function ManageHeader() {
             }}
           >
             <span className="text-xl font-[Vazir-Bold] text-white leading-tight">
-              {toPersianDigit((businessData?.rating || 4.9).toFixed(1))}
+              {/* ✅ FIX: فال‌بک 0 به جای 4.9 */}
+              {toPersianDigit((businessData?.rating || 0).toFixed(1))}
             </span>
             <div className="flex items-center gap-0.5 my-1">
               {[...Array(5)].map((_, i) => (
@@ -98,7 +95,7 @@ export default function ManageHeader() {
               ))}
             </div>
             <span className="text-[9px] text-white/80">
-              ({toPersianDigit(businessData?.reviewsCount || 142)})
+              {/* ✅ FIX: فال‌بک 0 به جای 142 */}({toPersianDigit(businessData?.reviewsCount || 0)})
             </span>
           </div>
         </div>
@@ -116,7 +113,6 @@ export default function ManageHeader() {
             <FiCreditCard size={16} className="text-white" />
             <span className="text-xs font-[Vazir-Bold] text-white">مدیریت مالی</span>
           </button>
-
           <button
             onClick={() => router.push('/manage/settings')}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border transition-all hover:opacity-80"
@@ -130,15 +126,12 @@ export default function ManageHeader() {
           </button>
         </div>
 
-        {/* ✅ هشدار ثبت حساب بانکی */}
+        {/* هشدار ثبت حساب بانکی */}
         {needsBankRegistration && (
           <button
             onClick={() => router.push('/manage/financial')}
             className="w-full flex items-center gap-2.5 p-3 rounded-xl border transition-all hover:opacity-90 active:scale-[0.99]"
-            style={{
-              backgroundColor: '#FF980015',
-              borderColor: '#FF980040',
-            }}
+            style={{ backgroundColor: '#FF980015', borderColor: '#FF980040' }}
           >
             <FiAlertTriangle size={16} color="#FF9800" className="flex-shrink-0" />
             <span

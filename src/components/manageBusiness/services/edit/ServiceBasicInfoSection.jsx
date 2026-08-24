@@ -6,7 +6,7 @@ import Card from '@/components/common/Card';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import SectionHeader from '@/components/common/SectionHeader';
-import { SERVICE_CATEGORIES, getSubServicesByCategory } from '@/constants/serviceTypes';
+import { useServiceCategories, useSubServices } from '@/hooks/useCategoryOptions';
 
 export default function ServiceBasicInfoSection({
   name,
@@ -18,7 +18,8 @@ export default function ServiceBasicInfoSection({
   onTypeChange,
 }) {
   const { colors } = useTheme();
-  const availableSubServices = categoryId ? getSubServicesByCategory(categoryId) : [];
+  const { categories: serviceCategories } = useServiceCategories();
+  const { subServices: availableSubServices } = useSubServices(categoryId);
 
   return (
     <div className="space-y-3">
@@ -35,7 +36,7 @@ export default function ServiceBasicInfoSection({
           label="دسته‌بندی خدمت *"
           placeholder="دسته‌بندی را انتخاب کنید"
           value={categoryId}
-          options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
+          options={serviceCategories}
           onSelect={onCategoryChange}
         />
         {errors.categoryId && (

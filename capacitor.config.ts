@@ -6,6 +6,13 @@ const config: CapacitorConfig = {
   appName: 'زیبانو',
   webDir: 'out',
   backgroundColor: '#F5F0EC',
+  server: {
+  androidScheme: 'https',
+    // 🆕 فاز ۵: در تولید، سرور واقعی
+    // در توسعه، سرور محلی
+    url: 'https://api.beauclub.ir', // یا سرور محلی برای تست
+    cleartext: false, // HTTPS فقط
+  },
   android: {
     // ✅ مهم: edge-to-edge را فعال می‌کند
     allowMixedContent: false,

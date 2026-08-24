@@ -55,10 +55,7 @@ export default function UpdateModal() {
               backgroundColor: updateInfo.isForceUpdate ? '#E5393520' : colors.primary + '20',
             }}
           >
-            <FiDownload
-              size={40}
-              color={updateInfo.isForceUpdate ? '#E53935' : colors.primary}
-            />
+            <FiDownload size={40} color={updateInfo.isForceUpdate ? '#E53935' : colors.primary} />
           </div>
         </div>
 
@@ -79,7 +76,10 @@ export default function UpdateModal() {
           }}
         >
           <div className="text-center flex-1">
-            <p className="text-xs mb-1" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
+            <p
+              className="text-xs mb-1"
+              style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
+            >
               فعلی
             </p>
             <p className="text-base" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
@@ -90,7 +90,10 @@ export default function UpdateModal() {
             ←
           </div>
           <div className="text-center flex-1">
-            <p className="text-xs mb-1" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
+            <p
+              className="text-xs mb-1"
+              style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
+            >
               جدید
             </p>
             <p
@@ -114,14 +117,20 @@ export default function UpdateModal() {
               border: `1px solid ${colors.border}`,
             }}
           >
-            <h3 className="text-sm mb-3" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
+            <h3
+              className="text-sm mb-3"
+              style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}
+            >
               تغییرات این نسخه:
             </h3>
             <div className="space-y-2">
               {updateInfo.changelog.slice(0, 3).map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <span className="text-base">{item.icon}</span>
-                  <span className="text-xs" style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}>
+                  <span
+                    className="text-xs"
+                    style={{ color: colors.textSecondary, fontFamily: 'Vazir' }}
+                  >
                     {item.text}
                   </span>
                 </div>

@@ -57,14 +57,7 @@ export default function NationalIdVerificationStep({
     setError('');
     try {
       let result;
-      if (!USE_MOCK) {
-        result = await authService.verifyNationalId(nationalId);
-      } else {
-        await new Promise((r) => setTimeout(r, 1500));
-        result = {
-          data: { verified_name: 'کاربر آزمایشی بیو کلاب', national_id: nationalId },
-        };
-      }
+      result = await authService.verifyNationalId(nationalId);
       const name = result.data?.verified_name || '';
       setVerifiedName(name);
       setSuccess(true);

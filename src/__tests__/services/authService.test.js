@@ -2,7 +2,6 @@
 import { authService } from '@/api';
 // اطمینان از حالت mock
 jest.mock('@/api/config', () => ({
-  USE_MOCK: true,
   API_CONFIG: { baseURL: 'http://localhost:8000/api/v1', timeout: 15000 },
   JWT_CONFIG: { ACCESS_TOKEN_KEY: 'test', REFRESH_TOKEN_KEY: 'test' },
   OTP_CONFIG: { CODE_LENGTH: 5, EXPIRY_SECONDS: 300, RESEND_COOLDOWN_SECONDS: 60 },

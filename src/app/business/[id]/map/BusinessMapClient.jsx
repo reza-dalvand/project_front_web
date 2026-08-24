@@ -1,6 +1,5 @@
 // src/app/business/[id]/map/BusinessMapClient.jsx
 'use client';
-
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
@@ -13,26 +12,52 @@ import BusinessMapPanel from '@/components/businessMap/BusinessMapPanel';
 import NavigationModal from '@/components/businessMap/NavigationModal';
 import MapErrorState from '@/components/businessMap/MapErrorState';
 import { businessesService } from '@/api';
+import env from '@/config/env';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-const MAP_STYLE = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      attribution: '© OpenStreetMap contributors',
+// ═══════════════════════════════════════════════════════
+//    ✅ FIX فاز ۳: ساختار آماده برای مهاجرت نقشه
+// ═══════════════════════════════════════════════════════
+// فعلاً از OSM رایگان استفاده می‌شود. در صورت مهاجرت به
+// سرویس‌های پولی (مثل MapTiler یا Neshan)، کلید از `env`
+// خوانده می‌شود. هرگز کلید را در کد هاردکد نکنید.
+//
+// نمونه مهاجرت آینده:
+//   1. کلید را در .env قرار دهید:
+//      NEXT_PUBLIC_MAPTILER_KEY=xxx
+//   2. در اینجا از آن بخوانید:
+//      const MAP_STYLE = `https://api.maptiler.com/maps/streets/style.json?key=${env.MAPTILER_KEY}`
+//   3. دیگر هیچ تغییری در بقیه کامپوننت لازم نیست
+//
+// ⚠️ Rate Limiting: OSM رایگان محدودیت درخواست دارد.
+//    در ترافیک بالا، استفاده از سرویس پولی توصیه می‌شود.
+
+const getMapStyle = () => {
+  // آینده:
+  // if (env.MAPTILER_KEY) {
+  //   return `https://api.maptiler.com/maps/streets/style.json?key=${env.MAPTILER_KEY}`;
+  // }
+  return {
+    version: 8,
+    sources: {
+      osm: {
+        type: 'raster',
+        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        attribution: '© OpenStreetMap contributors',
+      },
     },
-  },
-  layers: [
-    {
-      id: 'osm',
-      type: 'raster',
-      source: 'osm',
-    },
-  ],
+    layers: [
+      {
+        id: 'osm',
+        type: 'raster',
+        source: 'osm',
+      },
+    ],
+  };
 };
+
+const MAP_STYLE = getMapStyle();
 
 const NAVIGATION_DEEP_LINKS = {
   balad: (lat, lng) => `balad://route?destination=${lat},${lng}`,
@@ -55,7 +80,6 @@ export default function BusinessMapPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { showToast } = useToast();
-
   const [MapLib, setMapLib] = useState(null);
   const [mapLoading, setMapLoading] = useState(true);
   const [mapError, setMapError] = useState(false);
@@ -91,7 +115,6 @@ export default function BusinessMapPage() {
         setIsLoading(false);
       }
     };
-
     fetchBusiness();
   }, [params.id, showToast]);
 
@@ -122,17 +145,13 @@ export default function BusinessMapPage() {
   const openNavigationApp = (app) => {
     const { latitude, longitude } = business.location;
     setNavLoading(app.id);
-
     const deepLink = NAVIGATION_DEEP_LINKS[app.id](latitude, longitude);
     const webUrl = NAVIGATION_WEB_URLS[app.id](latitude, longitude);
-
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.src = deepLink;
     document.body.appendChild(iframe);
-
     let isHandled = false;
-
     const cleanup = () => {
       if (isHandled) return;
       isHandled = true;
@@ -142,13 +161,11 @@ export default function BusinessMapPage() {
       setNavLoading(null);
       setNavModalVisible(false);
     };
-
     const handleVisibility = () => {
       if (document.hidden && !isHandled) {
         cleanup();
       }
     };
-
     navTimerRef.current = setTimeout(() => {
       if (!isHandled) {
         cleanup();
@@ -156,7 +173,6 @@ export default function BusinessMapPage() {
         showToast(`اپلیکیشن ${app.name} یافت نشد، نسخه وب باز شد`, 'info');
       }
     }, 2500);
-
     document.addEventListener('visibilitychange', handleVisibility);
   };
 
@@ -166,8 +182,9 @@ export default function BusinessMapPage() {
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/business/${business.id}`;
-    const shareMessage = `📍 موقعیت ${business.name}\n🏠 ${business.address}\n🔗 ${shareUrl}`;
-
+    const shareMessage = `📍 موقعیت ${business.name}
+🏠 ${business.address}
+🔗 ${shareUrl}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -226,7 +243,6 @@ export default function BusinessMapPage() {
     <ScreenWrapper padding={0}>
       <div className="flex flex-col h-screen" style={{ backgroundColor: colors.background }}>
         <BusinessMapHeader businessName={business.name} onBack={handleBack} />
-
         <div className="flex-1 relative">
           {MapLib && !mapError ? (
             <MapLib.Map
@@ -264,7 +280,6 @@ export default function BusinessMapPage() {
             <MapErrorState isLoading={mapLoading} />
           )}
         </div>
-
         <BusinessMapPanel
           business={business}
           copied={copied}
@@ -274,7 +289,6 @@ export default function BusinessMapPage() {
           onShare={handleShare}
         />
       </div>
-
       <NavigationModal
         visible={navModalVisible}
         onClose={() => setNavModalVisible(false)}

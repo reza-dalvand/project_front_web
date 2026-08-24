@@ -168,7 +168,12 @@ export default function LineRentalPage() {
 
             {ads.length > 0 ? (
               ads.map((ad) => (
-                <LineRentalAdCard key={ad.id} ad={ad} onPress={handleAdPress} onDelete={handleDelete} />
+                <LineRentalAdCard
+                  key={ad.id}
+                  ad={ad}
+                  onPress={handleAdPress}
+                  onDelete={handleDelete}
+                />
               ))
             ) : (
               <EmptyState

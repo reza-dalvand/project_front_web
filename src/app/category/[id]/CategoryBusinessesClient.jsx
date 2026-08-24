@@ -68,13 +68,14 @@ export default function CategoryBusinessesPage() {
           data.map((b) => ({
             id: b.id,
             name: b.name,
-            category: b.category?.name || b.category_name || '',
-            city: b.city?.name || b.city_name || '',
+            // ✅ فاز ۳: فقط خوانش camelCase
+            category: b.categoryName || '',
+            city: b.cityName || '',
             address: b.address,
             rating: b.rating || 0,
-            reviewsCount: b.reviews_count || b.reviewsCount || 0,
+            reviewsCount: b.reviewsCount || 0,
             logo: b.logo,
-            VIP: b.is_vip || b.isVip,
+            VIP: b.isVip,
             discount: b.discount || 0,
             distanceText: b.distance ? `${b.distance.toFixed(1)} km` : null,
           }))
@@ -154,7 +155,9 @@ export default function CategoryBusinessesPage() {
           <EmptyState
             icon="🔍"
             title="کسب‌وکاری یافت نشد"
-            description={search ? 'با این عبارت جستجو نتیجه‌ای پیدا نشد' : 'فیلترهای خود را تغییر دهید'}
+            description={
+              search ? 'با این عبارت جستجو نتیجه‌ای پیدا نشد' : 'فیلترهای خود را تغییر دهید'
+            }
             actionLabel={search ? 'پاک کردن جستجو' : 'حذف فیلترها'}
             onAction={() => {
               if (search) setSearch('');

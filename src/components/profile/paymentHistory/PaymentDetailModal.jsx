@@ -72,7 +72,7 @@ export default function PaymentDetailModal({ visible, payment, onClose }) {
       '🧾 فاکتور بیو کلاب',
       `📋 ${payment.businessName || 'پرداخت'}`,
       `💰 مبلغ: ${formatPrice(payment.paidAmount || payment.amount || 0)}`,
-      `🔖 کد پیگیری: ${payment.trackingCode || payment.tracking_code || '—'}`,
+      `🔖 کد پیگیری: ${payment.trackingCode || '—'}`,
       '✅ بیو کلاب - رزرو آنلاین خدمات زیبایی',
     ].join('');
 

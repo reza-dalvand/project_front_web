@@ -238,12 +238,12 @@ export default function SearchPage() {
                         className="text-xs font-[Vazir-Medium] line-clamp-1"
                         style={{ color: colors.primary }}
                       >
-                        {business.category_name || business.category || ''}
+                        {business.categoryName || ''}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         {business.city_name && (
                           <span className="text-[10px]" style={{ color: colors.textSecondary }}>
-                            📍 {business.city_name}
+                            📍 {business.cityName}
                           </span>
                         )}
                         {business.rating > 0 && (
@@ -279,13 +279,13 @@ export default function SearchPage() {
                       className="text-xs font-[Vazir-Medium] mt-1"
                       style={{ color: colors.primary }}
                     >
-                      {service.business_name}
+                      {service.businessName}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                        {toPersianDigit((service.final_price || 0).toLocaleString('en-US'))} تومان
+                        {toPersianDigit((service.finalPrice || 0).toLocaleString('en-US'))} تومان
                       </span>
-                      {service.has_deposit && (
+                      {service.hasDeposit && (
                         <span
                           className="text-[10px] px-2 py-0.5 rounded-lg"
                           style={{ backgroundColor: '#FF980018', color: '#FF9800' }}

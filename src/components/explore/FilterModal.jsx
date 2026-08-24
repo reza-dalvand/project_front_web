@@ -156,9 +156,7 @@ export default function FilterModal({ visible, onClose, onApply, currentFilters 
           />
           <Dropdown
             label="نوع خدمت"
-            placeholder={
-              mainCategory === 'all' ? 'ابتدا دسته‌بندی کلی را انتخاب کنید' : 'همه'
-            }
+            placeholder={mainCategory === 'all' ? 'ابتدا دسته‌بندی کلی را انتخاب کنید' : 'همه'}
             value={subCategory}
             options={availableSubCategories.map((c) => ({ id: c.id, label: c.label }))}
             onSelect={setSubCategory}

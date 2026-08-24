@@ -1,12 +1,12 @@
 // src/components/profile/support/constants.js
 /**
-* ✅ فاز ۴: FAQ_ITEMS و FAQ_CATEGORIES حذف شدند
-*
-* به جای این ثابت‌ها، از بک‌اند استفاده کنید:
-* - supportService.getFAQ() برای لیست سوالات
-*
-* فیلتر دسته‌بندی FAQ هم از بک‌اند می‌آید.
-*/
+ * ✅ فاز ۴: FAQ_ITEMS و FAQ_CATEGORIES حذف شدند
+ *
+ * به جای این ثابت‌ها، از بک‌اند استفاده کنید:
+ * - supportService.getFAQ() برای لیست سوالات
+ *
+ * فیلتر دسته‌بندی FAQ هم از بک‌اند می‌آید.
+ */
 export const SUPPORT_PHONE = '09121234567';
 export const SUPPORT_PHONE_DISPLAY = '۰۲۱-۹۱۰۰۱۲۳۴';
 export const SUPPORT_EMAIL = 'support@beauclub.ir';

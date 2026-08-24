@@ -250,7 +250,10 @@ export default function HomePage() {
   );
 
   // ─── Handlers ───
-  const handleThemeToggle = useCallback(() => setTheme(isDark ? 'light' : 'dark'), [isDark, setTheme]);
+  const handleThemeToggle = useCallback(
+    () => setTheme(isDark ? 'light' : 'dark'),
+    [isDark, setTheme]
+  );
 
   const handleAdPress = useCallback(
     (ad) => {
@@ -288,7 +291,10 @@ export default function HomePage() {
   // ═══════ Loading State ═══════
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: colors.background }}
+      >
         <LoadingSpinner label="در حال بارگذاری..." />
       </div>
     );
@@ -323,7 +329,11 @@ export default function HomePage() {
       />
 
       {/* ═══════════ نوار فیلترهای فعال ═══════════ */}
-      <ActiveFiltersBar filters={filters} onChange={handleFilterChange} onClearAll={handleClearAllFilters} />
+      <ActiveFiltersBar
+        filters={filters}
+        onChange={handleFilterChange}
+        onClearAll={handleClearAllFilters}
+      />
 
       {/* ═══════════ بنر دعوت به ثبت‌نام ═══════════ */}
       {!isAuthenticated && <RegisterBanner onLogin={() => requireAuth()} />}
@@ -356,8 +366,16 @@ export default function HomePage() {
         {/* ─── ۲. دسته‌بندی خدمات ─── */}
         {categories.length > 0 && (
           <section>
-            <SectionHeader icon={<FiGrid size={18} />} iconColor="#FF9800" title="دسته‌بندی خدمات" />
-            <CategoryGrid categories={categories} selectedId={selectedCategory} onSelect={handleCategorySelect} />
+            <SectionHeader
+              icon={<FiGrid size={18} />}
+              iconColor="#FF9800"
+              title="دسته‌بندی خدمات"
+            />
+            <CategoryGrid
+              categories={categories}
+              selectedId={selectedCategory}
+              onSelect={handleCategorySelect}
+            />
           </section>
         )}
 
@@ -369,13 +387,20 @@ export default function HomePage() {
             title="فرصت‌های مدلینگ"
             subtitle="با تخفیف ویژه مدل شوید و نمونه‌کار بسازید"
             rightElement={
-              <SeeAllButton onPress={() => router.push('/model-requests')} count={filteredModelRequests.length} />
+              <SeeAllButton
+                onPress={() => router.push('/model-requests')}
+                count={filteredModelRequests.length}
+              />
             }
           />
           {filteredModelRequests.length > 0 ? (
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
               {filteredModelRequests.map((request) => (
-                <ModelRequestCard key={request.id} request={request} onPress={handleModelRequestPress} />
+                <ModelRequestCard
+                  key={request.id}
+                  request={request}
+                  onPress={handleModelRequestPress}
+                />
               ))}
             </div>
           ) : (
@@ -403,7 +428,10 @@ export default function HomePage() {
             title="فرصت‌های همکاری"
             subtitle="با اجاره لاین، کسب‌وکار خود را گسترش دهید"
             rightElement={
-              <SeeAllButton onPress={() => router.push('/line-rentals')} count={filteredLineRentals.length} />
+              <SeeAllButton
+                onPress={() => router.push('/line-rentals')}
+                count={filteredLineRentals.length}
+              />
             }
           />
           {filteredLineRentals.length > 0 ? (
@@ -434,14 +462,21 @@ export default function HomePage() {
       <BottomTabBar />
 
       {/* ═══════════ مدال‌ها ═══════════ */}
-      <NotificationModal visible={notificationVisible} onClose={() => setNotificationVisible(false)} />
+      <NotificationModal
+        visible={notificationVisible}
+        onClose={() => setNotificationVisible(false)}
+      />
       <HomeFilterModal
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onApply={setFilters}
         currentFilters={filters}
       />
-      <ReviewModal visible={reviewVisible} appointment={currentReviewAppointment} onClose={handleReviewClose} />
+      <ReviewModal
+        visible={reviewVisible}
+        appointment={currentReviewAppointment}
+        onClose={handleReviewClose}
+      />
     </div>
   );
 }

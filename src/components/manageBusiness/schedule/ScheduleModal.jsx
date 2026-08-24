@@ -14,6 +14,10 @@ import { toPersianDigit } from '@/utils/numberUtils';
 import { timeToMinutes } from '@/utils/dateUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
+// ✅ FIX فاز ۲: مقدار پیش‌فرض ایمن برای مدت نوبت
+const DEFAULT_SLOT_DURATION = 60;
+const MIN_SLOT_DURATION = 5;
+
 export default function ScheduleModal({
   visible,
   onClose,
@@ -30,18 +34,30 @@ export default function ScheduleModal({
   const [selectedDates, setSelectedDates] = useState([]);
   const [workStart, setWorkStart] = useState('09:00');
   const [workEnd, setWorkEnd] = useState('21:00');
-  // ✅ حذف شد: state slotDuration — از service خوانده می‌شود
   const [breaks, setBreaks] = useState([]);
   const [mounted, setMounted] = useState(false);
   const [saving, setSaving] = useState(false);
   const instanceId = useRef('schedule-modal');
 
-  // ✅ مدت هر نوبت از خدمت انتخاب‌شده خوانده می‌شود
+  // ✅ FIX فاز ۲: محاسبه ایمن مدت نوبت
+  // قبلاً: selectedService?.duration || 60
+  //   اگر duration === 0 بود → 60 می‌شد ✓
+  //   اما اگر duration === -5 یا NaN بود → مقدار نامعتبر
+  // حالا: صریحاً بررسی می‌کنیم
   const selectedService = useMemo(
     () => services.find((s) => s.id === selectedServiceId),
     [services, selectedServiceId]
   );
-  const slotDuration = selectedService?.duration || 60;
+
+  const slotDuration = useMemo(() => {
+    if (!selectedService) return DEFAULT_SLOT_DURATION;
+    const d = selectedService.duration;
+    // ✅ اگر صفر، منفی، یا عدد نامعتبر باشد → پیش‌فرض
+    if (!d || typeof d !== 'number' || isNaN(d) || d < MIN_SLOT_DURATION) {
+      return DEFAULT_SLOT_DURATION;
+    }
+    return Math.floor(d);
+  }, [selectedService]);
 
   useEffect(() => {
     setMounted(true);
@@ -62,7 +78,6 @@ export default function ScheduleModal({
       }
       setWorkStart('09:00');
       setWorkEnd('21:00');
-      // ✅ حذف شد: setSlotDuration(0)
       setBreaks([]);
       setSaving(false);
       acquireScrollLock(instanceId.current);
@@ -81,16 +96,21 @@ export default function ScheduleModal({
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
 
-  // ═══ محاسبه تعداد اسلات‌ها — slotDuration از service ═══
+  // ═══ محاسبه تعداد اسلات‌ها — ✅ با محافظت در برابر تقسیم بر صفر ═══
   const computedSlotCount = useMemo(() => {
     const startMin = timeToMinutes(workStart);
     const endMin = timeToMinutes(workEnd);
-    if (!startMin || !endMin || endMin <= startMin || slotDuration <= 0) return 0;
+    // ✅ FIX: اگر هر یک نامعتبر بود → صفر
+    if (!startMin || !endMin || endMin <= startMin) return 0;
+    // ✅ FIX: اگر slotDuration نامعتبر بود → صفر (قبلاً تقسیم بر صفر می‌شد)
+    if (!slotDuration || slotDuration <= 0) return 0;
+
     const occupiedRanges = breaks.map((b) => {
       const bStart = Math.max(timeToMinutes(b.start), startMin);
       const bEnd = Math.min(timeToMinutes(b.end), endMin);
       return { start: bStart, end: Math.max(bStart, bEnd) };
     });
+
     let count = 0;
     let currentMin = startMin;
     while (currentMin + slotDuration <= endMin) {
@@ -104,14 +124,17 @@ export default function ScheduleModal({
     return count;
   }, [workStart, workEnd, slotDuration, breaks]);
 
-  // ═══ اعتبارسنجی — بدون بررسی slotDuration ═══
+  // ═══ اعتبارسنجی — ✅ با بررسی‌های ایمنی ═══
   const canGoNext = useMemo(() => {
     if (currentStep === 1) return !!selectedServiceId;
     if (currentStep === 2) {
       const startMin = timeToMinutes(workStart);
       const endMin = timeToMinutes(workEnd);
       if (!startMin || !endMin || endMin <= startMin) return false;
-      // ✅ حذف شد: if (!slotDuration || slotDuration <= 0) return false;
+      // ✅ FIX: بررسی ایمنی — اگر سرویس انتخاب نشده، ادامه نده
+      if (!selectedService) return false;
+      // ✅ FIX: بررسی ایمنی — اگر مدت نوبت نامعتبر است
+      if (slotDuration <= 0) return false;
       const allBreaksValid = breaks.every((b) => {
         const bStart = timeToMinutes(b.start);
         const bEnd = timeToMinutes(b.end);
@@ -129,6 +152,8 @@ export default function ScheduleModal({
     breaks,
     selectedDates,
     computedSlotCount,
+    selectedService,
+    slotDuration,
   ]);
 
   const handleNext = () => {
@@ -139,9 +164,14 @@ export default function ScheduleModal({
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  // ═══ ذخیره — slotDuration از service ═══
+  // ═══ ذخیره ═══
   const handleSave = async () => {
     if (!selectedServiceId || selectedDates.length === 0) return;
+    // ✅ FIX: بررسی نهایی قبل از ذخیره
+    if (slotDuration <= 0) {
+      showToast('مدت هر نوبت نامعتبر است. لطفاً خدمت را بررسی کنید.', 'error');
+      return;
+    }
     setSaving(true);
     try {
       for (const date of selectedDates) {
@@ -152,7 +182,7 @@ export default function ScheduleModal({
           jd: date.jd,
           workStart,
           workEnd,
-          slotDuration, // ✅ از service خوانده شده
+          slotDuration, // ✅ مقدار ایمن
           breaks: breaks.map(({ id, ...rest }) => rest),
           slotCount: computedSlotCount,
         };
@@ -270,7 +300,7 @@ export default function ScheduleModal({
             <WorkingHoursStep
               workStart={workStart}
               workEnd={workEnd}
-              slotDuration={slotDuration} // ✅ فقط خواندنی — بدون onSlotDurationChange
+              slotDuration={slotDuration}
               breaks={breaks}
               onWorkStartChange={setWorkStart}
               onWorkEndChange={setWorkEnd}

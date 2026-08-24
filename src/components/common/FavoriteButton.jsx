@@ -32,7 +32,7 @@ export default function FavoriteButton({
 
     try {
       // ✅ فراخوانی API (در حالت mock فقط state آپدیت می‌شود)
-      if (!USE_MOCK && objectId) {
+      if (objectId) {
         await favoritesService.toggleFavorite(favoriteType, objectId);
       }
 

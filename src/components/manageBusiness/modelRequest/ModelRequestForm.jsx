@@ -79,7 +79,11 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
     <div className="p-5 space-y-6 pb-32">
       {/* بخش ۱: اطلاعات درخواست */}
       <div className="space-y-3">
-        <SectionHeader icon={<FiFileText size={18} />} iconColor={colors.primary} title="اطلاعات درخواست" />
+        <SectionHeader
+          icon={<FiFileText size={18} />}
+          iconColor={colors.primary}
+          title="اطلاعات درخواست"
+        />
         <Card variant="elevated" padding={16} radius={18}>
           <Input
             label="عنوان درخواست *"
@@ -106,7 +110,9 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
           )}
           <Dropdown
             label="نوع خدمت *"
-            placeholder={formData.categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
+            placeholder={
+              formData.categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'
+            }
             value={formData.subServiceId}
             options={availableSubServices}
             onSelect={(val) => updateField('subServiceId', val)}
@@ -159,13 +165,21 @@ export default function ModelRequestForm({ services, initialData, defaultPhone, 
               >
                 <CostTypeBadge type={option.id} variant="default" />
                 <div className="flex-1">
-                  <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>{option.label}</p>
-                  <p className="text-xs font-[Vazir] mt-0.5" style={{ color: colors.textSecondary }}>
+                  <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                    {option.label}
+                  </p>
+                  <p
+                    className="text-xs font-[Vazir] mt-0.5"
+                    style={{ color: colors.textSecondary }}
+                  >
                     {option.subtitle}
                   </p>
                 </div>
                 {isSelected && (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.primary }}>
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: colors.primary }}
+                  >
                     <FiCheck size={14} color="#fff" />
                   </div>
                 )}

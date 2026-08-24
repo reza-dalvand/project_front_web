@@ -49,8 +49,12 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
         setContactPhone(editingAd.contactPhone || '');
         setPercentSalon(editingAd.percentSalon ? String(editingAd.percentSalon) : '');
         setPercentPartner(editingAd.percentPartner ? String(editingAd.percentPartner) : '');
-        setFixedAmount(editingAd.fixedAmount ? formatPriceInput(String(editingAd.fixedAmount)) : '');
-        setFixedDeposit(editingAd.fixedDeposit ? formatPriceInput(String(editingAd.fixedDeposit)) : '');
+        setFixedAmount(
+          editingAd.fixedAmount ? formatPriceInput(String(editingAd.fixedAmount)) : ''
+        );
+        setFixedDeposit(
+          editingAd.fixedDeposit ? formatPriceInput(String(editingAd.fixedDeposit)) : ''
+        );
         setHourlyRate(editingAd.hourlyRate ? formatPriceInput(String(editingAd.hourlyRate)) : '');
       } else {
         setTitle('');
@@ -110,7 +114,8 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     else if (contactPhone.trim().length !== MAX_PHONE)
       newErrors.contactPhone = `شماره تماس باید دقیقاً ${toPersianDigit(MAX_PHONE)} رقم باشد`;
     if (collabType === 'percent') {
-      const s = parseNumber(percentSalon), p = parseNumber(percentPartner);
+      const s = parseNumber(percentSalon),
+        p = parseNumber(percentPartner);
       if (!s || !p) newErrors.price = 'درصد سالن و همکار را وارد کنید';
       else if (s + p !== 100) newErrors.price = 'مجموع درصدها باید ۱۰۰٪ باشد';
     } else if (collabType === 'fixed') {
@@ -129,10 +134,16 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     let priceData = {};
     let priceDisplay = '';
     if (collabType === 'percent') {
-      priceData = { percentSalon: parseNumber(percentSalon), percentPartner: parseNumber(percentPartner) };
+      priceData = {
+        percentSalon: parseNumber(percentSalon),
+        percentPartner: parseNumber(percentPartner),
+      };
       priceDisplay = `${toPersianDigit(priceData.percentSalon)}-${toPersianDigit(priceData.percentPartner)}`;
     } else if (collabType === 'fixed') {
-      priceData = { fixedAmount: parseNumber(fixedAmount), fixedDeposit: parseNumber(fixedDeposit) };
+      priceData = {
+        fixedAmount: parseNumber(fixedAmount),
+        fixedDeposit: parseNumber(fixedDeposit),
+      };
       priceDisplay =
         priceData.fixedDeposit > 0
           ? `${toPersianDigit(priceData.fixedAmount.toLocaleString('en-US'))} + ${toPersianDigit(priceData.fixedDeposit.toLocaleString('en-US'))} رهن`
@@ -202,7 +213,11 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
             }
           }}
         />
-        <CollabTypeSelector collabType={collabType} onSelect={handleCollabChange} error={errors.collabType} />
+        <CollabTypeSelector
+          collabType={collabType}
+          onSelect={handleCollabChange}
+          error={errors.collabType}
+        />
         {collabType === 'percent' && (
           <PercentPriceFields
             percentSalon={percentSalon}

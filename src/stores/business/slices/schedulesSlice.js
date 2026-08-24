@@ -13,19 +13,23 @@ import { schedulesService } from '@/api';
 /**
  * تبدیل فرمت بک‌اند به فرمت فرانت
  */
+/**
+ * تبدیل فرمت بک‌اند به فرمت فرانت
+ * ✅ فاز ۳: خوانش camelCase
+ */
 const mapScheduleFromApi = (s) => ({
   id: s.id,
-  serviceId: s.service_id || s.service,
+  serviceId: s.serviceId || s.service,
   jy: s.jy,
   jm: s.jm,
   jd: s.jd,
-  dateKey: s.date_key,
-  workStart: s.work_start,
-  workEnd: s.work_end,
-  slotDuration: s.slot_duration,
+  dateKey: s.dateKey,
+  workStart: s.workStart,
+  workEnd: s.workEnd,
+  slotDuration: s.slotDuration,
   breaks: s.breaks || [],
-  slotCount: s.slot_count || 0,
-  serviceName: s.service_name || '',
+  slotCount: s.slotCount || 0,
+  serviceName: s.serviceName || '',
 });
 
 /**

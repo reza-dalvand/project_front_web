@@ -43,8 +43,8 @@ export default function LineRentalDetailPage() {
   }, [params.id, showToast]);
 
   const handleCall = () => {
-    if (rental?.contact_phone || rental?.contactPhone) {
-      const phone = cleanPhone(rental.contact_phone || rental.contactPhone);
+    if (rental?.contactPhone) {
+      const phone = cleanPhone(rental.contactPhone);
       window.location.href = `tel:${phone}`;
     } else {
       showToast('شماره تماسی ثبت نشده است', 'error');
@@ -53,8 +53,9 @@ export default function LineRentalDetailPage() {
 
   const handleShare = async () => {
     const shareMessage = `🏢 ${rental?.title || ''}
-🏪 ${rental?.business_name || rental?.businessName || ''}
+🏪 ${rental?.businessName || ''}
 🔗 ${typeof window !== 'undefined' ? window.location.href : ''}`;
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -69,9 +70,9 @@ export default function LineRentalDetailPage() {
     }
     try {
       await navigator.clipboard.writeText(shareMessage);
-      showToast('لینک کپی شد', 'success');
+      showToast('✓ لینک کپی شد', 'success');
     } catch {
-      showToast('امکان کپی وجود ندارد', 'error');
+      showToast('امکان کپی کردن لینک وجود ندارد', 'error');
     }
   };
 
@@ -98,24 +99,24 @@ export default function LineRentalDetailPage() {
     );
   }
 
-  const collabType = rental.collab_type || rental.collabType;
-  const businessName = rental.business_name || rental.businessName;
-  const city = rental.city || '';
+  // ✅ فاز ۳: فقط خوانش camelCase
+  const collabType = rental.collabType;
+  const businessName = rental.businessName;
   const description = rental.description || '';
-  const contactPhone = rental.contact_phone || rental.contactPhone;
-  const createdAt = rental.created_jalali || rental.createdAt || '';
-  const expiresAt = rental.expires_jalali || rental.expiresAt || '';
-  const serviceTypeName = rental.service_category_name || rental.serviceTypeName || '';
-  const subServiceName = rental.sub_service_name || '';
-  const percentSalon = rental.percent_salon || rental.percentSalon;
-  const percentPartner = rental.percent_partner || rental.percentPartner;
-  const fixedAmount = rental.fixed_amount || rental.fixedAmount;
-  const fixedDeposit = rental.fixed_deposit || rental.fixedDeposit;
-  const hourlyRate = rental.hourly_rate || rental.hourlyRate;
+  const contactPhone = rental.contactPhone;
+  const createdAt = rental.createdJalali || '';
+  const expiresAt = rental.expiresJalali || '';
+  const serviceTypeName = rental.serviceCategoryName || '';
+  const subServiceName = rental.subServiceName || '';
+  const percentSalon = rental.percentSalon;
+  const percentPartner = rental.percentPartner;
+  const fixedAmount = rental.fixedAmount;
+  const fixedDeposit = rental.fixedDeposit;
+  const hourlyRate = rental.hourlyRate;
 
   const getPriceDisplay = () => {
     if (collabType === 'percent') {
-      return `${toPersianDigit(percentSalon)}-${toPersianDigit(percentPartner)}٪`;
+      return `${toPersianDigit(percentSalon || 0)}-${toPersianDigit(percentPartner || 0)}٪`;
     }
     if (collabType === 'fixed') {
       let text = `${toPersianDigit((fixedAmount || 0).toLocaleString('en-US'))} تومان`;
@@ -157,9 +158,11 @@ export default function LineRentalDetailPage() {
           <h1 className="text-lg font-[Vazir-Bold] leading-7" style={{ color: colors.textMain }}>
             {rental.title}
           </h1>
+
           <div className="flex items-center gap-2 flex-wrap">
             <CollabBadge type={collabType} priceDisplay={getPriceDisplay()} variant="default" />
           </div>
+
           {businessName && (
             <div className="flex items-center gap-2">
               <span className="text-xs">🏪</span>
@@ -168,14 +171,7 @@ export default function LineRentalDetailPage() {
               </span>
             </div>
           )}
-          {city && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs">📍</span>
-              <span className="text-xs" style={{ color: colors.textSecondary }}>
-                {city}
-              </span>
-            </div>
-          )}
+
           {subServiceName && (
             <div className="flex items-center gap-2">
               <span className="text-xs">💆‍♀️</span>
@@ -196,9 +192,6 @@ export default function LineRentalDetailPage() {
           </p>
         </Card>
 
-        {/* تاریخ‌ها */}
-        <LineRentalDatesCard createdAt={createdAt} expiresAt={expiresAt} />
-
         {/* دکمه تماس */}
         {contactPhone && (
           <Button
@@ -212,6 +205,9 @@ export default function LineRentalDetailPage() {
             style={{ backgroundColor: '#4CAF50' }}
           />
         )}
+
+        {/* تاریخ‌ها */}
+        <LineRentalDatesCard createdAt={createdAt} expiresAt={expiresAt} />
       </div>
     </ScreenWrapper>
   );

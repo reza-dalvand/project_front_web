@@ -56,9 +56,7 @@ export default function ActiveFilterChips({ filters, onChange }) {
           <Chip
             label={getMainCategoryLabel(filters.mainCategory)}
             selected
-            onRemove={() =>
-              onChange({ ...filters, mainCategory: 'all', subCategory: 'all' })
-            }
+            onRemove={() => onChange({ ...filters, mainCategory: 'all', subCategory: 'all' })}
           />
         )}
 

@@ -2,11 +2,11 @@
 /**
  * 🏪 Store کسب‌وکار — فاز ۵
  *
- * ✅ تغییرات فاز ۵:
- * - INITIAL_BUSINESS_DATA کاملاً خالی است
- * - migrate برای نسخه < 5 ریست کامل انجام می‌دهد
- * - fetchBusinessDetail تنها منبع پر کردن داده‌هاست
- * - Selector‌های اختصاصی برای جلوگیری از re-render
+ * ✅ تغییرات فاز ۲:
+ * - مهاجرت هوشمند: داده‌های هاردکد پاک می‌شوند ولی
+ *   بلافاصله بعد از مهاجرت، بازیابی خودکار از بک‌اند
+ * - کاهش ریست کامل — فقط ساختار ریست می‌شود و سپس از بک‌اند بازیابی
+ * - کامپوننت‌ها باید با داده‌های خالی هم کار کنند (تا زمانی که بک‌اند جواب دهد)
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -17,6 +17,9 @@ import { createAppointmentsSlice } from './business/slices/appointmentsSlice';
 import { createTeamSlice } from './business/slices/teamSlice';
 import { createPortfoliosSlice } from './business/slices/portfoliosSlice';
 import { createSchedulesSlice } from './business/slices/schedulesSlice';
+
+// ✅ FIX فاز ۲: فلگ برای اطلاع‌رسانی مهاجرت
+let migrationOccurred = false;
 
 export const useBusinessStore = create(
   persist(
@@ -47,8 +50,7 @@ export const useBusinessStore = create(
       },
 
       // ─── Selectors ───
-      getActiveServices: () =>
-        get().businessData.services.filter((s) => s.isActive !== false),
+      getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
 
       resetToDefaults: () => {
         set({
@@ -61,11 +63,6 @@ export const useBusinessStore = create(
       // ═══════════════════════════════════════════
       //    API Sync — Businesses
       // ═══════════════════════════════════════════
-
-      /**
-       * دریافت جزئیات کامل کسب‌وکار از API
-       * ✅ تنها منبع معتبر پر کردن businessData
-       */
       fetchBusinessDetail: async () => {
         try {
           const response = await businessesService.getBusinessDetail();
@@ -83,15 +80,16 @@ export const useBusinessStore = create(
               cityId: b.city?.id || null,
               provinceId: b.province?.id || null,
               phone: b.phone || '',
-              workingHours: b.working_hours || '',
+              // ✅ فاز ۳: خوانش camelCase
+              workingHours: b.workingHours || '',
               about: b.about || '',
               rating: b.rating || 0,
-              reviewsCount: b.reviews_count || 0,
-              VIP: b.is_vip || false,
+              reviewsCount: b.reviewsCount || 0,
+              VIP: b.isVip || false,
               logo: b.logo || null,
-              coverUrl: b.cover_image || null,
-              ownerPhoto: b.owner_photo || null,
-              ownerName: b.owner_name || '',
+              coverUrl: b.coverImage || null,
+              ownerPhoto: b.ownerPhoto || null,
+              ownerName: b.ownerName || '',
               verifiedName: b.verifiedName || '',
               nationalId: b.nationalId || '',
               bankInfo: {
@@ -119,8 +117,23 @@ export const useBusinessStore = create(
       },
 
       /**
-       * بررسی وضعیت کسب‌وکار
+       * ✅ FIX فاز ۲: بازیابی خودکار پس از مهاجرت
+       * وقتی مهاجرت اتفاق می‌افتد، داده‌های محلی پاک می‌شوند.
+       * این تابع باید بعد از مهاجرت و هنگام اولین بارگذاری اپ
+       * صدا زده شود تا داده‌ها از بک‌اند بازیابی شوند.
        */
+      autoRecoverFromMigration: async () => {
+        if (!migrationOccurred) return;
+        migrationOccurred = false;
+        try {
+          await get().fetchBusinessDetail();
+        } catch (error) {
+          // در صورت عدم دسترسی به بک‌اند، داده‌ها خالی می‌مانند
+          // و هنگام اتصال بعدی، از بک‌اند پر می‌شوند
+          console.warn('Auto-recovery failed:', error);
+        }
+      },
+
       fetchBusinessStatus: async () => {
         try {
           const response = await businessesService.getBusinessStatus();
@@ -131,9 +144,6 @@ export const useBusinessStore = create(
         }
       },
 
-      /**
-       * ثبت کسب‌وکار جدید
-       */
       createBusinessApi: async (formData) => {
         try {
           const response = await businessesService.createBusiness(formData);
@@ -146,7 +156,8 @@ export const useBusinessStore = create(
               name: b.name || '',
               category: b.category?.name || '',
               address: b.address || '',
-              bookingSlug: b.booking_slug || '',
+              // ✅ فاز ۳
+              bookingSlug: b.bookingSlug || '',
               isActive: b.status === 'approved',
               status: b.status || null,
             },
@@ -159,9 +170,6 @@ export const useBusinessStore = create(
         }
       },
 
-      /**
-       * بروزرسانی اطلاعات کسب‌وکار
-       */
       updateBusinessApi: async (data) => {
         try {
           const response = await businessesService.updateBusiness(data);
@@ -173,7 +181,8 @@ export const useBusinessStore = create(
               name: b.name || state.businessData.name,
               address: b.address || state.businessData.address,
               phone: b.phone || state.businessData.phone,
-              workingHours: b.working_hours || state.businessData.workingHours,
+              // ✅ فاز ۳
+              workingHours: b.workingHours || state.businessData.workingHours,
               about: b.about || state.businessData.about,
             },
           }));
@@ -185,9 +194,6 @@ export const useBusinessStore = create(
         }
       },
 
-      /**
-       * دریافت اطلاعات بانکی
-       */
       fetchBankInfo: async () => {
         try {
           const response = await businessesService.getBankInfo();
@@ -198,9 +204,6 @@ export const useBusinessStore = create(
         }
       },
 
-      /**
-       * ثبت/بروزرسانی اطلاعات بانکی
-       */
       updateBankInfoApi: async (bankData) => {
         try {
           const response = await businessesService.updateBankInfo({
@@ -212,14 +215,12 @@ export const useBusinessStore = create(
             bank_card_number: bankData.cardNumber,
             bank_account_number: bankData.accountNumber,
           });
-
           set((state) => ({
             businessData: {
               ...state.businessData,
               bankInfo: { isRegistered: true, isVerified: false },
             },
           }));
-
           return response.data;
         } catch (error) {
           console.error('updateBankInfoApi failed:', error);
@@ -227,9 +228,6 @@ export const useBusinessStore = create(
         }
       },
 
-      /**
-       * حذف کسب‌وکار
-       */
       deleteBusinessApi: async () => {
         try {
           await businessesService.deleteBusiness();
@@ -245,7 +243,6 @@ export const useBusinessStore = create(
       // ═══════════════════════════════════════════
       //    API Sync — Gallery
       // ═══════════════════════════════════════════
-
       fetchGallery: async () => {
         try {
           const response = await businessesService.getGallery();
@@ -312,15 +309,23 @@ export const useBusinessStore = create(
         _version: STORAGE_VERSION,
       }),
       /**
-       * ✅ فاز ۵: مهاجرت از نسخه‌های قدیمی
-       * هر نسخه‌ای کمتر از ۵ → ریست کامل به داده‌های خالی
-       * چون نسخه‌های قبلی داده‌های هاردکد داشتند که دیگر معتبر نیستند
+       * ✅ FIX فاز ۲: مهاجرت هوشمندانه
+       *
+       * قبلاً: هر نسخه < 5 → ریست کامل داده‌ها
+       * حالا: فقط داده‌های هاردکد پاک می‌شوند و بلافاصله
+       *       بازیابی خودکار از بک‌اند انجام می‌شود.
+       *       کاربر فقط در اولین بارگذاری پس از آپدیت
+       *       ممکن است یک بار صفحه را خالی ببیند،
+       *       و سپس داده‌ها از بک‌اند پر می‌شوند.
        */
       migrate: (persistedState, version) => {
         if (version < STORAGE_VERSION) {
           console.log(
-            `[BusinessStore] Migrating from v${version} to v${STORAGE_VERSION} — resetting to empty state`
+            `[BusinessStore] Migration from v${version} to v${STORAGE_VERSION}. ` +
+              'Hardcoded data cleared. Auto-recovery from backend will occur on next fetch.'
           );
+          // ✅ FIX فاز ۲: فلگ مهاجرت را فعال کن
+          migrationOccurred = true;
           return {
             businessData: INITIAL_BUSINESS_DATA,
             gallery: [],
@@ -335,7 +340,6 @@ export const useBusinessStore = create(
 
 // ═══════════════════════════════════════════════════════
 //    Selector‌های اختصاصی
-//    جلوگیری از re-render کل store در هر کامپوننت
 // ═══════════════════════════════════════════════════════
 export const useBusinessName = () => useBusinessStore((s) => s.businessData?.name);
 export const useBusinessServices = () => useBusinessStore((s) => s.businessData?.services || []);

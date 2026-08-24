@@ -47,15 +47,6 @@ export const TX_TABS = [
   { id: 'settling', label: 'در حال تسویه' },
 ];
 
-// اطلاعات بانکی موقت
-export const MOCK_BANK_INFO = {
-  ownerName: 'مریم حسینی',
-  nationalId: '',
-  sheba: '',
-  cardNumber: '',
-  bankName: '',
-  bankId: null,
-  accountNumber: '',
-  isRegistered: false,
-  isVerified: false,
-};
+// ✅ حذف شد: MOCK_BANK_INFO
+// اطلاعات بانکی فقط از بک‌اند و از طریق
+// bankInfoService.getBankInfo() دریافت می‌شود.

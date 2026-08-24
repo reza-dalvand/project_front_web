@@ -102,11 +102,19 @@ export default function SupportPage() {
           className="flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
           style={{ backgroundColor: '#25D36608', borderColor: '#25D36640' }}
         >
-          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#25D36620' }}>
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: '#25D36620' }}
+          >
             <FaWhatsapp size={28} color="#25D366" />
           </div>
-          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#25D366' }}>واتساپ</span>
-          <span className="text-[10px] font-[Vazir] text-center leading-4" style={{ color: colors.textSecondary }}>
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#25D366' }}>
+            واتساپ
+          </span>
+          <span
+            className="text-[10px] font-[Vazir] text-center leading-4"
+            style={{ color: colors.textSecondary }}
+          >
             پاسخگویی سریع
           </span>
         </button>
@@ -115,11 +123,19 @@ export default function SupportPage() {
           className="flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
           style={{ backgroundColor: '#0088cc08', borderColor: '#0088cc40' }}
         >
-          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#0088cc20' }}>
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: '#0088cc20' }}
+          >
             <FaTelegramPlane size={28} color="#0088cc" />
           </div>
-          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#0088cc' }}>تلگرام</span>
-          <span className="text-[10px] font-[Vazir] text-center leading-4" style={{ color: colors.textSecondary }}>
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: '#0088cc' }}>
+            تلگرام
+          </span>
+          <span
+            className="text-[10px] font-[Vazir] text-center leading-4"
+            style={{ color: colors.textSecondary }}
+          >
             ارسال پیام و تصویر
           </span>
         </button>
@@ -131,11 +147,16 @@ export default function SupportPage() {
           className="flex items-center gap-3 p-3.5 rounded-2xl border"
           style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
         >
-          <div className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FF980020' }}>
+          <div
+            className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: '#FF980020' }}
+          >
             <span className="text-lg">🕐</span>
           </div>
           <div className="flex-1 gap-1">
-            <p className="text-xs" style={{ color: colors.textSecondary }}>ساعات پاسخگویی</p>
+            <p className="text-xs" style={{ color: colors.textSecondary }}>
+              ساعات پاسخگویی
+            </p>
             <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
               {SUPPORT_HOURS_SIMPLE}
             </p>
@@ -239,7 +260,11 @@ export default function SupportPage() {
               );
             })
           ) : (
-            <EmptyState icon="🔍" title="نتیجه‌ای یافت نشد" description="دسته‌بندی دیگری را انتخاب کنید" />
+            <EmptyState
+              icon="🔍"
+              title="نتیجه‌ای یافت نشد"
+              description="دسته‌بندی دیگری را انتخاب کنید"
+            />
           )}
         </div>
       </div>

@@ -9,7 +9,6 @@ import {
   FiArrowRight,
   FiArrowLeft,
   FiAlertTriangle,
-  FiUpload,
 } from 'react-icons/fi';
 import { UPLOAD_CONFIG } from '@/api/config';
 import { useTheme } from '@/stores/useThemeStore';
@@ -20,36 +19,31 @@ import Button from '@/components/common/Button';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
-import { compressImage } from '@/utils/image-compression'; // ✅ جدید
-const MAX_GALLERY_IMAGES = 3; // بک‌اند: حداکثر ۳ تصویر
+import { compressImage } from '@/utils/image-compression';
+
+const MAX_GALLERY_IMAGES = 3;
 
 export default function GalleryManager() {
   const { colors } = useTheme();
   const { showToast } = useToast();
-
-  // State از store
   const gallery = useBusinessStore((s) => s.gallery);
   const fetchGallery = useBusinessStore((s) => s.fetchGallery);
   const uploadGalleryImageApi = useBusinessStore((s) => s.uploadGalleryImageApi);
   const deleteGalleryImageApi = useBusinessStore((s) => s.deleteGalleryImageApi);
   const reorderGalleryApi = useBusinessStore((s) => s.reorderGalleryApi);
 
-  // State محلی
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false); // ✅ جدید
+  const [isCompressing, setIsCompressing] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const fileInputRef = useRef(null);
 
-  // ═══════ دریافت گالری از API ═══════
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
       try {
-        if (!USE_MOCK) {
-          await fetchGallery();
-        }
+        await fetchGallery();
       } catch (e) {
         console.error('Failed to load gallery:', e);
         showToast('خطا در بارگذاری گالری', 'error');
@@ -60,26 +54,19 @@ export default function GalleryManager() {
     load();
   }, [fetchGallery, showToast]);
 
-  // ═══════ آپلود تصویر (با فشرده‌سازی) ═══════
   const handleFileSelect = useCallback(
     async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-
-      // بررسی محدودیت تعداد
       if (gallery.length >= MAX_GALLERY_IMAGES) {
         showToast(`حداکثر ${toPersianDigit(MAX_GALLERY_IMAGES)} تصویر مجاز است`, 'warning');
         return;
       }
-
-      // بررسی نوع فایل
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         showToast('فرمت فایل مجاز نیست (JPEG, PNG, WebP)', 'error');
         return;
       }
-
-      // ✅ بررسی حجم ورودی (قبل از فشرده‌سازی)
       const maxInputBytes = UPLOAD_CONFIG.MAX_INPUT_SIZE_MB * 1024 * 1024;
       if (file.size > maxInputBytes) {
         showToast(
@@ -89,20 +76,13 @@ export default function GalleryManager() {
         return;
       }
 
-      // ─── فشرده‌سازی ───
       setIsCompressing(true);
       try {
         const compressed = await compressImage(file, 'gallery');
-
         setIsCompressing(false);
         setIsUploading(true);
-
-        if (!USE_MOCK) {
-          await uploadGalleryImageApi(compressed, gallery.length);
-        } else {
-          // حالت Mock — شبیه‌سازی آپلود
-          await new Promise((r) => setTimeout(r, 1200));
-        }
+        // ✅ فقط آپلود واقعی — هیچ تأخیر ماک وجود ندارد
+        await uploadGalleryImageApi(compressed, gallery.length);
         showToast('تصویر با موفقیت به گالری اضافه شد', 'success');
       } catch (error) {
         showToast(error.message || 'خطا در آپلود تصویر', 'error');
@@ -115,7 +95,6 @@ export default function GalleryManager() {
     [gallery.length, uploadGalleryImageApi, showToast]
   );
 
-  // ═══════ حذف تصویر ═══════
   const handleDeleteRequest = useCallback((img) => {
     setDeleteTarget(img);
     setDeleteDialogVisible(true);
@@ -124,11 +103,7 @@ export default function GalleryManager() {
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteTarget) return;
     try {
-      if (!USE_MOCK) {
-        await deleteGalleryImageApi(deleteTarget.id);
-      } else {
-        await new Promise((r) => setTimeout(r, 600));
-      }
+      await deleteGalleryImageApi(deleteTarget.id);
       showToast('تصویر از گالری حذف شد', 'success');
     } catch (error) {
       showToast(error.message || 'خطا در حذف تصویر', 'error');
@@ -142,20 +117,15 @@ export default function GalleryManager() {
     setDeleteTarget(null);
   }, []);
 
-  // ═══════ جابجایی ترتیب ═══════
   const moveImage = useCallback(
     async (index, direction) => {
       const newOrder = [...gallery];
       const targetIndex = index + direction;
       if (targetIndex < 0 || targetIndex >= newOrder.length) return;
-
       [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
-
       const ids = newOrder.map((img) => img.id);
       try {
-        if (!USE_MOCK) {
-          await reorderGalleryApi(ids);
-        }
+        await reorderGalleryApi(ids);
       } catch (e) {
         console.error('Failed to reorder:', e);
       }
@@ -163,7 +133,6 @@ export default function GalleryManager() {
     [gallery, reorderGalleryApi]
   );
 
-  // ═══════ رندر ═══════
   return (
     <div className="space-y-5">
       {/* هدر */}
@@ -199,7 +168,7 @@ export default function GalleryManager() {
         </div>
       )}
 
-      {/* ═══════ لیست تصاویر ═══════ */}
+      {/* لیست تصاویر */}
       {isLoading ? (
         <div className="flex justify-center py-8">
           <LoadingSpinner label="در حال بارگذاری گالری..." />
@@ -209,7 +178,6 @@ export default function GalleryManager() {
           {gallery.map((img, index) => (
             <Card key={img.id} variant="elevated" padding={12} radius={16}>
               <div className="flex items-center gap-3">
-                {/* تصویر */}
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                   <Image
                     src={img.image_url || img.image}
@@ -219,8 +187,6 @@ export default function GalleryManager() {
                     sizes="80px"
                   />
                 </div>
-
-                {/* اطلاعات */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
                     تصویر {toPersianDigit(index + 1)}
@@ -234,8 +200,6 @@ export default function GalleryManager() {
                     </span>
                   )}
                 </div>
-
-                {/* دکمه‌های ترتیب */}
                 <div className="flex flex-col gap-1">
                   <button
                     onClick={() => moveImage(index, -1)}
@@ -254,8 +218,6 @@ export default function GalleryManager() {
                     <FiArrowLeft size={14} style={{ color: colors.textMain }} />
                   </button>
                 </div>
-
-                {/* دکمه حذف */}
                 <button
                   onClick={() => handleDeleteRequest(img)}
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105 active:scale-95"
@@ -268,7 +230,6 @@ export default function GalleryManager() {
           ))}
         </div>
       ) : (
-        /* حالت خالی */
         <div className="flex flex-col items-center py-12 gap-4">
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center"
@@ -285,7 +246,7 @@ export default function GalleryManager() {
         </div>
       )}
 
-      {/* ═══════ دکمه آپلود ═══════ */}
+      {/* دکمه آپلود */}
       {gallery.length < MAX_GALLERY_IMAGES && (
         <>
           <input
@@ -315,7 +276,7 @@ export default function GalleryManager() {
         </>
       )}
 
-      {/* ═══════ ConfirmDialog حذف ═══════ */}
+      {/* ConfirmDialog حذف */}
       <ConfirmDialog
         visible={deleteDialogVisible}
         title="حذف تصویر گالری"

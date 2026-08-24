@@ -3,11 +3,14 @@
  * ابزارهای JWT
  * decode، بررسی انقضا، و مدیریت توکن‌ها
  *
- * ✅ سازگار با SSR (Next.js)
+ * ✅ سازگار با مرورگر، SSR (Next.js) و Edge Runtime
+ * ✅ FIX فاز ۱: استفاده از ترتیب بررسی بهتر و سازگاری کامل
  */
 
 /**
- * Decode Base64url بدون نیاز به atob (سازگار با SSR)
+ * ✅ FIX فاز ۱: تبدیل Base64url به Base64 و سپس به رشته
+ * سازگار با: مرورگر، محیط‌های غیر-مرورگر، و محیط‌های بدون Buffer
+ *
  * @param {string} base64url
  * @returns {string}
  */
@@ -15,17 +18,29 @@ const base64UrlDecode = (base64url) => {
   // تبدیل Base64url به Base64
   const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
 
-  // ✅ روش سازگار با SSR: استفاده از Buffer در Node.js و atob در مرورگر
-  if (typeof window !== 'undefined' && typeof atob === 'function') {
-    return atob(base64);
+  // ✅ FIX فاز ۱: ترتیب بررسی بهتر
+  // ۱. ابتدا بررسی مرورگر (سریع‌ترین روش)
+  if (typeof window !== 'undefined') {
+    if (typeof window.atob === 'function') {
+      return window.atob(base64);
+    }
+    // برخی مرورگرهای قدیمی atob ندارند
+    if (typeof atob === 'function') {
+      return atob(base64);
+    }
   }
 
-  // محیط Node.js / SSR
+  // ۲. بررسی محیط‌های غیر-مرورگر (Node, Cloudflare Workers, etc.)
   if (typeof Buffer !== 'undefined') {
     return Buffer.from(base64, 'base64').toString('binary');
   }
 
-  // Fallback: decode دستی Base64
+  // ۳. بررسی محیط‌های جدید با globalThis
+  if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
+    return globalThis.atob(base64);
+  }
+
+  // ۴. Fallback: decode دستی Base64 (سازگار با همه محیط‌ها)
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
   let str = base64.replace(/=+$/, '');
   let output = '';
@@ -41,8 +56,12 @@ const base64UrlDecode = (base64url) => {
     const d = chars.indexOf(str.charAt(i + 3));
 
     output += String.fromCharCode((a << 2) | (b >> 4));
-    if (c !== 64 && c !== -1) output += String.fromCharCode(((b & 15) << 4) | (c >> 2));
-    if (d !== 64 && d !== -1) output += String.fromCharCode(((c & 3) << 6) | d);
+    if (c !== 64 && c !== -1) {
+      output += String.fromCharCode(((b & 15) << 4) | (c >> 2));
+    }
+    if (d !== 64 && d !== -1) {
+      output += String.fromCharCode(((c & 3) << 6) | d);
+    }
   }
 
   return output;
@@ -50,13 +69,13 @@ const base64UrlDecode = (base64url) => {
 
 /**
  * Decode کردن JWT بدون کتابخانه
- * ✅ سازگار با SSR
+ * سازگار با مرورگر و محیط‌های غیر-مرورگر
+ *
  * @param {string} token
  * @returns {object|null} payload
  */
 export const decodeJWT = (token) => {
   if (!token) return null;
-
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
@@ -64,7 +83,8 @@ export const decodeJWT = (token) => {
     const payload = parts[1];
     const decoded = base64UrlDecode(payload);
 
-    // تبدیل به UTF-8
+    // تبدیل به رشته قابل خواندن
+    // استفاده از decodeURIComponent برای پشتیبانی از کاراکترهای یونیکد (فارسی)
     const jsonStr = decodeURIComponent(
       decoded
         .split('')

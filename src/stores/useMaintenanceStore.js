@@ -35,7 +35,8 @@ export const useMaintenanceStore = create((set) => ({
       const response = await apiClient.get('/config/maintenance-status/');
       const config = response.data;
 
-      if (!config?.is_maintenance) {
+      // ✅ فاز ۳: خوانش camelCase (بعد از نرمال‌ساز)
+      if (!config?.isMaintenance) {
         set({ maintenanceInfo: null, checking: false });
         return;
       }
@@ -46,9 +47,9 @@ export const useMaintenanceStore = create((set) => ({
           message:
             config.message ||
             'تیم فنی بیو کلاب در حال انجام بهبودهای لازم است. لطفاً دقایقی دیگر مراجعه فرمایید.',
-          estimatedEnd: config.estimated_end || '',
+          estimatedEnd: config.estimatedEnd || '',
           reason: config.reason || '',
-          supportPhone: config.support_phone || '',
+          supportPhone: config.supportPhone || '',
         },
         checking: false,
       });

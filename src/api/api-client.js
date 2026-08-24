@@ -1,12 +1,12 @@
 // src/api/api-client.js
 /**
-* 🛡️ API Client - لایه نهایی درخواست‌ها
-*
-* تمام درخواست‌ها از این لایه عبور می‌کنند.
-* مسئولیت‌ها:
-*   - نرمال‌سازی Response (شامل fieldMapper و pagination)
-*   - مدیریت خطا
-*/
+ * 🛡️ API Client - لایه نهایی درخواست‌ها
+ *
+ * تمام درخواست‌ها از این لایه عبور می‌کنند.
+ * مسئولیت‌ها:
+ *   - نرمال‌سازی Response (شامل fieldMapper و pagination)
+ *   - مدیریت خطا
+ */
 import api from './axios-instance';
 import { normalizeSuccessResponse, normalizeErrorResponse } from './response-normalizer';
 

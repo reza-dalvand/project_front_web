@@ -65,7 +65,7 @@ export const useNotificationStore = create((set, get) => ({
       set((state) => ({
         notifications: state.notifications.map((n) =>
           notificationIds.length === 0 || notificationIds.includes(n.id)
-            ? { ...n, is_read: true }
+            ? { ...n, isRead: true } // ✅ فاز ۳: isRead (نه is_read)
             : n
         ),
         unreadCount: Math.max(0, state.unreadCount - (notificationIds.length || state.unreadCount)),
@@ -100,10 +100,9 @@ export const useNotificationStore = create((set, get) => ({
   deleteAllRead: async () => {
     try {
       const result = await notificationsService.deleteAll();
-
       set((state) => ({
-        notifications: state.notifications.filter((n) => !n.is_read),
-        totalCount: Math.max(0, state.totalCount - (result.data?.deleted_count || 0)),
+        notifications: state.notifications.filter((n) => !n.isRead), // ✅ فاز ۳
+        totalCount: Math.max(0, state.totalCount - (result.data?.deletedCount || 0)), // ✅ فاز ۳
       }));
     } catch (error) {
       console.error('Delete all read failed:', error);

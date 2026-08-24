@@ -2,18 +2,9 @@
 /**
  * Store احراز هویت — فاز ۲ (هماهنگ با بک‌اند)
  *
- * تغییرات:
- * - اضافه شدن needsProfileCompletion
- * - اصلاح login برای مدیریت is_new_user
- * - اصلاح checkSession
- * - اصلاح logout
- *
- * ✅ FIX فاز ۱: camelCase در login و checkSession
- *    response-normalizer تمام کلیدها را به camelCase تبدیل می‌کند
- *    access_token → accessToken
- *    refresh_token → refreshToken
- *    is_new_user → isNewUser
- *    needs_profile_completion → needsProfileCompletion
+ * ✅ فاز ۱:
+ * - نیازهای پروفایل (needsProfileCompletion) در persist ذخیره می‌شود
+ * - رفع چرخه بی‌نهایت تکمیل پروفایل پس از رفرش
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -48,13 +39,12 @@ export const useAuthStore = create(
       },
 
       /**
-       * ✅ FIX فاز ۱: ورود موفق — camelCase
-       * @param {object} userData - داده‌های کاربر (فرمت بک‌اند، camelCase شده توسط normalizer)
-       * @param {object} tokens - { accessToken, refreshToken } ← camelCase
-       * @param {object} options - { isNewUser, needsProfileCompletion } ← camelCase
+       * ورود موفق — ذخیره اطلاعات کاربر و توکن‌ها
+       * @param {object} userData - داده‌های کاربر
+       * @param {object} tokens - { accessToken, refreshToken }
+       * @param {object} options - { isNewUser, needsProfileCompletion }
        */
       login: (userData, tokens, options = {}) => {
-        // ✅ FIX: tokens.accessToken به جای tokens.access_token
         if (tokens?.accessToken) {
           useTokenStore.getState().setTokens({
             access: tokens.accessToken,
@@ -82,7 +72,7 @@ export const useAuthStore = create(
           },
           pendingPhone: null,
           pendingName: null,
-          // ✅ FIX: options.needsProfileCompletion به جای options.needs_profile_completion
+          // ✅ FIX فاز ۱: ذخیره صحیح در state
           needsProfileCompletion: options.needsProfileCompletion ?? false,
         });
       },
@@ -143,9 +133,7 @@ export const useAuthStore = create(
       },
 
       /**
-       * ✅ FIX فاز ۱: بررسی اعتبار session — camelCase
-       * بک‌اند در refresh برمی‌گرداند: { access, refresh }
-       * normalizer تبدیل نمی‌کند چون کلید underscore ندارد
+       * بررسی اعتبار session
        * @returns {Promise<boolean>}
        */
       checkSession: async () => {
@@ -167,8 +155,6 @@ export const useAuthStore = create(
           try {
             const result = await authService.refreshToken(refreshToken);
             const data = result.data;
-            // بک‌اند در CustomTokenRefreshView برمی‌گرداند: { access, refresh }
-            // این کلیدها underscore ندارند، normalizer تغییرشان نمی‌دهد
             useTokenStore.getState().setTokens({
               access: data.access,
               refresh: data.refresh,
@@ -180,6 +166,7 @@ export const useAuthStore = create(
             return false;
           }
         }
+
         return false;
       },
     }),
@@ -190,6 +177,8 @@ export const useAuthStore = create(
           ? localStorage
           : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
+      // ✅ FIX فاز ۱: نیازهای پروفایل هم در ذخیره‌سازی ماندگار می‌شود
+      // تا پس از رفرش صفحه، کاربر وارد چرخه بی‌نهایت تکمیل پروفایل نشود
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
         user: state.user,
@@ -246,13 +235,18 @@ export const useAuth = () => {
     if (isAuthenticated) {
       action?.();
     } else {
-      // ✅ FIX: مسیر فعلی به عنوان redirect پاس داده می‌شود
-      // بعد از لاگین، کاربر به همین صفحه برمی‌گردد
       router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
     }
   };
 
-  return { isAuthenticated, user, needsProfileCompletion, requireAuth, openAuthModal, logout };
+  return {
+    isAuthenticated,
+    user,
+    needsProfileCompletion,
+    requireAuth,
+    openAuthModal,
+    logout,
+  };
 };
 
 // ═══════════════════════════════════════════

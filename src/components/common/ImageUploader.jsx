@@ -1,11 +1,11 @@
 // src/components/common/ImageUploader.jsx
 'use client';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiCamera, FiEdit, FiX, FiUpload } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { UPLOAD_CONFIG } from '@/api/config';
-import { compressImage } from '@/utils/image-compression'; // ✅ جدید
+import { compressImage } from '@/utils/image-compression';
 import Image from 'next/image';
 
 export default function ImageUploader({
@@ -19,7 +19,20 @@ export default function ImageUploader({
 }) {
   const { colors } = useTheme();
   const [localPreview, setLocalPreview] = useState(value);
-  const [isCompressing, setIsCompressing] = useState(false); // ✅ جدید
+  const [isCompressing, setIsCompressing] = useState(false);
+
+  // ✅ FIX فاز ۳: ذخیره آخرین objectURL برای جلوگیری از نشت حافظه
+  const objectUrlRef = useRef(null);
+
+  // ✅ FIX فاز ۳: پاکسازی در unmount
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+    };
+  }, []);
 
   const onDrop = useCallback(
     async (acceptedFiles) => {
@@ -28,14 +41,17 @@ export default function ImageUploader({
 
       setIsCompressing(true);
       try {
-        // ✅ فشرده‌سازی با پریست مناسب بر اساس variant
         const compressed = await compressImage(file, variant);
 
-        const previewUrl = URL.createObjectURL(compressed);
-        setLocalPreview(previewUrl);
+        // ✅ FIX فاز ۳: پاکسازی قبلی قبل از ایجاد جدید
+        if (objectUrlRef.current) {
+          URL.revokeObjectURL(objectUrlRef.current);
+          objectUrlRef.current = null;
+        }
 
-        // ✅ FIX: به جای URL string، خود File فشرده را پاس می‌دهیم
-        // تا BasicInfoStep بتواند با instanceof File آن را به FormData اضافه کند
+        const previewUrl = URL.createObjectURL(compressed);
+        objectUrlRef.current = previewUrl;
+        setLocalPreview(previewUrl);
         onChange?.(compressed);
       } catch (err) {
         console.error('Image compression failed:', err);
@@ -50,12 +66,16 @@ export default function ImageUploader({
     onDrop,
     accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
     maxFiles: 1,
-    // ✅ سقف ورودی بالاتر — چون قرار است فشرده شود
     maxSize: UPLOAD_CONFIG.MAX_INPUT_SIZE_MB * 1024 * 1024,
   });
 
   const handleRemove = (e) => {
     e.stopPropagation();
+    // ✅ FIX فاز ۳: پاکسازی هنگام حذف دستی
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
     setLocalPreview(null);
     onChange?.(null);
   };

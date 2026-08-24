@@ -12,23 +12,27 @@ import { servicesService } from '@/api';
 /**
  * تبدیل فرمت بک‌اند به فرمت فرانت
  */
+/**
+ * تبدیل فرمت بک‌اند به فرمت فرانت
+ * ✅ فاز ۳: بعد از نرمال‌ساز، کلیدها camelCase هستند
+ */
 const mapServiceFromApi = (s) => ({
   id: s.id,
   name: s.name,
-  typeId: s.sub_service?.type_id || s.sub_service_id || '',
-  typeName: s.sub_service?.name || s.sub_service_name || '',
-  categoryId: s.category_id || s.category?.id || null,
-  categoryLabel: s.category_name || '',
-  originalPrice: s.original_price,
-  discountPercent: s.discount_percent || 0,
-  discountAmount: s.discount_amount || 0,
-  finalPrice: s.final_price || s.original_price,
-  appFee: s.app_fee || 0,
+  typeId: s.subService?.typeId || s.subServiceId || '',
+  typeName: s.subService?.name || s.subServiceName || '',
+  categoryId: s.categoryId || s.category?.id || null,
+  categoryLabel: s.categoryName || '',
+  originalPrice: s.originalPrice,
+  discountPercent: s.discountPercent || 0,
+  discountAmount: s.discountAmount || 0,
+  finalPrice: s.finalPrice || s.originalPrice,
+  appFee: s.appFee || 0,
   duration: s.duration || 60,
-  hasDeposit: s.has_deposit || false,
-  depositAmount: s.deposit_amount || 0,
-  renewalDays: s.renewal_days || 0,
-  isActive: s.is_active !== false,
+  hasDeposit: s.hasDeposit || false,
+  depositAmount: s.depositAmount || 0,
+  renewalDays: s.renewalDays || 0,
+  isActive: s.isActive !== false,
   description: s.description || '',
 });
 

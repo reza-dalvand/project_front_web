@@ -51,7 +51,7 @@ export default function NotificationModal({ visible, onClose }) {
   const instanceId = useRef('notification-modal');
 
   const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.isRead && !n.is_read).length,
+    () => notifications.filter((n) => !n.isRead).length, // ✅ فاز ۳
     [notifications]
   );
 
@@ -98,9 +98,7 @@ export default function NotificationModal({ visible, onClose }) {
   // ═══════ خواندن همه ═══════
   const markAllAsRead = async () => {
     try {
-      if (!USE_MOCK) {
-        await notificationsService.markAsRead([]);
-      }
+      await notificationsService.markAsRead([]);
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true, is_read: true })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
@@ -110,12 +108,8 @@ export default function NotificationModal({ visible, onClose }) {
   // ═══════ خواندن یک اعلان ═══════
   const markAsRead = async (id) => {
     try {
-      if (!USE_MOCK) {
-        await notificationsService.markAsRead([id]);
-      }
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true, is_read: true } : n))
-      );
+      await notificationsService.markAsRead([id]);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }
@@ -124,9 +118,7 @@ export default function NotificationModal({ visible, onClose }) {
   // ═══════ حذف یک اعلان ═══════
   const deleteNotification = async (id) => {
     try {
-      if (!USE_MOCK) {
-        await notificationsService.deleteNotification(id);
-      }
+      await notificationsService.deleteNotification(id);
       setNotifications((prev) => prev.filter((n) => n.id !== id));
     } catch (error) {
       console.error('Failed to delete notification:', error);
@@ -136,9 +128,7 @@ export default function NotificationModal({ visible, onClose }) {
   // ═══════ حذف همه خوانده‌شده‌ها ═══════
   const deleteAllRead = async () => {
     try {
-      if (!USE_MOCK) {
-        await notificationsService.deleteAll();
-      }
+      await notificationsService.deleteAll();
       setNotifications((prev) => prev.filter((n) => !n.isRead && !n.is_read));
     } catch (error) {
       console.error('Failed to delete all read:', error);
@@ -238,7 +228,7 @@ export default function NotificationModal({ visible, onClose }) {
             notifications.map((notification) => {
               const meta = getNotificationMeta(notification.type);
               const Icon = meta.icon;
-              const isRead = notification.isRead || notification.is_read;
+              const isRead = notification.isRead;
               return (
                 <div
                   key={notification.id}
@@ -283,7 +273,7 @@ export default function NotificationModal({ visible, onClose }) {
                       className="text-[10px] font-[Vazir]"
                       style={{ color: colors.textSecondary + '90' }}
                     >
-                      {notification.time || notification.created_at}
+                      {notification.time || notification.createdAt}
                     </p>
                   </div>
                   <button

@@ -1,10 +1,10 @@
 // src/constants/categorySubServices.js
 /**
-* ✅ فاز ۴: CATEGORY_SUB_SERVICES حذف شد
-*
-* به جای این ثابت، از هوک داینامیک استفاده کنید:
-* - useSubServices(categoryId) از '@/hooks/useCategoryOptions'
-*/
+ * ✅ فاز ۴: CATEGORY_SUB_SERVICES حذف شد
+ *
+ * به جای این ثابت، از هوک داینامیک استفاده کنید:
+ * - useSubServices(categoryId) از '@/hooks/useCategoryOptions'
+ */
 
 // گزینه‌های مرتب‌سازی — ثابت است و نیازی به بک‌اند ندارد
 export const SORT_OPTIONS = [

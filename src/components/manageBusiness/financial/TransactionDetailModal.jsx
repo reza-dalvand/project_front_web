@@ -184,10 +184,10 @@ export default function TransactionDetailModal({ visible, tx, onClose }) {
                   className="text-sm font-[Vazir-Bold]"
                   style={{ color: colors.textMain, letterSpacing: '1px', direction: 'ltr' }}
                 >
-                  {toPersianDigit(tx.tracking_code)}
+                  {toPersianDigit(tx.trackingCode || '—')}
                 </span>
                 <button
-                  onClick={() => navigator.clipboard?.writeText(tx.tracking_code)}
+                  onClick={() => navigator.clipboard?.writeText(tx.trackingCode)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: colors.primary + '15' }}
                 >

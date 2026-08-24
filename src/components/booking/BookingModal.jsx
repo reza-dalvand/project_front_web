@@ -12,7 +12,7 @@ import BookingTimeSelector from './BookingTimeSelector';
 import BookingNameStep from './BookingNameStep';
 import BookingReviewStep from './BookingReviewStep';
 import BookingSuccessStep from './BookingSuccessStep';
-import BookingFailedStep from './BookingFailedStep'; // ✅ جدید: مدال پرداخت ناموفق
+import BookingFailedStep from './BookingFailedStep';
 import BookingModalFooter from './BookingModalFooter';
 import TrustToggle from './TrustToggle';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
@@ -21,6 +21,9 @@ import { toJalaaliKey } from '@/utils/date-converter';
 import { buildPriceSummary } from '@/utils/price-utils';
 import { useAuth } from '@/stores/useAuthStore';
 import { useRouter } from 'next/navigation';
+
+let modalCounter = 0;
+const generateModalId = () => `booking-modal-${++modalCounter}-${Date.now()}`;
 
 export default function BookingModal({
   visible,
@@ -37,8 +40,8 @@ export default function BookingModal({
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const currentService = service || {};
-  const instanceId = useRef('booking-modal');
-  // ─── State‌های اصلی ───
+  const instanceId = useRef(generateModalId());
+
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -49,29 +52,18 @@ export default function BookingModal({
   const [availableDates, setAvailableDates] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-  // ═══════ ✅ FIX فاز ۳: State‌های استپ نام ═══════
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [nameConfirmed, setNameConfirmed] = useState(false);
-  const [nameErrors, setNameErrors] = useState({
-    firstName: '',
-    lastName: '',
-    confirm: '',
-  });
-
-  // ═══════ ✅ FIX: State‌های پرداخت ناموفق ═══════
+  const [nameErrors, setNameErrors] = useState({ firstName: '', lastName: '', confirm: '' });
   const [bookingFailed, setBookingFailed] = useState(false);
   const [bookingError, setBookingError] = useState(null);
-  // ═══════════════════════════════════════════════════════
 
-  // ─── تشخیص نیاز به استپ نام ───
   const needsNameStep = useMemo(() => {
     const name = user?.name?.trim();
     return !name || name === 'کاربر بیو کلاب' || name.length < 3;
   }, [user?.name]);
 
-  // ─── ساخت داینامیک استپ‌ها ───
   const STEPS = useMemo(() => {
     if (needsNameStep) {
       return [
@@ -93,11 +85,9 @@ export default function BookingModal({
   const dateStepId = needsNameStep ? 3 : 2;
   const timeStepId = needsNameStep ? 4 : 3;
 
-  // ═══════ ✅ FIX فاز ۳: اعتبارسنجی نام ═══════
   const validateName = () => {
     const errors = { firstName: '', lastName: '', confirm: '' };
     let isValid = true;
-
     if (!firstName.trim()) {
       errors.firstName = 'نام الزامی است';
       isValid = false;
@@ -105,7 +95,6 @@ export default function BookingModal({
       errors.firstName = 'نام باید حداقل ۲ کاراکتر باشد';
       isValid = false;
     }
-
     if (!lastName.trim()) {
       errors.lastName = 'نام خانوادگی الزامی است';
       isValid = false;
@@ -113,21 +102,17 @@ export default function BookingModal({
       errors.lastName = 'نام خانوادگی باید حداقل ۲ کاراکتر باشد';
       isValid = false;
     }
-
     if (!nameConfirmed) {
       errors.confirm = 'لطفاً تایید کنید که اطلاعات مطابق کارت بانکی است';
       isValid = false;
     }
-
     setNameErrors(errors);
     return isValid;
   };
 
-  // ═══════ ✅ FIX فاز ۳: پیش‌پر کردن نام از پروفایل ═══════
   const prefillNameFromUser = () => {
     if (user?.firstName) setFirstName(user.firstName);
     if (user?.lastName) setLastName(user.lastName);
-    // اگر نام کامل در user.name هست و firstName/lastName خالی هستند
     if (!user?.firstName && !user?.lastName && user?.name) {
       const parts = user.name.trim().split(' ');
       if (parts.length >= 2) {
@@ -137,7 +122,6 @@ export default function BookingModal({
     }
   };
 
-  // ─── Effects ───
   useEffect(() => {
     setMounted(true);
     return () => {
@@ -146,7 +130,6 @@ export default function BookingModal({
     };
   }, []);
 
-  // ✅ FIX: محافظت اضافی — اگر مدال باز شد ولی کاربر لاگین نبود
   useEffect(() => {
     if (visible && !isAuthenticated) {
       router.push(`/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`);
@@ -162,27 +145,17 @@ export default function BookingModal({
       setTrustEnabled(false);
       setIsSubmitting(false);
       setBookingResult(null);
-      // ═══════ ✅ FIX: ریست حالت خطا ═══════
       setBookingFailed(false);
       setBookingError(null);
-      // ═══════ ✅ FIX فاز ۳: ریست state‌های نام ═══════
       setFirstName('');
       setLastName('');
       setNameConfirmed(false);
       setNameErrors({ firstName: '', lastName: '', confirm: '' });
       setAvailableSlots([]);
-
-      // پیش‌پر کردن نام از پروفایل کاربر
-      if (needsNameStep) {
-        prefillNameFromUser();
-      }
-
+      if (needsNameStep) prefillNameFromUser();
       acquireScrollLock(instanceId.current);
-
-      // دریافت روزهای آزاد
-      if (businessId && currentService.id && !USE_MOCK) {
-        fetchAvailableDates();
-      }
+      // ✅ همیشه از بک‌اند روزهای آزاد را بگیر
+      if (businessId && currentService.id) fetchAvailableDates();
     } else {
       releaseScrollLock(instanceId.current);
     }
@@ -198,7 +171,6 @@ export default function BookingModal({
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible]);
 
-  // ─── دریافت روزهای آزاد ───
   const fetchAvailableDates = async () => {
     try {
       const result = await schedulesService.getAvailableDates(businessId, currentService.id, 30);
@@ -208,7 +180,6 @@ export default function BookingModal({
     }
   };
 
-  // ─── دریافت اسلات‌های آزاد برای تاریخ انتخابی ───
   const fetchAvailableSlots = async (date) => {
     setSlotsLoading(true);
     try {
@@ -228,7 +199,6 @@ export default function BookingModal({
     }
   };
 
-  // ─── محاسبات قیمت ───
   const priceSummary = useMemo(() => {
     const originalPrice = currentService.originalPrice ?? currentService.price ?? 0;
     const discountPercent = currentService.discountPercent ?? currentService.discount ?? 0;
@@ -240,92 +210,62 @@ export default function BookingModal({
     );
   }, [currentService]);
 
-  // ─── Handlers ───
   const handleDateSelect = (date) => {
     setSelectedDate(date);
     setSelectedTime(null);
     fetchAvailableSlots(date);
   };
-
-  // ═══════ ✅ FIX فاز ۳: اعتبارسنجی در استپ نام ═══════
   const handleNext = () => {
     if (needsNameStep && currentStep === nameStepId) {
       if (!validateName()) return;
-      // ذخیره نام در پروفایل کاربر برای استفاده‌های بعدی
       const fullName = `${firstName.trim()} ${lastName.trim()}`;
-      updateUser({
-        name: fullName,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-      });
+      updateUser({ name: fullName, firstName: firstName.trim(), lastName: lastName.trim() });
     }
     if (currentStep < timeStepId) setCurrentStep((p) => p + 1);
   };
-
   const handlePrev = () => {
     if (currentStep > 1) setCurrentStep((p) => p - 1);
   };
-
-  // ═══════ ✅ FIX فاز ۳ + FIX: ریست کامل در handleClose ═══════
   const handleClose = () => {
     setCurrentStep(1);
     setSelectedDate(null);
     setSelectedTime(null);
     setBookingResult(null);
-    // ریست حالت خطا
     setBookingFailed(false);
     setBookingError(null);
-    // ریست state‌های نام
     setFirstName('');
     setLastName('');
     setNameConfirmed(false);
     setNameErrors({ firstName: '', lastName: '', confirm: '' });
     onClose?.();
   };
-
-  // ═══════ ✅ FIX: تلاش مجدد پس از خطا ═══════
   const handleRetry = () => {
     setBookingFailed(false);
     setBookingError(null);
-    // برگشت به استپ ساعت برای پرداخت مجدد
     setCurrentStep(timeStepId);
   };
-  // ═══════════════════════════════════════════════════════
 
-  // ─── تایید رزرو و پرداخت ───
+  // ✅ FIX فاز ۳: ارسال trust_based به بک‌اند
   const handleConfirm = async () => {
     if (!selectedDate || !selectedTime) return;
+
     setIsSubmitting(true);
+
     try {
-      let result;
-      if (!USE_MOCK) {
-        result = await appointmentsService.createAppointment({
-          service_id: currentService.id,
-          jy: selectedDate.jy,
-          jm: selectedDate.jm,
-          jd: selectedDate.jd,
-          time_slot: selectedTime.start_time,
-        });
-      } else {
-        await new Promise((r) => setTimeout(r, 1200));
-        result = {
-          data: {
-            id: 'apt_' + Date.now(),
-            status: 'reserved',
-            verification_code: trustEnabled ? null : '5892',
-            date_key: toJalaaliKey(selectedDate.jy, selectedDate.jm, selectedDate.jd),
-            time_slot: selectedTime.start_time,
-            total_price: priceSummary.finalPrice,
-            deposit_amount: priceSummary.depositAmount,
-            remaining_amount: priceSummary.remaining,
-          },
-        };
-      }
+      const result = await appointmentsService.createAppointment({
+        service_id: currentService.id,
+        jy: selectedDate.jy,
+        jm: selectedDate.jm,
+        jd: selectedDate.jd,
+        time_slot: selectedTime.start_time,
+        trust_based: trustEnabled, // ✅ فاز ۳: وضعیت اعتماد
+      });
+
       setBookingResult(result.data);
-      // اطمینان از پاک بودن حالت خطا
       setBookingFailed(false);
       setBookingError(null);
       setIsSubmitting(false);
+
       onConfirm?.({
         ...result.data,
         service: currentService,
@@ -335,39 +275,18 @@ export default function BookingModal({
       });
     } catch (err) {
       setIsSubmitting(false);
-
-      // ═══════ ✅ FIX: نمایش مدال خطا به جای فقط toast ═══════
-      const isPaymentError =
-        err.code === 'PAYMENT_FAILED' ||
-        err.code === 'GATEWAY_ERROR' ||
-        err.code === 'TRANSACTION_FAILED' ||
-        err.message?.includes('پرداخت') ||
-        err.message?.includes('درگاه') ||
-        err.message?.includes('بانکی');
-
-      if (isPaymentError || !USE_MOCK) {
-        // خطای پرداخت → مدال ناموفق
-        setBookingFailed(true);
-        setBookingError({
-          message: err.message || 'ارتباط با درگاه پرداخت برقرار نشد',
-          code: err.code || 'UNKNOWN',
-          trackingCode: err.details?.tracking_code || err.details?.trackingCode || null,
-        });
-      } else {
-        // خطای غیر پرداختی → toast
-        showToast(err.message || 'خطا در رزرو نوبت', 'error');
-      }
-      // ═══════════════════════════════════════════════════════
+      setBookingFailed(true);
+      setBookingError({
+        message: err.message || 'ارتباط با درگاه پرداخت برقرار نشد',
+        code: err.code || 'UNKNOWN',
+        trackingCode: err.details?.tracking_code || err.details?.trackingCode || null,
+      });
     }
   };
 
-  // ─── canProceed ═══
   const canProceed = useMemo(() => {
-    // ═══════ ✅ FIX فاز ۳: اعتبارسنجی استپ نام ═══════
     if (needsNameStep && currentStep === nameStepId) {
-      const isFirstNameValid = firstName.trim().length >= 2;
-      const isLastNameValid = lastName.trim().length >= 2;
-      return isFirstNameValid && isLastNameValid && nameConfirmed;
+      return firstName.trim().length >= 2 && lastName.trim().length >= 2 && nameConfirmed;
     }
     if (currentStep === reviewStepId) return true;
     if (currentStep === dateStepId) return !!selectedDate;
@@ -375,9 +294,7 @@ export default function BookingModal({
     return false;
   }, [currentStep, selectedDate, selectedTime, needsNameStep, firstName, lastName, nameConfirmed]);
 
-  // ─── رندر استپ فعلی ───
   const renderStepContent = () => {
-    // ═══════ ✅ FIX: مدال پرداخت ناموفق ═══════
     if (bookingFailed) {
       return (
         <BookingFailedStep
@@ -392,9 +309,6 @@ export default function BookingModal({
         />
       );
     }
-    // ═══════════════════════════════════════════════════════
-
-    // مدال موفقیت
     if (bookingResult) {
       return (
         <BookingSuccessStep
@@ -408,8 +322,6 @@ export default function BookingModal({
         />
       );
     }
-
-    // ═══════ ✅ FIX فاز ۳: پاس دادن props به BookingNameStep ═══════
     if (needsNameStep && currentStep === nameStepId) {
       return (
         <BookingNameStep
@@ -417,29 +329,21 @@ export default function BookingModal({
           lastName={lastName}
           nameConfirmed={nameConfirmed}
           nameErrors={nameErrors}
-          onFirstNameChange={(text) => {
-            setFirstName(text);
-            if (nameErrors.firstName) {
-              setNameErrors((prev) => ({ ...prev, firstName: '' }));
-            }
+          onFirstNameChange={(t) => {
+            setFirstName(t);
+            if (nameErrors.firstName) setNameErrors((p) => ({ ...p, firstName: '' }));
           }}
-          onLastNameChange={(text) => {
-            setLastName(text);
-            if (nameErrors.lastName) {
-              setNameErrors((prev) => ({ ...prev, lastName: '' }));
-            }
+          onLastNameChange={(t) => {
+            setLastName(t);
+            if (nameErrors.lastName) setNameErrors((p) => ({ ...p, lastName: '' }));
           }}
-          onNameConfirmedChange={(confirmed) => {
-            setNameConfirmed(confirmed);
-            if (nameErrors.confirm) {
-              setNameErrors((prev) => ({ ...prev, confirm: '' }));
-            }
+          onNameConfirmedChange={(c) => {
+            setNameConfirmed(c);
+            if (nameErrors.confirm) setNameErrors((p) => ({ ...p, confirm: '' }));
           }}
         />
       );
     }
-    // ═══════════════════════════════════════════════════════
-
     if (currentStep === reviewStepId) {
       return (
         <BookingReviewStep
@@ -453,7 +357,6 @@ export default function BookingModal({
         />
       );
     }
-
     if (currentStep === dateStepId) {
       return (
         <BookingDateSelector
@@ -463,7 +366,6 @@ export default function BookingModal({
         />
       );
     }
-
     if (currentStep === timeStepId) {
       return (
         <div className="flex flex-col gap-3.5">
@@ -471,10 +373,7 @@ export default function BookingModal({
             <button
               onClick={handlePrev}
               className="flex items-center gap-1.5 self-start py-2 px-3.5 rounded-[14px] border"
-              style={{
-                backgroundColor: colors.primary + '10',
-                borderColor: colors.primary + '40',
-              }}
+              style={{ backgroundColor: colors.primary + '10', borderColor: colors.primary + '40' }}
             >
               <FiCalendar size={16} style={{ color: colors.primary }} />
               <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
@@ -491,7 +390,6 @@ export default function BookingModal({
             </div>
           ) : (
             <>
-              {/* یادآوری بیعانه */}
               <div
                 className="flex items-center gap-2 p-2.5 rounded-[12px] border"
                 style={{ backgroundColor: '#43A04710', borderColor: '#43A04735' }}
@@ -509,14 +407,12 @@ export default function BookingModal({
                 selectedId={selectedTime?.id}
                 onSelect={(slot) => setSelectedTime(slot)}
               />
-              {/* سوئیچ اعتماد */}
               {isAuthenticated && <TrustToggle enabled={trustEnabled} onToggle={setTrustEnabled} />}
             </>
           )}
         </div>
       );
     }
-
     return null;
   };
 
@@ -530,23 +426,16 @@ export default function BookingModal({
     >
       <div
         className="relative w-full max-w-lg max-h-[92vh] rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderTop: `1px solid ${colors.border}`,
-        }}
+        style={{ backgroundColor: colors.cardBackground, borderTop: `1px solid ${colors.border}` }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* هدر */}
         <div
           className="flex items-center gap-3 px-4 sm:px-5 py-4 border-b flex-shrink-0"
           style={{ borderColor: colors.border }}
         >
-          {/* ✅ FIX: آیکون و عنوان متفاوت در حالت خطا */}
           <div
             className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0"
-            style={{
-              backgroundColor: bookingFailed ? '#E5393515' : colors.primary + '15',
-            }}
+            style={{ backgroundColor: bookingFailed ? '#E5393515' : colors.primary + '15' }}
           >
             {bookingFailed ? (
               <FiX size={22} color="#E53935" />
@@ -570,23 +459,17 @@ export default function BookingModal({
             <FiX size={20} style={{ color: colors.textMain }} />
           </button>
         </div>
-
-        {/* Step Indicator — ✅ FIX: مخفی در حالت خطا */}
         {!bookingResult && !bookingFailed && (
           <BookingStepIndicator steps={STEPS} currentStep={currentStep} />
         )}
-
-        {/* محتوای اسکرولی */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-2 pb-10 w-full">
           {renderStepContent()}
         </div>
-        {/* فوتر — ✅ FIX: مخفی در حالت خطا */}
         {!bookingResult && !bookingFailed && (
           <div
             className="px-4 sm:px-5 pt-4 border-t flex-shrink-0"
             style={{
               borderColor: colors.border,
-              /* ✅ فاصله از Navigation Bar گوشی */
               paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
             }}
           >
@@ -605,6 +488,5 @@ export default function BookingModal({
       </div>
     </div>
   );
-
   return createPortal(content, document.body);
 }

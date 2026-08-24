@@ -65,20 +65,16 @@ export default function VerifyCodeModal({
     setError('');
 
     try {
-      if (!USE_MOCK) {
-        await appointmentsService.verifyServiceCode(appointment.id, enteredCode);
-      } else {
-        await new Promise((r) => setTimeout(r, 1200));
-        if (enteredCode !== appointment.verificationCode) {
-          setError('کد وارد شده صحیح نیست. لطفاً از مشتری کد درست را بپرسید.');
-          setCode(['', '', '', '']);
-          setCurrentBox(0);
-          setLoading(false);
-          setTimeout(() => inputRefs.current[0]?.focus(), 100);
-          return;
-        }
+      await appointmentsService.verifyServiceCode(appointment.id, enteredCode);
+      await new Promise((r) => setTimeout(r, 1200));
+      if (enteredCode !== appointment.verificationCode) {
+        setError('کد وارد شده صحیح نیست. لطفاً از مشتری کد درست را بپرسید.');
+        setCode(['', '', '', '']);
+        setCurrentBox(0);
+        setLoading(false);
+        setTimeout(() => inputRefs.current[0]?.focus(), 100);
+        return;
       }
-
       setLoading(false);
       onConfirm?.(appointment.id, enteredCode);
     } catch (err) {

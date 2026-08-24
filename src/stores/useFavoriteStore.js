@@ -20,8 +20,20 @@ export const useFavoriteStore = create(
         try {
           const result = await favoritesService.getFavorites();
           set({
-            favoriteBusinesses: result.data.businesses || [],
-            favoritePosts: result.data.posts || [],
+            // ✅ فاز ۳: فقط فیلدهای camelCase (بعد از نرمال‌ساز)
+            favoriteBusinesses: (result.data.businesses || []).map((b) => ({
+              id: b.business,
+              name: b.businessName,
+              logo: b.businessLogo,
+              category: b.businessCategory || '',
+              city: b.businessCity || '',
+            })),
+            favoritePosts: (result.data.posts || []).map((p) => ({
+              id: p.post,
+              caption: p.caption || '',
+              businessName: p.businessName || '',
+              image: p.image || null,
+            })),
             isLoading: false,
           });
         } catch (error) {

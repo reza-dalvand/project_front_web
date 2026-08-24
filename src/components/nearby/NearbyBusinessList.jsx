@@ -34,7 +34,12 @@ export default function NearbyBusinessList({
       {paginatedBusinesses.length > 0 ? (
         <div className="space-y-3">
           {paginatedBusinesses.map((biz) => (
-            <BusinessListCard key={biz.id} business={biz} categoryIcon="💆‍♀️" onPress={onBusinessPress} />
+            <BusinessListCard
+              key={biz.id}
+              business={biz}
+              categoryIcon="💆‍♀️"
+              onPress={onBusinessPress}
+            />
           ))}
           {hasMore && (
             <button

@@ -2,7 +2,6 @@
 import { appointmentsService, paymentsService } from '@/api';
 
 jest.mock('@/api/config', () => ({
-  USE_MOCK: true,
   API_CONFIG: { baseURL: 'http://localhost:8000/api/v1', timeout: 15000 },
 }));
 

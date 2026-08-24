@@ -81,17 +81,18 @@ const buildServicesFromBusiness = () => {
 const mapPriceListFromApi = (data, businessId) => ({
   businessId,
   themeId: data.theme || 'classic',
-  isPublished: data.is_published || false,
+  // ✅ فاز ۳: خوانش camelCase
+  isPublished: data.isPublished || false,
   services: (data.services || []).map((s) => ({
     id: s.id,
     name: s.name,
-    typeName: s.type_name || s.type_id || '',
-    typeId: s.type_id || '',
-    originalPrice: s.original_price,
-    discountPercent: s.discount_percent,
-    finalPrice: s.final_price,
-    hasDeposit: s.has_deposit,
-    depositAmount: s.deposit_amount,
+    typeName: s.typeName || s.typeId || '',
+    typeId: s.typeId || '',
+    originalPrice: s.originalPrice,
+    discountPercent: s.discountPercent,
+    finalPrice: s.finalPrice,
+    hasDeposit: s.hasDeposit,
+    depositAmount: s.depositAmount,
   })),
 });
 

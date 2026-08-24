@@ -120,7 +120,10 @@ export default function CategoryFilterModal({
                     color: isSelected ? colors.primary : colors.textMain,
                   }}
                 >
-                  <IconComponent size={14} color={isSelected ? colors.primary : colors.textSecondary} />
+                  <IconComponent
+                    size={14}
+                    color={isSelected ? colors.primary : colors.textSecondary}
+                  />
                   {option.label}
                 </button>
               );

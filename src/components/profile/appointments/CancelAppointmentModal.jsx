@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { FiX, FiXCircle, FiAlertTriangle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
 import CancelRefundSummary from './CancelRefundSummary';
 import CancelPolicyBox from './CancelPolicyBox';
@@ -13,14 +12,9 @@ import CancelBankInfoDisplay from './CancelBankInfoDisplay';
 import CancelBankForm from './CancelBankForm';
 import { formatPrice, toEnglishDigits, toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
-import { appointmentsService } from '@/api';
-import {
-  getCancellationPolicy,
-  formatHoursLeft,
-  CANCELLATION_THRESHOLD_HOURS,
-} from '@/utils/cancellation-utils';
-// ✅ FIX P2: import از فایل مشترک به جای تعریف محلی
-import { getBankOptions } from '@/data/banks';
+import { appointmentsService, bankInfoService } from '@/api';
+import { getBankOptions } from '@/constants/banks';
+import { getCancellationPolicy } from '@/utils/cancellation-utils';
 
 const formatSheba = (text) => {
   let cleaned = toEnglishDigits(text)
@@ -37,8 +31,6 @@ const formatCard = (text) => {
 
 export default function CancelAppointmentModal({ visible, appointment, onClose, onConfirmCancel }) {
   const { colors } = useTheme();
-  const user = useAuthStore((s) => s.user);
-  const updateUser = useAuthStore((s) => s.updateUser);
   const { showToast } = useToast();
   const instanceId = useRef('cancel-appointment-modal');
 
@@ -47,16 +39,46 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
   const [cardNumber, setCardNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // ✅ اطلاعات بانکی از بک‌اند گرفته می‌شود
+  const [bankInfo, setBankInfo] = useState(null);
+  const [loadingBankInfo, setLoadingBankInfo] = useState(false);
 
-  // ✅ FIX P2: استفاده از لیست مشترک
   const bankOptions = getBankOptions();
 
-  const bankInfo = user?.bankInfo;
+  // ✅ دریافت اطلاعات بانکی کاربر از بک‌اند
+  useEffect(() => {
+    if (!visible) return;
+    const fetchBankInfo = async () => {
+      setLoadingBankInfo(true);
+      try {
+        const result = await bankInfoService.getBankInfo();
+        const data = result.data;
+        // ✅ فاز ۳: خوانش camelCase
+        setBankInfo({
+          bankName: data.bankName || '',
+          bankId: data.bankId || null,
+          sheba: data.sheba || '',
+          cardNumber: data.cardNumber || '',
+          ownerName: data.ownerName || '',
+          isComplete: data.isComplete || false,
+        });
+      } catch (err) {
+        console.error('Failed to fetch bank info:', err);
+        setBankInfo(null);
+      } finally {
+        setLoadingBankInfo(false);
+      }
+    };
+    fetchBankInfo();
+  }, [visible]);
+
   const hasCompleteBankInfo = Boolean(
     bankInfo?.bankName && bankInfo?.sheba?.length >= 24 && bankInfo?.cardNumber?.length === 16
   );
 
-  const policy = appointment ? getCancellationPolicy(appointment.date, appointment.time) : null;
+  const policy = appointment
+    ? getCancellationPolicy(appointment.dateObj || appointment.date, appointment.time)
+    : null;
 
   useEffect(() => {
     if (visible) {
@@ -104,30 +126,15 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
         setError('شماره کارت باید ۱۶ رقم باشد');
         return;
       }
-      // ✅ FIX P2: استفاده از getBankById به جای find محلی
-      const { getBankById } = await import('@/data/banks');
-      const selectedBank = getBankById(bankId);
-      updateUser({
-        bankInfo: {
-          bankName: selectedBank?.label || '',
-          sheba: cleanSheba,
-          cardNumber: cleanCard,
-          ownerName: user?.name || '',
-        },
-      });
     }
 
     setLoading(true);
     setError('');
 
     try {
-      if (!USE_MOCK) {
-        await appointmentsService.cancelAppointment(appointment.id, '');
-      } else {
-        await new Promise((r) => setTimeout(r, 1200));
-      }
+      await appointmentsService.cancelAppointment(appointment.id, '');
       setLoading(false);
-      onConfirmCancel?.(appointment.id);
+      onConfirmCancel?.(appointment.id, reason);
       showToast('نوبت لغو شد. بیعانه ظرف ۴۸ ساعت واریز می‌شود.', 'success');
     } catch (err) {
       setLoading(false);
@@ -147,7 +154,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
     >
       <div
         className="w-full max-w-md max-h-[90vh] rounded-t-3xl md:rounded-3xl
-        flex flex-col overflow-hidden shadow-2xl"
+          flex flex-col overflow-hidden shadow-2xl"
         style={{
           backgroundColor: colors.cardBackground,
           borderTop: `1px solid ${colors.border}`,
@@ -192,46 +199,60 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
 
         {/* محتوا */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          <CancelRefundSummary refundAmount={refundAmount} />
-          <CancelPolicyBox canCancel={policy?.canCancel} hoursLeft={policy?.hoursLeft} />
-
-          {policy?.canCancel && (
+          {loadingBankInfo ? (
+            <div className="flex items-center justify-center py-6">
+              <div
+                className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+                style={{ color: colors.primary }}
+              />
+            </div>
+          ) : (
             <>
-              {hasCompleteBankInfo ? (
-                <CancelBankInfoDisplay bankInfo={bankInfo} />
-              ) : (
-                <CancelBankForm
-                  bankId={bankId}
-                  sheba={sheba}
-                  cardNumber={cardNumber}
-                  userName={user?.name}
-                  onBankChange={(val) => {
-                    setBankId(val);
-                    setError('');
+              <CancelRefundSummary refundAmount={refundAmount} />
+              <CancelPolicyBox canCancel={policy?.canCancel} hoursLeft={policy?.hoursLeft} />
+
+              {policy?.canCancel && (
+                <>
+                  {hasCompleteBankInfo ? (
+                    <CancelBankInfoDisplay bankInfo={bankInfo} />
+                  ) : (
+                    <CancelBankForm
+                      bankId={bankId}
+                      sheba={sheba}
+                      cardNumber={cardNumber}
+                      userName={bankInfo?.ownerName || ''}
+                      onBankChange={(val) => {
+                        setBankId(val);
+                        setError('');
+                      }}
+                      onShebaChange={(t) => {
+                        setSheba(formatSheba(t));
+                        setError('');
+                      }}
+                      onCardChange={(t) => {
+                        setCardNumber(formatCard(t));
+                        setError('');
+                      }}
+                    />
+                  )}
+                </>
+              )}
+
+              {error && (
+                <div
+                  className="flex items-center gap-2 p-3 rounded-xl border"
+                  style={{
+                    backgroundColor: '#E5393508',
+                    borderColor: '#E5393530',
                   }}
-                  onShebaChange={(t) => {
-                    setSheba(formatSheba(t));
-                    setError('');
-                  }}
-                  onCardChange={(t) => {
-                    setCardNumber(formatCard(t));
-                    setError('');
-                  }}
-                />
+                >
+                  <FiAlertTriangle size={14} color="#E53935" />
+                  <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
+                    {error}
+                  </span>
+                </div>
               )}
             </>
-          )}
-
-          {error && (
-            <div
-              className="flex items-center gap-2 p-3 rounded-xl border"
-              style={{ backgroundColor: '#E5393508', borderColor: '#E5393530' }}
-            >
-              <FiAlertTriangle size={14} color="#E53935" />
-              <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
-                {error}
-              </span>
-            </div>
           )}
         </div>
 
@@ -247,17 +268,17 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
             <button
               onClick={onClose}
               className="flex-1 py-3.5 rounded-2xl border-2 text-sm font-[Vazir-Bold]
-              transition-all hover:scale-[1.01] active:scale-[0.99]"
+                transition-all hover:scale-[1.01] active:scale-[0.99]"
               style={{ borderColor: colors.border, color: colors.textMain }}
             >
               انصراف
             </button>
             <button
               onClick={handleConfirm}
-              disabled={loading || !policy?.canCancel}
+              disabled={loading || !policy?.canCancel || loadingBankInfo}
               className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl
-              text-sm font-[Vazir-Bold] transition-all hover:scale-[1.01] active:scale-[0.99]
-              disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                text-sm font-[Vazir-Bold] transition-all hover:scale-[1.01] active:scale-[0.99]
+                disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               style={{ backgroundColor: '#E53935', color: '#fff' }}
             >
               {loading ? (

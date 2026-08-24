@@ -48,7 +48,11 @@ export default function NearbyPage() {
 
   // ═══════ دریافت موقعیت مکانی ═══════
   const fetchLocation = useCallback(async (forceRefresh = false) => {
-    if (!forceRefresh && cachedLocation && Date.now() - cachedLocationTimestamp < LOCATION_CACHE_TTL) {
+    if (
+      !forceRefresh &&
+      cachedLocation &&
+      Date.now() - cachedLocationTimestamp < LOCATION_CACHE_TTL
+    ) {
       setUserLocation(cachedLocation);
       return;
     }
@@ -110,16 +114,22 @@ export default function NearbyPage() {
             bizList.map((b) => ({
               id: b.id,
               name: b.name,
-              category: b.category?.name || b.category_name || '',
+              // ✅ فاز ۳: فقط خوانش camelCase
+              category: b.categoryName || '',
               address: b.address,
               rating: b.rating || 0,
-              reviewsCount: b.reviews_count || 0,
+              reviewsCount: b.reviewsCount || 0,
               logo: b.logo,
               discount: b.discount || 0,
               latitude: b.latitude,
               longitude: b.longitude,
               distance: b.distance
-                ? calculateDistance(userLocation.latitude, userLocation.longitude, b.latitude, b.longitude)
+                ? calculateDistance(
+                    userLocation.latitude,
+                    userLocation.longitude,
+                    b.latitude,
+                    b.longitude
+                  )
                 : null,
             }))
           );
@@ -164,7 +174,12 @@ export default function NearbyPage() {
       .filter((biz) => biz.latitude && biz.longitude)
       .map((biz) => ({
         ...biz,
-        distance: calculateDistance(userLocation.latitude, userLocation.longitude, biz.latitude, biz.longitude),
+        distance: calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          biz.latitude,
+          biz.longitude
+        ),
       }))
       .sort((a, b) => (a.distance || 0) - (b.distance || 0));
   }, [userLocation, nearbyBusinesses]);
@@ -172,7 +187,9 @@ export default function NearbyPage() {
   const filteredBusinesses = useMemo(() => {
     let list = businessesWithDistance.filter((b) => b.distance !== null);
     if (selectedCategoryId) {
-      list = list.filter((b) => b.category_id === selectedCategoryId || b.categoryId === selectedCategoryId);
+      list = list.filter(
+        (b) => b.category_id === selectedCategoryId || b.categoryId === selectedCategoryId
+      );
     }
     return list;
   }, [businessesWithDistance, selectedCategoryId]);
@@ -237,7 +254,11 @@ export default function NearbyPage() {
                   title="دسته‌بندی خدمات"
                   subtitle="یک دسته انتخاب کنید تا نزدیک‌ترین‌ها را ببینید"
                 />
-                <CategoryGrid categories={categories} selectedId={selectedCategoryId} onSelect={handleCategorySelect} />
+                <CategoryGrid
+                  categories={categories}
+                  selectedId={selectedCategoryId}
+                  onSelect={handleCategorySelect}
+                />
               </section>
 
               {selectedCategoryId && (
@@ -255,11 +276,17 @@ export default function NearbyPage() {
               )}
 
               {!selectedCategoryId && (
-                <NearbyModelRequestsSection nearbyModelRequests={nearbyModelRequests} onModelPress={handleModelPress} />
+                <NearbyModelRequestsSection
+                  nearbyModelRequests={nearbyModelRequests}
+                  onModelPress={handleModelPress}
+                />
               )}
 
               {!selectedCategoryId && (
-                <NearbyLineRentalsSection nearbyLineRentals={nearbyLineRentals} onLinePress={handleLinePress} />
+                <NearbyLineRentalsSection
+                  nearbyLineRentals={nearbyLineRentals}
+                  onLinePress={handleLinePress}
+                />
               )}
             </>
           )}

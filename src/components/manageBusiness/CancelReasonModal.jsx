@@ -48,11 +48,7 @@ export default function CancelReasonModal({ visible, appointment, onClose, onCon
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      if (!USE_MOCK) {
-        await appointmentsService.cancelByBusiness(appointment.id, reason.trim());
-      } else {
-        await new Promise((r) => setTimeout(r, 800));
-      }
+      await appointmentsService.cancelByBusiness(appointment.id, reason.trim());
       setLoading(false);
       onConfirm?.(appointment.id, reason.trim() || 'دلیلی ذکر نشده است');
     } catch (err) {

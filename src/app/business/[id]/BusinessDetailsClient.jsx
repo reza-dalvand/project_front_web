@@ -19,6 +19,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { businessesService, portfoliosService } from '@/api';
 import { useAuth } from '@/stores/useAuthStore';
+import { useFavoriteStore } from '@/stores/useFavoriteStore';
 
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), { ssr: false });
 const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'), { ssr: false });
@@ -42,17 +43,19 @@ export default function BusinessDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { showToast } = useToast();
-  const { requireAuth } = useAuth();
+  const { isAuthenticated, requireAuth } = useAuth();
 
   const [business, setBusiness] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('services');
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
+  const isBusinessFavorited = useFavoriteStore((s) => s.isBusinessFavorited);
+  const toggleBusinessFavorite = useFavoriteStore((s) => s.toggleBusinessFavorite);
   const [activePortfolio, setActivePortfolio] = useState(null);
+  const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
 
+  const isFavorite = isBusinessFavorited(params.id);
   // ✅ لیست قیمت از استور
   const priceListFromStore = usePriceListStore((s) => s.lists[params.id]);
   const fetchPriceList = usePriceListStore((s) => s.fetchPriceList);
@@ -68,36 +71,37 @@ export default function BusinessDetailsPage() {
         const businessData = {
           id: b.id,
           name: b.name,
-          category: b.category?.name || b.category_name || '',
-          city: b.city?.name || b.city_name || '',
+          category: b.category?.name || b.categoryName || '',
+          city: b.city?.name || b.cityName || '',
           address: b.address,
           phone: b.phone,
-          workingHours: b.working_hours || b.workingHours,
+          // ✅ فاز ۳: فقط خوانش camelCase
+          workingHours: b.workingHours,
           about: b.about,
           rating: b.rating,
-          reviewsCount: b.reviews_count || b.reviewsCount,
-          VIP: b.is_vip || b.isVip,
+          reviewsCount: b.reviewsCount || 0,
+          VIP: b.isVip || false,
           logo: b.logo,
-          coverUrl: b.cover_image || b.coverImage,
-          ownerPhoto: b.owner_photo || b.ownerPhoto,
-          ownerName: b.owner_name || b.ownerName,
-          verifiedName: b.verified_name || b.verifiedName,
-          bookingSlug: b.booking_slug || b.bookingSlug,
+          coverUrl: b.coverImage || null,
+          ownerPhoto: b.ownerPhoto || null,
+          ownerName: b.ownerName || '',
+          verifiedName: b.verifiedName || '',
+          bookingSlug: b.bookingSlug || '',
           latitude: b.latitude,
           longitude: b.longitude,
-          gallery: (b.gallery || []).map((img) => img.image_url || img.image || img),
+          gallery: (b.gallery || []).map((img) => img.imageUrl || img.image || img),
           services: (b.services || []).map((s) => ({
             id: s.id,
             name: s.name,
-            typeId: s.sub_service?.type_id || s.type_id || s.typeId || '',
-            typeName: s.sub_service?.name || s.type_name || s.typeName || '',
-            originalPrice: s.original_price ?? s.originalPrice ?? 0,
-            discountPercent: s.discount_percent ?? s.discountPercent ?? 0,
-            finalPrice: s.final_price ?? s.finalPrice ?? s.original_price ?? 0,
+            typeId: s.subService?.typeId || s.typeId || '',
+            typeName: s.subService?.name || s.typeName || '',
+            originalPrice: s.originalPrice ?? 0,
+            discountPercent: s.discountPercent ?? 0,
+            finalPrice: s.finalPrice ?? s.originalPrice ?? 0,
             duration: s.duration || 60,
-            hasDeposit: s.has_deposit ?? s.hasDeposit ?? false,
-            depositAmount: s.deposit_amount ?? s.depositAmount ?? 0,
-            isActive: s.is_active ?? s.isActive ?? true,
+            hasDeposit: s.hasDeposit ?? false,
+            depositAmount: s.depositAmount ?? 0,
+            isActive: s.isActive ?? true,
           })),
           portfolios: [],
         };
@@ -151,7 +155,9 @@ export default function BusinessDetailsPage() {
       if ((!storeList.services || storeList.services.length === 0) && business?.services?.length) {
         return {
           ...storeList,
-          services: business.services.filter((s) => s.isActive !== false).map(mapServiceToPriceList),
+          services: business.services
+            .filter((s) => s.isActive !== false)
+            .map(mapServiceToPriceList),
         };
       }
       return storeList;
@@ -197,7 +203,24 @@ export default function BusinessDetailsPage() {
     setActivePortfolio(null);
   }, []);
 
-  const toggleFavorite = useCallback(() => setIsFavorite((prev) => !prev), []);
+  const toggleFavorite = useCallback(async () => {
+    if (!isAuthenticated) {
+      requireAuth(() => {});
+      return;
+    }
+    try {
+      const newState = await toggleBusinessFavorite(params.id, {
+        id: params.id,
+        name: business?.name,
+        category: business?.category,
+        city: business?.city,
+        logo: business?.logo,
+      });
+      showToast(newState ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد', 'success');
+    } catch (error) {
+      showToast(error.message || 'خطا در عملیات', 'error');
+    }
+  }, [isAuthenticated, requireAuth, toggleBusinessFavorite, params.id, business, showToast]);
 
   const goBack = useCallback(() => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -253,7 +276,12 @@ export default function BusinessDetailsPage() {
 
         <BusinessInfoCard business={business} onMapPress={openMap} />
 
-        <BusinessTabs activeTab={activeTab} onTabChange={setActiveTab} colors={colors} showPrices={showPrices} />
+        <BusinessTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          colors={colors}
+          showPrices={showPrices}
+        />
 
         <div className="px-5 pt-1">
           {activeTab === 'services' && (
@@ -265,12 +293,18 @@ export default function BusinessDetailsPage() {
           )}
 
           {activeTab === 'prices' && priceListSettings && (
-            <PriceListMenu businessName={business.name} businessLogo={business.logo} settings={priceListSettings} />
+            <PriceListMenu
+              businessName={business.name}
+              businessLogo={business.logo}
+              settings={priceListSettings}
+            />
           )}
 
           {activeTab === 'honors' && <HonorMedalsSection businessId={business.id} />}
 
-          {activeTab === 'portfolio' && <PortfolioGrid portfolios={portfolios} onPortfolioPress={openPortfolio} />}
+          {activeTab === 'portfolio' && (
+            <PortfolioGrid portfolios={portfolios} onPortfolioPress={openPortfolio} />
+          )}
 
           {activeTab === 'about' && <BusinessAbout business={business} />}
         </div>
@@ -284,7 +318,11 @@ export default function BusinessDetailsPage() {
         businessName={business?.name || ''}
       />
 
-      <PortfolioModal visible={portfolioModalVisible} onClose={closePortfolio} portfolio={activePortfolio} />
+      <PortfolioModal
+        visible={portfolioModalVisible}
+        onClose={closePortfolio}
+        portfolio={activePortfolio}
+      />
     </ScreenWrapper>
   );
 }

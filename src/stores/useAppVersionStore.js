@@ -50,13 +50,14 @@ export const useAppVersionStore = create(
           const response = await apiClient.get('/config/app-version/');
           const config = response.data;
 
-          if (!config?.latest_version) {
+          // ✅ فاز ۳: خوانش camelCase (بعد از نرمال‌ساز)
+          if (!config?.latestVersion) {
             set({ updateInfo: null, checking: false });
             return;
           }
 
-          const compareLatest = compareVersions(APP_VERSION, config.latest_version);
-          const compareMin = compareVersions(APP_VERSION, config.min_required_version);
+          const compareLatest = compareVersions(APP_VERSION, config.latestVersion);
+          const compareMin = compareVersions(APP_VERSION, config.minRequiredVersion);
 
           // اگر نسخه فعلی آخرین نسخه است، آپدیتی وجود ندارد
           if (compareLatest >= 0) {
@@ -65,12 +66,12 @@ export const useAppVersionStore = create(
           }
 
           // بررسی آپدیت اجباری
-          const isForce = compareMin < 0 || config.is_force_update === true;
+          const isForce = compareMin < 0 || config.isForceUpdate === true;
 
           // اگر آپدیت اختیاری است و کاربر قبلاً رد کرده
           if (!isForce) {
             const { dismissedVersion } = get();
-            if (dismissedVersion === config.latest_version) {
+            if (dismissedVersion === config.latestVersion) {
               set({ dismissed: true, updateInfo: null, checking: false });
               return;
             }
@@ -79,14 +80,14 @@ export const useAppVersionStore = create(
           set({
             updateInfo: {
               currentVersion: APP_VERSION,
-              latestVersion: config.latest_version,
+              latestVersion: config.latestVersion,
               isForceUpdate: isForce,
               title: config.title || 'نسخه جدید بیو کلاب منتشر شد!',
               updateMessage:
-                config.update_message || 'برای تجربه بهتر، لطفاً به آخرین نسخه به‌روزرسانی کنید.',
+                config.updateMessage || 'برای تجربه بهتر، لطفاً به آخرین نسخه به‌روزرسانی کنید.',
               changelog: config.changelog || [],
-              storeUrl: config.store_url || DEFAULT_STORE_URL,
-              storeName: config.store_name || DEFAULT_STORE_NAME,
+              storeUrl: config.storeUrl || DEFAULT_STORE_URL,
+              storeName: config.storeName || DEFAULT_STORE_NAME,
             },
             checking: false,
           });

@@ -8,11 +8,7 @@ import Button from '@/components/common/Button';
 import Dropdown from '@/components/common/Dropdown';
 import CharCounter from '@/components/common/CharCounter';
 import { toPersianDigit } from '@/utils/numberUtils';
-import {
-  SERVICE_CATEGORIES,
-  getSubServicesByCategory,
-  getCategoryById,
-} from '@/constants/serviceTypes';
+import { useServiceCategories } from '@/hooks/useCategoryOptions';
 
 const MAX_DESCRIPTION_LENGTH = 300;
 const MAX_IMAGES = 5;
@@ -34,10 +30,12 @@ export default function PortfolioFormSheet({
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
 
-  // لیست زیرخدمات بر اساس دسته‌بندی انتخاب شده
-  const availableSubServices = categoryId ? getSubServicesByCategory(categoryId) : [];
+  // ✅ دریافت دسته‌بندی‌ها از فایل لوکال
+  const { categories: serviceCategories } = useServiceCategories();
+  const availableSubServices = categoryId
+    ? serviceCategories.find((c) => c.id === categoryId)?.subServices || []
+    : [];
 
-  // Reset form when modal opens
   useEffect(() => {
     if (visible) {
       if (editingPortfolio) {
@@ -61,10 +59,9 @@ export default function PortfolioFormSheet({
     }
   }, [visible, editingPortfolio]);
 
-  // وقتی دسته‌بندی عوض شد، نوع خدمت ریست شود
   const handleCategoryChange = (catId) => {
     setCategoryId(catId);
-    setSubServiceId(null); // ریست نوع خدمت
+    setSubServiceId(null);
     if (errors.categoryId) setErrors((prev) => ({ ...prev, categoryId: '' }));
     if (errors.subServiceId) setErrors((prev) => ({ ...prev, subServiceId: '' }));
   };
@@ -101,11 +98,9 @@ export default function PortfolioFormSheet({
     if (Object.keys(newErrors).length > 0) return;
 
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-
-    const category = getCategoryById(categoryId);
+    // ✅ حذف تأخیر ماک — مستقیم onSave صدا زده می‌شود
+    const category = serviceCategories.find((c) => c.id === categoryId);
     const subService = availableSubServices.find((s) => s.id === subServiceId);
-
     const portfolioData = {
       title: title.trim(),
       description: description.trim(),
@@ -116,7 +111,6 @@ export default function PortfolioFormSheet({
       coverImage: images[0],
       images,
     };
-
     onSave(portfolioData, editingPortfolio?.id);
     setIsSaving(false);
   };
@@ -145,7 +139,7 @@ export default function PortfolioFormSheet({
       }
     >
       <div className="space-y-5 pb-4">
-        {/* ═══════ بخش تصاویر ═══════ */}
+        {/* بخش تصاویر */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div
@@ -169,12 +163,10 @@ export default function PortfolioFormSheet({
               {errors.images}
             </p>
           )}
-          {/* Grid تصاویر */}
           <div className="grid grid-cols-3 gap-2.5">
             {images.map((img, index) => (
               <div key={index} className="relative aspect-square rounded-xl overflow-hidden group">
                 <img src={img} alt={`تصویر ${index + 1}`} className="w-full h-full object-cover" />
-                {/* Badge کاور */}
                 {index === 0 && (
                   <div
                     className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md text-[9px] font-[Vazir-Bold] text-white"
@@ -183,7 +175,6 @@ export default function PortfolioFormSheet({
                     کاور
                   </div>
                 )}
-                {/* دکمه حذف */}
                 <button
                   onClick={() => handleRemoveImage(index)}
                   className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -193,7 +184,6 @@ export default function PortfolioFormSheet({
                 </button>
               </div>
             ))}
-            {/* دکمه افزودن تصویر */}
             {images.length < MAX_IMAGES && (
               <button
                 onClick={handleAddImage}
@@ -215,7 +205,7 @@ export default function PortfolioFormSheet({
           </p>
         </div>
 
-        {/* ═══════ بخش دسته‌بندی و نوع خدمت ═══════ */}
+        {/* بخش دسته‌بندی و نوع خدمت */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div
@@ -228,13 +218,11 @@ export default function PortfolioFormSheet({
               دسته‌بندی و نوع خدمت
             </span>
           </div>
-
-          {/* Dropdown سطح ۱: دسته‌بندی خدمات */}
           <Dropdown
             label="دسته‌بندی خدمات *"
             placeholder="دسته‌بندی را انتخاب کنید"
             value={categoryId}
-            options={SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))}
+            options={serviceCategories.map((c) => ({ id: c.id, label: c.label }))}
             onSelect={handleCategoryChange}
           />
           {errors.categoryId && (
@@ -242,8 +230,6 @@ export default function PortfolioFormSheet({
               {errors.categoryId}
             </p>
           )}
-
-          {/* Dropdown سطح ۲: نوع خدمت */}
           <Dropdown
             label="نوع خدمت *"
             placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
@@ -262,7 +248,7 @@ export default function PortfolioFormSheet({
           )}
         </div>
 
-        {/* ═══════ بخش اطلاعات ═══════ */}
+        {/* بخش اطلاعات */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div
@@ -291,9 +277,7 @@ export default function PortfolioFormSheet({
               placeholder="توضیحاتی درباره این نمونه‌کار..."
               value={description}
               onChangeText={(t) => {
-                if (t.length <= MAX_DESCRIPTION_LENGTH) {
-                  setDescription(t);
-                }
+                if (t.length <= MAX_DESCRIPTION_LENGTH) setDescription(t);
               }}
               multiline
             />

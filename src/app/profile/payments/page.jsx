@@ -1,7 +1,8 @@
 // src/app/profile/payments/page.jsx
 'use client';
-import { useState, useMemo, useEffect } from 'react';
-import { FiFilter } from 'react-icons/fi';
+import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { FiFilter, FiCheckCircle, FiXCircle, FiInfo } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useToast } from '@/hooks/useToast';
@@ -10,13 +11,15 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import PaymentCompactCard from '@/components/profile/paymentHistory/PaymentCompactCard';
 import PaymentStatsCard from '@/components/profile/paymentHistory/PaymentStatsCard';
 import { paymentsService } from '@/api';
-import { usePaymentStore, TX_STATUS_MAP } from '@/stores/usePaymentStore';
+import { usePaymentStore } from '@/stores/usePaymentStore';
 import dynamic from 'next/dynamic';
+import { formatPrice, toPersianDigit } from '@/utils/numberUtils';
 
 const PaymentDetailModal = dynamic(
   () => import('@/components/profile/paymentHistory/PaymentDetailModal'),
   { ssr: false, loading: () => null }
 );
+
 const PaymentFilterSheet = dynamic(
   () => import('@/components/profile/paymentHistory/PaymentFilterSheet'),
   { ssr: false, loading: () => null }
@@ -30,10 +33,15 @@ const FILTER_OPTIONS = [
   { id: 'last_3months', label: 'سه ماه قبل' },
 ];
 
-export default function PaymentsPage() {
+// ═══════════════════════════════════════════════
+//   کامپوننت داخلی که از useSearchParams استفاده می‌کند
+// ═══════════════════════════════════════════════
+function PaymentsPageContent() {
   const { colors } = useTheme();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
+  const searchParams = useSearchParams();
+
   const { customerPayments, isLoading, fetchCustomerPayments } = usePaymentStore();
 
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -41,7 +49,47 @@ export default function PaymentsPage() {
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  // ═══════ بارگذاری اولیه ═══════
+  // ═══ ✅ فاز ۶: خواندن Query Params از Callback پرداخت ═══
+  const callbackStatus = searchParams.get('status');
+  const callbackTrackingCode = searchParams.get('tracking_code');
+  const callbackAmount = searchParams.get('amount');
+  const callbackReason = searchParams.get('reason');
+
+  // نمایش پیام نتیجه پرداخت (یک بار)
+  useEffect(() => {
+    if (!callbackStatus) return;
+
+    if (callbackStatus === 'success') {
+      showToast(
+        `پرداخت ${callbackAmount ? formatPrice(parseInt(callbackAmount)) : ''} با موفقیت انجام شد ✅`,
+        'success',
+        5000
+      );
+    } else if (callbackStatus === 'failed') {
+      const reasonMessages = {
+        cancelled: 'پرداخت توسط شما لغو شد',
+        invalid_callback: 'خطا در بازگشت از درگاه پرداخت',
+        transaction_not_found: 'تراکنش مورد نظر یافت نشد',
+        VERIFY_ERROR: 'خطا در تایید تراکنش',
+        GATEWAY_ERROR: 'خطا در ارتباط با درگاه پرداخت',
+      };
+      const message = reasonMessages[callbackReason] || 'پرداخت ناموفق بود';
+      showToast(message, 'error', 5000);
+    }
+
+    // پاک کردن query params از URL بدون رفرش صفحه
+    // تا با رفرش مجدد، پیام تکراری نمایش داده نشود
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('status');
+      url.searchParams.delete('tracking_code');
+      url.searchParams.delete('amount');
+      url.searchParams.delete('reason');
+      window.history.replaceState({}, '', url.pathname);
+    }
+  }, [callbackStatus, callbackTrackingCode, callbackAmount, callbackReason, showToast]);
+
+  // ═══ بارگذاری اولیه ═══
   useEffect(() => {
     fetchCustomerPayments().catch((error) => {
       console.error('Failed to load payments:', error);
@@ -49,10 +97,10 @@ export default function PaymentsPage() {
     });
   }, []);
 
-  // ═══════ فیلتر ═══════
+  // ═══ فیلتر ═══
   const filteredPayments = useMemo(() => {
     if (activeFilter === 'all') return customerPayments;
-    // فیلتر زمانی ساده بر اساس created_at
+
     const now = new Date();
     let cutoff;
     switch (activeFilter) {
@@ -78,14 +126,14 @@ export default function PaymentsPage() {
     return customerPayments.filter((p) => new Date(p.created_at) >= cutoff);
   }, [customerPayments, activeFilter]);
 
-  // ═══════ آمار ═══════
+  // ═══ آمار ═══
   const stats = useMemo(() => {
     const successful = customerPayments.filter(
       (p) => p.status === 'settled' || p.status === 'blocked' || p.status === 'settling'
     );
     return {
       totalPaid: successful.reduce((s, p) => s + (p.amount || 0), 0),
-      totalDiscount: 0, // در بک‌اند تخفیف جداگانه نیست
+      totalDiscount: 0,
       successCount: successful.length,
     };
   }, [customerPayments]);
@@ -105,6 +153,48 @@ export default function PaymentsPage() {
 
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: colors.background }}>
+      {/* ═══ ✅ فاز ۶: بنر نتیجه پرداخت ═══ */}
+      {callbackStatus && (
+        <div
+          className="mx-4 mt-4 mb-2 p-4 rounded-2xl border flex items-start gap-3"
+          style={{
+            backgroundColor: callbackStatus === 'success' ? '#43A04710' : '#E5393510',
+            borderColor: callbackStatus === 'success' ? '#43A04740' : '#E5393540',
+          }}
+        >
+          {callbackStatus === 'success' ? (
+            <FiCheckCircle size={22} color="#43A047" className="flex-shrink-0 mt-0.5" />
+          ) : (
+            <FiXCircle size={22} color="#E53935" className="flex-shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1">
+            <p
+              className="text-sm font-[Vazir-Bold] mb-1"
+              style={{
+                color: callbackStatus === 'success' ? '#43A047' : '#E53935',
+              }}
+            >
+              {callbackStatus === 'success' ? 'پرداخت موفق' : 'پرداخت ناموفق'}
+            </p>
+            <p className="text-xs" style={{ color: colors.textSecondary }}>
+              {callbackStatus === 'success'
+                ? `مبلغ ${callbackAmount ? formatPrice(parseInt(callbackAmount)) : ''} با موفقیت پرداخت شد. نوبت شما ثبت گردید.`
+                : callbackReason === 'cancelled'
+                  ? 'پرداخت توسط شما لغو شد. نوبت رزرو نشده است.'
+                  : 'خطایی در فرآیند پرداخت رخ داد. لطفاً دوباره تلاش کنید.'}
+            </p>
+            {callbackTrackingCode && (
+              <p
+                className="text-[11px] mt-2 font-mono"
+                style={{ color: colors.textSecondary, direction: 'ltr', textAlign: 'right' }}
+              >
+                کد پیگیری: {toPersianDigit(callbackTrackingCode)}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* هدر + فیلتر */}
       <div className="px-4 pt-3 pb-2 border-b" style={{ borderBottomColor: colors.border }}>
         <div className="flex items-center justify-between">
@@ -174,5 +264,22 @@ export default function PaymentsPage() {
         currentFilter={activeFilter}
       />
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//   صفحه اصلی با Suspense برای useSearchParams
+// ═══════════════════════════════════════════════
+export default function PaymentsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-app">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <PaymentsPageContent />
+    </Suspense>
   );
 }

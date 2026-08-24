@@ -65,9 +65,7 @@ export default function ActiveDevicesPage() {
     if (!removeDeviceTarget) return;
 
     try {
-      if (!USE_MOCK) {
-        await authService.revokeDevice(removeDeviceTarget.id);
-      }
+      await authService.revokeDevice(removeDeviceTarget.id);
       setDevices((prev) => prev.filter((d) => d.id !== removeDeviceTarget.id));
       showToast(
         `نشست "${removeDeviceTarget.device_name || removeDeviceTarget.name}" بسته شد`,

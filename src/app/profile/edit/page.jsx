@@ -1,6 +1,5 @@
 // src/app/profile/edit/page.jsx
 'use client';
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
@@ -21,6 +20,18 @@ import { OTP_CONFIG } from '@/api/config';
 const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;
 const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS;
 
+/**
+ * ✅ FIX فاز ۲: ناوبری ایمن به صفحه قبلی
+ * اگر تاریخچه خالی باشد (کاربر مستقیم وارد شده)، به خانه برود
+ */
+const safeNavigateBack = (router) => {
+  if (typeof window !== 'undefined' && window.history.length > 1) {
+    router.back();
+  } else {
+    router.replace('/');
+  }
+};
+
 export default function EditProfilePage() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -36,7 +47,6 @@ export default function EditProfilePage() {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteOtp, setShowDeleteOtp] = useState(false);
   const [deleteOtp, setDeleteOtp] = useState(['', '', '', '', '']);
@@ -54,7 +64,7 @@ export default function EditProfilePage() {
     return () => clearInterval(interval);
   }, [showDeleteOtp, deleteTimer]);
 
-  // ✅ حذف USE_MOCK — فقط API
+  // ═══ ذخیره پروفایل ═══
   const handleSave = async () => {
     const newErrors = {};
     if (!formData.firstName.trim()) {
@@ -76,7 +86,6 @@ export default function EditProfilePage() {
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
       });
-
       updateUser({
         name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
         firstName: formData.firstName.trim(),
@@ -86,6 +95,7 @@ export default function EditProfilePage() {
       setLoading(false);
       showToast('اطلاعات پروفایل با موفقیت ذخیره شد', 'success');
 
+      // ✅ FIX فاز ۲: بررسی پارامتر خوشامدگویی
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         if (params.get('welcome') === '1') {
@@ -93,14 +103,16 @@ export default function EditProfilePage() {
           return;
         }
       }
-      router.back();
+
+      // ✅ FIX فاز ۲: ناوبری ایمن
+      safeNavigateBack(router);
     } catch (err) {
       setLoading(false);
       showToast(err.message || 'خطا در ذخیره اطلاعات', 'error');
     }
   };
 
-  // ✅ حذف USE_MOCK — فقط API
+  // ═══ شروع حذف حساب ═══
   const handleStartDelete = async () => {
     setShowDeleteConfirm(false);
     setDeleteOtp(['', '', '', '', '']);
@@ -108,7 +120,6 @@ export default function EditProfilePage() {
     setDeleteOtpLoading(false);
     setDeleteTimer(RESEND_SECONDS);
     setDeleteCanResend(false);
-
     try {
       await authService.sendDeleteAccountOTP();
       setShowDeleteOtp(true);
@@ -118,17 +129,15 @@ export default function EditProfilePage() {
     }
   };
 
-  // ✅ حذف USE_MOCK — فقط API
+  // ═══ تایید حذف حساب ═══
   const handleConfirmDelete = async () => {
     const code = deleteOtp.join('');
     if (code.length < OTP_LENGTH) {
       setDeleteOtpError(`کد ${OTP_LENGTH} رقمی را کامل وارد کنید`);
       return;
     }
-
     setDeleteOtpLoading(true);
     setDeleteOtpError('');
-
     try {
       await authService.deleteAccount(code);
       setDeleteOtpLoading(false);
@@ -157,11 +166,10 @@ export default function EditProfilePage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="ویرایش پروفایل" onBackPress={() => router.back()} />
-
+      {/* ✅ FIX فاز ۲: دکمه بازگشت هم ایمن شد */}
+      <Header title="ویرایش پروفایل" onBackPress={() => safeNavigateBack(router)} />
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-6">
         <ProfileAvatarSection userName={user?.name} />
-
         <ProfileFormSection
           firstName={formData.firstName}
           lastName={formData.lastName}
@@ -175,12 +183,10 @@ export default function EditProfilePage() {
             if (errors.lastName) setErrors((prev) => ({ ...prev, lastName: '' }));
           }}
         />
-
         <PhoneSection
           phone={user?.phone}
           onChangePhonePress={() => router.push('/profile/change-phone')}
         />
-
         <Button
           title="ذخیره تغییرات"
           onPress={handleSave}
@@ -190,16 +196,13 @@ export default function EditProfilePage() {
           size="lg"
           fullWidth
         />
-
         <DangerZone onDeletePress={() => setShowDeleteConfirm(true)} />
       </div>
-
       <DeleteConfirmModal
         visible={showDeleteConfirm}
         onConfirm={handleStartDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-
       <DeleteOtpModal
         visible={showDeleteOtp}
         otp={deleteOtp}

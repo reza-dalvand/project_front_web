@@ -20,7 +20,10 @@ export default function NearbyLineRentalsSection({ nearbyLineRentals, onLinePres
         iconColor="#667eea"
         title="فرصت‌های همکاری نزدیک"
         rightElement={
-          <SeeAllButton onPress={() => router.push('/line-rentals')} count={nearbyLineRentals.length} />
+          <SeeAllButton
+            onPress={() => router.push('/line-rentals')}
+            count={nearbyLineRentals.length}
+          />
         }
       />
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">

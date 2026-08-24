@@ -24,9 +24,7 @@ export default function FavoritesPage() {
   const [activeTab, setActiveTab] = useState('businesses');
 
   useEffect(() => {
-    if (!USE_MOCK) {
-      fetchFavorites();
-    }
+    fetchFavorites();
   }, [fetchFavorites]);
 
   const tabs = [
