@@ -36,3 +36,5 @@ export default function ServiceTypeIcon({ typeId, size = 56 }) {
     </div>
   );
 }
+
+export const getServiceTypeInfo = getServiceTypeConfig;
