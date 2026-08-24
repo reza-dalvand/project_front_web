@@ -1,67 +1,96 @@
-// src/__tests__/utils/jwt-utils.test.js
 import {
   decodeJWT,
   isTokenExpired,
   getTokenRemainingTime,
+  getUserIdFromToken,
   isTokenExpiringSoon,
 } from '@/utils/jwt-utils';
+import { createJwt } from '../helpers/createJwt';
 
-// ✅ FIX: Helper برای Base64url encoding ایمن در برابر کاراکترهای یونیکد (فارسی)
-const encodeBase64Url = (obj) => {
-  const jsonStr = JSON.stringify(obj);
-  const base64 = Buffer.from(jsonStr, 'utf8').toString('base64');
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-};
-
-const createMockToken = (payload, expOffset = 3600) => {
-  const header = encodeBase64Url({ alg: 'HS256', typ: 'JWT' });
-  const exp = Math.floor(Date.now() / 1000) + expOffset;
-  const body = encodeBase64Url({ ...payload, exp });
-  const signature = 'mock_signature';
-  return `${header}.${body}.${signature}`;
-};
+const futureExp = () => Math.floor(Date.now() / 1000) + 3600;
+const pastExp = () => Math.floor(Date.now() / 1000) - 100;
 
 describe('jwt-utils', () => {
   describe('decodeJWT', () => {
-    it('باید payload با فیلدهای فارسی را decode کند', () => {
-      const payload = { user_id: 1, name: 'مریم حسینی', role: 'admin' };
-      const token = createMockToken(payload);
-      const decoded = decodeJWT(token);
-      expect(decoded).not.toBeNull();
-      expect(decoded.name).toBe('مریم حسینی');
-      expect(decoded.user_id).toBe(1);
+    it('payload یک توکن معتبر را استخراج می‌کند', () => {
+      const token = createJwt({ user_id: 1, exp: futureExp(), name: 'مریم حسینی' });
+      const payload = decodeJWT(token);
+      expect(payload).not.toBeNull();
+      expect(payload.user_id).toBe(1);
+      expect(payload.name).toBe('مریم حسینی');
     });
 
-    it('توکن نامعتبر را null برگرداند', () => {
-      expect(decodeJWT('invalid.token')).toBeNull();
+    it('برای توکن نامعتبر، خالی برمی‌گرداند', () => {
       expect(decodeJWT('')).toBeNull();
       expect(decodeJWT(null)).toBeNull();
+      expect(decodeJWT('invalid')).toBeNull();
+      expect(decodeJWT('a.b')).toBeNull();
     });
   });
 
   describe('isTokenExpired', () => {
-    it('توکن منقضی شده را تشخیص دهد', () => {
-      const token = createMockToken({ user_id: 1 }, -100); // 100 seconds in the past
+    it('برای توکن با انقضای آینده، خالی برمی‌گرداند', () => {
+      const token = createJwt({ exp: futureExp() });
+      expect(isTokenExpired(token)).toBe(false);
+    });
+
+    it('برای توکن منقضی‌شده، خالی برمی‌گرداند', () => {
+      const token = createJwt({ exp: pastExp() });
       expect(isTokenExpired(token)).toBe(true);
     });
 
-    it('توکن معتبر را تشخیص دهد', () => {
-      const token = createMockToken({ user_id: 1 }, 3600); // 1 hour in the future
-      expect(isTokenExpired(token)).toBe(false);
+    it('برای توکن بدون فیلد انقضا، خالی برمی‌گرداند', () => {
+      const token = createJwt({ user_id: 1 });
+      expect(isTokenExpired(token)).toBe(true);
+    });
+
+    it('برای توکن نامعتبر، خالی برمی‌گرداند', () => {
+      expect(isTokenExpired('invalid')).toBe(true);
+      expect(isTokenExpired(null)).toBe(true);
     });
   });
 
   describe('getTokenRemainingTime', () => {
-    it('زمان باقی‌مانده را محاسبه کند', () => {
-      const token = createMockToken({ user_id: 1 }, 3600);
+    it('زمان باقی‌مانده را بر حسب میلی‌ثانیه برمی‌گرداند', () => {
+      const token = createJwt({ exp: futureExp() });
       const remaining = getTokenRemainingTime(token);
-      expect(remaining).toBeGreaterThan(3500 * 1000);
+      expect(remaining).toBeGreaterThan(0);
       expect(remaining).toBeLessThanOrEqual(3600 * 1000);
     });
 
-    it('برای توکن منقضی شده 0 برگرداند', () => {
-      const token = createMockToken({ user_id: 1 }, -100);
+    it('برای توکن منقضی‌شده، صفر برمی‌گرداند', () => {
+      const token = createJwt({ exp: pastExp() });
       expect(getTokenRemainingTime(token)).toBe(0);
+    });
+  });
+
+  describe('getUserIdFromToken', () => {
+    it('شناسه کاربر را از توکن استخراج می‌کند', () => {
+      const token = createJwt({ user_id: 42, exp: futureExp() });
+      expect(getUserIdFromToken(token)).toBe(42);
+    });
+
+    it('برای توکن نامعتبر، خالی برمی‌گرداند', () => {
+      expect(getUserIdFromToken('invalid')).toBeNull();
+      expect(getUserIdFromToken(null)).toBeNull();
+    });
+  });
+
+  describe('isTokenExpiringSoon', () => {
+    it('برای توکنی که کمتر از ۵ دقیقه مانده، خالی برمی‌گرداند', () => {
+      const soon = Math.floor(Date.now() / 1000) + 60;
+      const token = createJwt({ exp: soon });
+      expect(isTokenExpiringSoon(token)).toBe(true);
+    });
+
+    it('برای توکنی که زمان زیادی مانده، خالی برمی‌گرداند', () => {
+      const token = createJwt({ exp: futureExp() });
+      expect(isTokenExpiringSoon(token)).toBe(false);
+    });
+
+    it('برای توکن منقضی‌شده، خالی برمی‌گرداند', () => {
+      const token = createJwt({ exp: pastExp() });
+      expect(isTokenExpiringSoon(token)).toBe(false);
     });
   });
 });

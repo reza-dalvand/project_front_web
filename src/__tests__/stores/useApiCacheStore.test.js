@@ -1,44 +1,59 @@
-// src/__tests__/stores/useApiCacheStore.test.js
 import { useApiCacheStore } from '@/stores/useApiCacheStore';
-import { act } from '@testing-library/react';
 
 describe('useApiCacheStore', () => {
   beforeEach(() => {
-    act(() => {
+    useApiCacheStore.getState().clearCache();
+  });
+
+  describe('setCache / getCache', () => {
+    it('داده را ذخیره و بازیابی می‌کند', () => {
+      useApiCacheStore.getState().setCache('key1', { data: 1 }, 60000);
+      expect(useApiCacheStore.getState().getCache('key1')).toEqual({ data: 1 });
+    });
+
+    it('برای کلید ناموجود، خالی برمی‌گرداند', () => {
+      expect(useApiCacheStore.getState().getCache('nonexistent')).toBeNull();
+    });
+
+    it('برای کش منقضی‌شده، خالی برمی‌گرداند', () => {
+      useApiCacheStore.getState().setCache('key1', { data: 1 }, -1000);
+      expect(useApiCacheStore.getState().getCache('key1')).toBeNull();
+    });
+  });
+
+  describe('hasCache', () => {
+    it('وجود کلید را بررسی می‌کند', () => {
+      useApiCacheStore.getState().setCache('key1', 'data', 60000);
+      expect(useApiCacheStore.getState().hasCache('key1')).toBe(true);
+      expect(useApiCacheStore.getState().hasCache('missing')).toBe(false);
+    });
+  });
+
+  describe('invalidateCache', () => {
+    it('یک کلید را حذف می‌کند', () => {
+      useApiCacheStore.getState().setCache('key1', 'data', 60000);
+      useApiCacheStore.getState().invalidateCache('key1');
+      expect(useApiCacheStore.getState().getCache('key1')).toBeNull();
+    });
+  });
+
+  describe('invalidateCacheByPrefix', () => {
+    it('کلیدهای با پیشوند مشخص را حذف می‌کند', () => {
+      useApiCacheStore.getState().setCache('appointments_1', 'a', 60000);
+      useApiCacheStore.getState().setCache('services_1', 's', 60000);
+      useApiCacheStore.getState().invalidateCacheByPrefix('appointments_');
+      expect(useApiCacheStore.getState().getCache('appointments_1')).toBeNull();
+      expect(useApiCacheStore.getState().getCache('services_1')).toBe('s');
+    });
+  });
+
+  describe('clearCache', () => {
+    it('کل کش را پاک می‌کند', () => {
+      useApiCacheStore.getState().setCache('a', 1, 60000);
+      useApiCacheStore.getState().setCache('b', 2, 60000);
       useApiCacheStore.getState().clearCache();
+      expect(useApiCacheStore.getState().getCache('a')).toBeNull();
+      expect(useApiCacheStore.getState().getCache('b')).toBeNull();
     });
-  });
-
-  it('ذخیره و دریافت از کش', () => {
-    act(() => {
-      useApiCacheStore.getState().setCache('test_key', { id: 1, name: 'Test' }, 60000);
-    });
-    const data = useApiCacheStore.getState().getCache('test_key');
-    expect(data).toEqual({ id: 1, name: 'Test' });
-  });
-
-  it('انقضای کش (TTL) با استفاده از Fake Timers', () => {
-    jest.useFakeTimers();
-    act(() => {
-      useApiCacheStore.getState().setCache('short_lived', 'data', 1000); // ۱ ثانیه
-    });
-
-    expect(useApiCacheStore.getState().getCache('short_lived')).toBe('data');
-
-    jest.advanceTimersByTime(1500); // ۱.۵ ثانیه بعد
-
-    expect(useApiCacheStore.getState().getCache('short_lived')).toBeNull();
-    jest.useRealTimers();
-  });
-
-  it('حذف بر اساس پیشوند (invalidateCacheByPrefix)', () => {
-    act(() => {
-      useApiCacheStore.getState().setCache('user_1', 'A');
-      useApiCacheStore.getState().setCache('user_2', 'B');
-      useApiCacheStore.getState().setCache('post_1', 'C');
-      useApiCacheStore.getState().invalidateCacheByPrefix('user_');
-    });
-    expect(useApiCacheStore.getState().hasCache('user_1')).toBe(false);
-    expect(useApiCacheStore.getState().hasCache('post_1')).toBe(true);
   });
 });

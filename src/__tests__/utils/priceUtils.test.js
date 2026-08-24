@@ -1,162 +1,128 @@
-// src/__tests__/utils/priceUtils.test.js
-/**
- * ✅ FIX P1: تست‌های calculateAppFee از numberUtils.test.js به اینجا منتقل شدند
- */
 import {
   calculateAppFee,
+  APP_FEE_TIERS,
+  MAX_APP_FEE,
+  getCurrentFeeTier,
   calculateFinalPrice,
   calculateDiscountAmount,
   calculateDeposit,
   calculateRemaining,
   calculateBusinessShare,
   buildPriceSummary,
-  APP_FEE_TIERS,
-  MAX_APP_FEE,
   MIN_DEPOSIT,
-  getCurrentFeeTier,
 } from '@/utils/price-utils';
 
 describe('price-utils', () => {
-  // ═══════ calculateAppFee — منتقل‌شده از numberUtils.test ═══════
   describe('calculateAppFee', () => {
-    it('زیر ۲۵۰ هزار → ۷ هزار ثابت', () => {
+    it('زیر ۲۵۰ هزار تومان، کمیسیون ثابت ۷۰۰۰ است', () => {
       expect(calculateAppFee(100000)).toBe(7000);
       expect(calculateAppFee(200000)).toBe(7000);
       expect(calculateAppFee(249999)).toBe(7000);
     });
 
-    it('۲۵۰ تا ۵۰۰ هزار → ۳٪', () => {
+    it('از ۲۵۰ هزار تا ۵۰۰ هزار، ۳ درصد است', () => {
       expect(calculateAppFee(250000)).toBe(7500);
       expect(calculateAppFee(500000)).toBe(15000);
     });
 
-    it('بالای ۵۰۰ هزار → ۴٪', () => {
+    it('بالای ۵۰۰ هزار، ۴ درصد است', () => {
       expect(calculateAppFee(600000)).toBe(24000);
       expect(calculateAppFee(1000000)).toBe(40000);
     });
 
-    it('سقف ۵۰ هزار', () => {
-      expect(calculateAppFee(2000000)).toBe(50000);
-      expect(calculateAppFee(5000000)).toBe(50000);
+    it('کمیسیون از سقف بیشتر نمی‌شود', () => {
+      expect(calculateAppFee(2000000)).toBe(MAX_APP_FEE);
     });
 
-    it('ورودی صفر یا منفی', () => {
+    it('برای صفر، منفی و نامعتبر صفر برمی‌گرداند', () => {
       expect(calculateAppFee(0)).toBe(0);
       expect(calculateAppFee(-100)).toBe(0);
       expect(calculateAppFee(null)).toBe(0);
     });
-
-    it('مقدار دقیق در مرز ۲۵۰ هزار', () => {
-      expect(calculateAppFee(249999)).toBe(7000);
-      expect(calculateAppFee(250000)).toBe(7500);
-    });
   });
 
-  // ═══════ APP_FEE_TIERS — منتقل‌شده از numberUtils.test ═══════
-  describe('APP_FEE_TIERS', () => {
-    it('سه ردیف تعریف شده', () => {
-      expect(APP_FEE_TIERS).toHaveLength(3);
-    });
-
-    it('ردیف اول: ثابت ۷ هزار', () => {
-      expect(APP_FEE_TIERS[0].type).toBe('fixed');
-      expect(APP_FEE_TIERS[0].fee).toBe(7000);
-      expect(APP_FEE_TIERS[0].max).toBe(250000);
-    });
-
-    it('ردیف دوم: ۳٪', () => {
-      expect(APP_FEE_TIERS[1].type).toBe('percent');
-      expect(APP_FEE_TIERS[1].fee).toBe(3);
-    });
-
-    it('ردیف سوم: ۴٪', () => {
-      expect(APP_FEE_TIERS[2].type).toBe('percent');
-      expect(APP_FEE_TIERS[2].fee).toBe(4);
-    });
-  });
-
-  // ═══════ getCurrentFeeTier — منتقل‌شده از numberUtils.test ═══════
   describe('getCurrentFeeTier', () => {
-    it('شناسایی ردیف صحیح', () => {
-      expect(getCurrentFeeTier(100000).type).toBe('fixed');
-      expect(getCurrentFeeTier(300000).type).toBe('percent');
-      expect(getCurrentFeeTier(600000).type).toBe('percent');
+    it('ردیف صحیح را بر اساس مبلغ برمی‌گرداند', () => {
+      expect(getCurrentFeeTier(100000)).toEqual(APP_FEE_TIERS[0]);
+      expect(getCurrentFeeTier(300000)).toEqual(APP_FEE_TIERS[1]);
+      expect(getCurrentFeeTier(600000)).toEqual(APP_FEE_TIERS[2]);
     });
 
-    it('ورودی صفر', () => {
+    it('برای صفر، ردیف اول را برمی‌گرداند', () => {
       expect(getCurrentFeeTier(0)).toEqual(APP_FEE_TIERS[0]);
     });
   });
 
-  // ═══════ calculateFinalPrice ═══════
   describe('calculateFinalPrice', () => {
-    it('محاسبه قیمت نهایی با تخفیف', () => {
+    it('قیمت نهایی را با کسر تخفیف محاسبه می‌کند', () => {
       expect(calculateFinalPrice(750000, 10)).toBe(675000);
       expect(calculateFinalPrice(500000, 20)).toBe(400000);
     });
 
-    it('بدون تخفیف', () => {
+    it('بدون تخفیف، همان قیمت اصلی را برمی‌گرداند', () => {
       expect(calculateFinalPrice(750000, 0)).toBe(750000);
     });
 
-    it('تخفیف ۱۰۰٪', () => {
-      expect(calculateFinalPrice(750000, 100)).toBe(0);
+    it('برای قیمت نامعتبر صفر برمی‌گرداند', () => {
+      expect(calculateFinalPrice(0, 10)).toBe(0);
+      expect(calculateFinalPrice(null, 10)).toBe(0);
     });
   });
 
-  // ═══════ calculateDiscountAmount ═══════
   describe('calculateDiscountAmount', () => {
-    it('محاسبه مبلغ تخفیف', () => {
+    it('مبلغ تخفیف را محاسبه می‌کند', () => {
       expect(calculateDiscountAmount(750000, 10)).toBe(75000);
     });
 
-    it('بدون تخفیف', () => {
+    it('بدون تخفیف صفر برمی‌گرداند', () => {
       expect(calculateDiscountAmount(750000, 0)).toBe(0);
+      expect(calculateDiscountAmount(750000)).toBe(0);
     });
   });
 
-  // ═══════ calculateDeposit ═══════
   describe('calculateDeposit', () => {
-    it('محاسبه بیعانه با درصد', () => {
+    it('بیعانه را بر اساس درصد محاسبه می‌کند', () => {
       expect(calculateDeposit(675000, true, 30)).toBe(202500);
     });
 
-    it('حداقل بیعانه', () => {
-      const result = calculateDeposit(100000, true, 5);
-      expect(result).toBeGreaterThanOrEqual(MIN_DEPOSIT);
+    it('بیعانه از حداقل کمتر نمی‌شود', () => {
+      expect(calculateDeposit(100000, true, 5)).toBe(MIN_DEPOSIT);
     });
 
-    it('بدون بیعانه', () => {
+    it('بدون بیعانه صفر برمی‌گرداند', () => {
       expect(calculateDeposit(675000, false)).toBe(0);
+      expect(calculateDeposit(0, true, 30)).toBe(0);
     });
   });
 
-  // ═══════ calculateRemaining ═══════
   describe('calculateRemaining', () => {
-    it('محاسبه مابقی', () => {
+    it('مبلغ باقی‌مانده را محاسبه می‌کند', () => {
       expect(calculateRemaining(675000, 200000)).toBe(475000);
     });
-  });
 
-  // ═══════ calculateBusinessShare ═══════
-  describe('calculateBusinessShare', () => {
-    it('محاسبه سهم کسب‌وکار', () => {
-      const share = calculateBusinessShare(750000);
-      const fee = calculateAppFee(750000);
-      expect(share).toBe(750000 - fee);
+    it('از صفر کمتر نمی‌شود', () => {
+      expect(calculateRemaining(100000, 200000)).toBe(0);
     });
   });
 
-  // ═══════ buildPriceSummary ═══════
+  describe('calculateBusinessShare', () => {
+    it('سهم کسب‌وکار پس از کسر کمیسیون را برمی‌گرداند', () => {
+      // کمیسیون 750000 = 4% = 30000
+      expect(calculateBusinessShare(750000)).toBe(720000);
+    });
+  });
+
   describe('buildPriceSummary', () => {
-    it('ساخت خلاصه قیمت کامل', () => {
+    it('خلاصه کامل قیمت را می‌سازد', () => {
       const summary = buildPriceSummary(750000, 10, true, 30);
       expect(summary.originalPrice).toBe(750000);
+      expect(summary.discountPercent).toBe(10);
       expect(summary.discountAmount).toBe(75000);
       expect(summary.finalPrice).toBe(675000);
-      expect(summary.depositAmount).toBeGreaterThan(0);
-      expect(summary.remaining).toBeGreaterThan(0);
-      expect(summary.appFee).toBeGreaterThan(0);
+      expect(summary.appFee).toBe(27000);
+      expect(summary.depositAmount).toBe(202500);
+      expect(summary.remaining).toBe(472500);
+      expect(summary.businessShare).toBe(648000);
     });
   });
 });

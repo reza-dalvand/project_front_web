@@ -1,8 +1,3 @@
-// src/__tests__/utils/numberUtils.test.js
-/**
- * ✅ FIX P1: تست‌های کمیسیون به priceUtils.test.js منتقل شدند
- * این فایل فقط فرمت اعداد را تست می‌کند
- */
 import {
   toPersianDigit,
   toEnglishDigits,
@@ -14,92 +9,95 @@ import {
 } from '@/utils/numberUtils';
 
 describe('numberUtils', () => {
-  // ═══════ toPersianDigit ═══════
   describe('toPersianDigit', () => {
-    it('تبدیل اعداد انگلیسی به فارسی', () => {
+    it('اعداد انگلیسی را به فارسی تبدیل می‌کند', () => {
       expect(toPersianDigit('0123456789')).toBe('۰۱۲۳۴۵۶۷۸۹');
       expect(toPersianDigit('1403')).toBe('۱۴۰۳');
     });
 
-    it('متن بدون عدد', () => {
+    it('برای متن بدون عدد، همان متن را برمی‌گرداند', () => {
       expect(toPersianDigit('سلام')).toBe('سلام');
     });
 
-    it('ورودی null/undefined', () => {
+    it('برای null و undefined رشته خالی برمی‌گرداند', () => {
       expect(toPersianDigit(null)).toBe('');
       expect(toPersianDigit(undefined)).toBe('');
     });
   });
 
-  // ═══════ toEnglishDigits ═══════
   describe('toEnglishDigits', () => {
-    it('تبدیل اعداد فارسی به انگلیسی', () => {
+    it('اعداد فارسی را به انگلیسی تبدیل می‌کند', () => {
       expect(toEnglishDigits('۰۱۲۳۴۵۶۷۸۹')).toBe('0123456789');
       expect(toEnglishDigits('۱۴۰۳')).toBe('1403');
     });
 
-    it('تبدیل اعداد عربی به انگلیسی', () => {
+    it('اعداد عربی را به انگلیسی تبدیل می‌کند', () => {
       expect(toEnglishDigits('٠١٢٣٤٥٦٧٨٩')).toBe('0123456789');
     });
 
-    it('ترکیب فارسی و انگلیسی', () => {
+    it('ترکیب فارسی و انگلیسی را یکجا تبدیل می‌کند', () => {
       expect(toEnglishDigits('۱۲34')).toBe('1234');
     });
   });
 
-  // ═══════ parseNumber ═══════
   describe('parseNumber', () => {
-    it('استخراج عدد از رشته فارسی', () => {
+    it('عدد را از رشته فارسی استخراج می‌کند', () => {
       expect(parseNumber('۱,۲۳۴,۵۶۷')).toBe(1234567);
       expect(parseNumber('۷۵۰,۰۰۰ تومان')).toBe(750000);
     });
 
-    it('ورودی خالی', () => {
+    it('برای ورودی خالی یا نامعتبر صفر برمی‌گرداند', () => {
       expect(parseNumber('')).toBe(0);
       expect(parseNumber('abc')).toBe(0);
+      expect(parseNumber(null)).toBe(0);
     });
   });
 
-  // ═══════ formatPrice ═══════
   describe('formatPrice', () => {
-    it('فرمت قیمت با جداکننده هزارگان', () => {
+    it('قیمت را با جداکننده هزارگان و تومان برمی‌گرداند', () => {
       expect(formatPrice(750000)).toBe('۷۵۰,۰۰۰ تومان');
       expect(formatPrice(1000000)).toBe('۱,۰۰۰,۰۰۰ تومان');
     });
 
-    it('قیمت صفر', () => {
+    it('برای صفر و مقدار نامعتبر، صفر تومان برمی‌گرداند', () => {
       expect(formatPrice(0)).toBe('۰ تومان');
+      expect(formatPrice(null)).toBe('۰ تومان');
     });
   });
 
-  // ═══════ formatPriceShort ═══════
   describe('formatPriceShort', () => {
-    it('فرمت کوتاه میلیون', () => {
+    it('مقادیر میلیونی را با پسوند M برمی‌گرداند', () => {
       expect(formatPriceShort(2500000)).toBe('۲.۵M');
     });
 
-    it('فرمت کوتاه هزار', () => {
+    it('مقادیر هزار را با پسوند K برمی‌گرداند', () => {
       expect(formatPriceShort(750000)).toBe('۷۵۰K');
+    });
+
+    it('مقادیر کوچک را بدون پسوند برمی‌گرداند', () => {
+      expect(formatPriceShort(500)).toBe('۵۰۰');
     });
   });
 
-  // ═══════ formatPriceInput ═══════
   describe('formatPriceInput', () => {
-    it('فرمت ورودی قیمت', () => {
+    it('ورودی را با جداکننده هزارگان فارسی برمی‌گرداند', () => {
       expect(formatPriceInput('750000')).toBe('۷۵۰,۰۰۰');
       expect(formatPriceInput('۷۵۰۰۰۰')).toBe('۷۵۰,۰۰۰');
     });
 
-    it('ورودی خالی', () => {
+    it('برای ورودی خالی، رشته خالی برمی‌گرداند', () => {
       expect(formatPriceInput('')).toBe('');
     });
   });
 
-  // ═══════ formatPercentInput ═══════
   describe('formatPercentInput', () => {
-    it('محدودیت حداکثر ۱۰۰', () => {
+    it('درصد را حداکثر تا ۱۰۰ محدود می‌کند', () => {
       expect(formatPercentInput('150')).toBe('۱۰۰');
       expect(formatPercentInput('50')).toBe('۵۰');
+    });
+
+    it('برای ورودی خالی، رشته خالی برمی‌گرداند', () => {
+      expect(formatPercentInput('')).toBe('');
     });
   });
 });

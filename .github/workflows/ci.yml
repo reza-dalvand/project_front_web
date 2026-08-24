@@ -1,6 +1,6 @@
 # ═══════════════════════════════════════════════════════════
 #   CI Pipeline - اجرا روی هر Pull Request
-#   شامل: lint + test + build
+#   شامل: lint + test + build + security audit
 # ═══════════════════════════════════════════════════════════
 
 name: CI Pipeline
@@ -12,6 +12,7 @@ on:
       - 'src/**'
       - 'public/**'
       - 'package.json'
+      - 'yarn.lock'
       - 'next.config.js'
       - '.github/workflows/ci.yml'
 
@@ -20,10 +21,14 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: '22'
+  NEXT_TELEMETRY_DISABLED: 1
+
 jobs:
-  # ─── Job 1: Lint ───
-  lint:
-    name: 🔍 ESLint
+  # ─── Job 1: Security Audit ───
+  audit:
+    name: 🔒 Security Audit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,20 +37,64 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare Yarn
+        run: corepack prepare yarn@1.22.22 --activate
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
+
+      - name: Run security audit
+        run: yarn audit --level moderate || true
+        continue-on-error: true
+
+  # ─── Job 2: Lint ───
+  lint:
+    name: 🔍 ESLint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare Yarn
+        run: corepack prepare yarn@1.22.22 --activate
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Cache ESLint
+        uses: actions/cache@v4
+        with:
+          path: .eslintcache
+          key: eslint-${{ runner.os }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            eslint-${{ runner.os }}-
 
       - name: Run ESLint
-        run: npm run lint
+        run: yarn lint
 
-  # ─── Job 2: Tests ───
+      - name: Type Check (if TypeScript)
+        run: yarn type-check || echo "No type-check script found, skipping"
+        continue-on-error: true
+
+  # ─── Job 3: Tests ───
   test:
     name: 🧪 Jest Tests
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [lint, audit]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,27 +102,45 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare Yarn
+        run: corepack prepare yarn@1.22.22 --activate
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Run tests with coverage
-        run: npm run test:ci
+        run: yarn test:ci
         env:
           CI: true
           NODE_ENV: test
+          NEXT_TELEMETRY_DISABLED: 1
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-report
-          path: coverage/
+          name: coverage-report-${{ github.run_id }}
+          path: |
+            coverage/
+            junit.xml
           retention-days: 7
+          if-no-files-found: warn
 
-  # ─── Job 3: Build ───
+      - name: Comment PR with coverage
+        uses: MishaKav/jest-coverage-comment@v1
+        if: github.event_name == 'pull_request' && always()
+        with:
+          coverage-path: ./coverage/coverage-summary.json
+          junitxml-path: ./junit.xml
+        continue-on-error: true
+
+  # ─── Job 4: Build ───
   build:
     name: 🏗️ Build
     runs-on: ubuntu-latest
@@ -85,18 +152,37 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare Yarn
+        run: corepack prepare yarn@1.22.22 --activate
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+            out
+          key: nextjs-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-
+            nextjs-${{ runner.os }}-
 
       - name: Build static export
-        run: npm run build
+        run: yarn build
         env:
           NEXT_PUBLIC_USE_MOCK: 'false'
           NEXT_PUBLIC_API_BASE_URL: 'http://localhost:8000/api/v1'
+          NEXT_PUBLIC_SITE_DOMAIN: 'http://localhost:3000'
           NODE_ENV: 'production'
+          NEXT_TELEMETRY_DISABLED: 1
 
       - name: Verify output directory
         run: |
@@ -104,37 +190,47 @@ jobs:
             echo "❌ Build failed: 'out' directory not found"
             exit 1
           fi
+
+          file_count=$(find out -type f | wc -l)
+          dir_size=$(du -sh out | cut -f1)
+
           echo "✅ Build successful"
+          echo "📁 Files: $file_count"
+          echo "📦 Size: $dir_size"
           ls -la out/
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: static-build
+          name: static-build-${{ github.run_id }}
           path: out/
           retention-days: 3
+          if-no-files-found: error
 
-  # ─── Job 4: Docker Build Test ───
-  docker-test:
-    name: 🐳 Docker Build Test
+  # ─── Job 5: Bundle Analysis (Optional) ───
+  analyze:
+    name: 📊 Bundle Analysis
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image (no push)
-        uses: docker/build-push-action@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          context: .
-          push: false
-          tags: beau-frontend:test
-          build-args: |
-            NEXT_PUBLIC_USE_MOCK=false
-            NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
-            NODE_ENV=production
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare Yarn
+        run: corepack prepare yarn@1.22.22 --activate
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Analyze bundle
+        run: yarn build && yarn analyze || echo "Bundle analysis not configured"

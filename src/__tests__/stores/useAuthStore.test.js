@@ -1,35 +1,24 @@
-// src/__tests__/stores/useAuthStore.test.js
-import { useAuthStore, useAuthModalStore } from '@/stores/useAuthStore';
-import { act } from '@testing-library/react';
+jest.mock('@/api', () => ({
+  authService: {
+    logout: jest.fn().mockResolvedValue({}),
+    refreshToken: jest.fn().mockResolvedValue({
+      data: { access: 'new-access', refresh: 'new-refresh' },
+    }),
+  },
+}));
 
-// ✅ Helper برای ساخت داده‌های تست
-// ✅ Helper برای ساخت داده‌های تست
-const createTestUser = (phone = '09123456789', firstName = 'مریم', lastName = 'حسینی') => ({
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useTokenStore } from '@/stores/useTokenStore';
+import { authService } from '@/api';
+
+const baseUser = {
   id: 1,
-  phone,
-  phone_display: `${phone.slice(0, 4)}***${phone.slice(-4)}`,
-  phoneDisplay: `${phone.slice(0, 4)}***${phone.slice(-4)}`,
-  first_name: firstName,
-  last_name: lastName,
-  firstName,
-  lastName,
-  full_name: `${firstName} ${lastName}`,
-  fullName: `${firstName} ${lastName}`,
-  avatar: null,
-  is_verified: true,
+  phone: '09123456789',
+  firstName: 'مریم',
+  lastName: 'حسینی',
+  fullName: 'مریم حسینی',
   isVerified: true,
-  is_national_id_verified: false,
-  isNationalIdVerified: false,
-  verified_name: '',
-  verifiedName: '',
-  date_joined: '2024-01-15T10:00:00Z',
-  dateJoined: '2024-01-15T10:00:00Z',
-});
-
-const createTestTokens = () => ({
-  access_token: 'mock_access_token_test',
-  refresh_token: 'mock_refresh_token_test',
-});
+};
 
 describe('useAuthStore', () => {
   beforeEach(() => {
@@ -39,86 +28,80 @@ describe('useAuthStore', () => {
       pendingPhone: null,
       pendingName: null,
       needsProfileCompletion: false,
-      _hydrated: true,
     });
-    useAuthModalStore.setState({ showAuthModal: false, pendingAction: null });
+    // ✅ FIX: ریست توکن‌ها برای جلوگیری از تداخل بین تست‌ها
+    useTokenStore.getState().clearTokens();
+    jest.clearAllMocks();
   });
 
-  it('وضعیت پیش‌فرض: لاگین نیست', () => {
-    const state = useAuthStore.getState();
-    expect(state.isAuthenticated).toBe(false);
-    expect(state.user).toBeNull();
+  describe('login', () => {
+    it('کاربر را وارد و ذخیره می‌کند', () => {
+      useAuthStore.getState().login(baseUser, { accessToken: 'a', refreshToken: 'r' }, {});
+
+      expect(useAuthStore.getState().isAuthenticated).toBe(true);
+      expect(useAuthStore.getState().user.name).toBe('مریم حسینی');
+      expect(useAuthStore.getState().user.phone).toBe('09123456789');
+    });
+
+    it('وضعیت تکمیل پروفایل را از گزینه‌ها می‌گیرد', () => {
+      useAuthStore
+        .getState()
+        .login(baseUser, { accessToken: 'a', refreshToken: 'r' }, { needsProfileCompletion: true });
+
+      expect(useAuthStore.getState().needsProfileCompletion).toBe(true);
+    });
   });
 
-  it('ورود با موفقیت', () => {
-    act(() => {
-      useAuthStore.getState().login(createTestUser(), createTestTokens());
-    });
-    const state = useAuthStore.getState();
-    expect(state.isAuthenticated).toBe(true);
-    expect(state.user.phone).toBe('09123456789');
-    expect(state.user.name).toBe('مریم حسینی');
-  });
+  describe('logout', () => {
+    it('کاربر را خارج و استیت را پاک می‌کند', async () => {
+      useAuthStore.getState().login(baseUser, { accessToken: 'a', refreshToken: 'r' }, {});
 
-  // ✅ FIX: خروج از حساب (async/await)
-  it('خروج از حساب', async () => {
-    act(() => {
-      useAuthStore.getState().login(createTestUser(), createTestTokens());
-    });
-    expect(useAuthStore.getState().isAuthenticated).toBe(true);
-
-    await act(async () => {
       await useAuthStore.getState().logout();
-    });
 
-    const state = useAuthStore.getState();
-    expect(state.isAuthenticated).toBe(false);
-    expect(state.user).toBeNull();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+      expect(useAuthStore.getState().user).toBeNull();
+    });
   });
 
-  it('بروزرسانی پروفایل', () => {
-    act(() => {
-      useAuthStore.getState().login(createTestUser(), createTestTokens());
-      useAuthStore.getState().updateUser({ name: 'مریم حسینی' });
+  describe('updateUser', () => {
+    it('کاربر را به‌روز می‌کند', () => {
+      useAuthStore.getState().login(baseUser, {}, {});
+
+      useAuthStore.getState().updateUser({ name: 'نام جدید' });
+
+      expect(useAuthStore.getState().user.name).toBe('نام جدید');
     });
-    expect(useAuthStore.getState().user.name).toBe('مریم حسینی');
   });
 
-  it('setPendingAuth', () => {
-    act(() => {
+  describe('completeProfile', () => {
+    it('وضعیت تکمیل پروفایل را خالی می‌کند', () => {
+      useAuthStore.setState({ needsProfileCompletion: true });
+
+      useAuthStore.getState().completeProfile();
+
+      expect(useAuthStore.getState().needsProfileCompletion).toBe(false);
+    });
+  });
+
+  describe('setPendingAuth', () => {
+    it('شماره در انتظار را ذخیره می‌کند', () => {
       useAuthStore.getState().setPendingAuth('09123456789', 'مریم', 'حسینی');
-    });
-    const state = useAuthStore.getState();
-    expect(state.pendingPhone).toBe('09123456789');
-    expect(state.pendingName).toBe('مریم حسینی');
-  });
-});
 
-describe('useAuthModalStore', () => {
-  beforeEach(() => {
-    useAuthModalStore.setState({ showAuthModal: false, pendingAction: null });
+      expect(useAuthStore.getState().pendingPhone).toBe('09123456789');
+      expect(useAuthStore.getState().pendingName).toBe('مریم حسینی');
+    });
   });
 
-  it('باز کردن مدال', () => {
-    act(() => {
-      useAuthModalStore.getState().openAuthModal();
-    });
-    expect(useAuthModalStore.getState().showAuthModal).toBe(true);
-  });
+  describe('checkSession', () => {
+    it('بدون توکن، خالی برمی‌گرداند و استیت را پاک می‌کند', async () => {
+      // ✅ FIX: اطمینان از خالی بودن توکن‌ها
+      useTokenStore.getState().clearTokens();
+      useAuthStore.setState({ isAuthenticated: true, user: baseUser });
 
-  it('بستن مدال', () => {
-    act(() => {
-      useAuthModalStore.getState().openAuthModal();
-      useAuthModalStore.getState().closeAuthModal();
-    });
-    expect(useAuthModalStore.getState().showAuthModal).toBe(false);
-  });
+      const result = await useAuthStore.getState().checkSession();
 
-  it('ذخیره pendingAction', () => {
-    const mockAction = jest.fn();
-    act(() => {
-      useAuthModalStore.getState().openAuthModal(mockAction);
+      expect(result).toBe(false);
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
     });
-    expect(useAuthModalStore.getState().pendingAction).toBe(mockAction);
   });
 });

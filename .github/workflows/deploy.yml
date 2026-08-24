@@ -1,23 +1,51 @@
-name: CI/CD Pipeline - Beau Front
+# ═══════════════════════════════════════════════════════════
+#   Deploy Pipeline - فقط روی push به main
+#   شامل: test + build + deploy + health check + rollback
+# ═══════════════════════════════════════════════════════════
+
+name: Deploy to Production
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'next.config.js'
+      - '.github/workflows/deploy.yml'
+
+# جلوگیری از deploy همزمان
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22'
+  DEPLOY_PATH: '/home/deploy/beau-front'
+  BACKUP_COUNT: 3
 
 jobs:
-  test-build-deploy:
-    name: Test, Build and Deploy
+  # ─── Job 1: Test & Build ───
+  test-and-build:
+    name: 🧪 Test & 🏗️ Build
     runs-on: ubuntu-latest
-
+    outputs:
+      build-version: ${{ steps.version.outputs.version }}
+      build-hash: ${{ steps.hash.outputs.hash }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
 
       - name: Enable Corepack
         run: corepack enable
@@ -33,56 +61,303 @@ jobs:
 
       - name: Run tests
         run: yarn test:ci
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+            out
+          key: nextjs-deploy-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nextjs-deploy-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-
 
       - name: Build static export
         run: yarn build
         env:
-          NEXT_PUBLIC_API_BASE_URL: https://api.beauclub.ir/api/v1
-          NEXT_PUBLIC_SITE_DOMAIN: https://beauclub.ir
-          NEXT_PUBLIC_ARVAN_CDN_URL: https://cdn.beauclub.ir
-          NEXT_PUBLIC_MEDIA_BASE_URL: https://api.beauclub.ir
-          NEXT_PUBLIC_USE_MOCK: false
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_SITE_DOMAIN: ${{ secrets.NEXT_PUBLIC_SITE_DOMAIN }}
+          NEXT_PUBLIC_ARVAN_CDN_URL: ${{ secrets.NEXT_PUBLIC_ARVAN_CDN_URL }}
+          NEXT_PUBLIC_MEDIA_BASE_URL: ${{ secrets.NEXT_PUBLIC_MEDIA_BASE_URL }}
+          NEXT_PUBLIC_USE_MOCK: 'false'
+          NEXT_TELEMETRY_DISABLED: 1
 
-      - name: Check out directory
+      - name: Verify build output
         run: |
           if [ ! -d "out" ]; then
-            echo "❌ out directory not found. Static export was not generated."
+            echo "❌ Build failed: 'out' directory not found"
             exit 1
           fi
-          echo "✅ out directory exists"
 
-      - name: Upload out directory to server
+          file_count=$(find out -type f | wc -l)
+          dir_size=$(du -sh out | cut -f1)
+
+          if [ "$file_count" -lt 1 ]; then
+            echo "❌ Build output is empty"
+            exit 1
+          fi
+
+          echo "✅ Build successful"
+          echo "📁 Files: $file_count"
+          echo "📦 Size: $dir_size"
+
+      - name: Generate version info
+        id: version
+        run: |
+          VERSION=$(date +%Y%m%d-%H%M%S)
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          echo "version=${VERSION}-${COMMIT_SHA}" >> $GITHUB_OUTPUT
+          echo "🏷️ Version: ${VERSION}-${COMMIT_SHA}"
+
+      - name: Generate build hash
+        id: hash
+        run: |
+          HASH=$(find out -type f -exec md5sum {} \; | sort | md5sum | cut -d' ' -f1)
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+          echo "🔑 Build hash: ${HASH}"
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy-package
+          # ✅ FIX: کپی محتویات out (نه خود پوشه) برای جلوگیری از تو در تو شدن (out/out/)
+          cp -r out/. deploy-package/
+          echo "${{ steps.version.outputs.version }}" > deploy-package/VERSION
+          echo "${{ steps.hash.outputs.hash }}" > deploy-package/HASH
+          echo "${{ github.sha }}" > deploy-package/COMMIT
+          tar -czf deployment.tar.gz -C deploy-package .
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-package-${{ github.run_id }}
+          path: deployment.tar.gz
+          retention-days: 7
+
+  # ─── Job 2: Deploy ───
+  deploy:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    environment:
+      name: production
+      url: https://beauclub.ir
+    steps:
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-package-${{ github.run_id }}
+
+      # ✅ FIX: ارسال یک فایل فشرده به جای هزاران فایل کوچک (سرعت بسیار بالاتر و جلوگیری از Time-out)
+      - name: Upload tarball to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
-          username: deploy
+          username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: 'out/*'
-          target: '/home/deploy/beau-front/out_new'
-          strip_components: 1
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: 'deployment.tar.gz'
+          target: '/tmp/'
           overwrite: true
+          timeout: 300s
+          command_timeout: 10m
 
-      - name: Activate new release
+      - name: Activate new release with backup
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
-          username: deploy
+          username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -e
 
-            cd /home/deploy/beau-front
+            DEPLOY_PATH="${{ env.DEPLOY_PATH }}"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            TARBALL="/tmp/deployment.tar.gz"
 
-            rm -rf out_old
+            echo "📂 Current directory: $(pwd)"
+            echo "📦 Deploy path: ${DEPLOY_PATH}"
 
-            if [ -d "out" ]; then
-              mv out out_old
+            mkdir -p "${DEPLOY_PATH}"
+            cd "${DEPLOY_PATH}"
+
+            if [ ! -f "${TARBALL}" ]; then
+              echo "❌ Tarball not found at ${TARBALL}"
+              exit 1
             fi
 
-            mv out_new out
+            # ذخیره نسخه قبلی (backup rotation)
+            if [ -d "out" ]; then
+              echo "💾 Creating backup: out_backup_${TIMESTAMP}"
+              cp -r out "out_backup_${TIMESTAMP}"
+              
+              # حذف backup‌های قدیمی
+              ls -dt out_backup_* 2>/dev/null | tail -n +$((${{ env.BACKUP_COUNT }} + 1)) | xargs -r rm -rf
+              echo "🗑️ Old backups cleaned (keeping last ${{ env.BACKUP_COUNT }})"
+            fi
 
+            echo "🔄 Extracting and activating new release..."
+            rm -rf out_new out_old 2>/dev/null || true
+            mkdir -p out_new
+
+            # استخراج مستقیم در out_new (فایل‌ها دقیقاً در ریشه out_new قرار می‌گیرند)
+            tar -xzf "${TARBALL}" -C out_new
+            rm -f "${TARBALL}" # پاکسازی فایل فشرده از سرور برای جلوگیری از پر شدن دیسک
+
+            # بررسی فایل‌های کلیدی
+            if [ ! -f "out_new/index.html" ]; then
+              echo "❌ Critical file missing: index.html"
+              rm -rf out_new
+              if [ -d "out_backup_${TIMESTAMP}" ]; then
+                echo "⏪ Rolling back to backup..."
+                mv "out_backup_${TIMESTAMP}" out
+              fi
+              exit 1
+            fi
+
+            mv out out_old 2>/dev/null || true
+            mv out_new out
             chmod -R 755 out
 
-            sudo systemctl reload nginx
+            echo "✅ New release activated successfully"
 
-            echo "✅ Beau Front deployed successfully"
+      - name: Reload Nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            if command -v nginx &> /dev/null; then
+              echo "🔍 Testing Nginx configuration..."
+              sudo nginx -t
+              
+              echo "🔄 Reloading Nginx..."
+              sudo systemctl reload nginx
+              echo "✅ Nginx reloaded successfully"
+            else
+              echo "⚠️ Nginx not found, skipping reload"
+            fi
+
+      - name: Health check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            SITE_URL="${{ secrets.PRODUCTION_URL }}"
+            MAX_RETRIES=5
+            RETRY_DELAY=5
+
+            echo "🏥 Performing health check on ${SITE_URL}..."
+
+            for i in $(seq 1 $MAX_RETRIES); do
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SITE_URL}" --max-time 10 || echo "000")
+              
+              if [ "$HTTP_CODE" = "200" ]; then
+                echo "✅ Health check passed (HTTP ${HTTP_CODE})"
+                exit 0
+              fi
+              
+              echo "⏳ Attempt ${i}/${MAX_RETRIES}: HTTP ${HTTP_CODE}, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            done
+
+            echo "❌ Health check failed after ${MAX_RETRIES} attempts"
+            exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            DEPLOY_PATH="${{ env.DEPLOY_PATH }}"
+            cd "${DEPLOY_PATH}"
+
+            echo "⏪ Starting rollback procedure..."
+
+            LATEST_BACKUP=$(ls -dt out_backup_* 2>/dev/null | head -n 1)
+
+            if [ -n "$LATEST_BACKUP" ]; then
+              echo "🔄 Rolling back to: ${LATEST_BACKUP}"
+              rm -rf out_failed 2>/dev/null || true
+              mv out out_failed 2>/dev/null || true
+              cp -r "${LATEST_BACKUP}" out
+              chmod -R 755 out
+              sudo systemctl reload nginx 2>/dev/null || true
+              echo "✅ Rollback completed successfully"
+            elif [ -d "out_old" ]; then
+              echo "🔄 Rolling back to: out_old"
+              rm -rf out 2>/dev/null || true
+              mv out_old out
+              chmod -R 755 out
+              sudo systemctl reload nginx 2>/dev/null || true
+              echo "✅ Rollback completed"
+            else
+              echo "❌ No backup available for rollback!"
+              exit 1
+            fi
+
+  # ─── Job 3: Notify ───
+  notify:
+    name: 📢 Notify
+    runs-on: ubuntu-latest
+    needs: [test-and-build, deploy]
+    if: always()
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | Job |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ needs.test-and-build.result == 'success' && '✅' || '❌' }} | Test & Build |" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ needs.deploy.result == 'success' && '✅' || '❌' }} | Deploy |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "### ✅ Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** ${{ needs.test-and-build.outputs.build-version }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Build Hash:** ${{ needs.test-and-build.outputs.build-hash }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **URL:** ${{ secrets.PRODUCTION_URL }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Deployment Failed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs for more details." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Send Telegram notification
+        if: always()
+        uses: appleboy/telegram-action@master
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        with:
+          to: ${{ env.TELEGRAM_CHAT_ID }}
+          token: ${{ env.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ${{ needs.deploy.result == 'success' && '✅' || '❌' }} Beau Front Deployment
+
+            Status: ${{ needs.deploy.result }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Actor: ${{ github.actor }}
+            ${{ needs.deploy.result == 'success' && format('URL: {0}', secrets.PRODUCTION_URL) || 'Check GitHub Actions for details' }}
+        continue-on-error: true

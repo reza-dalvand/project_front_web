@@ -1,7 +1,3 @@
-// src/__tests__/__mocks__/fileMock.js
+// ماک فایل‌های استاتیک (تصویر، فونت و ...) برای تست
+// قبلاً داخل این فایل test() بود که غلط است — فقط باید ماک باشد
 module.exports = 'test-file-stub';
-
-// ✅ اضافه کردن یک تست خالی برای جلوگیری از ارور Jest
-test('file mock', () => {
-  expect(true).toBe(true);
-});

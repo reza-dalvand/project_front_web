@@ -1,23 +1,53 @@
-// src/__tests__/services/searchService.test.js
 import { searchService } from '@/api';
+import apiClient from '@/api/api-client';
 
-jest.mock('@/api/config', () => ({
-  API_CONFIG: { baseURL: 'http://localhost:8000/api/v1', timeout: 15000 },
+jest.mock('@/api/api-client', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn().mockResolvedValue({ data: {} }),
+    post: jest.fn().mockResolvedValue({ data: {} }),
+    put: jest.fn().mockResolvedValue({ data: {} }),
+    delete: jest.fn().mockResolvedValue({ data: {} }),
+    upload: jest.fn().mockResolvedValue({ data: {} }),
+    patch: jest.fn().mockResolvedValue({ data: {} }),
+  },
 }));
 
 describe('searchService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('search → موفقیت و ساختار صحیح (businesses و services)', async () => {
-    const result = await searchService.search('فیشیال', 'all', 10);
-    // ✅ FIX: بررسی ساختار نرمال‌سازی شده
-    expect(result.data).toBeDefined();
-    expect(result.data).toHaveProperty('businesses');
-    expect(result.data).toHaveProperty('services');
-    expect(Array.isArray(result.data.businesses)).toBe(true);
+    apiClient.get.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          businesses: [{ id: 1, name: 'سالن تست' }],
+          services: [{ id: 1, name: 'فیشیال' }],
+          total: 2,
+        },
+      },
+    });
+
+    const result = await searchService.search('سالن');
+
+    expect(apiClient.get).toHaveBeenCalled();
+    expect(result.data.data.businesses).toBeDefined();
+    expect(result.data.data.services).toBeDefined();
   });
 
   it('getSuggestions → لیست پیشنهادات (آرایه)', async () => {
-    const result = await searchService.getSuggestions('ف');
-    expect(result.data).toBeDefined();
-    expect(Array.isArray(result.data)).toBe(true);
+    apiClient.get.mockResolvedValue({
+      data: {
+        success: true,
+        data: ['فیشیال', 'کاشت ناخن', 'رنگ مو'],
+      },
+    });
+
+    const result = await searchService.getSuggestions('فیش');
+
+    expect(apiClient.get).toHaveBeenCalled();
+    expect(Array.isArray(result.data.data)).toBe(true);
   });
 });

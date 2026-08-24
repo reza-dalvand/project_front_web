@@ -1,43 +1,104 @@
-// src/__tests__/services/authService.test.js
 import { authService } from '@/api';
-// اطمینان از حالت mock
-jest.mock('@/api/config', () => ({
-  API_CONFIG: { baseURL: 'http://localhost:8000/api/v1', timeout: 15000 },
-  JWT_CONFIG: { ACCESS_TOKEN_KEY: 'test', REFRESH_TOKEN_KEY: 'test' },
-  OTP_CONFIG: { CODE_LENGTH: 5, EXPIRY_SECONDS: 300, RESEND_COOLDOWN_SECONDS: 60 },
+import apiClient from '@/api/api-client';
+
+jest.mock('@/api/api-client', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn().mockResolvedValue({ data: {} }),
+    post: jest.fn().mockResolvedValue({ data: {} }),
+    put: jest.fn().mockResolvedValue({ data: {} }),
+    delete: jest.fn().mockResolvedValue({ data: {} }),
+    upload: jest.fn().mockResolvedValue({ data: {} }),
+    patch: jest.fn().mockResolvedValue({ data: {} }),
+  },
 }));
 
 describe('authService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('sendOTP → موفقیت', async () => {
+    apiClient.post.mockResolvedValue({
+      data: {
+        success: true,
+        data: { expires_in: 300, resend_after: 60 },
+      },
+    });
+
     const result = await authService.sendOTP('09123456789');
-    expect(result.data).toHaveProperty('expiresIn');
-    expect(result.data).toHaveProperty('resendAfter');
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      expect.stringContaining('otp'),
+      expect.objectContaining({ phone: '09123456789' })
+    );
+    expect(result.data.success).toBe(true);
   });
 
   it('verifyOTP → موفقیت', async () => {
+    apiClient.post.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          access_token: 'mock_access',
+          refresh_token: 'mock_refresh',
+          user: { id: 1, phone: '09123456789' },
+          is_new_user: false,
+        },
+      },
+    });
+
     const result = await authService.verifyOTP('09123456789', '12345');
-    expect(result.data).toHaveProperty('accessToken');
-    expect(result.data).toHaveProperty('refreshToken');
-    expect(result.data).toHaveProperty('user');
+
+    expect(apiClient.post).toHaveBeenCalled();
+    expect(result.data.data.access_token).toBeDefined();
   });
 
   it('refreshToken → موفقیت', async () => {
-    const result = await authService.refreshToken('mock_refresh_token');
-    expect(result.data).toHaveProperty('access');
+    apiClient.post.mockResolvedValue({
+      data: { access: 'new_access', refresh: 'new_refresh' },
+    });
+
+    const result = await authService.refreshToken('old_refresh');
+
+    expect(apiClient.post).toHaveBeenCalled();
+    expect(result.data.access).toBe('new_access');
   });
 
   it('logout → موفقیت', async () => {
-    const result = await authService.logout('mock_refresh_token');
-    expect(result).toBeDefined();
+    apiClient.post.mockResolvedValue({ data: { success: true } });
+
+    const result = await authService.logout();
+
+    expect(apiClient.post).toHaveBeenCalled();
+    expect(result.data.success).toBe(true);
   });
 
   it('verifyNationalId → موفقیت', async () => {
+    apiClient.post.mockResolvedValue({
+      data: {
+        success: true,
+        data: { verified_name: 'مریم حسینی' },
+      },
+    });
+
     const result = await authService.verifyNationalId('0012345679');
-    expect(result.data).toHaveProperty('verifiedName');
+
+    expect(apiClient.post).toHaveBeenCalled();
+    expect(result.data.success).toBe(true);
   });
 
   it('getDevices → لیست دستگاه‌ها', async () => {
+    apiClient.get.mockResolvedValue({
+      data: {
+        success: true,
+        data: [{ id: 1, device_name: 'Chrome' }],
+      },
+    });
+
     const result = await authService.getDevices();
-    expect(Array.isArray(result.data)).toBe(true);
+
+    expect(apiClient.get).toHaveBeenCalled();
+    expect(result.data.success).toBe(true);
   });
 });

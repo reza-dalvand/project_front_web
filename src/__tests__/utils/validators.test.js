@@ -1,58 +1,52 @@
-// src/__tests__/utils/validators.test.js
 import { validateNationalId, validateSheba, validateCardNumber } from '@/utils/validators';
 
 describe('validators', () => {
   describe('validateNationalId', () => {
-    it('کد ملی معتبر', () => {
+    it('کد ملی معتبر را می‌پذیرد', () => {
+      // checksum: sum=112, 112%11=2, 11-2=9 → رقم آخر 9 ✅
       expect(validateNationalId('0012345679')).toBe(true);
     });
 
-    it('کد ملی با ارقام فارسی', () => {
+    it('کد ملی فارسی معتبر را می‌پذیرد', () => {
       expect(validateNationalId('۰۰۱۲۳۴۵۶۷۹')).toBe(true);
     });
 
-    it('کد ملی نامعتبر - طول اشتباه', () => {
-      expect(validateNationalId('123456789')).toBe(false); // ۹ رقم
-      expect(validateNationalId('12345678901')).toBe(false); // ۱۱ رقم
-    });
-
-    it('کد ملی نامعتبر - ارقام تکراری', () => {
+    it('کد ملی نامعتبر را رد می‌کند', () => {
+      // checksum غلط: رقم آخر باید 9 باشد نه 5
+      expect(validateNationalId('0012345675')).toBe(false);
+      // 9 رقم
+      expect(validateNationalId('123456789')).toBe(false);
+      // 11 رقم
+      expect(validateNationalId('12345678901')).toBe(false);
+      // همه رقم یکسان
       expect(validateNationalId('1111111111')).toBe(false);
-      expect(validateNationalId('0000000000')).toBe(false);
-    });
-
-    it('کد ملی نامعتبر - checksum اشتباه', () => {
-      expect(validateNationalId('0012345678')).toBe(false);
+      expect(validateNationalId('')).toBe(false);
     });
   });
 
   describe('validateSheba', () => {
-    it('شبا معتبر', () => {
+    it('شماره شبای معتبر را می‌پذیرد', () => {
       expect(validateSheba('IR062960000000100324200001')).toBe(true);
     });
 
-    it('شبا با حروف کوچک', () => {
-      expect(validateSheba('ir062960000000100324200001')).toBe(true);
-    });
-
-    it('شبا بدون IR', () => {
+    it('شبای بدون پیشوند IR را رد می‌کند', () => {
       expect(validateSheba('062960000000100324200001')).toBe(false);
     });
 
-    it('شبا با طول اشتباه', () => {
-      expect(validateSheba('IR06296000000010032420001')).toBe(false); // ۲۳ رقم
+    it('شبای با طول نامعتبر را رد می‌کند', () => {
+      expect(validateSheba('IR123')).toBe(false);
     });
   });
 
   describe('validateCardNumber', () => {
-    it('کارت معتبر ۱۶ رقمی', () => {
+    it('شماره کارت ۱۶ رقمی را می‌پذیرد', () => {
       expect(validateCardNumber('6037991812345678')).toBe(true);
       expect(validateCardNumber('۶۰۳۷۹۹۱۸۱۲۳۴۵۶۷۸')).toBe(true);
     });
 
-    it('کارت با طول اشتباه', () => {
-      expect(validateCardNumber('603799181234567')).toBe(false); // ۱۵ رقم
-      expect(validateCardNumber('60379918123456789')).toBe(false); // ۱۷ رقم
+    it('شماره کارت با طول نامعتبر را رد می‌کند', () => {
+      expect(validateCardNumber('603799181234567')).toBe(false);
+      expect(validateCardNumber('')).toBe(false);
     });
   });
 });

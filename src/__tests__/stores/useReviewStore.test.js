@@ -1,65 +1,67 @@
-// src/__tests__/stores/useReviewStore.test.js
+jest.mock('@/api', () => ({
+  reviewsService: {
+    createReview: jest.fn().mockResolvedValue({ data: {} }),
+    canReview: jest.fn().mockResolvedValue({ data: { can_review: true } }),
+  },
+}));
+
 import { useReviewStore } from '@/stores/useReviewStore';
-import { act } from '@testing-library/react';
+import { reviewsService } from '@/api';
 
 describe('useReviewStore', () => {
   beforeEach(() => {
-    useReviewStore.setState({ reviews: [], pendingReviews: [] });
+    useReviewStore.setState({ reviews: [], pendingReviews: [], isLoading: false, error: null });
+    jest.clearAllMocks();
   });
 
-  it('افزودن نوبت در انتظار نظردهی', () => {
-    act(() => {
-      useReviewStore.getState().addPendingReview({
-        id: 'apt_1',
-        businessName: 'سالن تست',
-        serviceName: 'فیشیال',
+  describe('addPendingReview', () => {
+    it('نوبت را به لیست در انتظار اضافه می‌کند', () => {
+      useReviewStore.getState().addPendingReview({ id: 'apt1', businessName: 'سالن' });
+      expect(useReviewStore.getState().pendingReviews).toHaveLength(1);
+    });
+
+    it('از افزودن تکراری جلوگیری می‌کند', () => {
+      useReviewStore.getState().addPendingReview({ id: 'apt1', businessName: 'سالن' });
+      useReviewStore.getState().addPendingReview({ id: 'apt1', businessName: 'سالن' });
+      expect(useReviewStore.getState().pendingReviews).toHaveLength(1);
+    });
+  });
+
+  describe('dismissPendingReview', () => {
+    it('نوبت در انتظار را حذف می‌کند', () => {
+      useReviewStore.getState().addPendingReview({ id: 'apt1', businessName: 'سالن' });
+      useReviewStore.getState().dismissPendingReview('apt1');
+      expect(useReviewStore.getState().pendingReviews).toHaveLength(0);
+    });
+  });
+
+  describe('hasReviewFor', () => {
+    it('وجود نظر برای نوبت را بررسی می‌کند', () => {
+      useReviewStore.setState({ reviews: [{ appointmentId: 'apt1' }] });
+      expect(useReviewStore.getState().hasReviewFor('apt1')).toBe(true);
+      expect(useReviewStore.getState().hasReviewFor('apt2')).toBe(false);
+    });
+  });
+
+  describe('submitReview', () => {
+    it('نظر را ثبت و نوبت در انتظار را حذف می‌کند', async () => {
+      useReviewStore.getState().addPendingReview({ id: 'apt1', businessName: 'سالن' });
+      await useReviewStore.getState().submitReview('apt1', {
+        rating: 5,
+        comment: 'عالی',
+        tags: ['clean'],
       });
+      expect(useReviewStore.getState().reviews).toHaveLength(1);
+      expect(useReviewStore.getState().pendingReviews).toHaveLength(0);
+      expect(reviewsService.createReview).toHaveBeenCalled();
     });
-    expect(useReviewStore.getState().pendingReviews).toHaveLength(1);
   });
 
-  it('جلوگیری از تکرار', () => {
-    act(() => {
-      useReviewStore.getState().addPendingReview({ id: 'apt_1', businessName: 'سالن' });
-      useReviewStore.getState().addPendingReview({ id: 'apt_1', businessName: 'سالن' });
+  describe('checkCanReview', () => {
+    it('از سرویس بررسی امکان نظر می‌پرسد', async () => {
+      const result = await useReviewStore.getState().checkCanReview('apt1');
+      expect(result).toEqual({ can_review: true });
+      expect(reviewsService.canReview).toHaveBeenCalledWith('apt1');
     });
-    expect(useReviewStore.getState().pendingReviews).toHaveLength(1);
-  });
-
-  // ✅ FIX: ثبت نظر و حذف از pending (async/await)
-  it('ثبت نظر و حذف از pending', async () => {
-    act(() => {
-      useReviewStore.getState().addPendingReview({ id: 'apt_1', businessName: 'سالن' });
-    });
-
-    await act(async () => {
-      await useReviewStore.getState().submitReview('apt_1', { rating: 5, comment: 'عالی' });
-    });
-
-    expect(useReviewStore.getState().reviews).toHaveLength(1);
-    expect(useReviewStore.getState().pendingReviews).toHaveLength(0);
-    expect(useReviewStore.getState().reviews[0].rating).toBe(5);
-  });
-
-  it('رد کردن نوبت در انتظار', () => {
-    act(() => {
-      useReviewStore.getState().addPendingReview({ id: 'apt_1', businessName: 'سالن' });
-      useReviewStore.getState().dismissPendingReview('apt_1');
-    });
-    expect(useReviewStore.getState().pendingReviews).toHaveLength(0);
-  });
-
-  // ✅ FIX: hasReviewFor (async/await)
-  it('hasReviewFor', async () => {
-    act(() => {
-      useReviewStore.getState().addPendingReview({ id: 'apt_1', businessName: 'سالن' });
-    });
-
-    await act(async () => {
-      await useReviewStore.getState().submitReview('apt_1', { rating: 4 });
-    });
-
-    expect(useReviewStore.getState().hasReviewFor('apt_1')).toBe(true);
-    expect(useReviewStore.getState().hasReviewFor('apt_2')).toBe(false);
   });
 });
