@@ -197,6 +197,7 @@ jobs:
             SITE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'https://front-dev.beauclub.ir' }}"
             for i in $(seq 1 5); do
               HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SITE_URL}" --max-time 10 || echo "000")
+                echo "Attempt $i: HTTP Code is $HTTP_CODE" 
               if [ "$HTTP_CODE" = "200" ]; then exit 0; fi
               sleep 5
             done
