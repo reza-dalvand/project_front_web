@@ -7,7 +7,7 @@ name: CI Pipeline
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [main, develop]
     paths:
       - 'src/**'
       - 'public/**'
