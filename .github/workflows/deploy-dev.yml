@@ -2,7 +2,7 @@
 #   Deploy Pipeline - Staging (روی push به develop و staging)
 # ═══════════════════════════════════════════════════════════
 
-name: Deploy to Staging
+name: Deploy to develop
 
 on:
   push:
@@ -116,7 +116,7 @@ jobs:
 
   # ─── Job 2: Deploy ───
   deploy:
-    name: 🚀 Deploy to Develop
+    name: 🚀 Deploy to develop
     runs-on: ubuntu-latest
     needs: test-and-build
     environment:
