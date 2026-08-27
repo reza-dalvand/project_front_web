@@ -1,29 +1,29 @@
 # ═══════════════════════════════════════════════════════════
-#   Deploy Pipeline - Production (فقط روی push به main)
+#   Deploy Pipeline - Staging (روی push به develop و staging)
 # ═══════════════════════════════════════════════════════════
 
-name: Deploy to Production
+name: Deploy to develop
 
 on:
   push:
     branches:
-      - main
-      - master
+      - develop 
+      - staging
     paths:
       - 'src/**'
       - 'public/**'
       - 'package.json'
       - 'yarn.lock'
       - 'next.config.js'
-      - '.github/workflows/deploy.yml'
+      - '.github/workflows/deploy-dev.yml'
 
 concurrency:
-  group: deploy-production
+  group: deploy-staging
   cancel-in-progress: false
 
 env:
   NODE_VERSION: '22'
-  DEPLOY_PATH: ${{ secrets.PRODUCTION_DEPLOY_PATH }}
+  DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
   BACKUP_COUNT: 3
 
 jobs:
@@ -65,15 +65,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .next/cache
-          key: nextjs-deploy-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-${{ github.sha }}
+          key: nextjs-deploy-dev-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-${{ github.sha }}
           restore-keys: |
-            nextjs-deploy-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-
+            nextjs-deploy-dev-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-
 
       - name: Build static export
         run: yarn build
         env:
           NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
-          NEXT_PUBLIC_SITE_DOMAIN: ${{ secrets.NEXT_PUBLIC_SITE_DOMAIN }}
+          NEXT_PUBLIC_SITE_DOMAIN: ${{ secrets.NEXT_PUBLIC_SITE_DOMAIN || 'https://front-dev.beauclub.ir' }}
           NEXT_PUBLIC_ARVAN_CDN_URL: ${{ secrets.NEXT_PUBLIC_ARVAN_CDN_URL }}
           NEXT_PUBLIC_MEDIA_BASE_URL: ${{ secrets.NEXT_PUBLIC_MEDIA_BASE_URL }}
           NEXT_PUBLIC_USE_MOCK: 'false'
@@ -105,30 +105,28 @@ jobs:
           mkdir -p deploy-package
           cp -r out/. deploy-package/
           echo "${{ steps.version.outputs.version }}" > deploy-package/VERSION
-          echo "${{ steps.hash.outputs.hash }}" > deploy-package/HASH
-          echo "${{ github.sha }}" > deploy-package/COMMIT
           tar -czf deployment.tar.gz -C deploy-package .
 
       - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
         with:
-          name: deployment-package-${{ github.run_id }}
+          name: deployment-package-dev-${{ github.run_id }}
           path: deployment.tar.gz
           retention-days: 7
 
   # ─── Job 2: Deploy ───
   deploy:
-    name: 🚀 Deploy to Production
+    name: 🚀 Deploy to develop
     runs-on: ubuntu-latest
     needs: test-and-build
     environment:
-      name: production
-      url: https://beauclub.ir
+      name: develop
+      url: https://front-dev.beauclub.ir
     steps:
       - name: Download deployment artifact
         uses: actions/download-artifact@v4
         with:
-          name: deployment-package-${{ github.run_id }}
+          name: deployment-package-dev-${{ github.run_id }}
 
       - name: Upload tarball to server
         uses: appleboy/scp-action@v0.1.7
@@ -169,15 +167,6 @@ jobs:
             tar -xzf "${TARBALL}" -C out_new
             rm -f "${TARBALL}"
 
-            if [ ! -f "out_new/index.html" ]; then
-              echo "❌ Critical file missing: index.html"
-              rm -rf out_new
-              if [ -d "out_backup_${TIMESTAMP}" ]; then
-                mv "out_backup_${TIMESTAMP}" out
-              fi
-              exit 1
-            fi
-
             mv out out_old 2>/dev/null || true
             mv out_new out
             chmod -R 755 out
@@ -205,9 +194,10 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -e
-            SITE_URL="${{ secrets.PRODUCTION_URL || 'https://beauclub.ir' }}"
+            SITE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'https://front-dev.beauclub.ir' }}"
             for i in $(seq 1 5); do
               HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SITE_URL}" --max-time 10 || echo "000")
+                echo "Attempt $i: HTTP Code is $HTTP_CODE" 
               if [ "$HTTP_CODE" = "200" ]; then exit 0; fi
               sleep 5
             done
@@ -231,24 +221,3 @@ jobs:
               chmod -R 755 out
               sudo systemctl reload nginx 2>/dev/null || true
             fi
-
-  # ─── Job 3: Notify ───
-  notify:
-    name: 📢 Notify
-    runs-on: ubuntu-latest
-    needs: [test-and-build, deploy]
-    if: always()
-    steps:
-      - name: Send Telegram notification
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            ${{ needs.deploy.result == 'success' && '✅' || '❌' }} Beau PRODUCTION Deployment
-
-            Status: ${{ needs.deploy.result }}
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
-            Actor: ${{ github.actor }}
-            URL: https://beauclub.ir
