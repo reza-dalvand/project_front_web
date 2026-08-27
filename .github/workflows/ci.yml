@@ -7,7 +7,7 @@ name: CI Pipeline
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, master, develop, staging]
     paths:
       - 'src/**'
       - 'public/**'
@@ -16,7 +16,6 @@ on:
       - 'next.config.js'
       - '.github/workflows/ci.yml'
 
-# همزمان فقط یک ران برای هر PR
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -126,9 +125,7 @@ jobs:
         if: always()
         with:
           name: coverage-report-${{ github.run_id }}
-          path: |
-            coverage/
-            junit.xml
+          path: coverage/
           retention-days: 7
           if-no-files-found: warn
 
@@ -137,7 +134,6 @@ jobs:
         if: github.event_name == 'pull_request' && always()
         with:
           coverage-path: ./coverage/coverage-summary.json
-          junitxml-path: ./junit.xml
         continue-on-error: true
 
   # ─── Job 4: Build ───
@@ -167,9 +163,7 @@ jobs:
       - name: Cache Next.js build
         uses: actions/cache@v4
         with:
-          path: |
-            .next/cache
-            out
+          path: .next/cache
           key: nextjs-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
           restore-keys: |
             nextjs-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-
@@ -233,4 +227,6 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Analyze bundle
-        run: yarn build && yarn analyze || echo "Bundle analysis not configured"
+        # توجه: برای تحلیل واقعی نیاز به نصب @next/bundle-analyzer و تنظیم آن در next.config.js دارید
+        run: yarn analyze || echo "Bundle analysis not configured or failed"
+        continue-on-error: true
