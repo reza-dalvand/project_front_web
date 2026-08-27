@@ -194,7 +194,7 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -e
-            SITE_URL="${{ secrets.STAGING_URL || 'https://staging.beauclub.ir' }}"
+            SITE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'https://front-dev.beauclub.ir' }}"
             for i in $(seq 1 5); do
               HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SITE_URL}" --max-time 10 || echo "000")
               if [ "$HTTP_CODE" = "200" ]; then exit 0; fi
@@ -220,24 +220,3 @@ jobs:
               chmod -R 755 out
               sudo systemctl reload nginx 2>/dev/null || true
             fi
-
-  # ─── Job 3: Notify ───
-  notify:
-    name: 📢 Notify
-    runs-on: ubuntu-latest
-    needs: [test-and-build, deploy]
-    if: always()
-    steps:
-      - name: Send Telegram notification
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            ${{ needs.deploy.result == 'success' && '✅' || '❌' }} Beau STAGING Deployment
-
-            Status: ${{ needs.deploy.result }}
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
-            Actor: ${{ github.actor }}
-            URL: https://staging.beauclub.ir
