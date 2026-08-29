@@ -2,10 +2,15 @@
 
 const ENV = {
   development: {
-    API_BASE_URL: 'http://localhost:8000/api/v1',
-    SITE_DOMAIN: 'http://localhost:3000',
+    API_BASE_URL: 'http://127.0.0.1:8000/api/v1',
+    SITE_DOMAIN: 'http://127.0.0.1:3000',
     ARVAN_CDN_URL: '',
-    MEDIA_BASE_URL: 'http://localhost:8000',
+    MEDIA_BASE_URL: 'http://127.0.0.1:8000',
+
+    // API_BASE_URL: 'https://api.beauclub.ir/api/v1',
+    // SITE_DOMAIN: 'https://beauclub.ir',
+    // ARVAN_CDN_URL: 'https://cdn.beauclub.ir',
+    // MEDIA_BASE_URL: 'https://api.beauclub.ir',
   },
   staging: {
     API_BASE_URL: 'https://staging-api.beauclub.ir/api/v1',
