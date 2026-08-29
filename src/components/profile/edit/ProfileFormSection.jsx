@@ -4,6 +4,7 @@ import { FiUser, FiTag } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
 import Input from '@/components/common/Input';
+import { FiAlertCircle } from 'react-icons/fi';
 
 export default function ProfileFormSection({
   firstName,
@@ -26,6 +27,12 @@ export default function ProfileFormSection({
         <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
           اطلاعات شخصی
         </span>
+      </div>
+      <div className="flex items-start gap-2 p-3 mb-2 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm mt-4">
+        <FiAlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+        <p>
+           جهت جلوگیری از مشکلات مالی، مشخصات خود را بصورت صحیح و کامل وارد نمایید.
+        </p>
       </div>
       <Input
         label="نام *"
