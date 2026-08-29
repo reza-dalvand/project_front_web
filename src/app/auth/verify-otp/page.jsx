@@ -49,7 +49,10 @@ function VerifyOtpPageContent() {
         if (needsProfileCompletion) {
           router.replace('/profile/edit?welcome=1');
         } else {
-          router.replace(redirectUrl);
+          // ✅ اگر redirectUrl صفحه پروفایل بود و کاربر تازه ثبت‌نام کرده، به صفحه ویرایش پروفایل بره
+          // در غیر این صورت به redirectUrl بره (که می‌تونه صفحه هوم یا هر صفحه دیگه‌ای باشه)
+          const finalRedirect = redirectUrl === '/profile' ? '/' : redirectUrl;
+          router.replace(finalRedirect);
         }
       }, 1500);
     },

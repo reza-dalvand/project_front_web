@@ -39,7 +39,8 @@ export default function BottomTabBar() {
 
   const handleTabPress = (tab) => {
     if (tab.isAuthAction) {
-      router.push('/auth/login');
+      // ✅ ذخیره مسیر فعلی به عنوان redirect برای لاگین
+      router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
 

@@ -235,7 +235,10 @@ export const useAuth = () => {
     if (isAuthenticated) {
       action?.();
     } else {
-      router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+      // ✅ اگر در صفحه پروفایل هستیم و کاربر لاگین نکرده، بعد از لاگین به صفحه هوم بره
+      // در غیر این صورت به همون صفحه‌ای که بوده برگرده
+      const redirectPath = pathname === '/profile' ? '/' : pathname;
+      router.push(`/auth/login?redirect=${encodeURIComponent(redirectPath)}`);
     }
   };
 

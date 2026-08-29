@@ -20,7 +20,7 @@ import { appointmentsService, schedulesService } from '@/api';
 import { toJalaaliKey } from '@/utils/date-converter';
 import { buildPriceSummary } from '@/utils/price-utils';
 import { useAuth } from '@/stores/useAuthStore';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 let modalCounter = 0;
 const generateModalId = () => `booking-modal-${++modalCounter}-${Date.now()}`;
@@ -37,6 +37,7 @@ export default function BookingModal({
   const { showToast } = useToast();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
+  const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const currentService = service || {};
@@ -132,10 +133,13 @@ export default function BookingModal({
 
   useEffect(() => {
     if (visible && !isAuthenticated) {
-      router.push(`/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      // ✅ اگر در صفحه پروفایل هستیم و کاربر لاگین نکرده، بعد از لاگین به صفحه هوم بره
+      // در غیر این صورت به همون صفحه‌ای که بوده برگرده
+      const redirectPath = pathname === '/profile' ? '/' : pathname;
+      router.push(`/auth/login?redirect=${encodeURIComponent(redirectPath)}`);
       onClose?.();
     }
-  }, [visible, isAuthenticated]);
+  }, [visible, isAuthenticated, pathname]);
 
   useEffect(() => {
     if (visible) {
