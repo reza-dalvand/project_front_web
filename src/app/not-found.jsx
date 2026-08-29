@@ -52,16 +52,7 @@ export default function NotFound() {
       </div>
 
       {/* دکمه‌ها */}
-      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-        <Button
-          title="بازگشت به خانه"
-          onPress={() => router.push('/')}
-          variant="primary"
-          size="lg"
-          className="flex-1"
-          icon={<FiHome size={18} color="#fff" />}
-          iconPosition="right"
-        />
+      <div className="flex flex-row sm:flex-row gap-4 whitespace-nowrap">
         <Button
           title="صفحه قبل"
           onPress={() => router.back()}
@@ -69,7 +60,17 @@ export default function NotFound() {
           size="lg"
           className="flex-1"
           icon={<FiArrowRight size={18} style={{ color: colors.primary }} />}
-          iconPosition="right"
+          iconPosition="left"
+        />
+
+        <Button
+          title="بازگشت به خانه"
+          onPress={() => router.push('/')}
+          variant="primary"
+          size="lg"
+          className="flex-1"
+          icon={<FiHome size={18} color="#fff" />}
+          iconPosition="left"
         />
       </div>
 
