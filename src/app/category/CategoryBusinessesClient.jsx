@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -21,11 +21,9 @@ const CategoryFilterModal = dynamic(() => import('@/components/home/CategoryFilt
   loading: () => null,
 });
 
-export default function CategoryBusinessesPage() {
-  const params = useParams();
+export default function CategoryBusinessesPage({categoryId}) {
   const router = useRouter();
   const { colors } = useTheme();
-  const categoryId = params.id;
 
   const [categoryName, setCategoryName] = useState('دسته‌بندی');
   const [businesses, setBusinesses] = useState([]);
@@ -63,10 +61,13 @@ export default function CategoryBusinessesPage() {
           category_id: categoryId,
           page_size: 50,
         });
+
         const data = response.data || [];
+        
         setBusinesses(
           data.map((b) => ({
             id: b.id,
+            bookingSlug: b.bookingSlug || b.id, // ✅ اضافه شود (Fallback به id برای احتیاط)
             name: b.name,
             // ✅ فاز ۳: فقط خوانش camelCase
             category: b.categoryName || '',
@@ -122,7 +123,7 @@ export default function CategoryBusinessesPage() {
   }, [businesses, search, filters]);
 
   const handleBusinessPress = (business) => {
-    router.push(`/business/${business.id}`);
+    router.push(`/business?slug=${business.bookingSlug}`); // ✅ تغییر به slug
   };
 
   return (

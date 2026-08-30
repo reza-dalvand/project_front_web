@@ -1,11 +1,13 @@
 // src/components/booking/BookingModal.jsx
 'use client';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { FiCalendar, FiClock, FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useToast } from '@/hooks/useToast';
+import { useRouter } from 'next/navigation';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { buildPriceSummary } from '@/utils/price-utils';
 import BookingStepIndicator from './BookingStepIndicator';
 import BookingDateSelector from './BookingDateSelector';
 import BookingTimeSelector from './BookingTimeSelector';
@@ -15,12 +17,7 @@ import BookingSuccessStep from './BookingSuccessStep';
 import BookingFailedStep from './BookingFailedStep';
 import BookingModalFooter from './BookingModalFooter';
 import TrustToggle from './TrustToggle';
-import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
-import { appointmentsService, schedulesService } from '@/api';
-import { toJalaaliKey } from '@/utils/date-converter';
-import { buildPriceSummary } from '@/utils/price-utils';
-import { useAuth } from '@/stores/useAuthStore';
-import { useRouter } from 'next/navigation';
+import { useBookingSteps, useBookingState, useBookingName, useBookingData } from './hooks';
 
 let modalCounter = 0;
 const generateModalId = () => `booking-modal-${++modalCounter}-${Date.now()}`;
@@ -34,93 +31,71 @@ export default function BookingModal({
   onConfirm,
 }) {
   const { colors } = useTheme();
-  const { showToast } = useToast();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const updateUser = useAuthStore((s) => s.updateUser);
   const currentService = service || {};
   const instanceId = useRef(generateModalId());
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [trustEnabled, setTrustEnabled] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bookingResult, setBookingResult] = useState(null);
-  const [availableSlots, setAvailableSlots] = useState([]);
-  const [availableDates, setAvailableDates] = useState([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
+  // Custom hooks for state management
+  const {
+    selectedDate,
+    setSelectedDate,
+    selectedTime,
+    setSelectedTime,
+    trustEnabled,
+    setTrustEnabled,
+    isSubmitting,
+    setIsSubmitting,
+    bookingResult,
+    availableSlots,
+    setAvailableSlots,
+    availableDates,
+    setAvailableDates,
+    slotsLoading,
+    setSlotsLoading,
+    bookingFailed,
+    setBookingFailed,
+    bookingError,
+    setBookingError,
+    resetBookingState,
+  } = useBookingState();
+
+  const {
+    firstName,
+    setFirstName,
+    lastName,
+    setLastName,
+    nameConfirmed,
+    setNameConfirmed,
+    nameErrors,
+    setNameErrors,
+    needsNameStep,
+    validateName,
+    prefillNameFromUser,
+    updateUserName,
+    resetNameState,
+  } = useBookingName();
+
+  const {
+    currentStep,
+    setCurrentStep,
+    STEPS,
+    nameStepId,
+    reviewStepId,
+    dateStepId,
+    timeStepId,
+    handleNext: nextStep,
+    handlePrev: prevStep,
+    resetSteps,
+  } = useBookingSteps(needsNameStep);
+
+  const { fetchAvailableDates, fetchAvailableSlots, createAppointment } = useBookingData(
+    businessId,
+    currentService.id
+  );
+
   const [mounted, setMounted] = useState(false);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [nameConfirmed, setNameConfirmed] = useState(false);
-  const [nameErrors, setNameErrors] = useState({ firstName: '', lastName: '', confirm: '' });
-  const [bookingFailed, setBookingFailed] = useState(false);
-  const [bookingError, setBookingError] = useState(null);
-
-  const needsNameStep = useMemo(() => {
-    const name = user?.name?.trim();
-    return !name || name === 'کاربر بیو کلاب' || name.length < 3;
-  }, [user?.name]);
-
-  const STEPS = useMemo(() => {
-    if (needsNameStep) {
-      return [
-        { id: 1, label: 'مشخصات', icon: 'user' },
-        { id: 2, label: 'بررسی', icon: 'info' },
-        { id: 3, label: 'تاریخ', icon: 'calendar' },
-        { id: 4, label: 'ساعت', icon: 'clock' },
-      ];
-    }
-    return [
-      { id: 1, label: 'بررسی', icon: 'info' },
-      { id: 2, label: 'تاریخ', icon: 'calendar' },
-      { id: 3, label: 'ساعت', icon: 'clock' },
-    ];
-  }, [needsNameStep]);
-
-  const nameStepId = needsNameStep ? 1 : 0;
-  const reviewStepId = needsNameStep ? 2 : 1;
-  const dateStepId = needsNameStep ? 3 : 2;
-  const timeStepId = needsNameStep ? 4 : 3;
-
-  const validateName = () => {
-    const errors = { firstName: '', lastName: '', confirm: '' };
-    let isValid = true;
-    if (!firstName.trim()) {
-      errors.firstName = 'نام الزامی است';
-      isValid = false;
-    } else if (firstName.trim().length < 2) {
-      errors.firstName = 'نام باید حداقل ۲ کاراکتر باشد';
-      isValid = false;
-    }
-    if (!lastName.trim()) {
-      errors.lastName = 'نام خانوادگی الزامی است';
-      isValid = false;
-    } else if (lastName.trim().length < 2) {
-      errors.lastName = 'نام خانوادگی باید حداقل ۲ کاراکتر باشد';
-      isValid = false;
-    }
-    if (!nameConfirmed) {
-      errors.confirm = 'لطفاً تایید کنید که اطلاعات مطابق کارت بانکی است';
-      isValid = false;
-    }
-    setNameErrors(errors);
-    return isValid;
-  };
-
-  const prefillNameFromUser = () => {
-    if (user?.firstName) setFirstName(user.firstName);
-    if (user?.lastName) setLastName(user.lastName);
-    if (!user?.firstName && !user?.lastName && user?.name) {
-      const parts = user.name.trim().split(' ');
-      if (parts.length >= 2) {
-        setFirstName(parts[0]);
-        setLastName(parts.slice(1).join(' '));
-      }
-    }
-  };
 
   useEffect(() => {
     setMounted(true);
@@ -139,23 +114,13 @@ export default function BookingModal({
 
   useEffect(() => {
     if (visible) {
-      setCurrentStep(1);
-      setSelectedDate(null);
-      setSelectedTime(null);
-      setTrustEnabled(false);
-      setIsSubmitting(false);
-      setBookingResult(null);
-      setBookingFailed(false);
-      setBookingError(null);
-      setFirstName('');
-      setLastName('');
-      setNameConfirmed(false);
-      setNameErrors({ firstName: '', lastName: '', confirm: '' });
+      resetSteps();
+      resetBookingState();
+      resetNameState();
       setAvailableSlots([]);
       if (needsNameStep) prefillNameFromUser();
       acquireScrollLock(instanceId.current);
-      // ✅ همیشه از بک‌اند روزهای آزاد را بگیر
-      if (businessId && currentService.id) fetchAvailableDates();
+      if (businessId && currentService.id) fetchAvailableDates().then(setAvailableDates);
     } else {
       releaseScrollLock(instanceId.current);
     }
@@ -171,34 +136,6 @@ export default function BookingModal({
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible]);
 
-  const fetchAvailableDates = async () => {
-    try {
-      const result = await schedulesService.getAvailableDates(businessId, currentService.id, 30);
-      setAvailableDates(result.data || []);
-    } catch (err) {
-      console.error('Failed to fetch available dates:', err);
-    }
-  };
-
-  const fetchAvailableSlots = async (date) => {
-    setSlotsLoading(true);
-    try {
-      const result = await schedulesService.getAvailableSlots(
-        businessId,
-        currentService.id,
-        date.jy,
-        date.jm,
-        date.jd
-      );
-      setAvailableSlots(result.data || []);
-    } catch (err) {
-      console.error('Failed to fetch slots:', err);
-      showToast('خطا در دریافت ساعات آزاد', 'error');
-    } finally {
-      setSlotsLoading(false);
-    }
-  };
-
   const priceSummary = useMemo(() => {
     const originalPrice = currentService.originalPrice ?? currentService.price ?? 0;
     const discountPercent = currentService.discountPercent ?? currentService.discount ?? 0;
@@ -210,33 +147,25 @@ export default function BookingModal({
     );
   }, [currentService]);
 
-  const handleDateSelect = (date) => {
+  const handleDateSelect = async (date) => {
     setSelectedDate(date);
     setSelectedTime(null);
-    fetchAvailableSlots(date);
+    const slots = await fetchAvailableSlots(date);
+    setAvailableSlots(slots);
   };
+
   const handleNext = () => {
     if (needsNameStep && currentStep === nameStepId) {
       if (!validateName()) return;
-      const fullName = `${firstName.trim()} ${lastName.trim()}`;
-      updateUser({ name: fullName, firstName: firstName.trim(), lastName: lastName.trim() });
+      updateUserName();
     }
-    if (currentStep < timeStepId) setCurrentStep((p) => p + 1);
+    nextStep();
   };
-  const handlePrev = () => {
-    if (currentStep > 1) setCurrentStep((p) => p - 1);
-  };
+
   const handleClose = () => {
-    setCurrentStep(1);
-    setSelectedDate(null);
-    setSelectedTime(null);
-    setBookingResult(null);
-    setBookingFailed(false);
-    setBookingError(null);
-    setFirstName('');
-    setLastName('');
-    setNameConfirmed(false);
-    setNameErrors({ firstName: '', lastName: '', confirm: '' });
+    resetSteps();
+    resetBookingState();
+    resetNameState();
     onClose?.();
   };
   const handleRetry = () => {
@@ -245,22 +174,20 @@ export default function BookingModal({
     setCurrentStep(timeStepId);
   };
 
-  // ✅ FIX فاز ۳: ارسال trust_based به بک‌اند
   const handleConfirm = async () => {
     if (!selectedDate || !selectedTime) return;
 
     setIsSubmitting(true);
+    const result = await createAppointment({
+      service_id: currentService.id,
+      jy: selectedDate.jy,
+      jm: selectedDate.jm,
+      jd: selectedDate.jd,
+      time_slot: selectedTime.start_time,
+      trust_based: trustEnabled,
+    });
 
-    try {
-      const result = await appointmentsService.createAppointment({
-        service_id: currentService.id,
-        jy: selectedDate.jy,
-        jm: selectedDate.jm,
-        jd: selectedDate.jd,
-        time_slot: selectedTime.start_time,
-        trust_based: trustEnabled, // ✅ فاز ۳: وضعیت اعتماد
-      });
-
+    if (result.success) {
       setBookingResult(result.data);
       setBookingFailed(false);
       setBookingError(null);
@@ -273,14 +200,10 @@ export default function BookingModal({
         time: selectedTime,
         trustBased: trustEnabled,
       });
-    } catch (err) {
+    } else {
       setIsSubmitting(false);
       setBookingFailed(true);
-      setBookingError({
-        message: err.message || 'ارتباط با درگاه پرداخت برقرار نشد',
-        code: err.code || 'UNKNOWN',
-        trackingCode: err.details?.tracking_code || err.details?.trackingCode || null,
-      });
+      setBookingError(result.error);
     }
   };
 

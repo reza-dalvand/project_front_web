@@ -1,7 +1,7 @@
-// src/app/business/[id]/map/BusinessMapClient.jsx
+// src/app/business/map/BusinessMapClient.jsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import { useToast } from '@/hooks/useToast';
@@ -12,31 +12,9 @@ import BusinessMapPanel from '@/components/businessMap/BusinessMapPanel';
 import NavigationModal from '@/components/businessMap/NavigationModal';
 import MapErrorState from '@/components/businessMap/MapErrorState';
 import { businessesService } from '@/api';
-import env from '@/config/env';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-// ═══════════════════════════════════════════════════════
-//    ✅ FIX فاز ۳: ساختار آماده برای مهاجرت نقشه
-// ═══════════════════════════════════════════════════════
-// فعلاً از OSM رایگان استفاده می‌شود. در صورت مهاجرت به
-// سرویس‌های پولی (مثل MapTiler یا Neshan)، کلید از `env`
-// خوانده می‌شود. هرگز کلید را در کد هاردکد نکنید.
-//
-// نمونه مهاجرت آینده:
-//   1. کلید را در .env قرار دهید:
-//      NEXT_PUBLIC_MAPTILER_KEY=xxx
-//   2. در اینجا از آن بخوانید:
-//      const MAP_STYLE = `https://api.maptiler.com/maps/streets/style.json?key=${env.MAPTILER_KEY}`
-//   3. دیگر هیچ تغییری در بقیه کامپوننت لازم نیست
-//
-// ⚠️ Rate Limiting: OSM رایگان محدودیت درخواست دارد.
-//    در ترافیک بالا، استفاده از سرویس پولی توصیه می‌شود.
-
 const getMapStyle = () => {
-  // آینده:
-  // if (env.MAPTILER_KEY) {
-  //   return `https://api.maptiler.com/maps/streets/style.json?key=${env.MAPTILER_KEY}`;
-  // }
   return {
     version: 8,
     sources: {
@@ -47,13 +25,7 @@ const getMapStyle = () => {
         attribution: '© OpenStreetMap contributors',
       },
     },
-    layers: [
-      {
-        id: 'osm',
-        type: 'raster',
-        source: 'osm',
-      },
-    ],
+    layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
   };
 };
 
@@ -75,8 +47,7 @@ const NAVIGATION_WEB_URLS = {
   google: (lat, lng) => `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
 };
 
-export default function BusinessMapPage() {
-  const params = useParams();
+export default function BusinessMapClient({ businessSlug }) {
   const router = useRouter();
   const { colors } = useTheme();
   const { showToast } = useToast();
@@ -90,12 +61,11 @@ export default function BusinessMapPage() {
   const [isLoading, setIsLoading] = useState(true);
   const navTimerRef = useRef(null);
 
-  // ═══════ دریافت اطلاعات کسب‌وکار از API ═══════
   useEffect(() => {
     const fetchBusiness = async () => {
       setIsLoading(true);
       try {
-        const response = await businessesService.getPublicBusiness(params.id);
+        const response = await businessesService.getPublicBusiness(businessSlug);
         const b = response.data;
         setBusiness({
           id: b.id,
@@ -108,24 +78,20 @@ export default function BusinessMapPage() {
             longitude: b.longitude || 51.389,
           },
         });
-      } catch (error) {
-        console.error('Failed to fetch business for map:', error);
+      } catch (err) {
+        console.error('Failed to fetch business for map:', err);
         showToast('خطا در بارگذاری موقعیت کسب‌وکار', 'error');
       } finally {
         setIsLoading(false);
       }
     };
     fetchBusiness();
-  }, [params.id, showToast]);
+  }, [businessId, showToast]);
 
   useEffect(() => {
     import('react-map-gl/maplibre')
       .then((mod) => {
-        setMapLib({
-          Map: mod.default,
-          Marker: mod.Marker,
-          NavigationControl: mod.NavigationControl,
-        });
+        setMapLib({ Map: mod.default, Marker: mod.Marker, NavigationControl: mod.NavigationControl });
         setMapLoading(false);
       })
       .catch(() => {
@@ -136,9 +102,7 @@ export default function BusinessMapPage() {
 
   useEffect(() => {
     return () => {
-      if (navTimerRef.current) {
-        clearTimeout(navTimerRef.current);
-      }
+      if (navTimerRef.current) clearTimeout(navTimerRef.current);
     };
   }, []);
 
@@ -162,9 +126,7 @@ export default function BusinessMapPage() {
       setNavModalVisible(false);
     };
     const handleVisibility = () => {
-      if (document.hidden && !isHandled) {
-        cleanup();
-      }
+      if (document.hidden && !isHandled) cleanup();
     };
     navTimerRef.current = setTimeout(() => {
       if (!isHandled) {
@@ -176,22 +138,14 @@ export default function BusinessMapPage() {
     document.addEventListener('visibilitychange', handleVisibility);
   };
 
-  const handleNavigation = () => {
-    setNavModalVisible(true);
-  };
+  const handleNavigation = () => setNavModalVisible(true);
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/business/${business.id}`;
-    const shareMessage = `📍 موقعیت ${business.name}
-🏠 ${business.address}
-🔗 ${shareUrl}`;
+    const shareUrl = `${window.location.origin}/business?id=${business.id}`;
+    const shareMessage = `📍 موقعیت ${business.name}\n🏠 ${business.address}\n🔗 ${shareUrl}`;
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: business.name,
-          text: shareMessage,
-          url: shareUrl,
-        });
+        await navigator.share({ title: business.name, text: shareMessage, url: shareUrl });
       } catch (err) {}
     } else {
       try {
@@ -203,19 +157,13 @@ export default function BusinessMapPage() {
 
   const handleCall = () => {
     const phone = cleanPhone(business.phone);
-    if (phone) {
-      window.location.href = `tel:${phone}`;
-    } else {
-      showToast('شماره تماسی ثبت نشده است', 'error');
-    }
+    if (phone) window.location.href = `tel:${phone}`;
+    else showToast('شماره تماسی ثبت نشده است', 'error');
   };
 
   const handleBack = () => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push('/');
-    }
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back();
+    else router.push('/');
   };
 
   const handleCopyAddress = async () => {
@@ -246,32 +194,14 @@ export default function BusinessMapPage() {
         <div className="flex-1 relative">
           {MapLib && !mapError ? (
             <MapLib.Map
-              initialViewState={{
-                longitude: business.location.longitude,
-                latitude: business.location.latitude,
-                zoom: 15,
-              }}
+              initialViewState={{ longitude: business.location.longitude, latitude: business.location.latitude, zoom: 15 }}
               style={{ width: '100%', height: '100%' }}
               mapStyle={MAP_STYLE}
             >
               <MapLib.NavigationControl position="top-right" />
-              <MapLib.Marker
-                longitude={business.location.longitude}
-                latitude={business.location.latitude}
-                anchor="bottom"
-              >
-                <svg
-                  width="36"
-                  height="48"
-                  viewBox="0 0 36 48"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))' }}
-                >
-                  <path
-                    d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z"
-                    fill="#E53935"
-                  />
+              <MapLib.Marker longitude={business.location.longitude} latitude={business.location.latitude} anchor="bottom">
+                <svg width="36" height="48" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))' }}>
+                  <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z" fill="#E53935" />
                   <circle cx="18" cy="18" r="7" fill="#fff" />
                 </svg>
               </MapLib.Marker>
@@ -280,21 +210,9 @@ export default function BusinessMapPage() {
             <MapErrorState isLoading={mapLoading} />
           )}
         </div>
-        <BusinessMapPanel
-          business={business}
-          copied={copied}
-          onCopyAddress={handleCopyAddress}
-          onNavigation={handleNavigation}
-          onCall={handleCall}
-          onShare={handleShare}
-        />
+        <BusinessMapPanel business={business} copied={copied} onCopyAddress={handleCopyAddress} onNavigation={handleNavigation} onCall={handleCall} onShare={handleShare} />
       </div>
-      <NavigationModal
-        visible={navModalVisible}
-        onClose={() => setNavModalVisible(false)}
-        onSelect={openNavigationApp}
-        navLoading={navLoading}
-      />
+      <NavigationModal visible={navModalVisible} onClose={() => setNavModalVisible(false)} onSelect={openNavigationApp} navLoading={navLoading} />
     </ScreenWrapper>
   );
 }

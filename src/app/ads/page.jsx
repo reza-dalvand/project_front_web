@@ -51,9 +51,9 @@ export default function AllAdsPage() {
 
   const handleAdPress = (ad) => {
     if (ad.adType === 'model') {
-      router.push(`/model-requests/${ad.id}`);
+      router.push(`/model-request-detail?id=${ad.id}`);
     } else {
-      router.push(`/line-rentals/${ad.id}`);
+      router.push(`/line-rental-detail?id=${ad.id}`);
     }
   };
 

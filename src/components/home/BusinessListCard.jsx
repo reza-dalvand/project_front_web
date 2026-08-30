@@ -1,6 +1,5 @@
 // src/components/home/BusinessListCard.jsx
 'use client';
-import Image from 'next/image';
 import { FiMapPin, FiStar, FiChevronLeft, FiNavigation } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { Card } from '@/components/common';

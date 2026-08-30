@@ -95,7 +95,7 @@ export default function SearchPage() {
 
   const handleBusinessPress = useCallback(
     (business) => {
-      router.push(`/business/${business.id}`);
+      router.push(`/business?id=${business.id}`);
     },
     [router]
   );

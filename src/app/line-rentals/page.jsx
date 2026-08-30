@@ -49,7 +49,7 @@ export default function LineRentalsPage() {
 
   const handleRentalPress = useCallback(
     (rental) => {
-      router.push(`/line-rentals/${rental.id}`);
+      router.push(`/line-rental-detail?id=${rental.id}`);
     },
     [router]
   );

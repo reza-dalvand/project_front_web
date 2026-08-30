@@ -108,6 +108,7 @@ export default function HomePage() {
               subtitle: p.businessName || '',
               imageUrl: p.gallery?.[0] || p.images?.[0] || '',
               businessId: p.businessId || p.business_id,
+              businessSlug: p.businessBookingSlug || p.business_booking_slug, // ✅ اضافه شود
               badge: p.discount > 0 ? `${p.discount}%` : null,
             }))
           );
@@ -257,7 +258,8 @@ export default function HomePage() {
 
   const handleAdPress = useCallback(
     (ad) => {
-      if (ad.businessId) router.push(`/business/${ad.businessId}`);
+      const slug = ad.businessSlug || ad.businessId;
+      if (slug) router.push(`/business?slug=${slug}`); // ✅ تغییر مسیر
     },
     [router]
   );
@@ -265,18 +267,18 @@ export default function HomePage() {
   const handleCategorySelect = useCallback(
     (item) => {
       setSelectedCategory(item.id);
-      router.push(`/category/${item.id}`);
+      router.push(`/category?id=${item.id}`);
     },
     [router]
   );
 
   const handleModelRequestPress = useCallback(
-    (request) => router.push(`/model-requests/${request.id}`),
+    (request) => router.push(`/model-request-detail?id=${request.id}`),
     [router]
   );
 
   const handleLineRentalPress = useCallback(
-    (ad) => router.push(`/line-rentals/${ad.id}`),
+    (ad) => router.push(`/line-rental-detail?id=${ad.id}`),
     [router]
   );
 

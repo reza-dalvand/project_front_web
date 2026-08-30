@@ -32,7 +32,7 @@ export default function FavoritesPage() {
     { id: 'posts', label: 'ویترین', count: favoritePosts.length },
   ];
 
-  const handleBusinessPress = useCallback((biz) => router.push(`/business/${biz.id}`), [router]);
+  const handleBusinessPress = useCallback((biz) => router.push(`/business?id=${biz.id}`), [router]);
 
   const handleRemoveBusiness = useCallback(
     async (biz) => {

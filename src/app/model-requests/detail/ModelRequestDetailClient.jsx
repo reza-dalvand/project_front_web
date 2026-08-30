@@ -1,7 +1,7 @@
 // src/app/model-requests/[id]/ModelRequestDetailClient.jsx
 'use client';
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FiPhone } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -16,8 +16,7 @@ import { cleanPhone } from '@/utils/phoneUtils';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
 
-export default function ModelRequestDetailPage() {
-  const params = useParams();
+export default function ModelRequestDetailPage({requestId}) {
   const router = useRouter();
   const { colors } = useTheme();
   const { showToast } = useToast();
@@ -29,7 +28,7 @@ export default function ModelRequestDetailPage() {
     const fetchDetail = async () => {
       setIsLoading(true);
       try {
-        const result = await adsService.getModelRequestDetail(params.id);
+        const result = await adsService.getModelRequestDetail(requestId);
         setRequest(result.data);
       } catch (error) {
         console.error('Failed to fetch model request detail:', error);
@@ -39,7 +38,7 @@ export default function ModelRequestDetailPage() {
       }
     };
     fetchDetail();
-  }, [params.id, showToast]);
+  }, [requestId, showToast]);
 
   const handleCall = () => {
     if (request?.contact_phone || request?.contactPhone) {

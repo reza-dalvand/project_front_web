@@ -101,9 +101,11 @@ export default function ExplorePage() {
 
   // ═══════ هندلر ناوبری به صفحه کسب‌وکار ═══════
   const handleNavigateToBusiness = useCallback(
-    (businessId) => {
-      if (businessId) {
-        router.push(`/business/${businessId}`);
+    (data) => {
+      // ✅ دریافت اسلاگ از آبجکت پست یا fallback به id
+      const slug = data?.businessBookingSlug || data?.business_booking_slug || data?.businessId || data?.business_id || data;
+      if (slug) {
+        router.push(`/business?slug=${slug}`);
       }
     },
     [router]
@@ -162,7 +164,7 @@ export default function ExplorePage() {
         visible={!!activePost}
         onClose={handlePostClose}
         onSave={handleSave}
-        onNavigateToProfile={handleNavigateToBusiness}
+        onNavigateToProfile={() => handleNavigateToBusiness(activePost)} // ✅ ارسال کل آبجکت
       />
     </ScreenWrapper>
   );

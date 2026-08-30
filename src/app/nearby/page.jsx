@@ -113,6 +113,7 @@ export default function NearbyPage() {
           setNearbyBusinesses(
             bizList.map((b) => ({
               id: b.id,
+              bookingSlug: b.bookingSlug || b.id, // ✅ اضافه شود
               name: b.name,
               // ✅ فاز ۳: فقط خوانش camelCase
               category: b.categoryName || '',
@@ -214,9 +215,8 @@ export default function NearbyPage() {
     }, 500);
   }, [isLoadingMore, hasMore]);
 
-  const handleBusinessPress = useCallback((biz) => router.push(`/business/${biz.id}`), [router]);
-  const handleModelPress = useCallback((req) => router.push(`/model-requests/${req.id}`), [router]);
-  const handleLinePress = useCallback((ad) => router.push(`/line-rentals/${ad.id}`), [router]);
+  const handleBusinessPress = useCallback((biz) => router.push(`/business?slug=${biz.bookingSlug}`), [router]);  const handleModelPress = useCallback((req) => router.push(`/model-request-detail?id=${req.id}`), [router]);
+  const handleLinePress = useCallback((ad) => router.push(`/line-rental-detail?id=${ad.id}`), [router]);
 
   return (
     <ScreenWrapper scrollable padding={0}>

@@ -7,11 +7,18 @@ import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
 
+// ✅ fallback ثابت — نه random! هر بار یک تصویر ثابت نمایش می‌دهد
+const FALLBACK_COVER = '/images/placeholder-cover.jpg';
+
 /**
  * 🏪 BusinessHero - هدر تصویری صفحه جزئیات کسب‌وکار
+ *
+ * ✅ فاز ۵: لوگو و کاور مستقیماً از API خوانده می‌شوند
  */
 export default function BusinessHero({
   gallery = [],
+  coverUrl,       // ✅ جدید: URL کاور از API
+  logo,           // ✅ جدید: URL لوگو از API
   businessId,
   businessName,
   onBackPress,
@@ -23,8 +30,8 @@ export default function BusinessHero({
   const { showToast } = useToast();
   const [showShareToast, setShowShareToast] = useState(false);
 
-  // فقط اولین تصویر به عنوان کاور ثابت
-  const coverImage = gallery[0] || 'https://picsum.photos/800/600?random=45';
+  // ✅ اولویت: coverUrl از API → gallery[0] → fallback ثابت
+  const coverImage = coverUrl || gallery[0] || FALLBACK_COVER;
 
   // لینک رزرو اختصاصی
   const bookingLink = `https://beau.app/book/${businessId || 'biz_1'}`;
@@ -36,7 +43,6 @@ export default function BusinessHero({
 ${bookingLink}
 ✨ رزرو از اپلیکیشن بیو کلاب`;
 
-    // ۱. استفاده از Web Share API در صورت پشتیبانی
     if (navigator.share) {
       try {
         await navigator.share({
@@ -50,10 +56,8 @@ ${bookingLink}
       }
     }
 
-    // ۲. Fallback: کپی در کلیپ‌بورد
     try {
       let copied = false;
-
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         await navigator.clipboard.writeText(shareMessage);
         copied = true;
@@ -97,7 +101,7 @@ ${bookingLink}
 
   return (
     <div className="relative w-full h-[320px] bg-black overflow-hidden">
-      {/* ═══════ تصویر اصلی ═══════ */}
+      {/* ═══════ تصویر کاور از API ═══════ */}
       <div className="relative w-full h-full">
         <Image
           src={coverImage}
@@ -109,6 +113,22 @@ ${bookingLink}
         />
       </div>
 
+      {/* ═══════ لوگو کسب‌وکار (از API) ═══════ */}
+      {logo && (
+        <div
+          className="absolute bottom-4 right-4 w-16 h-16 rounded-2xl overflow-hidden border-[3px] shadow-lg z-10"
+          style={{ borderColor: '#fff' }}
+        >
+          <Image
+            src={logo}
+            alt={`لوگوی ${businessName || 'کسب‌وکار'}`}
+            width={64}
+            height={64}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
       {/* ═══════ گرادیان پایین ═══════ */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
@@ -117,7 +137,6 @@ ${bookingLink}
 
       {/* ═══════ دکمه‌های بالا ═══════ */}
       <div className="absolute top-4 left-4 right-4 flex items-center gap-3 z-10">
-        {/* دکمه بازگشت */}
         <button
           onClick={onBackPress}
           className="w-11 h-11 rounded-full flex items-center justify-center
@@ -131,7 +150,6 @@ ${bookingLink}
 
         <div className="flex-1" />
 
-        {/* دکمه اشتراک‌گذاری */}
         <button
           onClick={handleShare}
           className="w-11 h-11 rounded-full flex items-center justify-center
@@ -143,7 +161,6 @@ ${bookingLink}
           <FiShare2 size={20} color="#fff" />
         </button>
 
-        {/* دکمه ذخیره */}
         <button
           onClick={handleFavorite}
           className="w-11 h-11 rounded-full flex items-center justify-center
