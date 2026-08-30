@@ -34,7 +34,6 @@ export default function ManagePortfolioPage() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [activePortfolio, setActivePortfolio] = useState(null);
 
-
   const fetchPortfolios = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -48,31 +47,32 @@ export default function ManagePortfolioPage() {
     }
   }, [showToast]);
 
-  
   useEffect(() => {
     fetchPortfolios();
   }, [showToast, businessData?.portfolios]);
 
-  const handleSave = useCallback(async (portfolioData, editId) => {
-    try {
-      if (editId) {
-        await portfoliosService.updatePortfolio(editId, portfolioData);
-      } else {
-        await portfoliosService.createPortfolio(portfolioData);
+  const handleSave = useCallback(
+    async (portfolioData, editId) => {
+      try {
+        if (editId) {
+          await portfoliosService.updatePortfolio(editId, portfolioData);
+        } else {
+          await portfoliosService.createPortfolio(portfolioData);
+        }
+
+        // refresh لیست
+        await fetchPortfolios();
+        setFormVisible(false);
+        setEditingPortfolio(null);
+
+        showToast(editId ? '✓ نمونه‌کار ویرایش شد' : '✓ نمونه‌کار اضافه شد', 'success');
+      } catch (error) {
+        console.error('Save portfolio failed:', error);
+        showToast(error.message || 'خطا در ذخیره نمونه‌کار', 'error');
       }
-      
-      // refresh لیست
-      await fetchPortfolios();
-      setFormVisible(false);
-      setEditingPortfolio(null);
-      
-      showToast(editId ? '✓ نمونه‌کار ویرایش شد' : '✓ نمونه‌کار اضافه شد', 'success');
-    } catch (error) {
-      console.error('Save portfolio failed:', error);
-      showToast(error.message || 'خطا در ذخیره نمونه‌کار', 'error');
-    }
-  }, [showToast, fetchPortfolios]); 
-  
+    },
+    [showToast, fetchPortfolios]
+  );
 
   // ✅ حذف USE_MOCK — فقط API
   const handleDelete = useCallback(

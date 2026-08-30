@@ -29,7 +29,7 @@ export default function PortfolioFormSheet({
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState(null);
   const [subServiceId, setSubServiceId] = useState(null);
-  const [images, setImages] = useState([]);       // ✅ فایل‌های واقعی
+  const [images, setImages] = useState([]); // ✅ فایل‌های واقعی
   const [imagePreviews, setImagePreviews] = useState([]); // برای پیش‌نمایش
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -168,7 +168,10 @@ export default function PortfolioFormSheet({
       <div className="space-y-5 pb-4">
         {/* ═══ آپلود تصاویر — اجباری ═══ */}
         <div>
-          <label className="block text-sm font-[Vazir-Medium] mb-2" style={{ color: colors.textMain }}>
+          <label
+            className="block text-sm font-[Vazir-Medium] mb-2"
+            style={{ color: colors.textMain }}
+          >
             تصاویر نمونه‌کار <span style={{ color: '#E53935' }}>*</span>
             <span className="text-xs font-[Vazir] mr-2" style={{ color: colors.textSecondary }}>
               (حداقل ۱، حداکثر {toPersianDigit(MAX_IMAGES)} تصویر)
@@ -179,8 +182,18 @@ export default function PortfolioFormSheet({
           {imagePreviews.length > 0 && (
             <div className="flex flex-wrap gap-3 mb-3">
               {imagePreviews.map((preview, index) => (
-                <div key={index} className="relative w-24 h-24 rounded-xl overflow-hidden border" style={{ borderColor: colors.border }}>
-                  <Image src={preview} alt={`تصویر ${index + 1}`} fill className="object-cover" sizes="96px" />
+                <div
+                  key={index}
+                  className="relative w-24 h-24 rounded-xl overflow-hidden border"
+                  style={{ borderColor: colors.border }}
+                >
+                  <Image
+                    src={preview}
+                    alt={`تصویر ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="96px"
+                  />
                   {index === 0 && (
                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-center py-0.5">
                       <span className="text-[9px] text-white font-[Vazir-Bold]">کاور</span>
@@ -216,7 +229,10 @@ export default function PortfolioFormSheet({
                 backgroundColor: colors.primary + '05',
               }}
             >
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.primary + '15' }}>
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: colors.primary + '15' }}
+              >
                 <FiUpload size={24} style={{ color: colors.primary }} />
               </div>
               <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.textMain }}>
@@ -229,7 +245,9 @@ export default function PortfolioFormSheet({
           )}
 
           {errors.images && (
-            <p className="text-xs mt-1.5" style={{ color: '#E53935' }}>{errors.images}</p>
+            <p className="text-xs mt-1.5" style={{ color: '#E53935' }}>
+              {errors.images}
+            </p>
           )}
         </div>
 
@@ -257,7 +275,11 @@ export default function PortfolioFormSheet({
             setErrors((prev) => ({ ...prev, categoryId: '' }));
           }}
         />
-        {errors.categoryId && <p className="text-xs mt-1.5" style={{ color: '#E53935' }}>{errors.categoryId}</p>}
+        {errors.categoryId && (
+          <p className="text-xs mt-1.5" style={{ color: '#E53935' }}>
+            {errors.categoryId}
+          </p>
+        )}
 
         {/* ═══ نوع خدمت ═══ */}
         <Dropdown
@@ -271,7 +293,11 @@ export default function PortfolioFormSheet({
           }}
           disabled={!categoryId}
         />
-        {errors.subServiceId && <p className="text-xs mt-1.5" style={{ color: '#E53935' }}>{errors.subServiceId}</p>}
+        {errors.subServiceId && (
+          <p className="text-xs mt-1.5" style={{ color: '#E53935' }}>
+            {errors.subServiceId}
+          </p>
+        )}
 
         {/* ═══ توضیحات ═══ */}
         <Input
