@@ -16,25 +16,28 @@ import { servicesService } from '@/api';
  * تبدیل فرمت بک‌اند به فرمت فرانت
  * ✅ فاز ۳: بعد از نرمال‌ساز، کلیدها camelCase هستند
  */
-const mapServiceFromApi = (s) => ({
-  id: s.id,
-  name: s.name,
-  typeId: s.subService?.typeId || s.subServiceId || '',
-  typeName: s.subService?.name || s.subServiceName || '',
-  categoryId: s.categoryId || s.category?.id || null,
-  categoryLabel: s.categoryName || '',
-  originalPrice: s.originalPrice,
-  discountPercent: s.discountPercent || 0,
-  discountAmount: s.discountAmount || 0,
-  finalPrice: s.finalPrice || s.originalPrice,
-  appFee: s.appFee || 0,
-  duration: s.duration || 60,
-  hasDeposit: s.hasDeposit || false,
-  depositAmount: s.depositAmount || 0,
-  renewalDays: s.renewalDays || 0,
-  isActive: s.isActive !== false,
-  description: s.description || '',
-});
+const mapServiceFromApi = (s) => {
+  if (!s) return null;
+  return {
+    id: s.id,
+    name: s.name,
+    typeId: s.subService?.typeId || s.subServiceId || '',
+    typeName: s.subService?.name || s.subServiceName || '',
+    categoryId: s.categoryId || s.category?.id || null,
+    categoryLabel: s.categoryName || '',
+    originalPrice: s.originalPrice,
+    discountPercent: s.discountPercent || 0,
+    discountAmount: s.discountAmount || 0,
+    finalPrice: s.finalPrice || s.originalPrice,
+    appFee: s.appFee || 0,
+    duration: s.duration || 60,
+    hasDeposit: s.hasDeposit || false,
+    depositAmount: s.depositAmount || 0,
+    renewalDays: s.renewalDays || 0,
+    isActive: s.isActive !== false,
+    description: s.description || '',
+  };
+};
 
 /**
  * تبدیل فرمت فرانت به فرمت بک‌اند (برای ایجاد/بروزرسانی)
@@ -89,9 +92,19 @@ export const createServicesSlice = (set, get) => ({
     try {
       const payload = mapServiceToApi(serviceData);
       const response = await servicesService.createService(payload);
-      const newService = mapServiceFromApi(response.data);
-      get().addService(newService);
-      return response.data;
+
+      const rawData = response?.data || response;
+      const servicePayload = rawData?.data || rawData;
+
+      if (!servicePayload || !servicePayload.id) {
+        throw new Error('Invalid service creation response');
+      }
+
+      const newService = mapServiceFromApi(servicePayload);
+      if (newService) {
+        get().addService(newService);
+      }
+      return servicePayload;
     } catch (error) {
       console.error('createServiceApi failed:', error);
       throw error;

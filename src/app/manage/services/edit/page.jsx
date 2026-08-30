@@ -1,6 +1,6 @@
 // src/app/manage/services/edit/page.jsx
 'use client';
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiSave } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';

@@ -9,6 +9,7 @@ import Dropdown from '@/components/common/Dropdown';
 import CharCounter from '@/components/common/CharCounter';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { useServiceCategories } from '@/hooks/useCategoryOptions';
+import { compressImage } from '@/utils/image-compression'; 
 
 const MAX_DESCRIPTION_LENGTH = 300;
 const MAX_IMAGES = 5;
@@ -66,12 +67,14 @@ export default function PortfolioFormSheet({
     if (errors.subServiceId) setErrors((prev) => ({ ...prev, subServiceId: '' }));
   };
 
-  const handleAddImage = () => {
-    if (images.length >= MAX_IMAGES) return;
-    const randomId = Math.floor(Math.random() * 1000);
-    const newImage = `https://picsum.photos/800/800?random=${randomId}`;
-    setImages((prev) => [...prev, newImage]);
-    if (errors.images) setErrors((prev) => ({ ...prev, images: '' }));
+  const handleAddImage = async () => {
+      if (images.length >= MAX_IMAGES) return;
+      // ✅ فعلاً فقط یک placeholder نگه می‌داریم
+      // در نسخه واقعی باید input file اضافه شود
+      const randomId = Math.floor(Math.random() * 1000);
+      const newImage = `https://picsum.photos/800/800?random=${randomId}`;
+      setImages((prev) => [...prev, newImage]);
+      if (errors.images) setErrors((prev) => ({ ...prev, images: '' }));
   };
 
   const handleRemoveImage = (index) => {
@@ -98,19 +101,18 @@ export default function PortfolioFormSheet({
     if (Object.keys(newErrors).length > 0) return;
 
     setIsSaving(true);
-    // ✅ حذف تأخیر ماک — مستقیم onSave صدا زده می‌شود
     const category = serviceCategories.find((c) => c.id === categoryId);
     const subService = availableSubServices.find((s) => s.id === subServiceId);
+
+    // ✅ ارسال داده‌ها با نام‌های صحیح برای بک‌اند
     const portfolioData = {
-      title: title.trim(),
-      description: description.trim(),
-      categoryId,
-      categoryLabel: category?.label || '',
-      subServiceId,
-      subServiceLabel: subService?.label || '',
-      coverImage: images[0],
-      images,
+        title: title.trim(),
+        description: description.trim(),
+        category: categoryId,          // ✅ snake_case
+        sub_service: subServiceId,     // ✅ snake_case
+        images: images,                 // آرایه URL
     };
+
     onSave(portfolioData, editingPortfolio?.id);
     setIsSaving(false);
   };

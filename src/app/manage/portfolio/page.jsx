@@ -51,17 +51,17 @@ export default function ManagePortfolioPage() {
   }, [showToast, businessData?.portfolios]);
 
   // ✅ حذف USE_MOCK — فقط API
-  const handleSave = useCallback(
-    async (portfolioData, editingId) => {
-      try {
-        if (editingId) {
-          await portfoliosService.updatePortfolio(editingId, portfolioData);
+  const handleSave = useCallback(async (portfolioData, editId) => {
+    try {
+        if (editId) {
+            await portfoliosService.updatePortfolio(editId, portfolioData);
+            showToast('نمونه‌کار ویرایش شد', 'success');
         } else {
-          await portfoliosService.createPortfolio(portfolioData);
+            await portfoliosService.createPortfolio(portfolioData);
+            showToast('نمونه‌کار اضافه شد', 'success');
         }
-        const result = await portfoliosService.getMyPortfolios();
-        setPortfolios(result.data || []);
-        showToast(editingId ? '✓ نمونه‌کار ویرایش شد' : '✓ نمونه‌کار جدید اضافه شد', 'success');
+        // refresh لیست
+        await fetchPortfolios();
         setFormVisible(false);
         setEditingPortfolio(null);
       } catch (error) {
