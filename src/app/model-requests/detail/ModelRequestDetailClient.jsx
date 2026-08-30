@@ -16,7 +16,7 @@ import { cleanPhone } from '@/utils/phoneUtils';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
 
-export default function ModelRequestDetailPage({requestId}) {
+export default function ModelRequestDetailPage({ requestId }) {
   const router = useRouter();
   const { colors } = useTheme();
   const { showToast } = useToast();

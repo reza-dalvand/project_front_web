@@ -8,7 +8,7 @@ function BusinessPageContent() {
   const searchParams = useSearchParams();
   // ✅ پشتیبانی از slug (جدید) و id (برای سازگاری با عقب)
   const slug = searchParams.get('slug') || searchParams.get('id');
-  
+
   if (!slug) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
@@ -20,7 +20,7 @@ function BusinessPageContent() {
       </div>
     );
   }
-  
+
   return <BusinessDetailsClient businessSlug={slug} />;
 }
 

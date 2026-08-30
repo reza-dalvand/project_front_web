@@ -64,10 +64,10 @@ export function useBookingName() {
 
   const updateUserName = () => {
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
-    updateUser({ 
-      name: fullName, 
-      firstName: firstName.trim(), 
-      lastName: lastName.trim() 
+    updateUser({
+      name: fullName,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
     });
   };
 

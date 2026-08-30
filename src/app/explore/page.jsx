@@ -103,7 +103,12 @@ export default function ExplorePage() {
   const handleNavigateToBusiness = useCallback(
     (data) => {
       // ✅ دریافت اسلاگ از آبجکت پست یا fallback به id
-      const slug = data?.businessBookingSlug || data?.business_booking_slug || data?.businessId || data?.business_id || data;
+      const slug =
+        data?.businessBookingSlug ||
+        data?.business_booking_slug ||
+        data?.businessId ||
+        data?.business_id ||
+        data;
       if (slug) {
         router.push(`/business?slug=${slug}`);
       }

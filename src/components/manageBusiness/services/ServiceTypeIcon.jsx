@@ -3,17 +3,17 @@
 import { getServiceTypeConfig } from '@/constants/serviceTypes';
 
 /**
-* کامپوننت آیکون نوع خدمت
-* @param {string} typeId - شناسه نوع خدمت (subService id)
-* @param {number} size - اندازه آیکون (پیش‌فرض: 56)
-*/
+ * کامپوننت آیکون نوع خدمت
+ * @param {string} typeId - شناسه نوع خدمت (subService id)
+ * @param {number} size - اندازه آیکون (پیش‌فرض: 56)
+ */
 export default function ServiceTypeIcon({ typeId, size = 56 }) {
   // استفاده از تابع صحیح
   const info = getServiceTypeConfig(typeId);
   const IconComponent = info.icon;
   const iconSize = size * 0.5;
   const innerSize = size * 0.78;
-  
+
   return (
     <div
       className="flex items-center justify-center flex-shrink-0"

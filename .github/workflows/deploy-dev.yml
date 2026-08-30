@@ -7,7 +7,7 @@ name: Deploy to develop
 on:
   push:
     branches:
-      - develop 
+      - develop
       - staging
     paths:
       - 'src/**'
@@ -221,7 +221,3 @@ jobs:
               chmod -R 755 out
               sudo systemctl reload nginx 2>/dev/null || true
             fi
-
-
-
-            

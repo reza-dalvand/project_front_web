@@ -21,7 +21,7 @@ const CategoryFilterModal = dynamic(() => import('@/components/home/CategoryFilt
   loading: () => null,
 });
 
-export default function CategoryBusinessesPage({categoryId}) {
+export default function CategoryBusinessesPage({ categoryId }) {
   const router = useRouter();
   const { colors } = useTheme();
 
@@ -63,7 +63,7 @@ export default function CategoryBusinessesPage({categoryId}) {
         });
 
         const data = response.data || [];
-        
+
         setBusinesses(
           data.map((b) => ({
             id: b.id,

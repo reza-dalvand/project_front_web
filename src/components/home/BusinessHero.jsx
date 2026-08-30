@@ -17,13 +17,14 @@ const FALLBACK_COVER = '/images/placeholder-cover.jpg';
  */
 export default function BusinessHero({
   gallery = [],
-  coverUrl,       // ✅ جدید: URL کاور از API
-  logo,           // ✅ جدید: URL لوگو از API
+  coverUrl, // ✅ جدید: URL کاور از API
+  logo, // ✅ جدید: URL لوگو از API
   businessId,
   businessName,
   onBackPress,
   isFavorite = false,
   onFavoritePress,
+  ownerPhoto,
 }) {
   const { colors } = useTheme();
   const { isAuthenticated, requireAuth } = useAuth();
@@ -34,7 +35,7 @@ export default function BusinessHero({
   const coverImage = coverUrl || gallery[0] || FALLBACK_COVER;
 
   // لینک رزرو اختصاصی
-  const bookingLink = `https://beau.app/book/${businessId || 'biz_1'}`;
+  const bookingLink = `https://beauclub.ir/book/${businessId || 'biz_1'}`;
 
   // ═══════ هندلر اشتراک‌گذاری ═══════
   const handleShare = async () => {
@@ -114,20 +115,20 @@ ${bookingLink}
       </div>
 
       {/* ═══════ لوگو کسب‌وکار (از API) ═══════ */}
-      {logo && (
+      {/* {ownerPhoto && (
         <div
           className="absolute bottom-4 right-4 w-16 h-16 rounded-2xl overflow-hidden border-[3px] shadow-lg z-10"
           style={{ borderColor: '#fff' }}
         >
           <Image
-            src={logo}
+            src={ownerPhoto}
             alt={`لوگوی ${businessName || 'کسب‌وکار'}`}
             width={64}
             height={64}
             className="w-full h-full object-cover"
           />
         </div>
-      )}
+      )} */}
 
       {/* ═══════ گرادیان پایین ═══════ */}
       <div

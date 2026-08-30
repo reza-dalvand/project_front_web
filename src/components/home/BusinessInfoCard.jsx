@@ -77,18 +77,18 @@ export default function BusinessInfoCard({ business, onMapPress }) {
         className="relative w-[88px] h-[88px] -mt-[64px] rounded-[24px] overflow-hidden"
         style={{ border: `4px solid ${colors.background}` }}
       >
-        {business.logo ? (
-          <Image 
-            src={business.logo} 
-            alt={business.name || 'لوگو کسب‌وکار'} 
-            width={56} // یا هر ابعادی که در کد خودتان دارید
-            height={56} 
-            className="rounded-full object-cover"
+        {business.ownerPhoto ? (
+          <Image
+            src={business.ownerPhoto}
+            alt={business.name || 'لوگو کسب‌وکار'}
+            width={80} // یا هر ابعادی که در کد خودتان دارید
+            height={70}
+            className="object-cover"
           />
         ) : (
           // یک جایگزین (Placeholder) در صورتی که کسب‌وکار لوگو نداشته باشد
-          <div 
-            className="w-14 h-14 rounded-full flex items-center justify-center text-2xl" 
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center text-2xl"
             style={{ backgroundColor: colors?.border || '#e5e7eb' }}
           >
             🏪

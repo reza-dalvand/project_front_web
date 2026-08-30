@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   webDir: 'out',
   backgroundColor: '#F5F0EC',
   server: {
-  androidScheme: 'https',
+    androidScheme: 'https',
     // 🆕 فاز ۵: در تولید، سرور واقعی
     // در توسعه، سرور محلی
     url: 'https://api.beauclub.ir', // یا سرور محلی برای تست
@@ -20,7 +20,7 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 2500,
-      launchAutoHide: false,   // دستی hide میکنیم
+      launchAutoHide: false, // دستی hide میکنیم
       backgroundColor: '#F5F0EC',
       androidSplashResourceName: 'splash',
       showSpinner: false,

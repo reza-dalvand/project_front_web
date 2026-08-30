@@ -51,7 +51,7 @@ export default function BusinessDetailsClient({ businessSlug }) {
   const toggleBusinessFavorite = useFavoriteStore((s) => s.toggleBusinessFavorite);
   const [activePortfolio, setActivePortfolio] = useState(null);
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
-  
+
   const isFavorite = business?.id ? isBusinessFavorited(business.id) : false;
   const priceListFromStore = usePriceListStore((s) => s.lists[business?.id]);
   const fetchPriceList = usePriceListStore((s) => s.fetchPriceList);
@@ -77,7 +77,7 @@ export default function BusinessDetailsClient({ businessSlug }) {
           rating: b.rating,
           reviewsCount: b.reviewsCount || 0,
           VIP: b.isVip || false,
-          logo: b.logo || null, 
+          logo: b.logo || null,
           coverUrl: b.coverImage || null,
           ownerPhoto: b.ownerPhoto || null,
           ownerName: b.ownerName || '',
@@ -145,7 +145,9 @@ export default function BusinessDetailsClient({ businessSlug }) {
       if ((!storeList.services || storeList.services.length === 0) && business?.services?.length) {
         return {
           ...storeList,
-          services: business.services.filter((s) => s.isActive !== false).map(mapServiceToPriceList),
+          services: business.services
+            .filter((s) => s.isActive !== false)
+            .map(mapServiceToPriceList),
         };
       }
       return storeList;
@@ -218,8 +220,11 @@ export default function BusinessDetailsClient({ businessSlug }) {
     }
   }, [router]);
 
-  const openMap = useCallback(() => router.push(`/business/map?slug=${businessSlug}`), [router, businessSlug]);
-  
+  const openMap = useCallback(
+    () => router.push(`/business/map?slug=${businessSlug}`),
+    [router, businessSlug]
+  );
+
   if (isLoading) {
     return (
       <ScreenWrapper>
@@ -254,7 +259,9 @@ export default function BusinessDetailsClient({ businessSlug }) {
     <ScreenWrapper padding={0}>
       <div className="overflow-y-auto pb-[220px]">
         <BusinessHero
-          logo={business.coverImage}
+          logo={business.logo}
+          coverUrl={business.coverUrl}
+          ownerPhoto={business.ownerPhoto}
           gallery={gallery}
           businessId={business.id}
           businessName={business.name}
@@ -263,7 +270,12 @@ export default function BusinessDetailsClient({ businessSlug }) {
           onFavoritePress={toggleFavorite}
         />
         <BusinessInfoCard business={business} onMapPress={openMap} />
-        <BusinessTabs activeTab={activeTab} onTabChange={setActiveTab} colors={colors} showPrices={showPrices} />
+        <BusinessTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          colors={colors}
+          showPrices={showPrices}
+        />
         <div className="px-5 pt-1">
           {activeTab === 'services' && (
             <div className="flex flex-col gap-3 pb-2">
@@ -273,7 +285,11 @@ export default function BusinessDetailsClient({ businessSlug }) {
             </div>
           )}
           {activeTab === 'prices' && priceListSettings && (
-            <PriceListMenu businessName={business.name} businessLogo={business.logo} settings={priceListSettings} />
+            <PriceListMenu
+              businessName={business.name}
+              businessLogo={business.logo}
+              settings={priceListSettings}
+            />
           )}
           {activeTab === 'honors' && <HonorMedalsSection businessId={business.id} />}
           {activeTab === 'portfolio' && (
@@ -282,7 +298,7 @@ export default function BusinessDetailsClient({ businessSlug }) {
           {activeTab === 'about' && <BusinessAbout business={business} />}
         </div>
       </div>
-      
+
       {/* ✅ اصلاح ۳: ارسال business.id به مودال رزرو */}
       <BookingModal
         visible={bookingModalVisible}
@@ -291,7 +307,11 @@ export default function BusinessDetailsClient({ businessSlug }) {
         businessId={business?.id}
         businessName={business?.name || ''}
       />
-      <PortfolioModal visible={portfolioModalVisible} onClose={closePortfolio} portfolio={activePortfolio} />
+      <PortfolioModal
+        visible={portfolioModalVisible}
+        onClose={closePortfolio}
+        portfolio={activePortfolio}
+      />
     </ScreenWrapper>
   );
 }

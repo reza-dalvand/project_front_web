@@ -7,7 +7,7 @@ import BusinessMapClient from './BusinessMapClient';
 function BusinessMapPageContent() {
   const searchParams = useSearchParams();
   const slug = searchParams.get('slug') || searchParams.get('id');
-  
+
   if (!slug) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
@@ -16,7 +16,7 @@ function BusinessMapPageContent() {
       </div>
     );
   }
-  
+
   return <BusinessMapClient businessSlug={slug} />;
 }
 

@@ -74,8 +74,8 @@ export default function BusinessMapClient({ businessSlug }) {
           address: b.address,
           phone: b.phone,
           location: {
-            latitude: b.latitude || 35.6892,
-            longitude: b.longitude || 51.389,
+            latitude: parseFloat(b.latitude) || 35.6892,
+            longitude: parseFloat(b.longitude) || 51.389,
           },
         });
       } catch (err) {
@@ -86,12 +86,16 @@ export default function BusinessMapClient({ businessSlug }) {
       }
     };
     fetchBusiness();
-  }, [businessId, showToast]);
+  }, [businessSlug, showToast]);
 
   useEffect(() => {
     import('react-map-gl/maplibre')
       .then((mod) => {
-        setMapLib({ Map: mod.default, Marker: mod.Marker, NavigationControl: mod.NavigationControl });
+        setMapLib({
+          Map: mod.default,
+          Marker: mod.Marker,
+          NavigationControl: mod.NavigationControl,
+        });
         setMapLoading(false);
       })
       .catch(() => {
@@ -194,14 +198,32 @@ export default function BusinessMapClient({ businessSlug }) {
         <div className="flex-1 relative">
           {MapLib && !mapError ? (
             <MapLib.Map
-              initialViewState={{ longitude: business.location.longitude, latitude: business.location.latitude, zoom: 15 }}
+              initialViewState={{
+                longitude: business.location.longitude,
+                latitude: business.location.latitude,
+                zoom: 15,
+              }}
               style={{ width: '100%', height: '100%' }}
               mapStyle={MAP_STYLE}
             >
               <MapLib.NavigationControl position="top-right" />
-              <MapLib.Marker longitude={business.location.longitude} latitude={business.location.latitude} anchor="bottom">
-                <svg width="36" height="48" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))' }}>
-                  <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z" fill="#E53935" />
+              <MapLib.Marker
+                longitude={business.location.longitude}
+                latitude={business.location.latitude}
+                anchor="bottom"
+              >
+                <svg
+                  width="36"
+                  height="48"
+                  viewBox="0 0 36 48"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))' }}
+                >
+                  <path
+                    d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z"
+                    fill="#E53935"
+                  />
                   <circle cx="18" cy="18" r="7" fill="#fff" />
                 </svg>
               </MapLib.Marker>
@@ -210,9 +232,21 @@ export default function BusinessMapClient({ businessSlug }) {
             <MapErrorState isLoading={mapLoading} />
           )}
         </div>
-        <BusinessMapPanel business={business} copied={copied} onCopyAddress={handleCopyAddress} onNavigation={handleNavigation} onCall={handleCall} onShare={handleShare} />
+        <BusinessMapPanel
+          business={business}
+          copied={copied}
+          onCopyAddress={handleCopyAddress}
+          onNavigation={handleNavigation}
+          onCall={handleCall}
+          onShare={handleShare}
+        />
       </div>
-      <NavigationModal visible={navModalVisible} onClose={() => setNavModalVisible(false)} onSelect={openNavigationApp} navLoading={navLoading} />
+      <NavigationModal
+        visible={navModalVisible}
+        onClose={() => setNavModalVisible(false)}
+        onSelect={openNavigationApp}
+        navLoading={navLoading}
+      />
     </ScreenWrapper>
   );
 }
