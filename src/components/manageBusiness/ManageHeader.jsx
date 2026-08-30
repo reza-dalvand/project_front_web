@@ -87,7 +87,7 @@ export default function ManageHeader() {
           >
             <span className="text-xl font-[Vazir-Bold] text-white leading-tight">
               {/* ✅ FIX: فال‌بک 0 به جای 4.9 */}
-              {toPersianDigit((businessData?.rating || 0).toFixed(1))}
+              {toPersianDigit(parseFloat(businessData?.rating || 0).toFixed(1))}
             </span>
             <div className="flex items-center gap-0.5 my-1">
               {[...Array(5)].map((_, i) => (

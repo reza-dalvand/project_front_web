@@ -12,9 +12,7 @@ export default function BottomTabBar() {
   const router = useRouter();
   const { isAuthenticated, openAuthModal } = useAuth();
   const businessData = useBusinessStore((s) => s.businessData);
-  const hasBusiness = Boolean(
-    businessData?.id && businessData?.name && businessData?.isActive !== false
-  );
+  const hasBusiness = Boolean(businessData?.id && businessData?.name);
   const tabs = isAuthenticated
     ? [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
