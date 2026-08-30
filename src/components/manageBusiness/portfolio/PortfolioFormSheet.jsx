@@ -1,18 +1,18 @@
+// src/components/manageBusiness/portfolio/PortfolioFormSheet.jsx
 'use client';
-import { useState, useEffect } from 'react';
-import { FiX, FiImage, FiTag, FiCheck, FiPlus } from 'react-icons/fi';
+import { useState, useEffect, useRef } from 'react';
+import { FiX, FiImage, FiUpload } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import BottomSheet from '@/components/common/BottomSheet';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Dropdown from '@/components/common/Dropdown';
-import CharCounter from '@/components/common/CharCounter';
+import { useServiceCategories, useSubServices } from '@/hooks/useCategoryOptions';
 import { toPersianDigit } from '@/utils/numberUtils';
-import { useServiceCategories } from '@/hooks/useCategoryOptions';
-import { compressImage } from '@/utils/image-compression'; 
+import Image from 'next/image';
 
-const MAX_DESCRIPTION_LENGTH = 300;
-const MAX_IMAGES = 5;
+const MAX_IMAGES = 3;
+const MAX_DESCRIPTION = 300;
 
 export default function PortfolioFormSheet({
   visible,
@@ -23,101 +23,128 @@ export default function PortfolioFormSheet({
 }) {
   const { colors } = useTheme();
   const isEditMode = !!editingPortfolio;
+
+  // ─── State فرم ───
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState(null);
   const [subServiceId, setSubServiceId] = useState(null);
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]);       // ✅ فایل‌های واقعی
+  const [imagePreviews, setImagePreviews] = useState([]); // برای پیش‌نمایش
   const [errors, setErrors] = useState({});
-  const [isSaving, setIsSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // ✅ دریافت دسته‌بندی‌ها از فایل لوکال
+  const fileInputRef = useRef(null);
+
+  // ─── دسته‌بندی‌ها از بک‌اند ───
   const { categories: serviceCategories } = useServiceCategories();
-  const availableSubServices = categoryId
-    ? serviceCategories.find((c) => c.id === categoryId)?.subServices || []
-    : [];
+  const { subServices: availableSubServices } = useSubServices(categoryId);
 
+  // ─── پر کردن فرم در حالت ویرایش ───
   useEffect(() => {
     if (visible) {
       if (editingPortfolio) {
         setTitle(editingPortfolio.title || '');
         setDescription(editingPortfolio.description || '');
-        setCategoryId(editingPortfolio.categoryId || null);
-        setSubServiceId(editingPortfolio.subServiceId || null);
-        setImages(
-          editingPortfolio.images ||
-            (editingPortfolio.coverImage ? [editingPortfolio.coverImage] : [])
-        );
+        setCategoryId(editingPortfolio.categoryId || editingPortfolio.category?.id || null);
+        setSubServiceId(editingPortfolio.subServiceId || editingPortfolio.sub_service?.id || null);
+        setImages([]);
+        setImagePreviews([]);
       } else {
         setTitle('');
         setDescription('');
         setCategoryId(null);
         setSubServiceId(null);
         setImages([]);
+        setImagePreviews([]);
       }
       setErrors({});
-      setIsSaving(false);
+      setSaving(false);
     }
   }, [visible, editingPortfolio]);
 
-  const handleCategoryChange = (catId) => {
-    setCategoryId(catId);
-    setSubServiceId(null);
-    if (errors.categoryId) setErrors((prev) => ({ ...prev, categoryId: '' }));
-    if (errors.subServiceId) setErrors((prev) => ({ ...prev, subServiceId: '' }));
+  // ─── انتخاب فایل ───
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const remaining = MAX_IMAGES - images.length;
+    const filesToAdd = files.slice(0, remaining);
+
+    if (filesToAdd.length === 0) return;
+
+    // اعتبارسنجی نوع و حجم
+    const validFiles = [];
+    const previews = [];
+    for (const file of filesToAdd) {
+      if (!file.type.startsWith('image/')) {
+        setErrors((prev) => ({ ...prev, images: 'فقط فایل تصویری مجاز است' }));
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setErrors((prev) => ({ ...prev, images: 'حجم هر تصویر حداکثر ۱۰ مگابایت' }));
+        return;
+      }
+      validFiles.push(file);
+      previews.push(URL.createObjectURL(file));
+    }
+
+    setImages((prev) => [...prev, ...validFiles]);
+    setImagePreviews((prev) => [...prev, ...previews]);
+    setErrors((prev) => ({ ...prev, images: '' }));
+
+    // ریست اینپوت تا بشود دوباره همان فایل را انتخاب کرد
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleAddImage = async () => {
-      if (images.length >= MAX_IMAGES) return;
-      // ✅ فعلاً فقط یک placeholder نگه می‌داریم
-      // در نسخه واقعی باید input file اضافه شود
-      const randomId = Math.floor(Math.random() * 1000);
-      const newImage = `https://picsum.photos/800/800?random=${randomId}`;
-      setImages((prev) => [...prev, newImage]);
-      if (errors.images) setErrors((prev) => ({ ...prev, images: '' }));
-  };
-
-  const handleRemoveImage = (index) => {
+  // ─── حذف تصویر ───
+  const removeImage = (index) => {
+    URL.revokeObjectURL(imagePreviews[index]);
     setImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSave = async () => {
+  // ─── اعتبارسنجی ───
+  const validate = () => {
     const newErrors = {};
-    if (!title.trim()) {
-      newErrors.title = 'عنوان نمونه‌کار الزامی است';
-    } else if (title.trim().length < 3) {
-      newErrors.title = 'عنوان باید حداقل ۳ کاراکتر باشد';
-    }
-    if (!categoryId) {
-      newErrors.categoryId = 'دسته‌بندی خدمات را انتخاب کنید';
-    }
-    if (!subServiceId) {
-      newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
-    }
-    if (images.length === 0) {
-      newErrors.images = 'حداقل یک تصویر اضافه کنید';
-    }
+    if (!title.trim()) newErrors.title = 'عنوان نمونه‌کار الزامی است';
+    else if (title.trim().length < 3) newErrors.title = 'عنوان باید حداقل ۳ کاراکتر باشد';
+    if (!categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
+    if (!subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
+    if (images.length === 0) newErrors.images = 'حداقل یک تصویر آپلود کنید'; // ✅ اجباری
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-
-    setIsSaving(true);
-    const category = serviceCategories.find((c) => c.id === categoryId);
-    const subService = availableSubServices.find((s) => s.id === subServiceId);
-
-    // ✅ ارسال داده‌ها با نام‌های صحیح برای بک‌اند
-    const portfolioData = {
-        title: title.trim(),
-        description: description.trim(),
-        category: categoryId,          // ✅ snake_case
-        sub_service: subServiceId,     // ✅ snake_case
-        images: images,                 // آرایه URL
-    };
-
-    onSave(portfolioData, editingPortfolio?.id);
-    setIsSaving(false);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const descLength = description.length;
+  // ─── ذخیره ───
+  const handleSave = () => {
+    if (!validate()) return;
+    setSaving(true);
+
+    // ✅ ساختن FormData با فایل‌های واقعی
+    const formData = new FormData();
+    formData.append('title', title.trim());
+    formData.append('description', description.trim());
+    formData.append('category', String(categoryId));
+    formData.append('sub_service', String(subServiceId));
+
+    // ✅ تصاویر واقعی به جای آدرس
+    images.forEach((file, i) => {
+      formData.append('images', file);
+    });
+
+    // اولین تصویر = کاور
+    formData.append('cover_image', images[0]);
+
+    onSave(formData, editingPortfolio?.id);
+  };
+
+  // ─── Cleanup previews ───
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   return (
     <BottomSheet
@@ -126,166 +153,139 @@ export default function PortfolioFormSheet({
       title={isEditMode ? 'ویرایش نمونه‌کار' : 'افزودن نمونه‌کار جدید'}
       snapPoint={0.92}
       footer={
-        <div className="flex gap-3">
-          <Button title="انصراف" onPress={onClose} variant="outline" size="lg" className="flex-1" />
-          <Button
-            title={isSaving ? 'در حال ذخیره...' : isEditMode ? 'ذخیره تغییرات' : 'افزودن نمونه‌کار'}
-            onPress={handleSave}
-            variant="primary"
-            size="lg"
-            disabled={isSaving}
-            className="flex-1"
-            iconPosition="right"
-          />
-        </div>
+        <Button
+          title={saving ? 'در حال ذخیره...' : isEditMode ? 'ذخیره تغییرات' : 'افزودن نمونه‌کار'}
+          onPress={handleSave}
+          loading={saving}
+          disabled={saving}
+          variant="primary"
+          size="lg"
+          fullWidth
+          iconPosition="right"
+        />
       }
     >
       <div className="space-y-5 pb-4">
-        {/* بخش تصاویر */}
+        {/* ═══ آپلود تصاویر — اجباری ═══ */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#FF980018' }}
-            >
-              <FiImage size={16} color="#FF9800" />
-            </div>
-            <span className="text-sm font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
-              تصاویر نمونه‌کار
+          <label className="block text-sm font-[Vazir-Medium] mb-2" style={{ color: colors.textMain }}>
+            تصاویر نمونه‌کار <span style={{ color: '#E53935' }}>*</span>
+            <span className="text-xs font-[Vazir] mr-2" style={{ color: colors.textSecondary }}>
+              (حداقل ۱، حداکثر {toPersianDigit(MAX_IMAGES)} تصویر)
             </span>
-            <span
-              className="text-xs font-[Vazir-Bold] px-2.5 py-1 rounded-lg"
-              style={{ backgroundColor: colors.primary + '15', color: colors.primary }}
-            >
-              {toPersianDigit(images.length)} از {toPersianDigit(MAX_IMAGES)}
-            </span>
-          </div>
-          {errors.images && (
-            <p className="text-xs mb-2" style={{ color: '#E53935' }}>
-              {errors.images}
-            </p>
-          )}
-          <div className="grid grid-cols-3 gap-2.5">
-            {images.map((img, index) => (
-              <div key={index} className="relative aspect-square rounded-xl overflow-hidden group">
-                <img src={img} alt={`تصویر ${index + 1}`} className="w-full h-full object-cover" />
-                {index === 0 && (
-                  <div
-                    className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md text-[9px] font-[Vazir-Bold] text-white"
-                    style={{ backgroundColor: '#FFC107' }}
+          </label>
+
+          {/* پیش‌نمایش تصاویر */}
+          {imagePreviews.length > 0 && (
+            <div className="flex flex-wrap gap-3 mb-3">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative w-24 h-24 rounded-xl overflow-hidden border" style={{ borderColor: colors.border }}>
+                  <Image src={preview} alt={`تصویر ${index + 1}`} fill className="object-cover" sizes="96px" />
+                  {index === 0 && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-center py-0.5">
+                      <span className="text-[9px] text-white font-[Vazir-Bold]">کاور</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => removeImage(index)}
+                    className="absolute top-1 left-1 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: '#E53935' }}
                   >
-                    کاور
-                  </div>
-                )}
-                <button
-                  onClick={() => handleRemoveImage(index)}
-                  className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  style={{ backgroundColor: '#E53935' }}
-                >
-                  <FiX size={12} color="#fff" />
-                </button>
-              </div>
-            ))}
-            {images.length < MAX_IMAGES && (
-              <button
-                onClick={handleAddImage}
-                className="aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                style={{
-                  borderColor: colors.primary + '50',
-                  backgroundColor: colors.primary + '05',
-                }}
-              >
-                <FiPlus size={22} style={{ color: colors.primary }} />
-                <span className="text-[10px] font-[Vazir-Medium]" style={{ color: colors.primary }}>
-                  افزودن
-                </span>
-              </button>
-            )}
-          </div>
-          <p className="text-[11px] mt-2" style={{ color: colors.textSecondary }}>
-            اولین تصویر به عنوان کاور نمایش داده می‌شود
-          </p>
-        </div>
-
-        {/* بخش دسته‌بندی و نوع خدمت */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#9C27B018' }}
-            >
-              <FiTag size={16} color="#9C27B0" />
+                    <FiX size={12} color="#fff" />
+                  </button>
+                </div>
+              ))}
             </div>
-            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              دسته‌بندی و نوع خدمت
-            </span>
-          </div>
-          <Dropdown
-            label="دسته‌بندی خدمات *"
-            placeholder="دسته‌بندی را انتخاب کنید"
-            value={categoryId}
-            options={serviceCategories.map((c) => ({ id: c.id, label: c.label }))}
-            onSelect={handleCategoryChange}
-          />
-          {errors.categoryId && (
-            <p className="text-xs mt-[-8px] mb-3" style={{ color: '#E53935' }}>
-              {errors.categoryId}
-            </p>
           )}
-          <Dropdown
-            label="نوع خدمت *"
-            placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
-            value={subServiceId}
-            options={availableSubServices}
-            onSelect={(val) => {
-              setSubServiceId(val);
-              if (errors.subServiceId) setErrors((prev) => ({ ...prev, subServiceId: '' }));
-            }}
-            disabled={!categoryId}
-          />
-          {errors.subServiceId && (
-            <p className="text-xs mt-[-8px]" style={{ color: '#E53935' }}>
-              {errors.subServiceId}
-            </p>
-          )}
-        </div>
 
-        {/* بخش اطلاعات */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: colors.primary + '15' }}
-            >
-              <FiTag size={16} style={{ color: colors.primary }} />
-            </div>
-            <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              اطلاعات نمونه‌کار
-            </span>
-          </div>
-          <Input
-            label="عنوان نمونه‌کار *"
-            placeholder="مثال: پدیکور VIP با طراحی مینیمال"
-            value={title}
-            onChangeText={(t) => {
-              setTitle(t);
-              if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
-            }}
-            error={errors.title}
+          {/* دکمه آپلود */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            className="hidden"
+            onChange={handleFileSelect}
           />
-          <div className="mb-1">
-            <Input
-              label="توضیحات (اختیاری)"
-              placeholder="توضیحاتی درباره این نمونه‌کار..."
-              value={description}
-              onChangeText={(t) => {
-                if (t.length <= MAX_DESCRIPTION_LENGTH) setDescription(t);
+          {images.length < MAX_IMAGES && (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex flex-col items-center justify-center gap-2 py-8 rounded-xl border-2 border-dashed transition-all"
+              style={{
+                borderColor: errors.images ? '#E53935' : colors.primary + '50',
+                backgroundColor: colors.primary + '05',
               }}
-              multiline
-            />
-            <CharCounter current={descLength} max={MAX_DESCRIPTION_LENGTH} />
-          </div>
+            >
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.primary + '15' }}>
+                <FiUpload size={24} style={{ color: colors.primary }} />
+              </div>
+              <span className="text-sm font-[Vazir-Medium]" style={{ color: colors.textMain }}>
+                {images.length === 0 ? 'تصویر آپلود کنید' : 'افزودن تصویر بیشتر'}
+              </span>
+              <span className="text-xs" style={{ color: colors.textSecondary }}>
+                JPG، PNG یا WebP — حداکثر ۱۰ مگابایت
+              </span>
+            </button>
+          )}
+
+          {errors.images && (
+            <p className="text-xs mt-1.5" style={{ color: '#E53935' }}>{errors.images}</p>
+          )}
         </div>
+
+        {/* ═══ عنوان ═══ */}
+        <Input
+          label="عنوان نمونه‌کار *"
+          placeholder="مثال: کاشت ناخن مینیمال"
+          value={title}
+          onChangeText={(t) => {
+            setTitle(t);
+            setErrors((prev) => ({ ...prev, title: '' }));
+          }}
+          error={errors.title}
+        />
+
+        {/* ═══ دسته‌بندی ═══ */}
+        <Dropdown
+          label="دسته‌بندی خدمات *"
+          placeholder="دسته‌بندی را انتخاب کنید"
+          value={categoryId}
+          options={serviceCategories.map((c) => ({ id: c.id, label: c.label }))}
+          onSelect={(val) => {
+            setCategoryId(val);
+            setSubServiceId(null);
+            setErrors((prev) => ({ ...prev, categoryId: '' }));
+          }}
+        />
+        {errors.categoryId && <p className="text-xs mt-1.5" style={{ color: '#E53935' }}>{errors.categoryId}</p>}
+
+        {/* ═══ نوع خدمت ═══ */}
+        <Dropdown
+          label="نوع خدمت *"
+          placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
+          value={subServiceId}
+          options={availableSubServices}
+          onSelect={(val) => {
+            setSubServiceId(val);
+            setErrors((prev) => ({ ...prev, subServiceId: '' }));
+          }}
+          disabled={!categoryId}
+        />
+        {errors.subServiceId && <p className="text-xs mt-1.5" style={{ color: '#E53935' }}>{errors.subServiceId}</p>}
+
+        {/* ═══ توضیحات ═══ */}
+        <Input
+          label="توضیحات (اختیاری)"
+          placeholder="توضیحاتی درباره این نمونه‌کار..."
+          value={description}
+          onChangeText={(t) => {
+            if (t.length <= MAX_DESCRIPTION) setDescription(t);
+          }}
+          multiline
+        />
+        <p className="text-xs text-left" style={{ color: colors.textSecondary }}>
+          {toPersianDigit(description.length)}/{toPersianDigit(MAX_DESCRIPTION)}
+        </p>
       </div>
     </BottomSheet>
   );

@@ -34,43 +34,45 @@ export default function ManagePortfolioPage() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [activePortfolio, setActivePortfolio] = useState(null);
 
+
+  const fetchPortfolios = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const result = await portfoliosService.getMyPortfolios();
+      setPortfolios(result.data || []);
+    } catch (error) {
+      console.error('Failed to fetch portfolios:', error);
+      showToast('خطا در بارگذاری نمونه‌کارها', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast]);
+
+  
   useEffect(() => {
-    const fetchPortfolios = async () => {
-      setIsLoading(true);
-      try {
-        const result = await portfoliosService.getMyPortfolios();
-        setPortfolios(result.data || []);
-      } catch (error) {
-        console.error('Failed to fetch portfolios:', error);
-        showToast('خطا در بارگذاری نمونه‌کارها', 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchPortfolios();
   }, [showToast, businessData?.portfolios]);
 
-  // ✅ حذف USE_MOCK — فقط API
   const handleSave = useCallback(async (portfolioData, editId) => {
     try {
-        if (editId) {
-            await portfoliosService.updatePortfolio(editId, portfolioData);
-            showToast('نمونه‌کار ویرایش شد', 'success');
-        } else {
-            await portfoliosService.createPortfolio(portfolioData);
-            showToast('نمونه‌کار اضافه شد', 'success');
-        }
-        // refresh لیست
-        await fetchPortfolios();
-        setFormVisible(false);
-        setEditingPortfolio(null);
-      } catch (error) {
-        console.error('Save portfolio failed:', error);
-        showToast(error.message || 'خطا در ذخیره نمونه‌کار', 'error');
+      if (editId) {
+        await portfoliosService.updatePortfolio(editId, portfolioData);
+      } else {
+        await portfoliosService.createPortfolio(portfolioData);
       }
-    },
-    [showToast]
-  );
+      
+      // refresh لیست
+      await fetchPortfolios();
+      setFormVisible(false);
+      setEditingPortfolio(null);
+      
+      showToast(editId ? '✓ نمونه‌کار ویرایش شد' : '✓ نمونه‌کار اضافه شد', 'success');
+    } catch (error) {
+      console.error('Save portfolio failed:', error);
+      showToast(error.message || 'خطا در ذخیره نمونه‌کار', 'error');
+    }
+  }, [showToast, fetchPortfolios]); 
+  
 
   // ✅ حذف USE_MOCK — فقط API
   const handleDelete = useCallback(
