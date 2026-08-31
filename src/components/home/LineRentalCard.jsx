@@ -54,6 +54,7 @@ const getPriceDisplay = (rental) => {
 
 export default function LineRentalCard({ rental, onPress }) {
   const { colors } = useTheme();
+  if (!rental) return null;
 
   // ✅ فقط فیلدهای سازگار با بک‌اند (بعد از نرمال‌ساز)
   const collabType = rental.collabType;
@@ -69,7 +70,7 @@ export default function LineRentalCard({ rental, onPress }) {
     <button
       onClick={() => onPress?.(rental)}
       className="w-full rounded-2xl border overflow-hidden text-right transition-all
-hover:shadow-md active:scale-[0.99]"
+          hover:shadow-md active:scale-[0.99]"
       style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
     >
       {/* ═══ هدر گرادیانی ═══ */}

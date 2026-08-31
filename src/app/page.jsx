@@ -273,12 +273,12 @@ export default function HomePage() {
   );
 
   const handleModelRequestPress = useCallback(
-    (request) => router.push(`/model-request-detail?id=${request.id}`),
+    (request) => router.push(`/model-requests/detail?id=${request.id}`),
     [router]
   );
 
   const handleLineRentalPress = useCallback(
-    (ad) => router.push(`/line-rental-detail?id=${ad.id}`),
+    (ad) => router.push(`/line-rentals/detail?id=${ad.id}`),
     [router]
   );
 
@@ -382,22 +382,21 @@ export default function HomePage() {
         )}
 
         {/* ─── ۳. فرصت‌های مدلینگ ─── */}
-        <section>
-          <SectionHeader
-            icon={<FiUser size={18} />}
-            iconColor="#E91E63"
-            title="فرصت‌های مدلینگ"
-            subtitle="با تخفیف ویژه مدل شوید و نمونه‌کار بسازید"
-            rightElement={
-              <SeeAllButton
-                onPress={() => router.push('/model-requests')}
-                count={filteredModelRequests.length}
-              />
-            }
-          />
-          {filteredModelRequests.length > 0 ? (
+        {modelRequests.length > 0 && (
+          <section>
+            <SectionHeader
+              icon={<span style={{ fontSize: 18 }}>👤</span>}
+              iconColor="#E91E63"
+              title="فرصت‌های مدلینگ"
+              rightElement={
+                <SeeAllButton
+                  onPress={() => router.push('/model-requests')}
+                  count={modelRequests.length}
+                />
+              }
+            />
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-              {filteredModelRequests.map((request) => (
+              {modelRequests.map((request) => (
                 <ModelRequestCard
                   key={request.id}
                   request={request}
@@ -405,59 +404,33 @@ export default function HomePage() {
                 />
               ))}
             </div>
-          ) : (
-            <div className="flex flex-col items-center py-8 gap-2">
-              <span className="text-3xl">📍</span>
-              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                فرصت مدلینگی در این فاصله پیدا نشد
-              </p>
-              <button
-                onClick={disableNearby}
-                className="text-xs font-[Vazir-Bold] underline"
-                style={{ color: colors.primary }}
-              >
-                نمایش همه
-              </button>
-            </div>
-          )}
-        </section>
-
+          </section>
+        )}
         {/* ─── ۴. فرصت‌های همکاری / اجاره لاین ─── */}
-        <section>
-          <SectionHeader
-            icon={<FiAward size={18} />}
-            iconColor="#667eea"
-            title="فرصت‌های همکاری"
-            subtitle="با اجاره لاین، کسب‌وکار خود را گسترش دهید"
-            rightElement={
-              <SeeAllButton
-                onPress={() => router.push('/line-rentals')}
-                count={filteredLineRentals.length}
-              />
-            }
-          />
-          {filteredLineRentals.length > 0 ? (
+        {lineRentals.length > 0 && (
+          <section>
+            <SectionHeader
+              icon={<span style={{ fontSize: 18 }}>🏢</span>}
+              iconColor="#667eea"
+              title="فرصت‌های همکاری"
+              rightElement={
+                <SeeAllButton
+                  onPress={() => router.push('/line-rentals')}
+                  count={lineRentals.length}
+                />
+              }
+            />
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-              {filteredLineRentals.map((ad) => (
-                <LineRentalCard key={ad.id} ad={ad} onPress={handleLineRentalPress} />
+              {lineRentals.map((rental) => (
+                <LineRentalCard
+                  key={rental.id}
+                  rental={rental}
+                  onPress={handleLineRentalPress}
+                />
               ))}
             </div>
-          ) : (
-            <div className="flex flex-col items-center py-8 gap-2">
-              <span className="text-3xl">📍</span>
-              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                فرصت همکاری در این فاصله پیدا نشد
-              </p>
-              <button
-                onClick={disableNearby}
-                className="text-xs font-[Vazir-Bold] underline"
-                style={{ color: colors.primary }}
-              >
-                نمایش همه
-              </button>
-            </div>
-          )}
-        </section>
+          </section>
+        )}
       </div>
 
       {/* ═══════════ Bottom Tab Bar ═══════════ */}

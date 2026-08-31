@@ -30,15 +30,17 @@ export default function LineRentalsPage() {
           params.lat = userLocation.latitude;
           params.lng = userLocation.longitude;
           params.radius = 10;
-          const result = await adsService.getLineRentals(params);
-          setRentals(result.data || []);
         }
+        // ✅ درخواست همیشه ارسال می‌شود
+        const result = await adsService.getLineRentals(params);
+        setRentals(result.data || []);
       } catch (error) {
         console.error('Failed to fetch line rentals:', error);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchRentals();
   }, [nearbyEnabled, userLocation]);
 
@@ -49,7 +51,7 @@ export default function LineRentalsPage() {
 
   const handleRentalPress = useCallback(
     (rental) => {
-      router.push(`/line-rental-detail?id=${rental.id}`);
+      router.push(`/line-rentals/detail?id=${rental.id}`);
     },
     [router]
   );

@@ -98,7 +98,6 @@ export default function LineRentalDetailPage({ rentalId }) {
     );
   }
 
-  // ✅ فاز ۳: فقط خوانش camelCase
   const collabType = rental.collabType;
   const businessName = rental.businessName;
   const description = rental.description || '';

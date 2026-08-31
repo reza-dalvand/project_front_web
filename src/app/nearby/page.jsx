@@ -220,11 +220,11 @@ export default function NearbyPage() {
     [router]
   );
   const handleModelPress = useCallback(
-    (req) => router.push(`/model-request-detail?id=${req.id}`),
+    (req) => router.push(`/model-requests/detail?id=${req.id}`),
     [router]
   );
   const handleLinePress = useCallback(
-    (ad) => router.push(`/line-rental-detail?id=${ad.id}`),
+    (ad) => router.push(`/line-rentals/detail?id=${ad.id}`),
     [router]
   );
 

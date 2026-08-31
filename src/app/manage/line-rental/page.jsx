@@ -71,15 +71,36 @@ export default function LineRentalPage() {
     setSelectedAd(null);
   }, []);
 
-  // ✅ حذف USE_MOCK — فقط API
   const handleSave = useCallback(
     async (adData) => {
       try {
-        if (editingAd) {
-          await adsService.updateLineRental(editingAd.id, adData);
-        } else {
-          await adsService.createLineRental(adData);
+        // 🔄 نگاشت کلیدهای camelCase فرم به snake_case مورد انتظار بک‌اند
+        const payload = {
+          title: adData.title,
+          description: adData.description,
+          service_category: adData.categoryId,
+          sub_service: adData.subServiceId,
+          collab_type: adData.collabType,
+          contact_phone: adData.contactPhone,
+        };
+
+        // افزودن فیلدهای مالی بر اساس نوع همکاری
+        if (adData.collabType === 'percent') {
+          payload.percent_salon = adData.percentSalon;
+          payload.percent_partner = adData.percentPartner;
+        } else if (adData.collabType === 'fixed') {
+          payload.fixed_amount = adData.fixedAmount;
+          if (adData.fixedDeposit) payload.fixed_deposit = adData.fixedDeposit;
+        } else if (adData.collabType === 'hourly') {
+          payload.hourly_rate = adData.hourlyRate;
         }
+
+        if (editingAd) {
+          await adsService.updateLineRental(editingAd.id, payload);
+        } else {
+          await adsService.createLineRental(payload);
+        }
+        
         const result = await adsService.getMyLineRentals();
         setAds(result.data || []);
         showToast(
@@ -88,7 +109,14 @@ export default function LineRentalPage() {
         );
       } catch (error) {
         console.error('Save failed:', error);
-        showToast(error.message || 'خطا در ذخیره آگهی', 'error');
+        
+        // ✅ بهبود نمایش خطا: استخراج پیام دقیق خطای اعتبارسنجی بک‌اند
+        let errorMsg = error.message || 'خطا در ذخیره آگهی';
+        if (error.details && typeof error.details === 'object') {
+          const detailsMsg = Object.values(error.details).flat().join(' | ');
+          if (detailsMsg) errorMsg = detailsMsg;
+        }
+        showToast(errorMsg, 'error');
       }
     },
     [editingAd, showToast]

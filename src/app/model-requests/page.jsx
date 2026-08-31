@@ -49,7 +49,7 @@ export default function ModelRequestsPage() {
 
   const handleRequestPress = useCallback(
     (request) => {
-      router.push(`/model-request-detail?id=${request.id}`);
+      router.push(`/model-requests/detail?id=${request.id}`);
     },
     [router]
   );
