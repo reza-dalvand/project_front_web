@@ -1,6 +1,6 @@
 // src/app/auth/login/page.jsx
 'use client';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiSmartphone, FiShield, FiSend } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -21,6 +21,15 @@ function LoginPageContent() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+
+  useEffect(() => {
+    const { isAuthenticated, _hydrated } = useAuthStore.getState();
+    if (_hydrated && isAuthenticated) {
+      router.replace(redirectUrl === '/' ? '/' : redirectUrl);
+    }
+  }, [router, redirectUrl]);
+
 
   const handlePhoneChange = (text) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
@@ -56,7 +65,7 @@ function LoginPageContent() {
 
       setPendingAuth(cleanedPhone);
       setLoading(false);
-      router.push(`/auth/verify-otp?redirect=${encodeURIComponent(redirectUrl)}`);
+      router.replace(`/auth/verify-otp?redirect=${encodeURIComponent(redirectUrl)}`);
     } catch (err) {
       setLoading(false);
       setError(err.message || 'خطا در ارسال کد تایید. لطفاً دوباره تلاش کنید.');
