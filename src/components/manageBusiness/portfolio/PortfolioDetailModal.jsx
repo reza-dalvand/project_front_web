@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   FiX,
   FiChevronLeft,
@@ -30,9 +30,42 @@ export default function PortfolioDetailModal({
     setCurrentIndex(0);
   }, [portfolio, visible]);
 
+  const images = useMemo(() => {
+    // اگر تصاویر گالری وجود دارند
+    if (portfolio?.images && portfolio.images.length > 0) {
+      return portfolio.images
+        .map((img) => {
+          // اگر مستقیماً مسیر باشد (رشته)
+          if (typeof img === 'string') return img;
+          // اگر آبجکت باشد → مسیر کامل را استخراج کن
+          return img.imageUrl || img.image_url || img.image || null;
+        })
+        .filter(Boolean); // مقادیر خالی را حذف کن
+    }
+
+    // اگر فقط کاور وجود دارد
+    if (portfolio?.coverImageUrl) {
+      return [portfolio.coverImageUrl];
+    }
+    if (portfolio?.coverImage) {
+      // مسیر نسبی را به مسیر کامل تبدیل کن
+      if (typeof portfolio.coverImage === 'string') {
+        if (portfolio.coverImage.startsWith('http')) {
+          return [portfolio.coverImage];
+        }
+        // مسیر نسبی → با دامنه کامل کن
+        return [getFullImageUrl(portfolio.coverImage)];
+      }
+      return [portfolio.coverImage];
+    }
+
+    return [];
+  }, [portfolio]);
+
+
   if (!visible || !portfolio) return null;
 
-  const images = portfolio.images || (portfolio.coverImage ? [portfolio.coverImage] : []);
+
   const serviceName = services.find((s) => s.id === portfolio.serviceId)?.name || null;
 
   const goToPrev = () => {
@@ -69,7 +102,7 @@ export default function PortfolioDetailModal({
           className="flex items-center justify-between px-4 py-3 border-b"
           style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
         >
-          <span className="text-sm font-[Vazir-Bold] flex-1" style={{ color: colors.textMain }}>
+          <span className="text-sm font-[Vazir-Bold] flex-1 min-w-0 truncate pr-2" style={{ color: colors.textMain }}>
             {portfolio.title || 'نمونه‌کار'}
           </span>
           <div className="flex items-center gap-2">
@@ -146,7 +179,7 @@ export default function PortfolioDetailModal({
             >
               <FiImage size={12} color="#fff" />
               <span className="text-[11px] font-[Vazir-Bold] text-white">
-                {toPersianDigit(currentIndex + 1)} از {toPersianDigit(images.length)}
+                {toPersianDigit(images.length)} از {toPersianDigit(currentIndex + 1)}
               </span>
             </div>
           )}
@@ -176,7 +209,7 @@ export default function PortfolioDetailModal({
         )}
 
         {/* ═══════ محتوای اسکرولی ═══════ */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto min-w-0 overflow-x-hidden p-4 space-y-4">
           {/* عنوان و دسته‌بندی */}
           <div
             className="p-4 rounded-2xl border"
@@ -193,7 +226,10 @@ export default function PortfolioDetailModal({
                 عنوان نمونه‌کار
               </span>
             </div>
-            <p className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+            <p
+              className="text-base font-[Vazir-Bold] w-full min-w-0 break-words whitespace-normal leading-7"
+              style={{ color: colors.textMain }}
+            >
               {portfolio.title || 'نمونه‌کار'}
             </p>
 
@@ -261,11 +297,14 @@ export default function PortfolioDetailModal({
               </span>
             </div>
             {portfolio.description ? (
-              <p className="text-sm leading-6 text-justify" style={{ color: colors.textMain }}>
+              <p
+                className="text-sm w-full min-w-0 break-words whitespace-normal text-justify leading-7"
+                style={{ color: colors.textMain }}
+              >
                 {portfolio.description}
               </p>
             ) : (
-              <p className="text-xs italic" style={{ color: colors.textSecondary }}>
+              <p className="text-xs italic w-full min-w-0" style={{ color: colors.textSecondary }}>
                 توضیحاتی برای این نمونه‌کار ثبت نشده است
               </p>
             )}
@@ -277,7 +316,10 @@ export default function PortfolioDetailModal({
             style={{ backgroundColor: colors.primary + '08', borderColor: colors.primary + '25' }}
           >
             <span className="text-sm">💡</span>
-            <p className="text-[11px] flex-1 leading-5" style={{ color: colors.textSecondary }}>
+            <p
+              className="text-[11px] flex-1 min-w-0 break-words leading-5"
+              style={{ color: colors.textSecondary }}
+            >
               برای ویرایش این نمونه‌کار، روی آیکون ویرایش در بالای صفحه ضربه بزنید
             </p>
           </div>

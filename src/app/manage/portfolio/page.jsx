@@ -148,10 +148,11 @@ export default function ManagePortfolioPage() {
           </div>
         ) : portfolios.length > 0 ? (
           <div className="flex flex-wrap gap-3 justify-between">
-            {portfolios.map((portfolio) => (
+            {portfolios.map((portfolio, index) => (
               <PortfolioCard
                 key={portfolio.id}
                 portfolio={portfolio}
+                priority={index < 2}
                 onPress={openDetail}
                 onEdit={openEditForm}
                 onDelete={handleDelete}

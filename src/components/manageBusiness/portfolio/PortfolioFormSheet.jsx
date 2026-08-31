@@ -48,19 +48,21 @@ export default function PortfolioFormSheet({
         setDescription(editingPortfolio.description || '');
         setCategoryId(editingPortfolio.categoryId || editingPortfolio.category?.id || null);
         setSubServiceId(editingPortfolio.subServiceId || editingPortfolio.sub_service?.id || null);
+        // ✅ در حالت ویرایش، تصاویر قبلی نگه داشته می‌شوند
+        // کاربر فقط در صورت نیاز تصاویر جدید آپلود می‌کند
         setImages([]);
         setImagePreviews([]);
       } else {
-        setTitle('');
-        setDescription('');
-        setCategoryId(null);
-        setSubServiceId(null);
-        setImages([]);
-        setImagePreviews([]);
+          setTitle('');
+          setDescription('');
+          setCategoryId(null);
+          setSubServiceId(null);
+          setImages([]);
+          setImagePreviews([]);
+        }
+        setErrors({});
+        setSaving(false);
       }
-      setErrors({});
-      setSaving(false);
-    }
   }, [visible, editingPortfolio]);
 
   // ─── انتخاب فایل ───
@@ -105,40 +107,46 @@ export default function PortfolioFormSheet({
   };
 
   // ─── اعتبارسنجی ───
-  const validate = () => {
-    const newErrors = {};
-    if (!title.trim()) newErrors.title = 'عنوان نمونه‌کار الزامی است';
-    else if (title.trim().length < 3) newErrors.title = 'عنوان باید حداقل ۳ کاراکتر باشد';
-    if (!categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
-    if (!subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
-    if (images.length === 0) newErrors.images = 'حداقل یک تصویر آپلود کنید'; // ✅ اجباری
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+ const validate = () => {
+  const newErrors = {};
+  if (!title.trim()) newErrors.title = 'عنوان نمونه‌کار الزامی است';
+  else if (title.trim().length < 3) newErrors.title = 'عنوان باید حداقل ۳ کاراکتر باشد';
+  if (!categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
+  if (!subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
 
-  // ─── ذخیره ───
-  const handleSave = () => {
-    if (!validate()) return;
+  // ✅ در حالت ویرایش، اگر تصویر جدید آپلود نشده، تصاویر قبلی حفظ می‌شوند
+  if (!isEditMode && images.length === 0) {
+    newErrors.images = 'حداقل یک تصویر آپلود کنید';
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+
+// ═══ بخش handleSave را جایگزین کنید ═══
+const handleSave = () => {
+  if (!validate()) return;
     setSaving(true);
 
-    // ✅ ساختن FormData با فایل‌های واقعی
     const formData = new FormData();
     formData.append('title', title.trim());
     formData.append('description', description.trim());
-    formData.append('category', String(categoryId));
-    formData.append('sub_service', String(subServiceId));
 
-    // ✅ تصاویر واقعی به جای آدرس
-    images.forEach((file, i) => {
-      formData.append('images', file);
-    });
+    // ✅ فقط مقادیر معتبر اضافه شوند
+    if (categoryId) formData.append('category', String(categoryId));
+    if (subServiceId) formData.append('sub_service', String(subServiceId));
 
-    // اولین تصویر = کاور
-    formData.append('cover_image', images[0]);
+    // ✅ فقط اگر تصویر جدید آپلود شده باشد
+    if (images.length > 0) {
+      images.forEach((file) => {
+        formData.append('images', file);
+      });
+      formData.append('cover_image', images[0]);
+    }
 
     onSave(formData, editingPortfolio?.id);
-  };
-
+  };  
   // ─── Cleanup previews ───
   useEffect(() => {
     return () => {

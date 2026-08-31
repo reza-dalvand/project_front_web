@@ -59,15 +59,26 @@ const apiClient = {
     }
   },
 
+// src/api/api-client.js
+// فقط متد upload را جایگزین کنید:
+
   async upload(url, formData, config = {}) {
     try {
-      const response = await api.post(url, formData, {
-        ...config,
-        headers: {
-          ...config.headers,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const method = (config.method || 'POST').toUpperCase();
+      const headers = {
+        ...config.headers,
+        'Content-Type': 'multipart/form-data',
+      };
+
+      let response;
+      if (method === 'PUT') {
+        response = await api.put(url, formData, { headers });
+      } else if (method === 'PATCH') {
+        response = await api.patch(url, formData, { headers });
+      } else {
+        response = await api.post(url, formData, { headers });
+      }
+
       return normalizeSuccessResponse(response);
     } catch (error) {
       throw normalizeErrorResponse(error);

@@ -4,10 +4,29 @@ import Image from 'next/image';
 import { FiEdit2, FiTrash2, FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { useMemo } from "react";
 
-export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete }) {
+export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, priority }) {
   const { colors } = useTheme();
   const imageCount = portfolio.images?.length || 1;
+
+  const coverSrc = useMemo(() => {
+    // اولویت ۱: مسیر کامل کاور
+    if (portfolio.coverImageUrl) return portfolio.coverImageUrl;
+    // اولویت ۲: مسیر نسبی کاور
+    if (portfolio.coverImage && typeof portfolio.coverImage === 'string') {
+      return portfolio.coverImage.startsWith('http')
+        ? portfolio.coverImage
+        : getFullImageUrl(portfolio.coverImage);
+    }
+    // اولویت ۳: اولین تصویر گالری
+    if (portfolio.images && portfolio.images.length > 0) {
+      const firstImg = portfolio.images[0];
+      if (typeof firstImg === 'string') return firstImg;
+      return firstImg.imageUrl || firstImg.image_url || firstImg.image || null;
+    }
+    return null;
+  }, [portfolio]);
 
   return (
     <div
@@ -18,13 +37,20 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete }) 
     >
       {/* تصویر */}
       <div className="relative w-full aspect-square">
-        <Image
-          src={portfolio.coverImage || portfolio.images?.[0]}
-          alt={portfolio.title || 'portfolio'}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 48vw, 300px"
-        />
+        {coverSrc ? (
+          <Image
+            src={coverSrc}
+            alt={portfolio.title || 'portfolio'}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 48vw, 300px"
+            priority={priority}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+            <FiImage size={24} className="text-gray-400" />
+          </div>
+        )}
         {/* Badge تعداد تصاویر */}
         {imageCount > 1 && (
           <div
