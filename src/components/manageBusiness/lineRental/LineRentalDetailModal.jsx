@@ -45,11 +45,9 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
 
   if (!mounted || !visible || !ad) return null;
 
-  const statusConfig = {
-    active: { label: 'فعال', variant: 'success' },
-    inactive: { label: 'غیرفعال', variant: 'error' },
-  };
-  const st = statusConfig[ad.status] || statusConfig.inactive;
+  const st = !ad.isActive
+    ? { label: 'فعال', variant: 'success' }
+    : { label: 'غیرفعال', variant: 'error' };
 
   const handleCall = () => {
     if (ad.contactPhone) {
@@ -215,13 +213,13 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
           {/* تاریخ‌ها */}
           {(ad.createdAt || ad.expiresAt) && (
             <Card variant="default" padding={14} radius={14}>
-              {ad.createdAt && <InfoRow icon="📅" label="تاریخ ایجاد" value={ad.createdAt} />}
-              {ad.expiresAt && <InfoRow icon="⏰" label="تاریخ انقضا" value={ad.expiresAt} />}
+              {ad.createdAt && <InfoRow icon="📅" label="تاریخ ایجاد" value={ad.createdJalali} />}
+              {ad.expiresAt && <InfoRow icon="⏰" label="تاریخ انقضا" value={ad.expiresJalali} />}
             </Card>
           )}
 
           {/* غیرفعال */}
-          {ad.status === 'inactive' && (
+          {!ad.isActive && (
             <div
               className="flex items-center gap-2 p-3 rounded-xl border"
               style={{ backgroundColor: '#E5393510', borderColor: '#E5393530' }}
@@ -234,6 +232,7 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
           )}
 
           {/* دکمه‌ها */}
+          {ad.isActive && (
           <div className="flex gap-3 pt-2">
             <Button
               title="ویرایش"
@@ -258,6 +257,7 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
               iconPosition="right"
             />
           </div>
+          )}
         </div>
       </div>
       <ConfirmDialog

@@ -8,12 +8,7 @@ import Badge from '@/components/common/Badge';
 export default function ModelRequestCard({ request, onPress }) {
   const { colors } = useTheme();
 
-  const statusConfig = {
-    active: { label: 'فعال', variant: 'success' },
-    inactive: { label: 'غیرفعال', variant: 'error' },
-  };
-  const currentStatus = statusConfig[request.status] || statusConfig.inactive;
-
+  const isActive = request.isActive !== false;
   return (
     <button
       onClick={() => onPress?.(request)}
@@ -40,8 +35,12 @@ transition-all hover:scale-[1.01] active:scale-[0.99] text-right"
         <div className="flex items-center gap-2">
           <CostTypeBadge type={request.costType} variant="compact" />
           <div className="flex-1" />
-          <Badge label={currentStatus.label} variant={currentStatus.variant} size="sm" />
-        </div>
+            <Badge
+              label={isActive ? 'فعال' : 'غیرفعال'}
+              variant={isActive ? 'success' : 'error'}
+              size="sm"
+            />
+          </div>
       </div>
 
       {/* فلش */}

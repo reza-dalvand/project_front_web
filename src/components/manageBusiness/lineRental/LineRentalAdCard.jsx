@@ -8,11 +8,7 @@ import Badge from '@/components/common/Badge';
 export default function LineRentalAdCard({ ad, onPress }) {
   const { colors } = useTheme();
 
-  const statusConfig = {
-    active: { label: 'فعال', variant: 'success' },
-    inactive: { label: 'غیرفعال', variant: 'error' },
-  };
-  const currentStatus = statusConfig[ad.status] || statusConfig.inactive;
+  const isActive = ad.isActive !== false; 
 
   return (
     <button
@@ -40,7 +36,11 @@ export default function LineRentalAdCard({ ad, onPress }) {
         <div className="flex items-center gap-2">
           <CollabBadge type={ad.collabType} priceDisplay={ad.priceDisplay} variant="compact" />
           <div className="flex-1" />
-          <Badge label={currentStatus.label} variant={currentStatus.variant} size="sm" />
+          <Badge
+            label={isActive ? 'فعال' : 'غیرفعال'}
+            variant={isActive ? 'success' : 'error'}
+            size="sm"
+          />
         </div>
       </div>
 
