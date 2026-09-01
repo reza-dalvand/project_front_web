@@ -6,6 +6,7 @@ import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
+import { toJalaali, PERSIAN_MONTHS } from '@/utils/dateUtils';
 
 /**
  * 🏪 کارت اطلاعات کسب‌وکار — نسخه مینیمال تخت
@@ -14,8 +15,25 @@ import { cleanPhone } from '@/utils/phoneUtils';
 export default function BusinessInfoCard({ business, onMapPress }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
-  const memberSince = business.memberSince || '۲ سال';
+  
+  // پشتیبانی از memberSince یا dateJoined (بسته به ساختار بک‌اند)
+  const memberSinceRaw = business.memberSince || business.dateJoined || null;
   const servicesCount = business.servicesCount || business.services?.length || 0;
+
+  // ═══ تبدیل تاریخ عضویت به شمسی (روز + ماه + سال) ═══
+  let formattedMemberSince = '';
+  if (memberSinceRaw) {
+    try {
+      const date = new Date(memberSinceRaw);
+      if (!isNaN(date.getTime())) {
+        const j = toJalaali(date.getFullYear(), date.getMonth() + 1, date.getDate());
+        // فرمت نهایی: ۳۰ مرداد ۱۴۰۵
+        formattedMemberSince = `${PERSIAN_MONTHS[j.jm - 1]} ${toPersianDigit(j.jy)}`;
+      }
+    } catch (e) {
+      // در صورت بروز خطا در پارس تاریخ، سکوت می‌کنیم تا چیپ نمایش داده نشود
+    }
+  }
 
   // ═══ تماس ═══
   const handleCall = () => {
@@ -81,12 +99,11 @@ export default function BusinessInfoCard({ business, onMapPress }) {
           <Image
             src={business.ownerPhoto}
             alt={business.name || 'لوگو کسب‌وکار'}
-            width={80} // یا هر ابعادی که در کد خودتان دارید
+            width={80} 
             height={70}
             className="object-cover"
           />
         ) : (
-          // یک جایگزین (Placeholder) در صورتی که کسب‌وکار لوگو نداشته باشد
           <div
             className="w-14 h-14 rounded-full flex items-center justify-center text-2xl"
             style={{ backgroundColor: colors?.border || '#e5e7eb' }}
@@ -159,12 +176,16 @@ export default function BusinessInfoCard({ business, onMapPress }) {
         >
           💆‍♀️ {toPersianDigit(servicesCount)} خدمت
         </span>
-        <span
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-[Vazir-Bold]"
-          style={{ borderColor: colors.border, color: colors.textMain }}
-        >
-          🏆 {memberSince} عضویت
-        </span>
+        
+        {/* ═══ چیپ تاریخ عضویت (شمسی شده) ═══ */}
+        {formattedMemberSince && (
+            <span
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-[Vazir-Bold]"
+                style={{ borderColor: colors.border, color: colors.textMain }}
+            >
+                🏆 عضویت: {formattedMemberSince} 
+            </span>
+        )}
       </div>
 
       {/* ═══ دکمه‌های دایره‌ای اکشن ═══ */}

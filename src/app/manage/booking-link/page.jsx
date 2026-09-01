@@ -1,7 +1,8 @@
+// src/app/manage/booking-link/page.jsx
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiLink, FiZap, FiShare2, FiAward } from 'react-icons/fi';
+import { FiLink, FiZap, FiShare2, FiAward, FiAlertTriangle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -10,12 +11,14 @@ import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Header from '@/components/common/Header';
 import Card from '@/components/common/Card';
 import BookingLinkCard from '@/components/manageBusiness/bookingLink/BookingLinkCard';
+import env from '@/config/env';
 import dynamic from 'next/dynamic';
 
 const ShareBookingLinkModal = dynamic(
   () => import('@/components/manageBusiness/bookingLink/ShareBookingLinkModal'),
   { ssr: false, loading: () => null }
 );
+
 export default function BookingLinkPage() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -24,19 +27,31 @@ export default function BookingLinkPage() {
   const { showToast } = useToast();
   const [shareModalVisible, setShareModalVisible] = useState(false);
 
-  const bookingLink = `https://beauclub.ir/book/${businessData?.id || 'biz_1'}`;
+  // ✅ FIX: استفاده از bookingSlug و مسیر صحیح /business?slug=
+  const bookingSlug = businessData?.bookingSlug || '';
+  const bookingLink = bookingSlug
+    ? `${env.SITE_DOMAIN}/business?slug=${bookingSlug}`
+    : '';
 
   const linkStats = {
-    clicks: 245,
-    bookings: 18,
+    clicks: businessData?.bookingLinkClicks || 0,
+    bookings: businessData?.bookingLinkBookings || 0,
     link: bookingLink,
   };
 
   const handleShare = () => {
+    if (!bookingSlug) {
+      showToast('لینک رزرو هنوز برای کسب‌وکار شما ایجاد نشده است', 'error');
+      return;
+    }
     setShareModalVisible(true);
   };
 
   const handleCopy = () => {
+    if (!bookingSlug) {
+      showToast('لینک رزرو هنوز برای کسب‌وکار شما ایجاد نشده است', 'error');
+      return;
+    }
     navigator.clipboard?.writeText(bookingLink);
     showToast('لینک رزرو با موفقیت کپی شد', 'success');
   };
@@ -63,7 +78,7 @@ export default function BookingLinkPage() {
           >
             <FiLink size={32} style={{ color: colors.primary }} />
           </div>
-          <h2 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+          <h2 className="text-xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
             لینک اختصاصی شما
           </h2>
           <p className="text-xs leading-5 px-5" style={{ color: colors.textSecondary }}>
@@ -71,8 +86,32 @@ export default function BookingLinkPage() {
           </p>
         </div>
 
+        {/* ✅ FIX: هشدار اگر اسلاگ هنوز ایجاد نشده */}
+        {!bookingSlug && (
+          <div
+            className="flex items-start gap-3 p-4 rounded-2xl border"
+            style={{
+              backgroundColor: '#FF980008',
+              borderColor: '#FF980030',
+            }}
+          >
+            <FiAlertTriangle size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-[Vazir-Bold] mb-1" style={{ color: '#FF9800' }}>
+                لینک رزرو هنوز ایجاد نشده است
+              </p>
+              <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
+                لینک اختصاصی رزرو پس از تایید کسب‌وکار توسط کارشناسان بیو کلاب به صورت خودکار
+                ایجاد می‌شود. لطفاً منتظر تایید بمانید.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* کارت اصلی لینک */}
-        <BookingLinkCard bookingLink={linkStats} onShare={handleShare} onCopy={handleCopy} />
+        {bookingSlug && (
+          <BookingLinkCard bookingLink={linkStats} onShare={handleShare} onCopy={handleCopy} />
+        )}
 
         {/* راهنمای استفاده */}
         <Card variant="elevated" padding={16} radius={16}>

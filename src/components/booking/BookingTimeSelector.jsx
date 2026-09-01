@@ -1,14 +1,15 @@
 // src/components/booking/BookingTimeSelector.jsx
 'use client';
+
 import { FiClock } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
 export default function BookingTimeSelector({
-  slots = [], // ✅ از API می‌آید
+  slots = [],
   selectedId,
   onSelect,
-  isLoading = false, // ✅ جدید
+  isLoading = false,
 }) {
   const { colors } = useTheme();
 
@@ -48,6 +49,8 @@ export default function BookingTimeSelector({
       <div className="flex flex-wrap gap-2">
         {slots.map((slot) => {
           const isSelected = selectedId === slot.id;
+          // ✅ FIX: خوانش camelCase (بعد از نرمال‌ساز)
+          const displayLabel = slot.displayTime || slot.startTime || '';
           return (
             <button
               key={slot.id}
@@ -62,7 +65,7 @@ export default function BookingTimeSelector({
                 className="text-[13px] font-[Vazir-Bold]"
                 style={{ color: isSelected ? '#fff' : colors.textMain }}
               >
-                {slot.display_time || slot.start_time}
+                {displayLabel}
               </span>
             </button>
           );

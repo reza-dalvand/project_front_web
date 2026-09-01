@@ -2,7 +2,7 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiArrowRight, FiCheck } from 'react-icons/fi';
+import { FiX, FiArrowLeft, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import Button from '@/components/common/Button';
@@ -242,7 +242,7 @@ export default function ScheduleModal({
           size="lg"
           disabled={!canGoNext}
           className="flex-1"
-          icon={<FiArrowRight size={18} color="#fff" />}
+          icon={<FiArrowLeft size={18} color="#fff" />}
           iconPosition="right"
         />
       </div>

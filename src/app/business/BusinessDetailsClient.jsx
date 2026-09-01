@@ -86,6 +86,7 @@ export default function BusinessDetailsClient({ businessSlug }) {
           latitude: b.latitude,
           longitude: b.longitude,
           gallery: (b.gallery || []).map((img) => img.imageUrl || img.image || img),
+          memberSince: b.memberSince || b.createdAt || '',
           services: (b.services || []).map((s) => ({
             id: s.id,
             name: s.name,
