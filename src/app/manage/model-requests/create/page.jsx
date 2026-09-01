@@ -49,36 +49,40 @@ function CreateModelRequestPageContent() {
 
   // ═══ ذخیره ═══
   const handleSave = async (formData) => {
-    try {
-      if (isEditMode) {
-        await adsService.createModelRequest({
-          service: formData.serviceId,
-          title: formData.title,
-          description: formData.description,
-          cost_type: formData.costType,
-          discount: formData.discount || 0,
-          is_urgent: formData.isUrgent || false,
-          contact_phone: formData.contactPhone,
-        });
-        showToast('درخواست جدید ثبت شد (ویرایش مستقیم پشتیبانی نمی‌شود)', 'info');
-      } else {
-        await adsService.updateModelRequest({
-          service: formData.serviceId,
-          title: formData.title,
-          description: formData.description,
-          cost_type: formData.costType,
-          discount: formData.discount || 0,
-          is_urgent: formData.isUrgent || false,
-          contact_phone: formData.contactPhone,
-        });
-        showToast('درخواست مدل با موفقیت ایجاد شد', 'success');
+      try {
+        if (isEditMode) {
+          // ✅ حالت ویرایش → آپدیت با requestId
+          await adsService.updateModelRequest(requestId, {
+            service: formData.serviceId,
+            title: formData.title,
+            description: formData.description,
+            cost_type: formData.costType,
+            discount: formData.discount || 0,
+            is_urgent: formData.isUrgent || false,
+            contact_phone: formData.contactPhone,
+          });
+          showToast('درخواست مدل با موفقیت ویرایش شد', 'success');
+        } else {
+          console.log('Updating model request with ID:', requestId, 'and data:', formData);
+
+          // ✅ حالت ایجاد → ساخت جدید
+          await adsService.createModelRequest({
+            service: formData.categoryId,
+            title: formData.title,
+            description: formData.description,
+            cost_type: formData.costType,
+            discount: formData.discount || 0,
+            is_urgent: formData.isUrgent || false,
+            contact_phone: formData.contactPhone,
+          });
+          showToast('درخواست مدل با موفقیت ایجاد شد', 'success');
+        }
+        setTimeout(() => router.push('/manage/model-requests'), 1200);
+      } catch (error) {
+        console.error('Failed to save model request:', error);
+        showToast(error.message || 'خطا در ذخیره درخواست', 'error');
       }
-      setTimeout(() => router.push('/manage/model-requests'), 1200);
-    } catch (error) {
-      console.error('Failed to save model request:', error);
-      showToast(error.message || 'خطا در ذخیره درخواست', 'error');
-    }
-  };
+    };
 
   const handleClose = () => {
     router.push('/manage/model-requests');

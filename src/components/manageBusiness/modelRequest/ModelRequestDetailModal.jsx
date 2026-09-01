@@ -41,8 +41,10 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
     active: { label: 'فعال', variant: 'success' },
     inactive: { label: 'غیرفعال', variant: 'error' },
   };
-  const currentStatus = statusConfig[request.status] || statusConfig.inactive;
-
+  const currentStatus = !request.status
+    ? { label: 'فعال', variant: 'success' }
+    : { label: 'غیرفعال', variant: 'error' };
+    
   const handleCall = () => {
     if (request.contactPhone) {
       window.location.href = `tel:${request.contactPhone}`;
@@ -102,17 +104,6 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
             <div className="flex items-center gap-2 flex-wrap">
               <CostTypeBadge type={request.costType} variant="default" />
               <Badge label={currentStatus.label} variant={currentStatus.variant} size="md" />
-              {request.serviceName && (
-                <div
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
-                  style={{ backgroundColor: colors.primary + '15' }}
-                >
-                  <span className="text-xs">💆‍♀️</span>
-                  <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                    {request.serviceName}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
 
@@ -162,8 +153,8 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
                 زمان‌بندی
               </span>
             </div>
-            <InfoRow icon="📅" label="تاریخ ایجاد" value={request.createdAt || '—'} />
-            <InfoRow icon="⏰" label="تاریخ انقضا" value={request.expiresAt || '—'} />
+            <InfoRow icon="📅" label="تاریخ ایجاد" value={request.createdJalali || '—'} />
+            <InfoRow icon="⏰" label="تاریخ انقضا" value={request.expiresJalali || '—'} />
           </Card>
 
           {/* دکمه‌های اکشن */}
