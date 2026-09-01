@@ -41,6 +41,7 @@ export default function PostThumbnail({ post, onPress }) {
         src={firstImage}
         alt={post.businessName}
         fill
+        priority
         sizes="(max-width: 768px) 33vw, 200px"
         className="object-cover group-hover:scale-105 transition-transform duration-300"
       />

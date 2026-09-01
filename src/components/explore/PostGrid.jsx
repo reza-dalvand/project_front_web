@@ -13,6 +13,7 @@ export default function PostGrid({
   onClearFilters,
   onLoadMore,
   isLoadingMore = false,
+  isLoading = false, // ✅ اضافه شد برای لود اولیه
   hasMore = true,
   totalLoaded = 0,
 }) {
@@ -20,7 +21,6 @@ export default function PostGrid({
   const sentinelRef = useRef(null);
 
   // ✅ FIX (فاز ۴): guard برای جلوگیری از load همزمان
-  // هنگام اسکرول سریع، ممکن است observer چندبار trigger شود
   const isLoadingRef = useRef(false);
 
   useEffect(() => {
@@ -47,6 +47,15 @@ export default function PostGrid({
     }
   }, [isLoadingMore]);
 
+  // ✅ حالت لود اولیه
+  if (isLoading && (!posts || posts.length === 0)) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   // حالت خالی
   if (!posts || posts.length === 0) {
     return (
@@ -68,8 +77,10 @@ export default function PostGrid({
           <PostThumbnail key={post.id} post={post} onPress={onPostPress} />
         ))}
       </div>
+      
       {/* Sentinel نامرئی برای trigger لود بعدی */}
       {hasMore && <div ref={sentinelRef} className="h-1" />}
+      
       {/* اسپینر لود صفحه بعدی */}
       {isLoadingMore && (
         <div className="flex items-center justify-center gap-3 py-6">
@@ -82,6 +93,7 @@ export default function PostGrid({
           </span>
         </div>
       )}
+      
       {/* پیام پایان لیست */}
       {!hasMore && !isLoadingMore && posts.length > 0 && (
         <div className="flex items-center justify-center gap-3 py-8 px-6">

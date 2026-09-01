@@ -7,6 +7,7 @@ import { useTheme } from '@/stores/useThemeStore';
 
 export default function PostBusinessInfo({ post, onProfilePress, onBooking }) {
   const { colors } = useTheme();
+  const avatarSrc = post.businessOwnerPhoto || post.businessLogo || null;
 
   return (
     <div

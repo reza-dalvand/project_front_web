@@ -1,85 +1,48 @@
 // src/api/services/explore.service.js
 /**
- * 🖼️ Explore Service — هماهنگ با بک‌اند
- *
- * Endpoints:
- *   GET    /explore/posts/                    → لیست پست‌ها (عمومی)
- *   GET    /explore/posts/{pk}/               → جزئیات پست
- *   GET    /explore/my-posts/                 → پست‌های کسب‌وکار من
- *   POST   /explore/my-posts/create/          → ایجاد پست
- *   PUT    /explore/my-posts/{pk}/update/     → ویرایش پست
- *   DELETE /explore/my-posts/{pk}/delete/     → حذف پست
- *
- * مدل ExplorePost:
- *   business, source (business|magazine), caption (max 500)
- *   main_category, sub_category, is_pinned
- *   images: PostImage[] (image, sort_order)
- */
+* 🖼️ Explore Service — ویترین + اسلایدر صفحه هوم
+*
+* - getPosts      → اسلایدر تبلیغاتی صفحه هوم (از /explore/posts/)
+* - getPortfolios → گرید ویترین صفحه اکسپلور (از /portfolios/)
+*/
 import apiClient from '../api-client';
 
 export const exploreService = {
   /**
-   * لیست پست‌های ویترین (عمومی)
-   * GET /explore/posts/
+   * دریافت پست‌های ویترین (برای اسلایدر صفحه هوم)
    *
-   * Params: { main_category, business_id, page, page_size }
-   * Response: ExplorePostListSerializer[]
+   * @param {object} params - { page, page_size, category_id, business_id }
+   *
+   * Response (ExplorePostListSerializer):
+   *   { id, caption, source, business, business_name, business_logo,
+   *     business_booking_slug, main_category, main_category_name,
+   *     sub_category, sub_category_name, is_pinned, images, first_image,
+   *     is_favorited, created_at }
    */
   getPosts: (params = {}) => {
     return apiClient.get('/explore/posts/', { params });
   },
 
   /**
-   * جزئیات پست
-   * GET /explore/posts/{pk}/
+   * دریافت جزئیات یک پست ویترین
    */
   getPostDetail: (postId) => {
     return apiClient.get(`/explore/posts/${postId}/`);
   },
 
   /**
-   * پست‌های کسب‌وکار من
-   * GET /explore/my-posts/
-   */
-  getMyPosts: () => {
-    return apiClient.get('/explore/my-posts/');
-  },
-
-  /**
-   * ایجاد پست جدید
-   * POST /explore/my-posts/create/
+   * دریافت تمام نمونه‌کارها (برای گرید صفحه اکسپلور)
    *
-   * Payload (FormData):
-   * {
-   *   caption: string,
-   *   main_category: number,
-   *   sub_category: number,
-   *   images: File[] (max 5)
-   * }
+   * @param {object} params - { page, page_size, category_id, business_id }
    */
-  createPost: (data) => {
-    if (data instanceof FormData) {
-      return apiClient.upload('/explore/my-posts/create/', data);
-    }
-    return apiClient.post('/explore/my-posts/create/', data);
+  getPortfolios: (params = {}) => {
+    return apiClient.get('/portfolios/', { params });
   },
 
   /**
-   * ویرایش پست
-   * PUT /explore/my-posts/{pk}/update/
+   * دریافت جزئیات یک نمونه‌کار
    */
-  updatePost: (postId, data) => {
-    if (data instanceof FormData) {
-      return apiClient.upload(`/explore/my-posts/${postId}/update/`, data, { method: 'PUT' });
-    }
-    return apiClient.put(`/explore/my-posts/${postId}/update/`, data);
-  },
-
-  /**
-   * حذف پست
-   * DELETE /explore/my-posts/{pk}/delete/
-   */
-  deletePost: (postId) => {
-    return apiClient.delete(`/explore/my-posts/${postId}/delete/`);
+  getPortfolioDetail: (portfolioId) => {
+    return apiClient.get(`/portfolios/${portfolioId}/`);
   },
 };
