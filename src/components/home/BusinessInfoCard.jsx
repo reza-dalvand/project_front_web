@@ -15,7 +15,7 @@ import { toJalaali, PERSIAN_MONTHS } from '@/utils/dateUtils';
 export default function BusinessInfoCard({ business, onMapPress }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
-  
+
   // پشتیبانی از memberSince یا dateJoined (بسته به ساختار بک‌اند)
   const memberSinceRaw = business.memberSince || business.dateJoined || null;
   const servicesCount = business.servicesCount || business.services?.length || 0;
@@ -99,7 +99,7 @@ export default function BusinessInfoCard({ business, onMapPress }) {
           <Image
             src={business.ownerPhoto}
             alt={business.name || 'لوگو کسب‌وکار'}
-            width={80} 
+            width={80}
             height={70}
             className="object-cover"
           />
@@ -176,15 +176,15 @@ export default function BusinessInfoCard({ business, onMapPress }) {
         >
           💆‍♀️ {toPersianDigit(servicesCount)} خدمت
         </span>
-        
+
         {/* ═══ چیپ تاریخ عضویت (شمسی شده) ═══ */}
         {formattedMemberSince && (
-            <span
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-[Vazir-Bold]"
-                style={{ borderColor: colors.border, color: colors.textMain }}
-            >
-                🏆 عضویت: {formattedMemberSince} 
-            </span>
+          <span
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-[Vazir-Bold]"
+            style={{ borderColor: colors.border, color: colors.textMain }}
+          >
+            🏆 عضویت: {formattedMemberSince}
+          </span>
         )}
       </div>
 

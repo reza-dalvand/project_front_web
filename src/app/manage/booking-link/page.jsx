@@ -29,9 +29,7 @@ export default function BookingLinkPage() {
 
   // ✅ FIX: استفاده از bookingSlug و مسیر صحیح /business?slug=
   const bookingSlug = businessData?.bookingSlug || '';
-  const bookingLink = bookingSlug
-    ? `${env.SITE_DOMAIN}/business?slug=${bookingSlug}`
-    : '';
+  const bookingLink = bookingSlug ? `${env.SITE_DOMAIN}/business?slug=${bookingSlug}` : '';
 
   const linkStats = {
     clicks: businessData?.bookingLinkClicks || 0,
@@ -101,8 +99,8 @@ export default function BookingLinkPage() {
                 لینک رزرو هنوز ایجاد نشده است
               </p>
               <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
-                لینک اختصاصی رزرو پس از تایید کسب‌وکار توسط کارشناسان بیو کلاب به صورت خودکار
-                ایجاد می‌شود. لطفاً منتظر تایید بمانید.
+                لینک اختصاصی رزرو پس از تایید کسب‌وکار توسط کارشناسان بیو کلاب به صورت خودکار ایجاد
+                می‌شود. لطفاً منتظر تایید بمانید.
               </p>
             </div>
           </div>

@@ -44,7 +44,7 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
   const currentStatus = !request.status
     ? { label: 'فعال', variant: 'success' }
     : { label: 'غیرفعال', variant: 'error' };
-    
+
   const handleCall = () => {
     if (request.contactPhone) {
       window.location.href = `tel:${request.contactPhone}`;

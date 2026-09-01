@@ -97,17 +97,17 @@ export default function NearbyPage() {
         ]);
 
         if (catRes.status === 'fulfilled') {
-            const cats = catRes.value.data || [];
-            setCategories(
-                cats.map((c) => ({
-                    id: String(c.id),
-                    name: c.name || c.title,
-                    icon: c.iconName || c.icon_name || 'default',
-                    gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
-                    gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
-                    count: c.count || 0,
-                }))
-            );
+          const cats = catRes.value.data || [];
+          setCategories(
+            cats.map((c) => ({
+              id: String(c.id),
+              name: c.name || c.title,
+              icon: c.iconName || c.icon_name || 'default',
+              gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
+              gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
+              count: c.count || 0,
+            }))
+          );
         }
 
         if (bizRes.status === 'fulfilled') {

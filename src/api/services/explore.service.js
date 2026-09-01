@@ -1,10 +1,10 @@
 // src/api/services/explore.service.js
 /**
-* 🖼️ Explore Service — ویترین + اسلایدر صفحه هوم
-*
-* - getPosts      → اسلایدر تبلیغاتی صفحه هوم (از /explore/posts/)
-* - getPortfolios → گرید ویترین صفحه اکسپلور (از /portfolios/)
-*/
+ * 🖼️ Explore Service — ویترین + اسلایدر صفحه هوم
+ *
+ * - getPosts      → اسلایدر تبلیغاتی صفحه هوم (از /explore/posts/)
+ * - getPortfolios → گرید ویترین صفحه اکسپلور (از /portfolios/)
+ */
 import apiClient from '../api-client';
 
 export const exploreService = {

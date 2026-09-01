@@ -62,9 +62,7 @@ export default function PortfolioDetailModal({
     return [];
   }, [portfolio]);
 
-
   if (!visible || !portfolio) return null;
-
 
   const serviceName = services.find((s) => s.id === portfolio.serviceId)?.name || null;
 
@@ -102,7 +100,10 @@ export default function PortfolioDetailModal({
           className="flex items-center justify-between px-4 py-3 border-b"
           style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
         >
-          <span className="text-sm font-[Vazir-Bold] flex-1 min-w-0 truncate pr-2" style={{ color: colors.textMain }}>
+          <span
+            className="text-sm font-[Vazir-Bold] flex-1 min-w-0 truncate pr-2"
+            style={{ color: colors.textMain }}
+          >
             {portfolio.title || 'نمونه‌کار'}
           </span>
           <div className="flex items-center gap-2">

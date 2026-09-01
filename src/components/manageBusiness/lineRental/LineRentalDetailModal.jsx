@@ -233,30 +233,30 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
 
           {/* دکمه‌ها */}
           {ad.isActive && (
-          <div className="flex gap-3 pt-2">
-            <Button
-              title="ویرایش"
-              onPress={() => {
-                onClose();
-                setTimeout(() => onEdit?.(ad), 300);
-              }}
-              variant="outline"
-              size="lg"
-              className="flex-1"
-              icon={<FiEdit2 size={16} style={{ color: colors.primary }} />}
-              iconPosition="right"
-            />
-            <Button
-              title="حذف"
-              onPress={handleDeleteRequest}
-              variant="primary"
-              size="lg"
-              className="flex-1"
-              style={{ backgroundColor: '#E53935', borderColor: '#E53935' }}
-              icon={<FiTrash2 size={16} color="#fff" />}
-              iconPosition="right"
-            />
-          </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                title="ویرایش"
+                onPress={() => {
+                  onClose();
+                  setTimeout(() => onEdit?.(ad), 300);
+                }}
+                variant="outline"
+                size="lg"
+                className="flex-1"
+                icon={<FiEdit2 size={16} style={{ color: colors.primary }} />}
+                iconPosition="right"
+              />
+              <Button
+                title="حذف"
+                onPress={handleDeleteRequest}
+                variant="primary"
+                size="lg"
+                className="flex-1"
+                style={{ backgroundColor: '#E53935', borderColor: '#E53935' }}
+                icon={<FiTrash2 size={16} color="#fff" />}
+                iconPosition="right"
+              />
+            </div>
           )}
         </div>
       </div>

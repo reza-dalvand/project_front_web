@@ -22,14 +22,12 @@ function LoginPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-
   useEffect(() => {
     const { isAuthenticated, _hydrated } = useAuthStore.getState();
     if (_hydrated && isAuthenticated) {
       router.replace(redirectUrl === '/' ? '/' : redirectUrl);
     }
   }, [router, redirectUrl]);
-
 
   const handlePhoneChange = (text) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');

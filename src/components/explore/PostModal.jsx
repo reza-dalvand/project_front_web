@@ -53,10 +53,7 @@ export default function PostModal({
   if (!mounted || !visible || !post) return null;
 
   // استخراج تصاویر: اول کاور، بعد گالری
-  const gallery = [
-    ...(post.coverImage ? [post.coverImage] : []),
-    ...(post.images || []),
-  ];
+  const gallery = [...(post.coverImage ? [post.coverImage] : []), ...(post.images || [])];
 
   const handleShare = async () => {
     const shareMessage = `🖼️ ${post.caption || 'نمونه‌کار'}
@@ -126,10 +123,7 @@ export default function PostModal({
           />
 
           {/* کپشن / توضیحات نمونه‌کار */}
-          <PostCaptionCard
-            caption={post.description || post.caption || ''}
-            isMagazine={false}
-          />
+          <PostCaptionCard caption={post.description || post.caption || ''} isMagazine={false} />
         </div>
       </div>
     </div>,

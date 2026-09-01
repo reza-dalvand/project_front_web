@@ -77,10 +77,10 @@ export default function PostGrid({
           <PostThumbnail key={post.id} post={post} onPress={onPostPress} />
         ))}
       </div>
-      
+
       {/* Sentinel نامرئی برای trigger لود بعدی */}
       {hasMore && <div ref={sentinelRef} className="h-1" />}
-      
+
       {/* اسپینر لود صفحه بعدی */}
       {isLoadingMore && (
         <div className="flex items-center justify-center gap-3 py-6">
@@ -93,7 +93,7 @@ export default function PostGrid({
           </span>
         </div>
       )}
-      
+
       {/* پیام پایان لیست */}
       {!hasMore && !isLoadingMore && posts.length > 0 && (
         <div className="flex items-center justify-center gap-3 py-8 px-6">

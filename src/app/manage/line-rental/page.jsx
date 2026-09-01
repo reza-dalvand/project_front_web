@@ -100,7 +100,7 @@ export default function LineRentalPage() {
         } else {
           await adsService.createLineRental(payload);
         }
-        
+
         const result = await adsService.getMyLineRentals();
         setAds(result.data || []);
         showToast(
@@ -109,7 +109,7 @@ export default function LineRentalPage() {
         );
       } catch (error) {
         console.error('Save failed:', error);
-        
+
         // ✅ بهبود نمایش خطا: استخراج پیام دقیق خطای اعتبارسنجی بک‌اند
         let errorMsg = error.message || 'خطا در ذخیره آگهی';
         if (error.details && typeof error.details === 'object') {

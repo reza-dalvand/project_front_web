@@ -42,7 +42,7 @@ export default function BookingModal({
 
   // ─── useBookingState ───
   const {
-    selectedDate, 
+    selectedDate,
     setSelectedDate,
     selectedTime,
     setSelectedTime,
@@ -51,11 +51,11 @@ export default function BookingModal({
     isSubmitting,
     setIsSubmitting,
     bookingResult,
-    setBookingResult,   
+    setBookingResult,
     availableSlots,
     setAvailableSlots,
     slotsLoading,
-    setSlotsLoading, 
+    setSlotsLoading,
     bookingFailed,
     setBookingFailed,
     bookingError,
@@ -169,9 +169,7 @@ export default function BookingModal({
       releaseScrollLock(instanceId.current);
     };
     // ✅ FIX ۱: dependencies کامل
-  }, [
-    visible, businessId, serviceId, needsNameStep
-  ]);
+  }, [visible, businessId, serviceId, needsNameStep]);
 
   // ═══════ Escape Key ═══════
   useEffect(() => {
@@ -193,20 +191,23 @@ export default function BookingModal({
   }, [currentService]);
 
   // ═══════ ✅ FIX ۸: useCallback برای جلوگیری از re-render ═══════
-  const handleDateSelect = useCallback(async (date) => {
-    setSelectedDate(date);
-    setSelectedTime(null);
-    setSlotsLoading(true);
-    try {
-      const slots = await fetchAvailableSlots(date);
-      setAvailableSlots(slots || []);
-    } catch (err) {
-      console.error('Failed to fetch slots:', err);
-      setAvailableSlots([]);
-    } finally {
-      setSlotsLoading(false);
-    }
-  }, [fetchAvailableSlots, setSelectedDate, setSelectedTime, setAvailableSlots, setSlotsLoading]);
+  const handleDateSelect = useCallback(
+    async (date) => {
+      setSelectedDate(date);
+      setSelectedTime(null);
+      setSlotsLoading(true);
+      try {
+        const slots = await fetchAvailableSlots(date);
+        setAvailableSlots(slots || []);
+      } catch (err) {
+        console.error('Failed to fetch slots:', err);
+        setAvailableSlots([]);
+      } finally {
+        setSlotsLoading(false);
+      }
+    },
+    [fetchAvailableSlots, setSelectedDate, setSelectedTime, setAvailableSlots, setSlotsLoading]
+  );
 
   const handleNext = useCallback(() => {
     if (needsNameStep && currentStep === nameStepId) {
@@ -276,9 +277,17 @@ export default function BookingModal({
       setIsSubmitting(false);
     }
   }, [
-    selectedDate, selectedTime, serviceId, trustEnabled,
-    createAppointment, currentService, onConfirm,
-    setBookingResult, setBookingFailed, setBookingError, setIsSubmitting,
+    selectedDate,
+    selectedTime,
+    serviceId,
+    trustEnabled,
+    createAppointment,
+    currentService,
+    onConfirm,
+    setBookingResult,
+    setBookingFailed,
+    setBookingError,
+    setIsSubmitting,
   ]);
 
   // ═══════ canProceed ═══════
@@ -292,16 +301,24 @@ export default function BookingModal({
     if (currentStep === timeStepId) return !!selectedTime;
     return false;
   }, [
-    currentStep, selectedDate, selectedTime, needsNameStep,
-    firstName, lastName, nameConfirmed, nameStepId,
-    reviewStepId, dateStepId, timeStepId,
-    bookingFailed, bookingResult,
+    currentStep,
+    selectedDate,
+    selectedTime,
+    needsNameStep,
+    firstName,
+    lastName,
+    nameConfirmed,
+    nameStepId,
+    reviewStepId,
+    dateStepId,
+    timeStepId,
+    bookingFailed,
+    bookingResult,
   ]);
 
   // ✅ FIX ۳: استخراج verificationCode با پشتیبانی از هر دو فرمت
-  const verificationCode = bookingResult?.verification_code
-    || bookingResult?.verificationCode
-    || '';
+  const verificationCode =
+    bookingResult?.verification_code || bookingResult?.verificationCode || '';
 
   // ═══════ Render Step Content ═══════
   const renderStepContent = () => {
@@ -388,7 +405,7 @@ export default function BookingModal({
             >
               <FiCalendar size={16} style={{ color: colors.primary }} />
               <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                {selectedDate.jy}/{selectedDate.jm}/{selectedDate.jd} 
+                {selectedDate.jy}/{selectedDate.jm}/{selectedDate.jd}
               </span>
             </button>
           )}

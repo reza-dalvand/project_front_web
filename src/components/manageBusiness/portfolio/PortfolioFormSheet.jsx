@@ -53,16 +53,16 @@ export default function PortfolioFormSheet({
         setImages([]);
         setImagePreviews([]);
       } else {
-          setTitle('');
-          setDescription('');
-          setCategoryId(null);
-          setSubServiceId(null);
-          setImages([]);
-          setImagePreviews([]);
-        }
-        setErrors({});
-        setSaving(false);
+        setTitle('');
+        setDescription('');
+        setCategoryId(null);
+        setSubServiceId(null);
+        setImages([]);
+        setImagePreviews([]);
       }
+      setErrors({});
+      setSaving(false);
+    }
   }, [visible, editingPortfolio]);
 
   // ─── انتخاب فایل ───
@@ -107,26 +107,25 @@ export default function PortfolioFormSheet({
   };
 
   // ─── اعتبارسنجی ───
- const validate = () => {
-  const newErrors = {};
-  if (!title.trim()) newErrors.title = 'عنوان نمونه‌کار الزامی است';
-  else if (title.trim().length < 3) newErrors.title = 'عنوان باید حداقل ۳ کاراکتر باشد';
-  if (!categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
-  if (!subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
+  const validate = () => {
+    const newErrors = {};
+    if (!title.trim()) newErrors.title = 'عنوان نمونه‌کار الزامی است';
+    else if (title.trim().length < 3) newErrors.title = 'عنوان باید حداقل ۳ کاراکتر باشد';
+    if (!categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
+    if (!subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
 
-  // ✅ در حالت ویرایش، اگر تصویر جدید آپلود نشده، تصاویر قبلی حفظ می‌شوند
-  if (!isEditMode && images.length === 0) {
-    newErrors.images = 'حداقل یک تصویر آپلود کنید';
-  }
+    // ✅ در حالت ویرایش، اگر تصویر جدید آپلود نشده، تصاویر قبلی حفظ می‌شوند
+    if (!isEditMode && images.length === 0) {
+      newErrors.images = 'حداقل یک تصویر آپلود کنید';
+    }
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-
-// ═══ بخش handleSave را جایگزین کنید ═══
-const handleSave = () => {
-  if (!validate()) return;
+  // ═══ بخش handleSave را جایگزین کنید ═══
+  const handleSave = () => {
+    if (!validate()) return;
     setSaving(true);
 
     const formData = new FormData();
@@ -146,7 +145,7 @@ const handleSave = () => {
     }
 
     onSave(formData, editingPortfolio?.id);
-  };  
+  };
   // ─── Cleanup previews ───
   useEffect(() => {
     return () => {

@@ -35,12 +35,12 @@ transition-all hover:scale-[1.01] active:scale-[0.99] text-right"
         <div className="flex items-center gap-2">
           <CostTypeBadge type={request.costType} variant="compact" />
           <div className="flex-1" />
-            <Badge
-              label={isActive ? 'فعال' : 'غیرفعال'}
-              variant={isActive ? 'success' : 'error'}
-              size="sm"
-            />
-          </div>
+          <Badge
+            label={isActive ? 'فعال' : 'غیرفعال'}
+            variant={isActive ? 'success' : 'error'}
+            size="sm"
+          />
+        </div>
       </div>
 
       {/* فلش */}

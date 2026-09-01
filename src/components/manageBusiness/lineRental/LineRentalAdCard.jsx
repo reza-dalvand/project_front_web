@@ -8,7 +8,7 @@ import Badge from '@/components/common/Badge';
 export default function LineRentalAdCard({ ad, onPress }) {
   const { colors } = useTheme();
 
-  const isActive = ad.isActive !== false; 
+  const isActive = ad.isActive !== false;
 
   return (
     <button

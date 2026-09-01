@@ -115,17 +115,17 @@ export default function HomePage() {
         }
 
         if (catRes.status === 'fulfilled') {
-            const cats = catRes.value.data || [];
-            setCategories(
-                cats.map((c) => ({
-                    id: String(c.id),
-                    name: c.name || c.title,
-                    icon: c.iconName || c.icon_name || 'default',
-                    gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
-                    gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
-                    count: c.count || 0,
-                }))
-            );
+          const cats = catRes.value.data || [];
+          setCategories(
+            cats.map((c) => ({
+              id: String(c.id),
+              name: c.name || c.title,
+              icon: c.iconName || c.icon_name || 'default',
+              gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
+              gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
+              count: c.count || 0,
+            }))
+          );
         }
 
         if (modelRes.status === 'fulfilled') {
@@ -424,11 +424,7 @@ export default function HomePage() {
             />
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
               {lineRentals.map((rental) => (
-                <LineRentalCard
-                  key={rental.id}
-                  rental={rental}
-                  onPress={handleLineRentalPress}
-                />
+                <LineRentalCard key={rental.id} rental={rental} onPress={handleLineRentalPress} />
               ))}
             </div>
           </section>

@@ -38,12 +38,12 @@ export default function ManagePortfolioPage() {
     setIsLoading(true);
     try {
       // ✅ استفاده از getMyPortfolios برای دریافت نمونه‌کارهای همین کسب‌وکار
-      const result = await portfoliosService.getMyPortfolios(); 
+      const result = await portfoliosService.getMyPortfolios();
       let items = result.data || [];
-      
+
       // ✅ شافل کردن آرایه برای نمایش رندوم
       items = items.sort(() => Math.random() - 0.5);
-      
+
       setPortfolios(items); // ✅ اصلاح نام state
     } catch (error) {
       console.error('Failed to fetch portfolios:', error);

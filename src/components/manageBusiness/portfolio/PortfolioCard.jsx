@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { FiEdit2, FiTrash2, FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
 export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, priority }) {
   const { colors } = useTheme();

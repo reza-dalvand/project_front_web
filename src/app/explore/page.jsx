@@ -54,114 +54,104 @@ export default function ExplorePage() {
    * ✅ FIX: دریافت داده از /portfolios/ (نمونه‌کارها)
    * و نگاشت به فرمت مورد انتظار کامپوننت‌های ویترین
    */
-  const fetchPortfolios = useCallback(async (pageNum = 1, append = false) => {
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
+  const fetchPortfolios = useCallback(
+    async (pageNum = 1, append = false) => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
 
-    if (pageNum === 1) setIsLoading(true);
-    else setIsLoadingMore(true);
+      if (pageNum === 1) setIsLoading(true);
+      else setIsLoadingMore(true);
 
-    try {
-      const params = {
-        page: pageNum,
-        page_size: PAGE_SIZE,
-      };
+      try {
+        const params = {
+          page: pageNum,
+          page_size: PAGE_SIZE,
+        };
 
-      // ✅ فیلتر دسته‌بندی
-      if (filters.mainCategory && filters.mainCategory !== 'all') {
-        params.category_id = filters.mainCategory;
+        // ✅ فیلتر دسته‌بندی
+        if (filters.mainCategory && filters.mainCategory !== 'all') {
+          params.category_id = filters.mainCategory;
+        }
+
+        const result = await exploreService.getPortfolios(params);
+
+        // ✅ نگاشت نمونه‌کار به فرمت ویترین
+        // نمونه‌کار: { id, title, description, cover_image, images,
+        //               business, business_name, business_logo,
+        //               category, category_name, sub_service, ... }
+        const mappedData = (result.data || []).map((portfolio) => ({
+          // شناسه‌ها
+          id: portfolio.id,
+          type: 'portfolio',
+
+          // محتوای نمونه‌کار
+          caption: portfolio.title || 'نمونه‌کار',
+          description: portfolio.description || '',
+
+          // تصاویر — کاور + تصاویر گالری
+          coverImage: portfolio.coverImageUrl || portfolio.cover_image_url || null,
+          images: (portfolio.images || []).map(
+            (img) => img.image_url || img.imageUrl || img.image || img
+          ),
+
+          // اطلاعات کسب‌وکار (برای نمایش در مودال)
+          businessId: portfolio.business || portfolio.businessId,
+          businessName:
+            portfolio.businessName || portfolio.business_name || portfolio.business?.name || '',
+          businessLogo:
+            portfolio.businessLogo || portfolio.business_logo || portfolio.business?.logo || null,
+          businessBookingSlug:
+            portfolio.businessBookingSlug || portfolio.business_booking_slug || '',
+
+          // دسته‌بندی
+          mainCategory: portfolio.category || portfolio.categoryId || null,
+          mainCategoryName:
+            portfolio.categoryName || portfolio.category_name || portfolio.category?.name || '',
+          subCategory: portfolio.subService || portfolio.sub_service || null,
+          subCategoryName:
+            portfolio.subServiceName ||
+            portfolio.sub_service_name ||
+            portfolio.sub_service?.name ||
+            '',
+
+          // منبع — همیشه 'business' چون نمونه‌کار است
+          source: 'business',
+
+          // تاریخ ایجاد
+          createdAt: portfolio.createdAt || portfolio.created_at || '',
+        }));
+
+        // ✅ شافل رندوم
+        const shuffled = shuffleArray(mappedData);
+
+        if (append) {
+          setAllPosts((prev) => [...prev, ...shuffled]);
+        } else {
+          setAllPosts(shuffled);
+        }
+
+        // Pagination meta
+        const pagination = result.meta || result.pagination || {};
+        const total = pagination.count || totalCount;
+        setTotalCount(total);
+
+        const hasNext =
+          pagination.hasNext !== undefined ? pagination.hasNext : pageNum * PAGE_SIZE < total;
+        setHasMore(hasNext);
+        setPage(pageNum);
+      } catch (error) {
+        console.error('Failed to fetch portfolios:', error);
+        if (!append) {
+          setAllPosts([]);
+        }
+      } finally {
+        isFetchingRef.current = false;
+        setIsLoading(false);
+        setIsLoadingMore(false);
       }
-
-      const result = await exploreService.getPortfolios(params);
-
-      // ✅ نگاشت نمونه‌کار به فرمت ویترین
-      // نمونه‌کار: { id, title, description, cover_image, images,
-      //               business, business_name, business_logo,
-      //               category, category_name, sub_service, ... }
-      const mappedData = (result.data || []).map((portfolio) => ({
-        // شناسه‌ها
-        id: portfolio.id,
-        type: 'portfolio',
-
-        // محتوای نمونه‌کار
-        caption: portfolio.title || 'نمونه‌کار',
-        description: portfolio.description || '',
-
-        // تصاویر — کاور + تصاویر گالری
-        coverImage: portfolio.coverImageUrl || portfolio.cover_image_url || null,
-        images: (portfolio.images || []).map(
-          (img) => img.image_url || img.imageUrl || img.image || img
-        ),
-
-        // اطلاعات کسب‌وکار (برای نمایش در مودال)
-        businessId: portfolio.business || portfolio.businessId,
-        businessName:
-          portfolio.businessName ||
-          portfolio.business_name ||
-          portfolio.business?.name ||
-          '',
-        businessLogo:
-          portfolio.businessLogo ||
-          portfolio.business_logo ||
-          portfolio.business?.logo ||
-          null,
-        businessBookingSlug:
-          portfolio.businessBookingSlug ||
-          portfolio.business_booking_slug ||
-          '',
-
-        // دسته‌بندی
-        mainCategory: portfolio.category || portfolio.categoryId || null,
-        mainCategoryName:
-          portfolio.categoryName ||
-          portfolio.category_name ||
-          portfolio.category?.name ||
-          '',
-        subCategory: portfolio.subService || portfolio.sub_service || null,
-        subCategoryName:
-          portfolio.subServiceName ||
-          portfolio.sub_service_name ||
-          portfolio.sub_service?.name ||
-          '',
-
-        // منبع — همیشه 'business' چون نمونه‌کار است
-        source: 'business',
-
-        // تاریخ ایجاد
-        createdAt: portfolio.createdAt || portfolio.created_at || '',
-      }));
-
-      // ✅ شافل رندوم
-      const shuffled = shuffleArray(mappedData);
-
-      if (append) {
-        setAllPosts((prev) => [...prev, ...shuffled]);
-      } else {
-        setAllPosts(shuffled);
-      }
-
-      // Pagination meta
-      const pagination = result.meta || result.pagination || {};
-      const total = pagination.count || totalCount;
-      setTotalCount(total);
-
-      const hasNext =
-        pagination.hasNext !== undefined
-          ? pagination.hasNext
-          : pageNum * PAGE_SIZE < total;
-      setHasMore(hasNext);
-      setPage(pageNum);
-    } catch (error) {
-      console.error('Failed to fetch portfolios:', error);
-      if (!append) {
-        setAllPosts([]);
-      }
-    } finally {
-      isFetchingRef.current = false;
-      setIsLoading(false);
-      setIsLoadingMore(false);
-    }
-  }, [filters.mainCategory]);
+    },
+    [filters.mainCategory]
+  );
 
   // ─── بارگذاری اولیه + تغییر فیلتر ───
   useEffect(() => {
