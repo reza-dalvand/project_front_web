@@ -85,7 +85,7 @@ export default function HomePage() {
       try {
         const [adsRes, catRes, modelRes, lineRes] = await Promise.allSettled([
           exploreService.getPosts({ page_size: 6 }),
-          categoriesService.getBusinessCategories(),
+          categoriesService.getServiceCategories(),
           adsService.getModelRequests(
             nearbyEnabled && userLocation
               ? { lat: userLocation.latitude, lng: userLocation.longitude, page_size: 6 }
@@ -115,15 +115,17 @@ export default function HomePage() {
         }
 
         if (catRes.status === 'fulfilled') {
-          const cats = catRes.value.data || [];
-          setCategories(
-            cats.map((c) => ({
-              id: String(c.id),
-              name: c.name || c.title,
-              icon: c.icon || 'face',
-              count: c.count || 0,
-            }))
-          );
+            const cats = catRes.value.data || [];
+            setCategories(
+                cats.map((c) => ({
+                    id: String(c.id),
+                    name: c.name || c.title,
+                    icon: c.iconName || c.icon_name || 'default',
+                    gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
+                    gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
+                    count: c.count || 0,
+                }))
+            );
         }
 
         if (modelRes.status === 'fulfilled') {

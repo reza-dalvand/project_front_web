@@ -90,22 +90,24 @@ export default function NearbyPage() {
         };
 
         const [catRes, bizRes, modelRes, lineRes] = await Promise.allSettled([
-          categoriesService.getBusinessCategories(),
+          categoriesService.getServiceCategories(),
           businessesService.getBusinessList(params),
           adsService.getModelRequests(params),
           adsService.getLineRentals(params),
         ]);
 
         if (catRes.status === 'fulfilled') {
-          const cats = catRes.value.data || [];
-          setCategories(
-            cats.map((c) => ({
-              id: String(c.id),
-              name: c.name || c.title,
-              icon: c.icon || 'face',
-              count: c.count || 0,
-            }))
-          );
+            const cats = catRes.value.data || [];
+            setCategories(
+                cats.map((c) => ({
+                    id: String(c.id),
+                    name: c.name || c.title,
+                    icon: c.iconName || c.icon_name || 'default',
+                    gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
+                    gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
+                    count: c.count || 0,
+                }))
+            );
         }
 
         if (bizRes.status === 'fulfilled') {
