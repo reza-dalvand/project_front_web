@@ -76,7 +76,7 @@ export default function ExplorePage() {
         Object.assign(params, locationParams);
 
         const result = await exploreService.getPortfolios(params);
-        
+
         const mappedData = (result.data || []).map((portfolio) => ({
           id: portfolio.id,
           type: 'portfolio',
@@ -133,7 +133,14 @@ export default function ExplorePage() {
         setIsLoadingMore(false);
       }
     },
-    [filters.mainCategory, getLocationParams, globalProvinceId, globalCityId, globalLatitude, globalLongitude]
+    [
+      filters.mainCategory,
+      getLocationParams,
+      globalProvinceId,
+      globalCityId,
+      globalLatitude,
+      globalLongitude,
+    ]
   );
 
   useEffect(() => {
@@ -167,7 +174,7 @@ export default function ExplorePage() {
   const handleClearFilters = useCallback(() => {
     setFilters({ mainCategory: 'all', subCategory: 'all', source: 'all' });
   }, []);
-  
+
   const handleNavigateToBusiness = useCallback(
     (data) => {
       const slug =

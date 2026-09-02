@@ -1,14 +1,14 @@
 // src/stores/useGlobalLocationStore.js
 /**
-* 🌍 استور سراسری فیلتر موقعیت
-*
-* قوانین:
-*  - سه حالت: 'all' | 'province_city' | 'gps'
-*  - GPS اولویت دارد → استان/شهر غیرفعال
-*  - خطای GPS → بازگشت به آخرین استان/شهر ذخیره‌شده
-*  - بدون فیلتر → نمایش همه محتوا
-*  - ذخیره در localStorage (مداوم)
-*/
+ * 🌍 استور سراسری فیلتر موقعیت
+ *
+ * قوانین:
+ *  - سه حالت: 'all' | 'province_city' | 'gps'
+ *  - GPS اولویت دارد → استان/شهر غیرفعال
+ *  - خطای GPS → بازگشت به آخرین استان/شهر ذخیره‌شده
+ *  - بدون فیلتر → نمایش همه محتوا
+ *  - ذخیره در localStorage (مداوم)
+ */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 

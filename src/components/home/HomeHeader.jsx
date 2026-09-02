@@ -6,7 +6,6 @@ import SearchBar from '@/components/common/SearchBar';
 import Avatar from '@/components/common/Avatar';
 import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
-
 export default function HomeHeader({
   userName,
   userAvatar,
@@ -79,7 +78,9 @@ export default function HomeHeader({
               onClick={onFilterPress}
               className="w-[42px] h-[42px] rounded-[14px] flex items-center justify-center border relative transition-colors"
               style={{
-                backgroundColor: hasActiveLocationFilter ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.18)',
+                backgroundColor: hasActiveLocationFilter
+                  ? 'rgba(255,255,255,0.32)'
+                  : 'rgba(255,255,255,0.18)',
                 borderColor: 'rgba(255,255,255,0.1)',
               }}
             >

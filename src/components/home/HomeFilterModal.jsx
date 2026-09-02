@@ -128,9 +128,7 @@ export default function HomeFilterModal({ visible, onClose }) {
               موقعیت مکانی من (GPS)
             </span>
             <span className="text-xs" style={{ color: colors.textSecondary }}>
-              {gpsIsActive
-                ? 'فعال — نزدیک‌ترین‌ها نمایش داده می‌شوند'
-                : 'بر اساس موقعیت فعلی شما'}
+              {gpsIsActive ? 'فعال — نزدیک‌ترین‌ها نمایش داده می‌شوند' : 'بر اساس موقعیت فعلی شما'}
             </span>
           </div>
           {/* سوئیچ */}
@@ -158,8 +156,8 @@ export default function HomeFilterModal({ visible, onClose }) {
           >
             <span className="text-sm flex-shrink-0">💡</span>
             <p className="text-xs leading-5" style={{ color: colors.textSecondary }}>
-              فیلتر موقعیت مکانی فعال است. فیلتر استان/شهر موقتاً غیرفعال شده و پس از
-              غیرفعال‌سازی GPS، آخرین انتخاب شما بازیابی می‌شود.
+              فیلتر موقعیت مکانی فعال است. فیلتر استان/شهر موقتاً غیرفعال شده و پس از غیرفعال‌سازی
+              GPS، آخرین انتخاب شما بازیابی می‌شود.
             </p>
           </div>
         )}

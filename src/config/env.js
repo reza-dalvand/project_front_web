@@ -37,8 +37,7 @@ const getPlatformApiUrl = (defaultUrl) => {
 
   // اگر در محیط اندروید/امولاتور هستیم، آدرس را به‌صورت پویا تنظیم کن
   const isAndroidEmulator =
-    typeof window !== 'undefined' &&
-    window.location?.hostname === '10.0.2.2';
+    typeof window !== 'undefined' && window.location?.hostname === '10.0.2.2';
 
   if (isAndroidEmulator) {
     return defaultUrl.replace('127.0.0.1', '10.0.2.2');

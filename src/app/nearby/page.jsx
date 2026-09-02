@@ -20,7 +20,6 @@ import NearbyLineRentalsSection from '@/components/nearby/NearbyLineRentalsSecti
 import LocationInfoBar from '@/components/nearby/LocationInfoBar';
 import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
-
 // ✅ API Services
 import { businessesService, categoriesService, adsService } from '@/api';
 
@@ -81,24 +80,24 @@ export default function NearbyPage() {
   useEffect(() => {
     if (!userLocation) return;
     const fetchData = async () => {
-        setIsLoading(true);
-        try {
-            // ✅ FIX: صفحه نزدیک همیشه بر اساس موقعیت واقعی کاربر کار می‌کند
-            // فیلتر استان/شهر سراسری اینجا اعمال نمی‌شود
-            // چون هدف صفحه "نزدیک‌ترین‌ها" ذاتاً فاصله‌محور است
-            const params = {
-                lat: userLocation.latitude,
-                lng: userLocation.longitude,
-                radius: 10,
-                page_size: 30,
-            };
+      setIsLoading(true);
+      try {
+        // ✅ FIX: صفحه نزدیک همیشه بر اساس موقعیت واقعی کاربر کار می‌کند
+        // فیلتر استان/شهر سراسری اینجا اعمال نمی‌شود
+        // چون هدف صفحه "نزدیک‌ترین‌ها" ذاتاً فاصله‌محور است
+        const params = {
+          lat: userLocation.latitude,
+          lng: userLocation.longitude,
+          radius: 10,
+          page_size: 30,
+        };
 
-            const [catRes, bizRes, modelRes, lineRes] = await Promise.allSettled([
-                categoriesService.getServiceCategories(),
-                businessesService.getBusinessList(params),
-                adsService.getModelRequests(params),
-                adsService.getLineRentals(params),
-            ]);
+        const [catRes, bizRes, modelRes, lineRes] = await Promise.allSettled([
+          categoriesService.getServiceCategories(),
+          businessesService.getBusinessList(params),
+          adsService.getModelRequests(params),
+          adsService.getLineRentals(params),
+        ]);
 
         if (catRes.status === 'fulfilled') {
           const cats = catRes.value.data || [];

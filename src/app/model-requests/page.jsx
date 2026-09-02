@@ -24,17 +24,17 @@ export default function ModelRequestsPage() {
   const { provinceId, cityId, latitude, longitude } = useGlobalLocationStore();
 
   useEffect(() => {
-  const fetchRequests = async () => {
-    setIsLoading(true);
-    try {
-      const locationParams = getLocationParams();
-      const params = { ...locationParams };
-      if (nearbyEnabled && userLocation && !locationParams.lat) {
-        params.lat = userLocation.latitude;
-        params.lng = userLocation.longitude;
-        params.radius = 10;
-      }
-      const result = await adsService.getModelRequests(params);
+    const fetchRequests = async () => {
+      setIsLoading(true);
+      try {
+        const locationParams = getLocationParams();
+        const params = { ...locationParams };
+        if (nearbyEnabled && userLocation && !locationParams.lat) {
+          params.lat = userLocation.latitude;
+          params.lng = userLocation.longitude;
+          params.radius = 10;
+        }
+        const result = await adsService.getModelRequests(params);
         setRequests(result.data || []);
       } catch (error) {
         console.error('Failed to fetch model requests:', error);
