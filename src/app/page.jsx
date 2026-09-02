@@ -1,5 +1,6 @@
 // src/app/page.jsx
 'use client';
+
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -7,7 +8,6 @@ import { FiGrid, FiUser, FiStar, FiAward } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import { useReviewStore } from '@/stores/useReviewStore';
-import { useNearbyStore } from '@/stores/useNearbyStore';
 import { SectionHeader, BottomTabBar } from '@/components/common';
 import HomeHeader from '@/components/home/HomeHeader';
 import AdSlider from '@/components/home/AdSlider';
@@ -45,21 +45,20 @@ export default function HomePage() {
   const { pendingReviews, addPendingReview } = useReviewStore();
   const isDark = resolvedTheme === 'dark';
 
-  // ═══════ Nearby States ═══════
-  const nearbyEnabled = useNearbyStore((s) => s.enabled);
-  const nearbyLoading = useNearbyStore((s) => s.loading);
-  const nearbyDenied = useNearbyStore((s) => s.denied);
-  const userLocation = useNearbyStore((s) => s.userLocation);
-  const maxDistanceKm = useNearbyStore((s) => s.maxDistanceKm);
-  const enableNearby = useNearbyStore((s) => s.enable);
-  const disableNearby = useNearbyStore((s) => s.disable);
-  const setNearbyLoading = useNearbyStore((s) => s.setLoading);
-  const setNearbyDenied = useNearbyStore((s) => s.setDenied);
+  // ═══════ ✅ تغییر: استفاده از useGlobalLocationStore به جای useNearbyStore ═══════
+  const gpsEnabled = useGlobalLocationStore((s) => s.gpsEnabled);
+  const gpsLoading = useGlobalLocationStore((s) => s.gpsLoading);
+  const enableGps = useGlobalLocationStore((s) => s.enableGps);
+  const disableGps = useGlobalLocationStore((s) => s.disableGps);
+  const handleGpsError = useGlobalLocationStore((s) => s.handleGpsError);
+  const setGpsLoading = useGlobalLocationStore((s) => s.setGpsLoading);
+  const globalLatitude = useGlobalLocationStore((s) => s.latitude);
+  const globalLongitude = useGlobalLocationStore((s) => s.longitude);
+
   const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
   const globalProvinceId = useGlobalLocationStore((s) => s.provinceId);
   const globalCityId = useGlobalLocationStore((s) => s.cityId);
-  const globalLatitude = useGlobalLocationStore((s) => s.latitude);
-  const globalLongitude = useGlobalLocationStore((s) => s.longitude);
+
   // ─── State‌ها ───
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -68,7 +67,6 @@ export default function HomePage() {
   const [filters, setFilters] = useState({});
   const [reviewVisible, setReviewVisible] = useState(false);
   const [currentReviewAppointment, setCurrentReviewAppointment] = useState(null);
-
   const [ads, setAds] = useState([]);
   const [categories, setCategories] = useState([]);
   const [lineRentals, setLineRentals] = useState([]);
@@ -80,13 +78,11 @@ export default function HomePage() {
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
-        // ✅ FIX: حذف فراخوانی تکراری — فقط ۳ درخواست
         const [adsRes, catRes, lineRes] = await Promise.allSettled([
           exploreService.getPosts({ page_size: 6, ...getLocationParams() }),
           categoriesService.getServiceCategories(),
           adsService.getLineRentals({ page_size: 6, ...getLocationParams() }),
         ]);
-
         if (adsRes.status === 'fulfilled') {
           const posts = adsRes.value.data || [];
           setAds(
@@ -101,7 +97,6 @@ export default function HomePage() {
             }))
           );
         }
-
         if (catRes.status === 'fulfilled') {
           const cats = catRes.value.data || [];
           setCategories(
@@ -115,7 +110,6 @@ export default function HomePage() {
             }))
           );
         }
-
         if (lineRes.status === 'fulfilled') {
           setLineRentals(lineRes.value.data || []);
         }
@@ -125,16 +119,8 @@ export default function HomePage() {
         setIsLoading(false);
       }
     };
-
     fetchAllData();
-  }, [
-    nearbyEnabled,
-    userLocation,
-    globalProvinceId,
-    globalCityId,
-    globalLatitude,
-    globalLongitude,
-  ]);
+  }, [gpsEnabled, globalLatitude, globalLongitude, globalProvinceId, globalCityId]);
 
   // ═══════ دریافت نوبت‌های گذشته برای نظردهی ═══════
   useEffect(() => {
@@ -169,56 +155,44 @@ export default function HomePage() {
     });
   }, [doneAppointments, addPendingReview]);
 
-  // ═══════ Nearby Toggle Handler ═══════
+  // ═══════ ✅ تغییر: NearbyToggle دقیقاً مثل GPS در HomeFilterModal ═══════
   const handleNearbyToggle = useCallback(async () => {
-    if (nearbyEnabled) {
-      disableNearby();
-      showToast('نمایش نزدیک‌ترین‌ها غیرفعال شد', 'info');
+    if (gpsEnabled) {
+      disableGps();
+      showToast('فیلتر موقعیت مکانی غیرفعال شد', 'info');
       return;
     }
-    if (nearbyDenied) {
-      showToast('دسترسی به موقعیت مکانی رد شده است. از تنظیمات گوشی اجازه دهید.', 'error');
-      return;
-    }
-    setNearbyLoading(true);
-    try {
-      const location = await getCurrentLocation();
-      enableNearby(location);
-      showToast('نمایش نزدیک‌ترین‌ها فعال شد', 'success');
-    } catch (err) {
-      setNearbyLoading(false);
-      if (err.code === 1) {
-        setNearbyDenied(true);
-        showToast('دسترسی به موقعیت مکانی رد شد. از تنظیمات اجازه دهید.', 'error');
-      } else if (err.code === 2) {
-        showToast('موقعیت مکانی در دسترس نیست. GPS را روشن کنید.', 'warning');
-      } else if (err.code === 3) {
-        showToast('دریافت موقعیت طول کشید. دوباره تلاش کنید.', 'warning');
-      } else {
-        showToast('خطا در دریافت موقعیت مکانی', 'error');
-      }
-    }
-  }, [
-    nearbyEnabled,
-    nearbyDenied,
-    showToast,
-    enableNearby,
-    disableNearby,
-    setNearbyLoading,
-    setNearbyDenied,
-  ]);
 
-  // ═══════ فیلتر اجاره لاین بر اساس فاصله ═══════
+    setGpsLoading(true);
+    try {
+      const loc = await getCurrentLocation();
+      enableGps(loc.latitude, loc.longitude);
+      showToast('موقعیت مکانی شما فعال شد', 'success');
+    } catch (err) {
+      handleGpsError();
+      if (err.code === 1) {
+        showToast('دسترسی به موقعیت رد شد. از تنظیمات اجازه دهید.', 'error');
+      } else if (err.code === 2) {
+        showToast('GPS در دسترس نیست. روشن کنید.', 'warning');
+      } else {
+        showToast('خطا در دریافت موقعیت', 'error');
+      }
+    } finally {
+      setGpsLoading(false);
+    }
+  }, [gpsEnabled, disableGps, setGpsLoading, enableGps, handleGpsError, showToast]);
+
+  // ═══════ ✅ تغییر: فیلتر اجاره لاین بر اساس استور گلوبال ═══════
   const filteredLineRentals = useMemo(() => {
-    if (!nearbyEnabled || !userLocation) return lineRentals;
+    if (!gpsEnabled || !globalLatitude || !globalLongitude) return lineRentals;
     return lineRentals.filter((ad) => {
       const lat = ad.latitude || ad.lat;
       const lng = ad.longitude || ad.lng;
       if (!lat || !lng) return false;
-      const dist = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
-      return dist <= maxDistanceKm;
+      const dist = calculateDistance(globalLatitude, globalLongitude, lat, lng);
+      return dist <= 10;
     });
-  }, [nearbyEnabled, userLocation, lineRentals, maxDistanceKm]);
+  }, [gpsEnabled, globalLatitude, globalLongitude, lineRentals]);
 
   // ═══════ hasActiveFilter ═══════
   const hasActiveFilter = useMemo(
@@ -231,7 +205,6 @@ export default function HomePage() {
     () => setTheme(isDark ? 'light' : 'dark'),
     [isDark, setTheme]
   );
-
   const handleAdPress = useCallback(
     (ad) => {
       const slug = ad.businessSlug || ad.businessId;
@@ -239,7 +212,6 @@ export default function HomePage() {
     },
     [router]
   );
-
   const handleCategorySelect = useCallback(
     (item) => {
       setSelectedCategory(item.id);
@@ -247,17 +219,14 @@ export default function HomePage() {
     },
     [router]
   );
-
   const handleLineRentalPress = useCallback(
     (ad) => router.push(`/line-rentals/detail?id=${ad.id}`),
     [router]
   );
-
   const handleReviewClose = useCallback(() => {
     setReviewVisible(false);
     setCurrentReviewAppointment(null);
   }, []);
-
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
   const handleClearAllFilters = useCallback(() => setFilters({}), []);
 
@@ -326,12 +295,11 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* ─── 📍 دکمه نزدیک‌ترین‌ها ─── */}
+        {/* ─── 📍 دکمه نزدیک‌ترین‌ها — ✅ تغییر: از استور گلوبال ═══ */}
         <section>
           <NearbyToggle
-            nearbyEnabled={nearbyEnabled}
-            nearbyLoading={nearbyLoading}
-            maxDistanceKm={maxDistanceKm}
+            nearbyEnabled={gpsEnabled}
+            nearbyLoading={gpsLoading}
             onToggle={handleNearbyToggle}
           />
         </section>
