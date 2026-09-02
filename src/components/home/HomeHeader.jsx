@@ -4,6 +4,8 @@ import { FiFilter, FiMoon, FiSun } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import SearchBar from '@/components/common/SearchBar';
 import Avatar from '@/components/common/Avatar';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
+
 
 export default function HomeHeader({
   userName,
@@ -18,6 +20,8 @@ export default function HomeHeader({
   onSearchClick,
 }) {
   const { colors } = useTheme();
+  const hasActiveLocationFilter = useGlobalLocationStore((s) => s.hasActiveLocationFilter());
+  const getLocationLabel = useGlobalLocationStore((s) => s.getLocationLabel);
 
   return (
     <div
@@ -75,20 +79,15 @@ export default function HomeHeader({
               onClick={onFilterPress}
               className="w-[42px] h-[42px] rounded-[14px] flex items-center justify-center border relative transition-colors"
               style={{
-                backgroundColor: hasActiveFilter
-                  ? 'rgba(255,255,255,0.32)'
-                  : 'rgba(255,255,255,0.18)',
+                backgroundColor: hasActiveLocationFilter ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.18)',
                 borderColor: 'rgba(255,255,255,0.1)',
               }}
             >
               <FiFilter size={22} color="#fff" />
-              {hasActiveFilter && (
+              {hasActiveLocationFilter && (
                 <div
-                  className="absolute top-2 right-2 w-2 h-2 rounded-full border-[1.5px]"
-                  style={{
-                    backgroundColor: '#FFD700',
-                    borderColor: colors.primary,
-                  }}
+                  className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full border-2"
+                  style={{ backgroundColor: '#4CAF50', borderColor: colors.primary }}
                 />
               )}
             </button>

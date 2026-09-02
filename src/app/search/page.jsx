@@ -3,13 +3,14 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FiArrowRight, FiSearch, FiX, FiMapPin, FiStar } from 'react-icons/fi';
+import { FiArrowRight, FiSearch, FiX, FiStar } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { searchService } from '@/api';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
 const TAB_OPTIONS = [
   { id: 'all', label: 'همه' },
@@ -25,7 +26,12 @@ export default function SearchPage() {
   const [searchResults, setSearchResults] = useState({ businesses: [], services: [], total: 0 });
   const [isLoading, setIsLoading] = useState(false);
   const [searchHistory, setSearchHistory] = useState([]);
-
+  const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
+  const globalProvinceId = useGlobalLocationStore((s) => s.provinceId);
+  const globalCityId = useGlobalLocationStore((s) => s.cityId);
+  const globalLatitude = useGlobalLocationStore((s) => s.latitude);
+  const globalLongitude = useGlobalLocationStore((s) => s.longitude);
+  
   useEffect(() => {
     const fetchHistory = async () => {
       try {
@@ -38,43 +44,42 @@ export default function SearchPage() {
     fetchHistory();
   }, []);
 
-  // ✅ FIX (فاز ۴): cancelled flag + cleanup timer
-  // جلوگیری از setState بعد از unmount و race condition
-  useEffect(() => {
+useEffect(() => {
     if (searchQuery.trim().length < 2) {
-      setSearchResults({ businesses: [], services: [], total: 0 });
-      return;
+        setSearchResults({ businesses: [], services: [], total: 0 });
+        return;
     }
 
     let cancelled = false;
-
     const timer = setTimeout(async () => {
-      setIsLoading(true);
-      try {
-        const result = await searchService.search(searchQuery, activeTab, 20);
-        if (!cancelled) {
-          setSearchResults({
-            businesses: result.data.businesses || [],
-            services: result.data.services || [],
-            total: result.data.total || 0,
-          });
+        setIsLoading(true);
+        try {
+            const locationParams = getLocationParams();
+            const result = await searchService.search(searchQuery, activeTab, 20, locationParams);
+            if (!cancelled) {
+                setSearchResults({
+                    businesses: result.data.businesses || [],
+                    services: result.data.services || [],
+                    total: result.data.total || 0,
+                });
+            }
+        } catch (error) {
+            if (!cancelled) {
+                console.error('Search failed:', error);
+            }
+        } finally {
+            if (!cancelled) {
+                setIsLoading(false);
+            }
         }
-      } catch (error) {
-        if (!cancelled) {
-          console.error('Search failed:', error);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
     }, 300);
 
     return () => {
-      cancelled = true;
-      clearTimeout(timer);
+        cancelled = true;
+        clearTimeout(timer);
     };
-  }, [searchQuery, activeTab]);
+}, [searchQuery, activeTab, globalProvinceId, globalCityId, globalLatitude, globalLongitude]);
+// ✅ FIX: وابستگی به مقادیر فیلتر سراسری به جای رفرنس تابع
 
   const filteredResults = useMemo(() => {
     if (activeTab === 'all') return searchResults;

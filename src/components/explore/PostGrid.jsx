@@ -63,8 +63,8 @@ export default function PostGrid({
         icon="🖼️"
         title="نتیجه‌ای یافت نشد"
         description="فیلترهای خود را تغییر دهید"
-        actionLabel={onClearFilters ? 'حذف فیلترها' : null}
-        onAction={onClearFilters}
+        // actionLabel={onClearFilters ? 'حذف فیلترها' : null}
+        // onAction={onClearFilters}
       />
     );
   }

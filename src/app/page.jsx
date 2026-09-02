@@ -20,7 +20,7 @@ import RegisterBanner from '@/components/home/RegisterBanner';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/useToast';
 import { getCurrentLocation, calculateDistance } from '@/utils/geo-utils';
-// ✅ API Services
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 import { adsService, categoriesService, exploreService, appointmentsService } from '@/api';
 
 // ✅ Lazy Load
@@ -55,7 +55,11 @@ export default function HomePage() {
   const disableNearby = useNearbyStore((s) => s.disable);
   const setNearbyLoading = useNearbyStore((s) => s.setLoading);
   const setNearbyDenied = useNearbyStore((s) => s.setDenied);
-
+  const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
+  const globalProvinceId = useGlobalLocationStore((s) => s.provinceId);
+  const globalCityId = useGlobalLocationStore((s) => s.cityId);
+  const globalLatitude = useGlobalLocationStore((s) => s.latitude);
+  const globalLongitude = useGlobalLocationStore((s) => s.longitude);
   // ─── State‌ها ───
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -65,7 +69,6 @@ export default function HomePage() {
   const [reviewVisible, setReviewVisible] = useState(false);
   const [currentReviewAppointment, setCurrentReviewAppointment] = useState(null);
 
-  // ✅ State‌های داده از API — مدلینگ حذف شد
   const [ads, setAds] = useState([]);
   const [categories, setCategories] = useState([]);
   const [lineRentals, setLineRentals] = useState([]);
@@ -74,61 +77,57 @@ export default function HomePage() {
 
   // ═══════ دریافت داده‌ها از API ═══════
   useEffect(() => {
-    const fetchAllData = async () => {
-      setIsLoading(true);
-      try {
-        const [adsRes, catRes, lineRes] = await Promise.allSettled([
-          exploreService.getPosts({ page_size: 6 }),
-          categoriesService.getServiceCategories(),
-          // ✅ مدلینگ حذف شد
-          adsService.getLineRentals(
-            nearbyEnabled && userLocation
-              ? { lat: userLocation.latitude, lng: userLocation.longitude, page_size: 6 }
-              : { page_size: 6 }
-          ),
-        ]);
+      const fetchAllData = async () => {
+          setIsLoading(true);
+          try {
+              // ✅ FIX: حذف فراخوانی تکراری — فقط ۳ درخواست
+              const [adsRes, catRes, lineRes] = await Promise.allSettled([
+                  exploreService.getPosts({ page_size: 6, ...getLocationParams() }),
+                  categoriesService.getServiceCategories(),
+                  adsService.getLineRentals({ page_size: 6, ...getLocationParams() }),
+              ]);
 
-        if (adsRes.status === 'fulfilled') {
-          const posts = adsRes.value.data || [];
-          setAds(
-            posts.map((p, i) => ({
-              id: p.id || i,
-              title: p.caption || p.businessName || 'بیو کلاب',
-              subtitle: p.businessName || '',
-              imageUrl: p.gallery?.[0] || p.images?.[0] || '',
-              businessId: p.businessId || p.business_id,
-              businessSlug: p.businessBookingSlug || p.business_booking_slug,
-              badge: p.discount > 0 ? `${p.discount}%` : null,
-            }))
-          );
-        }
+              if (adsRes.status === 'fulfilled') {
+                  const posts = adsRes.value.data || [];
+                  setAds(
+                      posts.map((p, i) => ({
+                          id: p.id || i,
+                          title: p.caption || p.businessName || 'بیو کلاب',
+                          subtitle: p.businessName || '',
+                          imageUrl: p.gallery?.[0] || p.images?.[0] || '',
+                          businessId: p.businessId || p.business_id,
+                          businessSlug: p.businessBookingSlug || p.business_booking_slug,
+                          badge: p.discount > 0 ? `${p.discount}%` : null,
+                      }))
+                  );
+              }
 
-        if (catRes.status === 'fulfilled') {
-          const cats = catRes.value.data || [];
-          setCategories(
-            cats.map((c) => ({
-              id: String(c.id),
-              name: c.name || c.title,
-              icon: c.iconName || c.icon_name || 'default',
-              gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
-              gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
-              count: c.count || 0,
-            }))
-          );
-        }
+              if (catRes.status === 'fulfilled') {
+                  const cats = catRes.value.data || [];
+                  setCategories(
+                      cats.map((c) => ({
+                          id: String(c.id),
+                          name: c.name || c.title,
+                          icon: c.iconName || c.icon_name || 'default',
+                          gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
+                          gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
+                          count: c.count || 0,
+                      }))
+                  );
+              }
 
-        if (lineRes.status === 'fulfilled') {
-          setLineRentals(lineRes.value.data || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch home data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+              if (lineRes.status === 'fulfilled') {
+                  setLineRentals(lineRes.value.data || []);
+              }
+          } catch (error) {
+              console.error('Failed to fetch home data:', error);
+          } finally {
+              setIsLoading(false);
+          }
+      };
 
-    fetchAllData();
-  }, [nearbyEnabled, userLocation]);
+      fetchAllData();
+  }, [nearbyEnabled, userLocation, globalProvinceId, globalCityId, globalLatitude, globalLongitude]);
 
   // ═══════ دریافت نوبت‌های گذشته برای نظردهی ═══════
   useEffect(() => {

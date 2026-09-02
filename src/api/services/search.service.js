@@ -40,9 +40,9 @@ export const searchService = {
    *   query: string
    * }
    */
-  search: (query, category = 'all', limit = 10) => {
+  search: (query, category = 'all', limit = 10, locationParams = {}) => {
     return apiClient.get('/search/', {
-      params: { query, category, limit },
+      params: { query, category, limit, ...locationParams },
     });
   },
 

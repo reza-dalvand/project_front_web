@@ -81,7 +81,6 @@ export default function CategoryGrid({ categories = [], onSelect, selectedId }) 
       {categories.map((item) => {
         const isSelected = item.id === selectedId;
         const hasCount = (item.count || 0) > 0;
-        console.log(item.count, 'has');
 
         // دریافت آیکون و رنگ
         const iconKey = (item.icon || 'default').toLowerCase().replace(/\s+/g, '_');

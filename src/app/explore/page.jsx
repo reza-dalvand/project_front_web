@@ -7,17 +7,13 @@ import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import SectionHeader from '@/components/common/SectionHeader';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
-import EmptyState from '@/components/common/EmptyState';
 import { PostGrid, ActiveFilterChips, FilterModal, PostModal } from '@/components/explore';
-
-// ✅ FIX: خواندن از پورتفولیو نه اکسپلور
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 import { exploreService } from '@/api';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
 
-const PAGE_SIZE = 21; // ۲۱ آیتم = ۳ ستون × ۷ ردیف
+const PAGE_SIZE = 21;
 
-// ✅ تابع شافل (Fisher-Yates)
 const shuffleArray = (array) => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -41,19 +37,22 @@ export default function ExplorePage() {
   const [totalCount, setTotalCount] = useState(0);
   const [activePost, setActivePost] = useState(null);
   const [filterVisible, setFilterVisible] = useState(false);
+
   const [filters, setFilters] = useState({
     mainCategory: 'all',
     subCategory: 'all',
     source: 'all',
   });
 
-  // ─── Ref برای جلوگیری از لود همزمان ───
   const isFetchingRef = useRef(false);
 
-  /**
-   * ✅ FIX: دریافت داده از /portfolios/ (نمونه‌کارها)
-   * و نگاشت به فرمت مورد انتظار کامپوننت‌های ویترین
-   */
+  // ✅ هوک‌ها باید دقیقاً اینجا (داخل بدنه کامپوننت) تعریف شوند:
+  const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
+  const globalProvinceId = useGlobalLocationStore((s) => s.provinceId);
+  const globalCityId = useGlobalLocationStore((s) => s.cityId);
+  const globalLatitude = useGlobalLocationStore((s) => s.latitude);
+  const globalLongitude = useGlobalLocationStore((s) => s.longitude);
+
   const fetchPortfolios = useCallback(
     async (pageNum = 1, append = false) => {
       if (isFetchingRef.current) return;
@@ -68,57 +67,47 @@ export default function ExplorePage() {
           page_size: PAGE_SIZE,
         };
 
-        // ✅ فیلتر دسته‌بندی
-        if (filters.mainCategory && filters.mainCategory !== 'all') {
+        if (filters.mainCategory !== 'all') {
           params.category_id = filters.mainCategory;
         }
 
+        // استفاده از getLocationParams برای دریافت پارامترهای مکان
+        const locationParams = getLocationParams();
+        Object.assign(params, locationParams);
+
         const result = await exploreService.getPortfolios(params);
-
+        
         const mappedData = (result.data || []).map((portfolio) => ({
-            // شناسه‌ها
-            id: portfolio.id,
-            type: 'portfolio',
-
-            // محتوای نمونه‌کار
-            caption: portfolio.title || 'نمونه‌کار',
-            description: portfolio.description || '',
-
-            // تصاویر
-            coverImage: portfolio.coverImageUrl || portfolio.cover_image_url || null,
-            images: (portfolio.images || []).map(
-                (img) => img.image_url || img.imageUrl || img.image || img
-            ),
-
-            // اطلاعات کسب‌وکار
-            businessId: portfolio.business || portfolio.businessId,
-            businessName:
-                portfolio.businessName || portfolio.business_name || portfolio.business?.name || '',
-            businessLogo:
-                portfolio.businessLogo || portfolio.business_logo || portfolio.business?.logo || null,
-            // ✅ فیلد جدید: عکس صاحب کسب‌وکار
-            businessOwnerPhoto:
-                portfolio.businessOwnerPhoto || portfolio.business_owner_photo || null,
-            businessBookingSlug:
-                portfolio.businessBookingSlug || portfolio.business_booking_slug || '',
-
-            // دسته‌بندی
-            mainCategory: portfolio.category || portfolio.categoryId || null,
-            mainCategoryName:
-                portfolio.categoryName || portfolio.category_name || portfolio.category?.name || '',
-            subCategory: portfolio.subService || portfolio.sub_service || null,
-            subCategoryName:
-                portfolio.subServiceName ||
-                portfolio.sub_service_name ||
-                portfolio.sub_service?.name ||
-                '',
-
-            // منبع
-            source: 'business',
-            createdAt: portfolio.createdAt || portfolio.created_at || '',
+          id: portfolio.id,
+          type: 'portfolio',
+          caption: portfolio.title || 'نمونه‌کار',
+          description: portfolio.description || '',
+          coverImage: portfolio.coverImageUrl || portfolio.cover_image_url || null,
+          images: (portfolio.images || []).map(
+            (img) => img.image_url || img.imageUrl || img.image || img
+          ),
+          businessId: portfolio.business || portfolio.businessId,
+          businessName:
+            portfolio.businessName || portfolio.business_name || portfolio.business?.name || '',
+          businessLogo:
+            portfolio.businessLogo || portfolio.business_logo || portfolio.business?.logo || null,
+          businessOwnerPhoto:
+            portfolio.businessOwnerPhoto || portfolio.business_owner_photo || null,
+          businessBookingSlug:
+            portfolio.businessBookingSlug || portfolio.business_booking_slug || '',
+          mainCategory: portfolio.category || portfolio.categoryId || null,
+          mainCategoryName:
+            portfolio.categoryName || portfolio.category_name || portfolio.category?.name || '',
+          subCategory: portfolio.subService || portfolio.sub_service || null,
+          subCategoryName:
+            portfolio.subServiceName ||
+            portfolio.sub_service_name ||
+            portfolio.sub_service?.name ||
+            '',
+          source: 'business',
+          createdAt: portfolio.createdAt || portfolio.created_at || '',
         }));
 
-        // ✅ شافل رندوم
         const shuffled = shuffleArray(mappedData);
 
         if (append) {
@@ -127,7 +116,6 @@ export default function ExplorePage() {
           setAllPosts(shuffled);
         }
 
-        // Pagination meta
         const pagination = result.meta || result.pagination || {};
         const total = pagination.count || totalCount;
         setTotalCount(total);
@@ -138,26 +126,22 @@ export default function ExplorePage() {
         setPage(pageNum);
       } catch (error) {
         console.error('Failed to fetch portfolios:', error);
-        if (!append) {
-          setAllPosts([]);
-        }
+        if (!append) setAllPosts([]);
       } finally {
         isFetchingRef.current = false;
         setIsLoading(false);
         setIsLoadingMore(false);
       }
     },
-    [filters.mainCategory]
+    [filters.mainCategory, getLocationParams, globalProvinceId, globalCityId, globalLatitude, globalLongitude]
   );
 
-  // ─── بارگذاری اولیه + تغییر فیلتر ───
   useEffect(() => {
     setAllPosts([]);
     setPage(1);
     fetchPortfolios(1, false);
   }, [fetchPortfolios]);
 
-  // ─── فیلتر محلی (زیردسته) ───
   const filteredPosts = useMemo(() => {
     return allPosts.filter((post) => {
       if (filters.subCategory && filters.subCategory !== 'all') {
@@ -169,27 +153,21 @@ export default function ExplorePage() {
     });
   }, [allPosts, filters.subCategory]);
 
-  // ─── لود صفحه بعد ───
   const handleLoadMore = useCallback(() => {
     if (!isLoadingMore && hasMore) {
       fetchPortfolios(page + 1, true);
     }
   }, [page, isLoadingMore, hasMore, fetchPortfolios]);
 
-  // ─── هندلرها ───
   const handlePostPress = useCallback((post) => setActivePost(post), []);
   const handlePostClose = useCallback(() => setActivePost(null), []);
   const handleFilterOpen = useCallback(() => setFilterVisible(true), []);
   const handleFilterClose = useCallback(() => setFilterVisible(false), []);
-
-  const handleFilterChange = useCallback((newFilters) => {
-    setFilters(newFilters);
-  }, []);
-
+  const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
   const handleClearFilters = useCallback(() => {
     setFilters({ mainCategory: 'all', subCategory: 'all', source: 'all' });
   }, []);
-
+  
   const handleNavigateToBusiness = useCallback(
     (data) => {
       const slug =
@@ -198,16 +176,13 @@ export default function ExplorePage() {
         data?.businessId ||
         data?.business_id ||
         data;
-      if (slug) {
-        router.push(`/business?slug=${slug}`);
-      }
+      if (slug) router.push(`/business?slug=${slug}`);
     },
     [router]
   );
 
   return (
     <ScreenWrapper scrollable={false} padding={0}>
-      {/* هدر */}
       <div
         className="px-5 pt-3.5 border-b"
         style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}
@@ -229,10 +204,8 @@ export default function ExplorePage() {
         />
       </div>
 
-      {/* چیپ‌های فیلتر */}
       <ActiveFilterChips filters={filters} onChange={handleFilterChange} />
 
-      {/* گرید نمونه‌کارها */}
       <div className="flex-1 overflow-y-auto px-2 pt-2">
         <PostGrid
           posts={filteredPosts}
@@ -246,7 +219,6 @@ export default function ExplorePage() {
         />
       </div>
 
-      {/* مودال فیلتر */}
       <FilterModal
         visible={filterVisible}
         onClose={handleFilterClose}
@@ -254,7 +226,6 @@ export default function ExplorePage() {
         currentFilters={filters}
       />
 
-      {/* مودال جزئیات نمونه‌کار */}
       <PostModal
         post={activePost}
         visible={!!activePost}

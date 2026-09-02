@@ -14,8 +14,6 @@ import { useBusinessCategories, useServiceCategories } from '@/hooks/useCategory
 
 export default function FilterModal({ visible, onClose, onApply, currentFilters }) {
   const { colors } = useTheme();
-  const [province, setProvince] = useState(null);
-  const [city, setCity] = useState(null);
   const [businessType, setBusinessType] = useState(null);
   const [mainCategory, setMainCategory] = useState('all');
   const [subCategory, setSubCategory] = useState('all');
@@ -23,14 +21,12 @@ export default function FilterModal({ visible, onClose, onApply, currentFilters 
 
   // ✅ دریافت داده‌ها از بک‌اند
   const { provinces } = useProvinces();
-  const { cities } = useCities(province);
+  const { cities } = useCities();
   const { categories: businessTypes } = useBusinessCategories();
   const { categories: serviceCategories } = useServiceCategories();
 
   useEffect(() => {
     if (visible && currentFilters) {
-      setProvince(currentFilters.province);
-      setCity(currentFilters.city);
       setBusinessType(currentFilters.businessType);
       setMainCategory(currentFilters.mainCategory || 'all');
       setSubCategory(currentFilters.subCategory || 'all');
@@ -51,20 +47,16 @@ export default function FilterModal({ visible, onClose, onApply, currentFilters 
   };
 
   const handleApply = () => {
-    onApply({ province, city, businessType, mainCategory, subCategory, source });
+    onApply({ businessType, mainCategory, subCategory, source });
     onClose();
   };
 
   const handleClear = () => {
-    setProvince(null);
-    setCity(null);
     setBusinessType(null);
     setMainCategory('all');
     setSubCategory('all');
     setSource('all');
     onApply({
-      province: null,
-      city: null,
       businessType: null,
       mainCategory: 'all',
       subCategory: 'all',
@@ -161,41 +153,6 @@ export default function FilterModal({ visible, onClose, onApply, currentFilters 
             options={availableSubCategories.map((c) => ({ id: c.id, label: c.label }))}
             onSelect={setSubCategory}
             disabled={mainCategory === 'all'}
-          />
-        </div>
-
-        <Divider />
-
-        {/* بخش ۳: موقعیت مکانی */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#2196F318' }}
-            >
-              <FiMapPin size={16} color="#2196F3" />
-            </div>
-            <span className="text-sm font-bold" style={{ color: colors.textMain }}>
-              موقعیت مکانی
-            </span>
-          </div>
-          <Dropdown
-            label="استان"
-            placeholder="انتخاب استان"
-            value={province}
-            options={provinces}
-            onSelect={(val) => {
-              setProvince(val);
-              setCity(null);
-            }}
-          />
-          <Dropdown
-            label="شهر"
-            placeholder={province ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
-            value={city}
-            options={cities}
-            onSelect={setCity}
-            disabled={!province}
           />
         </div>
 

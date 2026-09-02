@@ -11,27 +11,31 @@ import { adsService } from '@/api';
 import LineRentalHeader from '@/components/lineRentals/LineRentalHeader';
 import LineRentalFilter from '@/components/lineRentals/LineRentalFilter';
 import LineRentalCard from '@/components/lineRentals/LineRentalCard';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
 export default function LineRentalsPage() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
   const nearbyEnabled = useNearbyStore((s) => s.enabled);
   const userLocation = useNearbyStore((s) => s.userLocation);
   const [rentals, setRentals] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [collabFilter, setCollabFilter] = useState('all');
+  const { provinceId, cityId, latitude, longitude } = useGlobalLocationStore();
 
   useEffect(() => {
     const fetchRentals = async () => {
       setIsLoading(true);
       try {
-        const params = {};
-        if (nearbyEnabled && userLocation) {
+        // ✅ FIX: پارامترهای موقعیت از استور سراسری
+        const locationParams = getLocationParams();
+        const params = { ...locationParams };
+        // اگر GPS فعال نبود ولی فیلتر سراسری هم نبود، از موقعیت محلی استفاده کن
+        if (nearbyEnabled && userLocation && !locationParams.lat) {
           params.lat = userLocation.latitude;
           params.lng = userLocation.longitude;
           params.radius = 10;
         }
-        // ✅ درخواست همیشه ارسال می‌شود
         const result = await adsService.getLineRentals(params);
         setRentals(result.data || []);
       } catch (error) {
@@ -42,7 +46,7 @@ export default function LineRentalsPage() {
     };
 
     fetchRentals();
-  }, [nearbyEnabled, userLocation]);
+  }, [nearbyEnabled, userLocation, provinceId, cityId, latitude, longitude]);
 
   const filteredRentals = useMemo(() => {
     if (collabFilter === 'all') return rentals;

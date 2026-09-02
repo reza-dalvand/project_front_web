@@ -11,27 +11,30 @@ import { adsService } from '@/api';
 import ModelRequestHeader from '@/components/modelRequests/ModelRequestHeader';
 import ModelRequestFilter from '@/components/modelRequests/ModelRequestFilter';
 import ModelRequestCard from '@/components/modelRequests/ModelRequestCard';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
 export default function ModelRequestsPage() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
   const nearbyEnabled = useNearbyStore((s) => s.enabled);
   const userLocation = useNearbyStore((s) => s.userLocation);
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [costFilter, setCostFilter] = useState('all');
+  const { provinceId, cityId, latitude, longitude } = useGlobalLocationStore();
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      setIsLoading(true);
-      try {
-        const params = {};
-        if (nearbyEnabled && userLocation) {
-          params.lat = userLocation.latitude;
-          params.lng = userLocation.longitude;
-          params.radius = 10;
-        }
-        const result = await adsService.getModelRequests(params);
+  const fetchRequests = async () => {
+    setIsLoading(true);
+    try {
+      const locationParams = getLocationParams();
+      const params = { ...locationParams };
+      if (nearbyEnabled && userLocation && !locationParams.lat) {
+        params.lat = userLocation.latitude;
+        params.lng = userLocation.longitude;
+        params.radius = 10;
+      }
+      const result = await adsService.getModelRequests(params);
         setRequests(result.data || []);
       } catch (error) {
         console.error('Failed to fetch model requests:', error);
@@ -40,7 +43,7 @@ export default function ModelRequestsPage() {
       }
     };
     fetchRequests();
-  }, [nearbyEnabled, userLocation]);
+  }, [nearbyEnabled, userLocation, provinceId, cityId, latitude, longitude]);
 
   const filteredRequests = useMemo(() => {
     if (costFilter === 'all') return requests;

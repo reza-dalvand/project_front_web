@@ -18,6 +18,8 @@ import NearbyBusinessList from '@/components/nearby/NearbyBusinessList';
 import NearbyModelRequestsSection from '@/components/nearby/NearbyModelRequestsSection';
 import NearbyLineRentalsSection from '@/components/nearby/NearbyLineRentalsSection';
 import LocationInfoBar from '@/components/nearby/LocationInfoBar';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
+
 
 // ✅ API Services
 import { businessesService, categoriesService, adsService } from '@/api';
@@ -30,7 +32,7 @@ const LOCATION_CACHE_TTL = 5 * 60 * 1000;
 export default function NearbyPage() {
   const router = useRouter();
   const { colors } = useTheme();
-
+  const globalLocation = useGlobalLocationStore((s) => s.getLocationParams);
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState(null);
@@ -78,23 +80,25 @@ export default function NearbyPage() {
   // ═══════ دریافت داده‌ها از API ═══════
   useEffect(() => {
     if (!userLocation) return;
-
     const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const params = {
-          lat: userLocation.latitude,
-          lng: userLocation.longitude,
-          radius: 10,
-          page_size: 30,
-        };
+        setIsLoading(true);
+        try {
+            // ✅ FIX: صفحه نزدیک همیشه بر اساس موقعیت واقعی کاربر کار می‌کند
+            // فیلتر استان/شهر سراسری اینجا اعمال نمی‌شود
+            // چون هدف صفحه "نزدیک‌ترین‌ها" ذاتاً فاصله‌محور است
+            const params = {
+                lat: userLocation.latitude,
+                lng: userLocation.longitude,
+                radius: 10,
+                page_size: 30,
+            };
 
-        const [catRes, bizRes, modelRes, lineRes] = await Promise.allSettled([
-          categoriesService.getServiceCategories(),
-          businessesService.getBusinessList(params),
-          adsService.getModelRequests(params),
-          adsService.getLineRentals(params),
-        ]);
+            const [catRes, bizRes, modelRes, lineRes] = await Promise.allSettled([
+                categoriesService.getServiceCategories(),
+                businessesService.getBusinessList(params),
+                adsService.getModelRequests(params),
+                adsService.getLineRentals(params),
+            ]);
 
         if (catRes.status === 'fulfilled') {
           const cats = catRes.value.data || [];
@@ -153,7 +157,7 @@ export default function NearbyPage() {
     };
 
     fetchData();
-  }, [userLocation]);
+  }, [userLocation, globalLocation]);
 
   const getLocationErrorMessage = (err) => {
     if (!err) return 'خطای ناشناخته در دریافت موقعیت';
