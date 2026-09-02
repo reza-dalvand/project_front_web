@@ -14,8 +14,7 @@ export default function GallerySlider({ gallery = [] }) {
   // ✅ FIX اصلی: حذف تصاویر تکراری
   // کاور معمولاً داخل images هم وجود دارد → بدون Set، تعداد غلط نشان داده می‌شود
   const images = useMemo(
-    () =>
-      [...new Set((gallery || []).filter((g) => typeof g === 'string' && g.trim() !== ''))],
+    () => [...new Set((gallery || []).filter((g) => typeof g === 'string' && g.trim() !== ''))],
     [gallery]
   );
 

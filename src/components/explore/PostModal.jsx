@@ -1,15 +1,8 @@
-
 // src/components/explore/PostModal.jsx
 
 'use client';
 
-import {
-  useEffect,
-  useState,
-  useRef,
-  useMemo,
-  useCallback,
-} from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 
 import { createPortal } from 'react-dom';
 
@@ -21,18 +14,9 @@ import PostModalHeader from './post/PostModalHeader';
 import PostBusinessInfo from './post/PostBusinessInfo';
 import PostCaptionCard from './post/PostCaptionCard';
 
-import {
-  acquireScrollLock,
-  releaseScrollLock,
-} from '@/utils/scrollLock';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-export default function PostModal({
-  post,
-  visible,
-  onClose,
-  onNavigateToProfile,
-  onBooking,
-}) {
+export default function PostModal({ post, visible, onClose, onNavigateToProfile, onBooking }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
 
@@ -99,13 +83,7 @@ export default function PostModal({
     }
 
     if (img && typeof img === 'object') {
-      return (
-        img.imageUrl ||
-        img.image_url ||
-        img.image ||
-        img.url ||
-        null
-      );
+      return img.imageUrl || img.image_url || img.image || img.url || null;
     }
 
     return null;
@@ -124,13 +102,9 @@ export default function PostModal({
     }
 
     const allImages = [
-      ...(post.coverImage
-        ? [extractUrl(post.coverImage)]
-        : []),
+      ...(post.coverImage ? [extractUrl(post.coverImage)] : []),
 
-      ...(Array.isArray(post.images)
-        ? post.images.map(extractUrl)
-        : []),
+      ...(Array.isArray(post.images) ? post.images.map(extractUrl) : []),
     ].filter(Boolean);
 
     // حذف تصاویر تکراری
@@ -144,10 +118,7 @@ export default function PostModal({
   const handleShare = useCallback(async () => {
     if (!post) return;
 
-    const shareTitle =
-      post.caption ||
-      post.title ||
-      'نمونه‌کار بیو کلاب';
+    const shareTitle = post.caption || post.title || 'نمونه‌کار بیو کلاب';
 
     const shareMessage = `🖼️ ${shareTitle}
 
@@ -156,18 +127,12 @@ export default function PostModal({
 📱 بیو کلاب | رزرو آنلاین خدمات زیبایی`;
 
     // Native Share
-    if (
-      typeof navigator !== 'undefined' &&
-      typeof navigator.share === 'function'
-    ) {
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         await navigator.share({
           title: shareTitle,
           text: shareMessage,
-          url:
-            typeof window !== 'undefined'
-              ? window.location.href
-              : undefined,
+          url: typeof window !== 'undefined' ? window.location.href : undefined,
         });
 
         return;
@@ -181,27 +146,15 @@ export default function PostModal({
 
     // Clipboard fallback
     try {
-      if (
-        typeof navigator !== 'undefined' &&
-        navigator.clipboard
-      ) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.writeText(shareMessage);
 
-        showToast(
-          'لینک و توضیحات کپی شد',
-          'success'
-        );
+        showToast('لینک و توضیحات کپی شد', 'success');
       } else {
-        showToast(
-          'امکان کپی وجود ندارد',
-          'error'
-        );
+        showToast('امکان کپی وجود ندارد', 'error');
       }
     } catch {
-      showToast(
-        'امکان کپی وجود ندارد',
-        'error'
-      );
+      showToast('امکان کپی وجود ندارد', 'error');
     }
   }, [post, showToast]);
 
@@ -249,19 +202,14 @@ export default function PostModal({
 
     // اولویت با slug
     // اگر slug نبود از businessId استفاده می‌کنیم
-    businessBookingSlug:
-      post.businessBookingSlug ||
-      post.businessId,
+    businessBookingSlug: post.businessBookingSlug || post.businessId,
   };
 
   // =========================================================
   // Caption
   // =========================================================
 
-  const caption =
-    post.description ||
-    post.caption ||
-    '';
+  const caption = post.description || post.caption || '';
 
   // =========================================================
   // Render
@@ -301,10 +249,7 @@ export default function PostModal({
             Header
         ====================================================== */}
 
-        <PostModalHeader
-          onClose={onClose}
-          onShare={handleShare}
-        />
+        <PostModalHeader onClose={onClose} onShare={handleShare} />
 
         {/* =====================================================
             Scrollable Content
@@ -340,10 +285,7 @@ export default function PostModal({
               Caption / Description
           ==================================================== */}
 
-          <PostCaptionCard
-            caption={caption}
-            isMagazine={post.source === 'magazine'}
-          />
+          <PostCaptionCard caption={caption} isMagazine={post.source === 'magazine'} />
 
           {/* ===================================================
               Safe Area
