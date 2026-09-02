@@ -199,6 +199,7 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
   const businessData = {
     businessName: post.businessName,
     businessLogo: post.businessLogo,
+    businessOwnerPhoto: post.businessOwnerPhoto,
 
     // اولویت با slug
     // اگر slug نبود از businessId استفاده می‌کنیم

@@ -75,50 +75,47 @@ export default function ExplorePage() {
 
         const result = await exploreService.getPortfolios(params);
 
-        // ✅ نگاشت نمونه‌کار به فرمت ویترین
-        // نمونه‌کار: { id, title, description, cover_image, images,
-        //               business, business_name, business_logo,
-        //               category, category_name, sub_service, ... }
         const mappedData = (result.data || []).map((portfolio) => ({
-          // شناسه‌ها
-          id: portfolio.id,
-          type: 'portfolio',
+            // شناسه‌ها
+            id: portfolio.id,
+            type: 'portfolio',
 
-          // محتوای نمونه‌کار
-          caption: portfolio.title || 'نمونه‌کار',
-          description: portfolio.description || '',
+            // محتوای نمونه‌کار
+            caption: portfolio.title || 'نمونه‌کار',
+            description: portfolio.description || '',
 
-          // تصاویر — کاور + تصاویر گالری
-          coverImage: portfolio.coverImageUrl || portfolio.cover_image_url || null,
-          images: (portfolio.images || []).map(
-            (img) => img.image_url || img.imageUrl || img.image || img
-          ),
+            // تصاویر
+            coverImage: portfolio.coverImageUrl || portfolio.cover_image_url || null,
+            images: (portfolio.images || []).map(
+                (img) => img.image_url || img.imageUrl || img.image || img
+            ),
 
-          // اطلاعات کسب‌وکار (برای نمایش در مودال)
-          businessId: portfolio.business || portfolio.businessId,
-          businessName:
-            portfolio.businessName || portfolio.business_name || portfolio.business?.name || '',
-          businessLogo:
-            portfolio.businessLogo || portfolio.business_logo || portfolio.business?.logo || null,
-          businessBookingSlug:
-            portfolio.businessBookingSlug || portfolio.business_booking_slug || '',
+            // اطلاعات کسب‌وکار
+            businessId: portfolio.business || portfolio.businessId,
+            businessName:
+                portfolio.businessName || portfolio.business_name || portfolio.business?.name || '',
+            businessLogo:
+                portfolio.businessLogo || portfolio.business_logo || portfolio.business?.logo || null,
+            // ✅ فیلد جدید: عکس صاحب کسب‌وکار
+            businessOwnerPhoto:
+                portfolio.businessOwnerPhoto || portfolio.business_owner_photo || null,
+            businessBookingSlug:
+                portfolio.businessBookingSlug || portfolio.business_booking_slug || '',
 
-          // دسته‌بندی
-          mainCategory: portfolio.category || portfolio.categoryId || null,
-          mainCategoryName:
-            portfolio.categoryName || portfolio.category_name || portfolio.category?.name || '',
-          subCategory: portfolio.subService || portfolio.sub_service || null,
-          subCategoryName:
-            portfolio.subServiceName ||
-            portfolio.sub_service_name ||
-            portfolio.sub_service?.name ||
-            '',
+            // دسته‌بندی
+            mainCategory: portfolio.category || portfolio.categoryId || null,
+            mainCategoryName:
+                portfolio.categoryName || portfolio.category_name || portfolio.category?.name || '',
+            subCategory: portfolio.subService || portfolio.sub_service || null,
+            subCategoryName:
+                portfolio.subServiceName ||
+                portfolio.sub_service_name ||
+                portfolio.sub_service?.name ||
+                '',
 
-          // منبع — همیشه 'business' چون نمونه‌کار است
-          source: 'business',
-
-          // تاریخ ایجاد
-          createdAt: portfolio.createdAt || portfolio.created_at || '',
+            // منبع
+            source: 'business',
+            createdAt: portfolio.createdAt || portfolio.created_at || '',
         }));
 
         // ✅ شافل رندوم
