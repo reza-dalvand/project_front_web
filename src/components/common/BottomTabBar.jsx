@@ -1,4 +1,3 @@
-// src/components/common/BottomTabBar.jsx
 'use client';
 import { FiHome, FiGrid, FiPlusCircle, FiCreditCard, FiUser, FiLogIn } from 'react-icons/fi';
 import { usePathname, useRouter } from 'next/navigation';
@@ -13,22 +12,25 @@ export default function BottomTabBar() {
   const { isAuthenticated, openAuthModal } = useAuth();
   const businessData = useBusinessStore((s) => s.businessData);
   const hasBusiness = Boolean(businessData?.id && businessData?.name);
+
   const tabs = isAuthenticated
     ? [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
         { id: 'explore', icon: FiGrid, label: 'ویترین', path: '/explore' },
+        { id: 'model-requests', icon: FiUser, label: 'اگهی مدل', path: '/model-requests' },
         hasBusiness
-          ? { id: 'manage', icon: FiCreditCard, label: 'مدیریت کسب‌وکار', path: '/manage' }
-          : { id: 'create', icon: FiPlusCircle, label: 'ثبت آگهی جدید', path: '/create-business' },
+          ? { id: 'manage', icon: FiCreditCard, label: 'مدیریت', path: '/manage' }
+          : { id: 'create', icon: FiPlusCircle, label: 'ثبت آگهی', path: '/create-business' },
         { id: 'profile', icon: FiUser, label: 'پروفایل', path: '/profile' },
       ]
     : [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
         { id: 'explore', icon: FiGrid, label: 'ویترین', path: '/explore' },
+        { id: 'model-requests', icon: FiUser, label: 'درخواست مدل', path: '/model-requests' },
         { id: 'login', icon: FiLogIn, label: 'ورود و ثبت‌نام', isAuthAction: true },
       ];
 
-  // ✅ FIX: تشخیص دقیق مسیر فعال
+  // تشخیص مسیر فعال
   const isActive = (tab) => {
     if (tab.isAuthAction) return false;
     if (tab.path === '/') return pathname === '/';
@@ -40,11 +42,7 @@ export default function BottomTabBar() {
       router.push('/auth/login');
       return;
     }
-
-    // ✅ FIX اصلی: اگه روی تب فعال کلیک شد، هیچ ناوبری نکن
-    // این از push های تکراری و پر شدن history stack جلوگیری می‌کنه
     if (isActive(tab)) return;
-
     router.push(tab.path);
   };
 
