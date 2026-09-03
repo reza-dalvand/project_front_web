@@ -240,13 +240,14 @@ export default function BookingModal({
     setIsSubmitting(true);
     try {
       const result = await createAppointment({
-        service_id: serviceId,
+        serviceId: serviceId, // ✅ apiClient خودش به service_id تبدیل می‌کند
         jy: selectedDate.jy,
         jm: selectedDate.jm,
         jd: selectedDate.jd,
-        // ✅ FIX ۳: پشتیبانی از هر دو فرمت
-        time_slot: selectedTime.start_time || selectedTime.time_slot || selectedTime.display_time,
-        trust_based: trustEnabled,
+        
+        timeSlot: selectedTime.startTime || selectedTime.timeSlot || selectedTime.displayTime,
+        
+        trustBased: trustEnabled,
       });
 
       if (result?.success !== false) {

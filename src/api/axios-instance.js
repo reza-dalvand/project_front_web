@@ -114,7 +114,8 @@ api.interceptors.response.use(
       const refreshToken = getRefreshToken();
 
       if (!refreshToken) {
-        throw new Error('No refresh token');
+        clearTokens();
+        return Promise.reject(error); 
       }
 
       // ✅ FIX فاز ۱: علامت‌گذاری درخواست رفرش برای جلوگیری از حلقه

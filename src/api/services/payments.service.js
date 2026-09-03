@@ -27,6 +27,11 @@ export const paymentsService = {
   getBusinessTransactions: (params = {}) => {
     return apiClient.get('/payments/business/transactions/', { params });
   },
-  // ❌ requestSettlement حذف شد — تسویه خودکار است
-  // ❌ getSettlements حذف شد — تسویه خودکار است
+
+  verifyPayment: (authority, status) => {
+    return apiClient.post('/payments/verify/', {
+        authority: authority,
+        status: status,
+    });
+  },
 };

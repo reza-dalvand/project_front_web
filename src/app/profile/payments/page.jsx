@@ -44,58 +44,63 @@ function PaymentsPageContent() {
 
   const { customerPayments, isLoading, fetchCustomerPayments } = usePaymentStore();
 
+  const authority = searchParams.get('Authority');
+  const zarinpalStatus = searchParams.get('Status'); 
+  
+  const [paymentResult, setPaymentResult] = useState(null);
+
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  // ═══ ✅ فاز ۶: خواندن Query Params از Callback پرداخت ═══
-  const callbackStatus = searchParams.get('status');
-  const callbackTrackingCode = searchParams.get('tracking_code');
-  const callbackAmount = searchParams.get('amount');
-  const callbackReason = searchParams.get('reason');
-
-  // نمایش پیام نتیجه پرداخت (یک بار)
   useEffect(() => {
-    if (!callbackStatus) return;
+      if (!authority) return;
 
-    if (callbackStatus === 'success') {
-      showToast(
-        `پرداخت ${callbackAmount ? formatPrice(parseInt(callbackAmount)) : ''} با موفقیت انجام شد ✅`,
-        'success',
-        5000
-      );
-    } else if (callbackStatus === 'failed') {
-      const reasonMessages = {
-        cancelled: 'پرداخت توسط شما لغو شد',
-        invalid_callback: 'خطا در بازگشت از درگاه پرداخت',
-        transaction_not_found: 'تراکنش مورد نظر یافت نشد',
-        VERIFY_ERROR: 'خطا در تایید تراکنش',
-        GATEWAY_ERROR: 'خطا در ارتباط با درگاه پرداخت',
+      const verify = async () => {
+          try {
+              const result = await paymentsService.verifyPayment(authority, zarinpalStatus);
+              setPaymentResult({
+                  success: true,
+                  amount: result.data.amount,
+                  tracking_code: result.data.tracking_code,
+              });
+              showToast(
+                  `پرداخت ${formatPrice(result.data.amount)} با موفقیت انجام شد ✅`,
+                  'success',
+                  5000
+              );
+          } catch (err) {
+              const code = err?.code || err?.response?.data?.error?.code;
+              const reasonMessages = {
+                  PAYMENT_FAILED: 'پرداخت توسط شما لغو شد یا ناموفق بود',
+                  TRANSACTION_NOT_FOUND: 'تراکنش مورد نظر یافت نشد',
+                  VERIFY_ERROR: 'خطا در تایید تراکنش',
+                  GATEWAY_ERROR: 'خطا در ارتباط با درگاه پرداخت',
+              };
+              const message = reasonMessages[code] || err?.message || 'پرداخت ناموفق بود';
+              
+              setPaymentResult({
+                  success: false,
+                  reason: code,
+                  tracking_code: authority,
+              });
+              showToast(message, 'error', 5000);
+          } finally {
+              // پاک کردن query params از URL بدون رفرش صفحه
+              if (typeof window !== 'undefined') {
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete('Authority');
+                  url.searchParams.delete('Status');
+                  window.history.replaceState({}, '', url.pathname);
+              }
+              // رفرش لیست تراکنش‌ها
+              fetchCustomerPayments().catch(() => {});
+          }
       };
-      const message = reasonMessages[callbackReason] || 'پرداخت ناموفق بود';
-      showToast(message, 'error', 5000);
-    }
 
-    // پاک کردن query params از URL بدون رفرش صفحه
-    // تا با رفرش مجدد، پیام تکراری نمایش داده نشود
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('status');
-      url.searchParams.delete('tracking_code');
-      url.searchParams.delete('amount');
-      url.searchParams.delete('reason');
-      window.history.replaceState({}, '', url.pathname);
-    }
-  }, [callbackStatus, callbackTrackingCode, callbackAmount, callbackReason, showToast]);
-
-  // ═══ بارگذاری اولیه ═══
-  useEffect(() => {
-    fetchCustomerPayments().catch((error) => {
-      console.error('Failed to load payments:', error);
-      showToast('خطا در بارگذاری تاریخچه پرداخت‌ها', 'error');
-    });
-  }, []);
+      verify();
+  }, [authority, zarinpalStatus, showToast, fetchCustomerPayments]);
 
   // ═══ فیلتر ═══
   const filteredPayments = useMemo(() => {
@@ -154,45 +159,45 @@ function PaymentsPageContent() {
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: colors.background }}>
       {/* ═══ ✅ فاز ۶: بنر نتیجه پرداخت ═══ */}
-      {callbackStatus && (
-        <div
-          className="mx-4 mt-4 mb-2 p-4 rounded-2xl border flex items-start gap-3"
-          style={{
-            backgroundColor: callbackStatus === 'success' ? '#43A04710' : '#E5393510',
-            borderColor: callbackStatus === 'success' ? '#43A04740' : '#E5393540',
-          }}
-        >
-          {callbackStatus === 'success' ? (
-            <FiCheckCircle size={22} color="#43A047" className="flex-shrink-0 mt-0.5" />
-          ) : (
-            <FiXCircle size={22} color="#E53935" className="flex-shrink-0 mt-0.5" />
-          )}
-          <div className="flex-1">
-            <p
-              className="text-sm font-[Vazir-Bold] mb-1"
+      {paymentResult && (
+          <div
+              className="mx-4 mt-4 mb-2 p-4 rounded-2xl border flex items-start gap-3"
               style={{
-                color: callbackStatus === 'success' ? '#43A047' : '#E53935',
+                  backgroundColor: paymentResult.success ? '#43A04710' : '#E5393510',
+                  borderColor: paymentResult.success ? '#43A04740' : '#E5393540',
               }}
-            >
-              {callbackStatus === 'success' ? 'پرداخت موفق' : 'پرداخت ناموفق'}
-            </p>
-            <p className="text-xs" style={{ color: colors.textSecondary }}>
-              {callbackStatus === 'success'
-                ? `مبلغ ${callbackAmount ? formatPrice(parseInt(callbackAmount)) : ''} با موفقیت پرداخت شد. نوبت شما ثبت گردید.`
-                : callbackReason === 'cancelled'
-                  ? 'پرداخت توسط شما لغو شد. نوبت رزرو نشده است.'
-                  : 'خطایی در فرآیند پرداخت رخ داد. لطفاً دوباره تلاش کنید.'}
-            </p>
-            {callbackTrackingCode && (
-              <p
-                className="text-[11px] mt-2 font-mono"
-                style={{ color: colors.textSecondary, direction: 'ltr', textAlign: 'right' }}
-              >
-                کد پیگیری: {toPersianDigit(callbackTrackingCode)}
-              </p>
-            )}
+          >
+              {paymentResult.success ? (
+                  <FiCheckCircle size={22} color="#43A047" className="flex-shrink-0 mt-0.5" />
+              ) : (
+                  <FiXCircle size={22} color="#E53935" className="flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1">
+                  <p
+                      className="text-sm font-[Vazir-Bold] mb-1"
+                      style={{
+                          color: paymentResult.success ? '#43A047' : '#E53935',
+                      }}
+                  >
+                      {paymentResult.success ? 'پرداخت موفق' : 'پرداخت ناموفق'}
+                  </p>
+                  <p className="text-xs" style={{ color: colors.textSecondary }}>
+                      {paymentResult.success
+                          ? `مبلغ ${formatPrice(paymentResult.amount)} با موفقیت پرداخت شد. نوبت شما ثبت گردید.`
+                          : paymentResult.reason === 'PAYMENT_FAILED'
+                          ? 'پرداخت توسط شما لغو شد. نوبت رزرو نشده است.'
+                          : 'خطایی در فرآیند پرداخت رخ داد. لطفاً دوباره تلاش کنید.'}
+                  </p>
+                  {paymentResult.tracking_code && (
+                      <p
+                          className="text-[11px] mt-2 font-mono"
+                          style={{ color: colors.textSecondary, direction: 'ltr', textAlign: 'right' }}
+                      >
+                          کد پیگیری: {toPersianDigit(paymentResult.tracking_code)}
+                      </p>
+                  )}
+              </div>
           </div>
-        </div>
       )}
 
       {/* هدر + فیلتر */}
