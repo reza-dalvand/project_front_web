@@ -43,7 +43,6 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
   };
 
   return (
-    // ✅ تغییر اصلی: <button> → <div> با role="button"
     <div
       role="button"
       tabIndex={0}
@@ -128,7 +127,7 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
         <div className="px-4 py-3 border-t" style={{ borderColor: colors.border }}>
           <button
             onClick={(e) => {
-              e.stopPropagation(); // ✅ جلوگیری از باز شدن مدال جزئیات
+              e.stopPropagation();
               onVerify?.(appointment);
             }}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl

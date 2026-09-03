@@ -91,7 +91,8 @@ export default function AppointmentCompactCard({ appointment, onPress, onCopyCod
       {/* ═══ کد تایید کوچک - فقط نوبت‌های آینده ═══ */}
       {appointment.isUpcoming &&
         appointment.status !== 'cancelled' &&
-        appointment.verificationCode && (
+        appointment.verificationCode && 
+        appointment.verificationCode !== '0000' && (
           <div
             className="flex items-center gap-2.5 px-3.5 py-2.5 border-t"
             style={{ borderColor: colors.border, backgroundColor: colors.background }}
