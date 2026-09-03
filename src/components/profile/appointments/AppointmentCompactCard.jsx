@@ -1,5 +1,5 @@
+// src/components/profile/appointments/AppointmentCompactCard.jsx
 'use client';
-import Image from 'next/image';
 import { FiCalendar, FiClock, FiCopy, FiCheck, FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 
@@ -10,14 +10,31 @@ const STATUS_CONFIG = {
   cancelled: { label: 'لغو شده', color: '#E53935' },
 };
 
+// ═══ ایموجی بر اساس نام خدمت (هم‌الگو با سایر کارت‌های پروژه) ═══
+const getServiceEmoji = (serviceName = '') => {
+  if (serviceName.includes('ناخن')) return '💅';
+  if (serviceName.includes('میکاپ') || serviceName.includes('گریم')) return '💄';
+  if (
+    serviceName.includes('فیشیال') ||
+    serviceName.includes('پوست') ||
+    serviceName.includes('پاکسازی')
+  )
+    return '✨';
+  if (serviceName.includes('لیزر')) return '⚡';
+  if (serviceName.includes('مو') || serviceName.includes('رنگ') || serviceName.includes('کراتین'))
+    return '🎨';
+  if (serviceName.includes('مژه') || serviceName.includes('ابرو')) return '👁️';
+  if (serviceName.includes('ماساژ')) return '💆‍♀️';
+  return '💆‍♀️';
+};
+
 /**
  * کارت فشرده نوبت
- * فقط: لوگو + نام سالن + تاریخ + ساعت + وضعیت + کد تایید کوچک
+ * فقط: آیکن خدمت + نام سالن + تاریخ + ساعت + وضعیت + کد تایید کوچک
  */
 export default function AppointmentCompactCard({ appointment, onPress, onCopyCode, copiedCode }) {
   const { colors } = useTheme();
   const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.reserved;
-
   return (
     <div
       className="rounded-2xl border overflow-hidden transition-all hover:shadow-sm"
@@ -28,22 +45,20 @@ export default function AppointmentCompactCard({ appointment, onPress, onCopyCod
         onClick={() => onPress?.(appointment)}
         className="w-full flex items-center gap-3 p-3.5 text-right active:bg-black/[0.02]"
       >
-        {/* لوگو */}
+        {/* ✅ آیکن مرتبط با نوبت (به جای تصویر لوگو) */}
         <div className="relative flex-shrink-0">
-          <Image
-            src={appointment.businessLogo}
-            alt={appointment.businessName}
-            width={46}
-            height={46}
-            className="rounded-xl"
-          />
+          <div
+            className="w-[46px] h-[46px] rounded-xl flex items-center justify-center text-2xl"
+            style={{ backgroundColor: colors.primary + '15' }}
+          >
+            {getServiceEmoji(appointment.serviceName || appointment.service_name || '')}
+          </div>
           {/* نقطه وضعیت */}
           <div
             className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full border-2"
             style={{ backgroundColor: status.color, borderColor: colors.cardBackground }}
           />
         </div>
-
         {/* اطلاعات */}
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <span className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
@@ -64,7 +79,6 @@ export default function AppointmentCompactCard({ appointment, onPress, onCopyCod
             </div>
           </div>
         </div>
-
         {/* وضعیت + فلش */}
         <span
           className="flex items-center gap-1 text-[10px] font-[Vazir-Bold] px-2.5 py-1.5 rounded-lg flex-shrink-0"
@@ -74,7 +88,6 @@ export default function AppointmentCompactCard({ appointment, onPress, onCopyCod
           <FiChevronLeft size={12} />
         </span>
       </button>
-
       {/* ═══ کد تایید کوچک - فقط نوبت‌های آینده ═══ */}
       {appointment.isUpcoming &&
         appointment.status !== 'cancelled' &&
