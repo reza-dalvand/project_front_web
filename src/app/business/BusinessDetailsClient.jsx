@@ -19,6 +19,7 @@ import EmptyState from '@/components/common/EmptyState';
 import { businessesService, portfoliosService } from '@/api';
 import { useAuth } from '@/stores/useAuthStore';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
+import { priceListService } from '@/api';
 
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), { ssr: false });
 const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'), { ssr: false });
@@ -51,10 +52,11 @@ export default function BusinessDetailsClient({ businessSlug }) {
   const toggleBusinessFavorite = useFavoriteStore((s) => s.toggleBusinessFavorite);
   const [activePortfolio, setActivePortfolio] = useState(null);
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
+  const fetchPublicPriceList = usePriceListStore((s) => s.fetchPublicPriceList);
+
 
   const isFavorite = business?.id ? isBusinessFavorited(business.id) : false;
   const priceListFromStore = usePriceListStore((s) => s.lists[business?.id]);
-  const fetchPriceList = usePriceListStore((s) => s.fetchPriceList);
 
   // ✅ اصلاح ۱: استفاده از businessSlug برای دریافت اطلاعات
   useEffect(() => {
@@ -136,37 +138,40 @@ export default function BusinessDetailsClient({ businessSlug }) {
 
   useEffect(() => {
     if (business?.id) {
-      fetchPriceList(business.id).catch(() => {});
+      fetchPublicPriceList(business.id).catch(() => {});
     }
-  }, [business?.id, fetchPriceList]);
+  }, [business?.id, fetchPublicPriceList]);
 
   const priceListSettings = useMemo(() => {
-    const storeList = priceListFromStore;
-    if (storeList) {
-      if ((!storeList.services || storeList.services.length === 0) && business?.services?.length) {
+      const storeList = priceListFromStore;
+      if (storeList) {
+        // اگر سرویس خالی بود ولی سرویس‌های کسب‌وکار موجود بود، از آنها بساز
+        if ((!storeList.services || storeList.services.length === 0) && business?.services?.length) {
+          return {
+            ...storeList,
+            isPublished: true, // ✅ FIX: اگر سرویس هست، نمایش بده
+            services: business.services
+              .filter((s) => s.isActive !== false)
+              .map(mapServiceToPriceList),
+          };
+        }
+        return storeList;
+      }
+      // اگر هنوز از بک‌اند نیامده ولی سرویس داریم، پیش‌نمایش نشان بده
+      if (business?.services?.length) {
         return {
-          ...storeList,
-          services: business.services
-            .filter((s) => s.isActive !== false)
-            .map(mapServiceToPriceList),
+          businessId: business.id,
+          themeId: 'classic',
+          isPublished: true, 
+          services: business.services.filter((s) => s.isActive !== false).map(mapServiceToPriceList),
         };
       }
-      return storeList;
-    }
-    if (business?.services?.length) {
-      return {
-        businessId: business.id,
-        themeId: 'classic',
-        isPublished: true,
-        services: business.services.filter((s) => s.isActive !== false).map(mapServiceToPriceList),
-      };
-    }
-    return null;
-  }, [priceListFromStore, business]);
+      return null;
+    }, [priceListFromStore, business]);
 
-  const showPrices =
-    priceListSettings?.isPublished === true && (priceListSettings?.services?.length ?? 0) > 0;
-
+  const showPrices = Boolean(
+    priceListSettings?.isPublished && priceListSettings?.services?.length > 0
+  );
   const openBooking = useCallback(
     (service) => {
       requireAuth(() => {

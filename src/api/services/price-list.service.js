@@ -1,15 +1,9 @@
 // src/api/services/price-list.service.js
-/**
- * 🏷️ Price List Service — بدون یادداشت
- *
- * قیمت‌ها فقط از بخش «خدمات» خوانده می‌شوند.
- * فقط theme و is_published قابل تغییر هستند.
- */
 import apiClient from '../api-client';
 
 export const priceListService = {
   /**
-   * دریافت لیست قیمت کسب‌وکار
+   * دریافت لیست قیمت کسب‌وکار خودم (مالک)
    * GET /services/price-list/
    */
   getPriceList: () => {
@@ -17,14 +11,18 @@ export const priceListService = {
   },
 
   /**
-   * بروزرسانی لیست قیمت (فقط تم و وضعیت انتشار)
+   * ✅ جدید: دریافت لیست قیمت عمومی (برای مشتری)
+   * GET /services/price-list/public/?business_id=X
+   */
+  getPublicPriceList: (businessId) => {
+    return apiClient.get('/services/price-list/public/', {
+      params: { business_id: businessId },
+    });
+  },
+
+  /**
+   * بروزرسانی لیست قیمت (فقط مالک)
    * PUT /services/price-list/
-   *
-   * Payload:
-   * {
-   *   theme?: 'rose' | 'gold' | 'mint' | 'classic',
-   *   is_published?: boolean,
-   * }
    */
   updatePriceList: (data) => {
     return apiClient.put('/services/price-list/', data);
