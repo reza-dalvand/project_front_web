@@ -15,6 +15,8 @@ import Button from '@/components/common/Button';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { validateNationalId } from '@/utils/validators';
 import { authService } from '@/api';
+import { useBusinessStore } from '@/stores/useBusinessStore';
+
 export default function NationalIdVerificationStep({
   formData,
   onUpdate,
@@ -28,6 +30,8 @@ export default function NationalIdVerificationStep({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [verifiedName, setVerifiedName] = useState('');
+  const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
+
 
   const handleNationalIdChange = (text) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
@@ -40,29 +44,30 @@ export default function NationalIdVerificationStep({
   const isValid = nationalId.length === 10 && validateNationalId(nationalId);
 
   const handleVerify = async () => {
-    if (!nationalId) {
-      setError('لطفاً کد ملی خود را وارد کنید');
-      return;
-    }
-    if (nationalId.length !== 10) {
-      setError('کد ملی باید دقیقاً ۱۰ رقم باشد');
-      return;
-    }
-    if (!validateNationalId(nationalId)) {
-      setError('کد ملی وارد شده معتبر نیست');
-      return;
-    }
+    if (!nationalId) { setError('لطفاً کد ملی خود را وارد کنید'); return; }
+    if (nationalId.length !== 10) { setError('کد ملی باید دقیقاً ۱۰ رقم باشد'); return; }
+    if (!validateNationalId(nationalId)) { setError('کد ملی وارد شده معتبر نیست'); return; }
 
     setLoading(true);
     setError('');
+
     try {
       let result;
       result = await authService.verifyNationalId(nationalId);
       const name = result.data?.verified_name || '';
+
       setVerifiedName(name);
       setSuccess(true);
       onUpdate('nationalId', nationalId);
       onUpdate('verifiedName', name);
+
+      // ✅ FIX: استور جهانی را هم آپدیت کن
+      useBusinessStore.getState().updateBusinessInfo({
+        isNationalIdVerified: true,
+        verifiedName: name,
+        nationalId: nationalId,
+      });
+
       showToast('هویت شما با موفقیت تایید شد', 'success');
       setTimeout(() => onVerified?.(), 1000);
     } catch (err) {

@@ -1,12 +1,7 @@
 // src/stores/useBusinessStore.js
 /**
  * 🏪 Store کسب‌وکار — فاز ۵
- *
- * ✅ تغییرات فاز ۲:
- * - مهاجرت هوشمند: داده‌های هاردکد پاک می‌شوند ولی
- *   بلافاصله بعد از مهاجرت، بازیابی خودکار از بک‌اند
- * - کاهش ریست کامل — فقط ساختار ریست می‌شود و سپس از بک‌اند بازیابی
- * - کامپوننت‌ها باید با داده‌های خالی هم کار کنند (تا زمانی که بک‌اند جواب دهد)
+ * ... (بقیه کامنت‌ها و کدهای قبلی بدون تغییر)
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -18,25 +13,21 @@ import { createTeamSlice } from './business/slices/teamSlice';
 import { createPortfoliosSlice } from './business/slices/portfoliosSlice';
 import { createSchedulesSlice } from './business/slices/schedulesSlice';
 
-// ✅ FIX فاز ۲: فلگ برای اطلاع‌رسانی مهاجرت
 let migrationOccurred = false;
 
 export const useBusinessStore = create(
   persist(
     (set, get) => ({
-      // ─── State اصلی (خالی در شروع) ───
       businessData: INITIAL_BUSINESS_DATA,
       gallery: [],
       _version: STORAGE_VERSION,
 
-      // ─── Slice‌ها ───
       ...createServicesSlice(set, get),
       ...createAppointmentsSlice(set),
       ...createTeamSlice(set),
       ...createPortfoliosSlice(set),
       ...createSchedulesSlice(set, get),
 
-      // ─── اطلاعات پایه ───
       updateBusinessInfo: (updates) =>
         set((state) => ({
           businessData: { ...state.businessData, ...updates },
@@ -49,7 +40,6 @@ export const useBusinessStore = create(
         return true;
       },
 
-      // ─── Selectors ───
       getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
 
       resetToDefaults: () => {
@@ -60,9 +50,6 @@ export const useBusinessStore = create(
         });
       },
 
-      // ═══════════════════════════════════════════
-      //    API Sync — Businesses
-      // ═══════════════════════════════════════════
       fetchBusinessDetail: async () => {
         try {
           const response = await businessesService.getBusinessDetail();
@@ -80,7 +67,6 @@ export const useBusinessStore = create(
               cityId: b.city?.id || null,
               provinceId: b.province?.id || null,
               phone: b.phone || '',
-              // ✅ فاز ۳: خوانش camelCase
               workingHours: b.workingHours || '',
               about: b.about || '',
               rating: b.rating || 0,
@@ -90,11 +76,19 @@ export const useBusinessStore = create(
               coverUrl: b.coverImage || null,
               ownerPhoto: b.ownerPhoto || null,
               ownerName: b.ownerName || '',
-              verifiedName: b.verifiedName || '',
               nationalId: b.nationalId || '',
+              isNationalIdVerified: Boolean(b.isNationalIdVerified),
+              verifiedName: b.verifiedName || '',
+
               bankInfo: {
-                isRegistered: b.bankInfoRegistered || false,
-                isVerified: b.bankInfoVerified || false,
+                isRegistered: b.bank_info_registered || b.bankInfoRegistered || false,
+                isVerified: b.bank_info_verified || b.bankInfoVerified || false,
+                ownerName: b.bank_owner_name || b.bankOwnerName || '',
+                bankName: b.bank_name || b.bankName || '',
+                bankId: b.bank_id || b.bankId || null,
+                sheba: b.bank_sheba || b.bankSheba || '',
+                cardNumber: b.bank_card_number || b.bankCardNumber || '',
+                accountNumber: b.bank_account_number || b.bankAccountNumber || '',
               },
               bookingSlug: b.bookingSlug || '',
               isActive: b.status === 'approved',
@@ -116,20 +110,12 @@ export const useBusinessStore = create(
         }
       },
 
-      /**
-       * ✅ FIX فاز ۲: بازیابی خودکار پس از مهاجرت
-       * وقتی مهاجرت اتفاق می‌افتد، داده‌های محلی پاک می‌شوند.
-       * این تابع باید بعد از مهاجرت و هنگام اولین بارگذاری اپ
-       * صدا زده شود تا داده‌ها از بک‌اند بازیابی شوند.
-       */
       autoRecoverFromMigration: async () => {
         if (!migrationOccurred) return;
         migrationOccurred = false;
         try {
           await get().fetchBusinessDetail();
         } catch (error) {
-          // در صورت عدم دسترسی به بک‌اند، داده‌ها خالی می‌مانند
-          // و هنگام اتصال بعدی، از بک‌اند پر می‌شوند
           console.warn('Auto-recovery failed:', error);
         }
       },
@@ -156,7 +142,6 @@ export const useBusinessStore = create(
               name: b.name || '',
               category: b.category?.name || '',
               address: b.address || '',
-              // ✅ فاز ۳
               bookingSlug: b.bookingSlug || '',
               isActive: b.status === 'approved',
               status: b.status || null,
@@ -181,7 +166,6 @@ export const useBusinessStore = create(
               name: b.name || state.businessData.name,
               address: b.address || state.businessData.address,
               phone: b.phone || state.businessData.phone,
-              // ✅ فاز ۳
               workingHours: b.workingHours || state.businessData.workingHours,
               about: b.about || state.businessData.about,
             },
@@ -194,10 +178,32 @@ export const useBusinessStore = create(
         }
       },
 
+      // src/stores/useBusinessStore.js
+
       fetchBankInfo: async () => {
         try {
           const response = await businessesService.getBankInfo();
-          return response.data;
+          const data = response.data;
+          
+          // ✅ ذخیره اطلاعات کامل بانکی در استور
+          set((state) => ({
+            businessData: {
+              ...state.businessData,
+              bankInfo: {
+                isRegistered: true, // چون API جواب داده یعنی اطلاعات ثبت شده است
+                isVerified: data.isVerified ?? data.is_verified ?? false,
+                bankName: data.bankName || data.bank_name || '',
+                bankId: data.bankId || data.bank_id || '',
+                sheba: data.sheba || '',
+                cardNumber: data.cardNumber || data.card_number || '',
+                ownerName: data.ownerName || data.owner_name || '',
+                accountNumber: data.accountNumber || data.account_number || '',
+                nationalId: data.nationalId || data.national_id || '',
+              },
+            },
+          }));
+          
+          return data;
         } catch (error) {
           console.error('fetchBankInfo failed:', error);
           throw error;
@@ -215,12 +221,25 @@ export const useBusinessStore = create(
             bank_card_number: bankData.cardNumber,
             bank_account_number: bankData.accountNumber,
           });
+          
+          // ✅ بروزرسانی استور با داده‌های جدید بلافاصله پس از موفقیت API
           set((state) => ({
             businessData: {
               ...state.businessData,
-              bankInfo: { isRegistered: true, isVerified: false },
+              bankInfo: {
+                isRegistered: true,
+                isVerified: false, // معمولاً پس از ویرایش اطلاعات بانکی، نیاز به تایید مجدد توسط ادمین دارد
+                bankName: bankData.bankName || '',
+                bankId: bankData.bankId || '',
+                sheba: bankData.sheba || '',
+                cardNumber: bankData.cardNumber || '',
+                ownerName: bankData.ownerName || '',
+                accountNumber: bankData.accountNumber || '',
+                nationalId: bankData.nationalId || '',
+              },
             },
           }));
+          
           return response.data;
         } catch (error) {
           console.error('updateBankInfoApi failed:', error);
@@ -240,9 +259,6 @@ export const useBusinessStore = create(
         }
       },
 
-      // ═══════════════════════════════════════════
-      //    API Sync — Gallery
-      // ═══════════════════════════════════════════
       fetchGallery: async () => {
         try {
           const response = await businessesService.getGallery();
@@ -308,23 +324,12 @@ export const useBusinessStore = create(
         gallery: state.gallery,
         _version: STORAGE_VERSION,
       }),
-      /**
-       * ✅ FIX فاز ۲: مهاجرت هوشمندانه
-       *
-       * قبلاً: هر نسخه < 5 → ریست کامل داده‌ها
-       * حالا: فقط داده‌های هاردکد پاک می‌شوند و بلافاصله
-       *       بازیابی خودکار از بک‌اند انجام می‌شود.
-       *       کاربر فقط در اولین بارگذاری پس از آپدیت
-       *       ممکن است یک بار صفحه را خالی ببیند،
-       *       و سپس داده‌ها از بک‌اند پر می‌شوند.
-       */
       migrate: (persistedState, version) => {
         if (version < STORAGE_VERSION) {
           console.log(
             `[BusinessStore] Migration from v${version} to v${STORAGE_VERSION}. ` +
               'Hardcoded data cleared. Auto-recovery from backend will occur on next fetch.'
           );
-          // ✅ FIX فاز ۲: فلگ مهاجرت را فعال کن
           migrationOccurred = true;
           return {
             businessData: INITIAL_BUSINESS_DATA,
@@ -338,9 +343,6 @@ export const useBusinessStore = create(
   )
 );
 
-// ═══════════════════════════════════════════════════════
-//    Selector‌های اختصاصی
-// ═══════════════════════════════════════════════════════
 export const useBusinessName = () => useBusinessStore((s) => s.businessData?.name);
 export const useBusinessServices = () => useBusinessStore((s) => s.businessData?.services || []);
 export const useBusinessAppointments = () =>

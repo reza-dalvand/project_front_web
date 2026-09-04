@@ -53,6 +53,14 @@ export const INITIAL_BUSINESS_DATA = {
   bankInfo: {
     isRegistered: false,
     isVerified: false,
+    // ✅ فیلدهای جدید برای نگهداری اطلاعات کامل
+    bankName: '',
+    bankId: '',
+    sheba: '',
+    cardNumber: '',
+    ownerName: '',
+    accountNumber: '',
+    nationalId: '',
   },
 
   // ─── لینک رزرو ───

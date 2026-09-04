@@ -7,21 +7,29 @@ import BankEditHeader from './BankEditHeader';
 import BankEditFormFields from './BankEditFormFields';
 import BankEditFooter from './BankEditFooter';
 import { toEnglishDigits } from '@/utils/numberUtils';
-import { validateNationalId } from '@/utils/validators';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
-export default function BankEditModal({ visible, onClose, onSave, bankInfo, businessOwnerName }) {
+export default function BankEditModal({
+  visible,
+  onClose,
+  onSave,
+  bankInfo,
+  businessOwnerName,
+  isVerified = false,
+  verifiedName = '',
+  saving = false,
+}) {
   const { colors } = useTheme();
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef('bank-edit-modal');
   const [form, setForm] = useState({
     ownerName: '',
-    nationalId: '',
     bankId: null,
     sheba: '',
     cardNumber: '',
     accountNumber: '',
   });
+
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -35,13 +43,14 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
   useEffect(() => {
     if (visible) {
       setForm({
-        ownerName: bankInfo?.ownerName || businessOwnerName || '',
-        nationalId: bankInfo?.nationalId || '',
+        // اگر کد ملی تایید شده باشد، نام تایید شده استفاده می‌شود
+        ownerName: isVerified ? verifiedName : (bankInfo?.ownerName || businessOwnerName || ''),
         bankId: bankInfo?.bankId || null,
         sheba: bankInfo?.sheba || '',
         cardNumber: bankInfo?.cardNumber || '',
         accountNumber: bankInfo?.accountNumber || '',
       });
+      console.log('BankEditModal: Resetting form with bankInfo:', bankInfo, 'and verifiedName:', verifiedName);
       setErrors({});
       acquireScrollLock(instanceId.current);
     } else {
@@ -50,7 +59,7 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
     return () => {
       releaseScrollLock(instanceId.current);
     };
-  }, [visible, bankInfo, businessOwnerName]);
+  }, [visible, bankInfo, businessOwnerName, isVerified, verifiedName]);
 
   useEffect(() => {
     if (!visible) return;
@@ -64,13 +73,6 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
   const updateField = (key, val) => {
     setForm((prev) => ({ ...prev, [key]: val }));
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: '' }));
-  };
-
-  const handleNationalIdChange = (text) => {
-    const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
-    if (cleaned.length <= 10) {
-      updateField('nationalId', cleaned);
-    }
   };
 
   const handleShebaChange = (text) => {
@@ -92,23 +94,21 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
   };
 
   const handleFieldChange = (key, val) => {
-    if (key === 'nationalId') handleNationalIdChange(val);
-    else if (key === 'sheba') handleShebaChange(val);
+    if (key === 'sheba') handleShebaChange(val);
     else if (key === 'cardNumber') handleCardChange(val);
     else updateField(key, val);
   };
 
   const validate = () => {
     const e = {};
-    if (!form.ownerName.trim() || form.ownerName.trim().length < 3) {
+    
+    // اگر کد ملی تایید نشده باشد، اصلا اجازه ثبت ندهیم
+    if (!isVerified) {
+      e.ownerName = 'ابتدا باید کد ملی خود را تایید کنید';
+    } else if (!form.ownerName.trim() || form.ownerName.trim().length < 3) {
       e.ownerName = 'نام کامل صاحب حساب الزامی است';
     }
-    const enNational = toEnglishDigits(form.nationalId).replace(/[^0-9]/g, '');
-    if (enNational.length !== 10) {
-      e.nationalId = 'کد ملی باید دقیقاً ۱۰ رقم باشد';
-    } else if (!validateNationalId(enNational)) {
-      e.nationalId = 'کد ملی وارد شده معتبر نیست';
-    }
+    
     if (!form.bankId) {
       e.bankId = 'لطفاً بانک را انتخاب کنید';
     }
@@ -124,7 +124,9 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
       }
     }
     const enCard = toEnglishDigits(form.cardNumber).replace(/[^0-9]/g, '');
-    if (enCard.length !== 16) {
+    if (!enCard) {
+      e.cardNumber = 'شماره کارت الزامی است';
+    } else if (enCard.length !== 16) {
       e.cardNumber = 'شماره کارت باید دقیقاً ۱۶ رقم باشد';
     }
     setErrors(e);
@@ -148,14 +150,10 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
       { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
     ];
     const selectedBank = IRANIAN_BANKS.find((b) => b.id === form.bankId);
-    if (
-      confirm('آیا از صحت اطلاعات وارد شده مطمئن هستید؟ پس از ثبت، حساب وارد مرحله تایید می‌شود.')
-    ) {
-      onSave({
-        ...form,
-        bankName: selectedBank?.label || '',
-      });
-    }
+    onSave({
+      ...form,
+      bankName: selectedBank?.label || '',
+    });
   };
 
   if (!mounted || !visible) return null;
@@ -180,13 +178,14 @@ export default function BankEditModal({ visible, onClose, onSave, bankInfo, busi
             form={form}
             errors={errors}
             businessOwnerName={businessOwnerName}
+            isVerified={isVerified}
+            verifiedName={verifiedName}
             onFieldChange={handleFieldChange}
           />
         </div>
-        <BankEditFooter onClose={onClose} onSubmit={handleSubmit} />
+        <BankEditFooter onClose={onClose} onSubmit={handleSubmit} saving={saving} />
       </div>
     </div>
   );
-
   return createPortal(content, document.body);
 }

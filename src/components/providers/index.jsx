@@ -51,17 +51,15 @@ function BusinessInitializer() {
   const businessId = useBusinessStore((s) => s.businessData?.id);
 
   useEffect(() => {
-    if (isAuthenticated && !businessId) {
+    if (isAuthenticated) {
       fetchBusinessDetail().catch((err) => {
-        console.warn('Business fetch failed (user may not have a business):', err);
+        console.warn('Business fetch failed:', err);
       });
     }
-  }, [isAuthenticated, businessId, fetchBusinessDetail]);
-
+  }, [isAuthenticated, fetchBusinessDetail]);
+  
   return null;
 }
-
-// ... existing code ...
 
 export default function Providers({ children }) {
   return (

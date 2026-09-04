@@ -6,45 +6,38 @@ import Dropdown from '@/components/common/Dropdown';
 import { getBankOptions } from '@/constants/banks';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-export default function BankEditFormFields({ form, errors, businessOwnerName, onFieldChange }) {
+export default function BankEditFormFields({ 
+  form, 
+  errors, 
+  businessOwnerName, 
+  isVerified, 
+  verifiedName, 
+  onFieldChange 
+}) {
   const { colors } = useTheme();
   const bankOptions = getBankOptions();
 
   return (
     <>
       {/* هشدار مهم */}
-      <div
-        className="flex items-start gap-3 p-3.5 rounded-xl border"
-        style={{
-          backgroundColor: '#E5393510',
-          borderColor: '#E5393530',
-        }}
-      >
-        <span className="text-lg flex-shrink-0">⚠️</span>
-        <p className="text-xs font-[Vazir] leading-[18px] flex-1" style={{ color: '#E53935' }}>
-          صاحب حساب باید حتماً همان شخصی باشد که کد ملی‌اش در مرحله ثبت کسب‌وکار تایید شده است.
-        </p>
-      </div>
-      {/* نام صاحب حساب */}
+      {!isVerified && (
+        <div className="flex items-start gap-2 p-3 rounded-xl border mb-4"
+            style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}>
+          <span className="text-base">⚠️</span>
+          <p className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: colors.textSecondary }}>
+            برای ثبت اطلاعات بانکی، ابتدا باید <strong>کد ملی</strong> خود را در بخش تنظیمات/پروفایل تایید کنید.
+            نام صاحب حساب به صورت خودکار از روی کد ملی شما تنظیم می‌شود.
+          </p>
+        </div>
+      )}
+
       <Input
-        label="نام و نام خانوادگی کامل *"
-        placeholder="مثال: مریم حسینی"
-        value={form.ownerName}
-        onChangeText={(v) => onFieldChange('ownerName', v)}
-        error={errors.ownerName}
-        hint={businessOwnerName ? `نام تایید شده احراز هویت: ${businessOwnerName}` : undefined}
+        label="نام صاحب حساب *"
+        value={isVerified ? (verifiedName || 'تایید نشده') : 'تایید نشده'}
+        disabled={true} // همیشه غیرقابل ویرایش است (یا تایید نشده یا از کد ملی خوانده می‌شود)
+        hint={isVerified ? "این نام بر اساس استعلام کد ملی شما به صورت خودکار تنظیم شده است" : "ابتدا کد ملی خود را تایید کنید"}
       />
-      {/* کد ملی */}
-      <Input
-        label="کد ملی صاحب حساب *"
-        placeholder="مثال: 0012345679"
-        value={toPersianDigit(form.nationalId)}
-        onChangeText={(v) => onFieldChange('nationalId', v)}
-        error={errors.nationalId}
-        type="tel"
-        maxLength={10}
-        hint={`${toPersianDigit(form.nationalId.length)} از ۱۰ رقم`}
-      />
+
       {/* نام بانک */}
       <div>
         <Dropdown
@@ -62,25 +55,28 @@ export default function BankEditFormFields({ form, errors, businessOwnerName, on
           </div>
         )}
       </div>
+
       {/* شماره شبا */}
       <Input
         label="شماره شبا *"
-        placeholder="IR + ۲۴ رقم (مثال: IR062960000000100324200001)"
+        placeholder="IR000000000000000000000000"
         value={form.sheba}
         onChangeText={(v) => onFieldChange('sheba', v)}
         error={errors.sheba}
         maxLength={26}
       />
+
       {/* شماره کارت */}
       <Input
         label="شماره کارت *"
-        placeholder="مثال: 6037991812345678"
+        placeholder="مثال: ۶۰۳۷۹۹۱۸۱۲۳۴۵۶۷۸"
         value={toPersianDigit(form.cardNumber)}
         onChangeText={(v) => onFieldChange('cardNumber', v)}
         error={errors.cardNumber}
         type="tel"
         maxLength={16}
       />
+
       {/* نکات */}
       <div className="p-4 rounded-xl" style={{ backgroundColor: colors.background }}>
         <p className="text-xs font-[Vazir-Bold] mb-2" style={{ color: colors.textMain }}>
