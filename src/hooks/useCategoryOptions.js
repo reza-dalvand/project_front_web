@@ -118,13 +118,31 @@ export const useServiceCategories = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ✅ Subscribe به تغییرات مکان
+  const locationParams = useGlobalLocationStore((state) => ({
+    provinceId: state.provinceId,
+    cityId: state.cityId,
+    latitude: state.latitude,
+    longitude: state.longitude,
+    locationType: state.locationType,
+  }));
+
   useEffect(() => {
     setIsLoading(true);
     setError(null);
 
     const fetch = async () => {
       try {
-        const result = await categoriesService.getServiceCategories();
+        // ✅ ارسال پارامترهای مکانی
+        const params = {};
+        if (locationParams.provinceId) params.province_id = locationParams.provinceId;
+        if (locationParams.cityId) params.city_id = locationParams.cityId;
+        if (locationParams.latitude && locationParams.longitude) {
+          params.lat = locationParams.latitude;
+          params.lng = locationParams.longitude;
+        }
+
+        const result = await categoriesService.getServiceCategories(params);
         setCategories(
           (result.data || []).map((c) => {
             const icon = c.icon_name || c.iconName || 'default';
@@ -134,6 +152,7 @@ export const useServiceCategories = () => {
               icon: ICON_MAP[icon] || ICON_MAP.default,
               color: COLOR_MAP[icon] || COLOR_MAP.default,
               gradient: GRADIENT_MAP[icon] || GRADIENT_MAP.default,
+              count: c.business_count || c.count || 0, // ✅ استفاده از count جدید
               subServices: (c.sub_services || c.subServices || []).map((s) => ({
                 id: String(s.id),
                 label: s.name,
@@ -150,7 +169,13 @@ export const useServiceCategories = () => {
     };
 
     fetch();
-  }, []);
+  }, [
+    locationParams.provinceId,
+    locationParams.cityId,
+    locationParams.latitude,
+    locationParams.longitude,
+    locationParams.locationType,
+  ]);
 
   return { categories, isLoading, error };
 };

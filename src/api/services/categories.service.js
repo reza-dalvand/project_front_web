@@ -13,8 +13,13 @@ export const categoriesService = {
    * لیست دسته‌بندی‌های خدمات
    * GET /categories/service-categories/
    */
-  getServiceCategories: () => {
-    return apiClient.get('/categories/service-categories/');
+  getServiceCategories: (params = {}) => {
+    return apiClient.get('/categories/service-categories/', {
+      params: {
+        ...params,
+        _t: Date.now(),
+      },
+    });
   },
 
   /**

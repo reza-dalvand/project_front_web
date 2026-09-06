@@ -108,7 +108,8 @@ export default function HomePage() {
         const locationParams = getLocationParams();
         const [adsRes, catRes, lineRes] = await Promise.allSettled([
           exploreService.getPosts({ page_size: 6, ...locationParams }),
-          categoriesService.getServiceCategories(),
+          // ✅ الف) ارسال پارامترهای مکانی برای محاسبه بدج تعداد دسته‌ها
+          categoriesService.getServiceCategories({ ...locationParams }),
           adsService.getLineRentals({ page_size: 6, ...locationParams }),
         ]);
         if (adsRes.status === 'fulfilled') {
@@ -149,6 +150,7 @@ export default function HomePage() {
     };
     fetchAllData();
   }, [
+    // ✅ ب) dependencyهای مکانی — با تغییر استان/شهر یا روشن/خاموش شدن GPS، بدج‌ها refetch می‌شوند
     locationState.provinceId,
     locationState.cityId,
     locationState.latitude,
