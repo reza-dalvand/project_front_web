@@ -54,7 +54,6 @@ export default function BusinessDetailsClient({ businessSlug }) {
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
   const fetchPublicPriceList = usePriceListStore((s) => s.fetchPublicPriceList);
 
-
   const isFavorite = business?.id ? isBusinessFavorited(business.id) : false;
   const priceListFromStore = usePriceListStore((s) => s.lists[business?.id]);
 
@@ -143,31 +142,31 @@ export default function BusinessDetailsClient({ businessSlug }) {
   }, [business?.id, fetchPublicPriceList]);
 
   const priceListSettings = useMemo(() => {
-      const storeList = priceListFromStore;
-      if (storeList) {
-        // اگر سرویس خالی بود ولی سرویس‌های کسب‌وکار موجود بود، از آنها بساز
-        if ((!storeList.services || storeList.services.length === 0) && business?.services?.length) {
-          return {
-            ...storeList,
-            isPublished: true, // ✅ FIX: اگر سرویس هست، نمایش بده
-            services: business.services
-              .filter((s) => s.isActive !== false)
-              .map(mapServiceToPriceList),
-          };
-        }
-        return storeList;
-      }
-      // اگر هنوز از بک‌اند نیامده ولی سرویس داریم، پیش‌نمایش نشان بده
-      if (business?.services?.length) {
+    const storeList = priceListFromStore;
+    if (storeList) {
+      // اگر سرویس خالی بود ولی سرویس‌های کسب‌وکار موجود بود، از آنها بساز
+      if ((!storeList.services || storeList.services.length === 0) && business?.services?.length) {
         return {
-          businessId: business.id,
-          themeId: 'classic',
-          isPublished: true, 
-          services: business.services.filter((s) => s.isActive !== false).map(mapServiceToPriceList),
+          ...storeList,
+          isPublished: true, // ✅ FIX: اگر سرویس هست، نمایش بده
+          services: business.services
+            .filter((s) => s.isActive !== false)
+            .map(mapServiceToPriceList),
         };
       }
-      return null;
-    }, [priceListFromStore, business]);
+      return storeList;
+    }
+    // اگر هنوز از بک‌اند نیامده ولی سرویس داریم، پیش‌نمایش نشان بده
+    if (business?.services?.length) {
+      return {
+        businessId: business.id,
+        themeId: 'classic',
+        isPublished: true,
+        services: business.services.filter((s) => s.isActive !== false).map(mapServiceToPriceList),
+      };
+    }
+    return null;
+  }, [priceListFromStore, business]);
 
   const showPrices = Boolean(
     priceListSettings?.isPublished && priceListSettings?.services?.length > 0

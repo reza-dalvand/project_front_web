@@ -94,9 +94,7 @@ export const useTodayAppointments = () => {
         // بروزرسانی محلی
         setAppointments((prev) =>
           prev.map((apt) =>
-            apt.id === appointmentId
-              ? { ...apt, status: 'reserved', isVerified: true }
-              : apt
+            apt.id === appointmentId ? { ...apt, status: 'reserved', isVerified: true } : apt
           )
         );
         showToast('✓ خدمت تایید شد • بیعانه آزاد شد', 'success');

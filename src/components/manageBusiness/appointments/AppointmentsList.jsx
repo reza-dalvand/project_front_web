@@ -10,14 +10,8 @@ import AppointmentListItem from './AppointmentListItem';
 
 export default function AppointmentsList() {
   const { colors } = useTheme();
-  const {
-    appointments,
-    isLoading,
-    refetch,
-    handleVerifyCode,
-    handleTrustConfirm,
-    handleCancel,
-  } = useTodayAppointments();
+  const { appointments, isLoading, refetch, handleVerifyCode, handleTrustConfirm, handleCancel } =
+    useTodayAppointments();
 
   const today = useMemo(() => todayJalaali(), []);
   const weekdayName = PERSIAN_WEEKDAYS[(new Date().getDay() + 1) % 7];

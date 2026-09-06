@@ -1,13 +1,13 @@
 // src/api/api-client.js
 /**
-* 🛡️ API Client - لایه نهایی درخواست‌ها
-*
-* تمام درخواست‌ها از این لایه عبور می‌کنند.
-* مسئولیت‌ها:
-*   - تبدیل خودکار camelCase → snake_case برای سازگاری با Django
-*   - نرمال‌سازی Response (شامل fieldMapper و pagination)
-*   - مدیریت خطا
-*/
+ * 🛡️ API Client - لایه نهایی درخواست‌ها
+ *
+ * تمام درخواست‌ها از این لایه عبور می‌کنند.
+ * مسئولیت‌ها:
+ *   - تبدیل خودکار camelCase → snake_case برای سازگاری با Django
+ *   - نرمال‌سازی Response (شامل fieldMapper و pagination)
+ *   - مدیریت خطا
+ */
 import api from './axios-instance';
 import { normalizeSuccessResponse, normalizeErrorResponse } from './response-normalizer';
 
@@ -15,23 +15,23 @@ import { normalizeSuccessResponse, normalizeErrorResponse } from './response-nor
 //    تبدیل کلیدها: camelCase → snake_case
 // ═══════════════════════════════════════════════
 /**
-* تبدیل یک کلید camelCase به snake_case
-* @example 'timeSlot' → 'time_slot'
-* @example 'serviceId' → 'service_id'
-*/
+ * تبدیل یک کلید camelCase به snake_case
+ * @example 'timeSlot' → 'time_slot'
+ * @example 'serviceId' → 'service_id'
+ */
 const camelToSnake = (str) => str.replace(/([A-Z])/g, '_$1').toLowerCase();
 
 /**
-* تبدیل بازگشتی تمام کلیدهای یک آبجکت از camelCase به snake_case
-* - FormData, File, Blob دست‌نخورده باقی می‌مانند
-* - آرایه‌ها element-wise تبدیل می‌شوند
-*/
+ * تبدیل بازگشتی تمام کلیدهای یک آبجکت از camelCase به snake_case
+ * - FormData, File, Blob دست‌نخورده باقی می‌مانند
+ * - آرایه‌ها element-wise تبدیل می‌شوند
+ */
 const toSnakeCase = (obj) => {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj !== 'object') return obj;
   if (obj instanceof FormData || obj instanceof File || obj instanceof Blob) return obj;
   if (Array.isArray(obj)) return obj.map(toSnakeCase);
-  
+
   const result = {};
   for (const [key, value] of Object.entries(obj)) {
     const snakeKey = camelToSnake(key);

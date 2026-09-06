@@ -244,9 +244,9 @@ export default function BookingModal({
         jy: selectedDate.jy,
         jm: selectedDate.jm,
         jd: selectedDate.jd,
-        
+
         timeSlot: selectedTime.startTime || selectedTime.timeSlot || selectedTime.displayTime,
-        
+
         trustBased: trustEnabled,
       });
 

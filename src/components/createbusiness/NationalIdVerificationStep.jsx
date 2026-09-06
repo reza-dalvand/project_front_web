@@ -32,7 +32,6 @@ export default function NationalIdVerificationStep({
   const [verifiedName, setVerifiedName] = useState('');
   const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
 
-
   const handleNationalIdChange = (text) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     if (cleaned.length <= 10) {
@@ -44,9 +43,18 @@ export default function NationalIdVerificationStep({
   const isValid = nationalId.length === 10 && validateNationalId(nationalId);
 
   const handleVerify = async () => {
-    if (!nationalId) { setError('لطفاً کد ملی خود را وارد کنید'); return; }
-    if (nationalId.length !== 10) { setError('کد ملی باید دقیقاً ۱۰ رقم باشد'); return; }
-    if (!validateNationalId(nationalId)) { setError('کد ملی وارد شده معتبر نیست'); return; }
+    if (!nationalId) {
+      setError('لطفاً کد ملی خود را وارد کنید');
+      return;
+    }
+    if (nationalId.length !== 10) {
+      setError('کد ملی باید دقیقاً ۱۰ رقم باشد');
+      return;
+    }
+    if (!validateNationalId(nationalId)) {
+      setError('کد ملی وارد شده معتبر نیست');
+      return;
+    }
 
     setLoading(true);
     setError('');

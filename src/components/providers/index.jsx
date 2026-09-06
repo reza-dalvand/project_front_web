@@ -48,16 +48,23 @@ function StoreInitializers() {
 function BusinessInitializer() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
-  const businessId = useBusinessStore((s) => s.businessData?.id);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchBusinessDetail().catch((err) => {
-        console.warn('Business fetch failed:', err);
+        // ✅ FIX: اگر ارور صرفاً به دلیل نداشتن کسب‌وکار بود، آن را لاگ نکن
+        const isNoBusiness =
+          err?.code === 'NOT_FOUND' ||
+          err?.status === 404 ||
+          (typeof err?.message === 'string' && err.message.includes('کسب‌وکاری ثبت نکرده‌اید'));
+
+        if (!isNoBusiness) {
+          console.warn('Business fetch failed:', err);
+        }
       });
     }
   }, [isAuthenticated, fetchBusinessDetail]);
-  
+
   return null;
 }
 

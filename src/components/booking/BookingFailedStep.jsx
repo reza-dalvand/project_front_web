@@ -97,7 +97,7 @@ export default function BookingFailedStep({
               className="text-xs font-[Vazir-Bold] flex-1 text-left"
               style={{ color: colors.textMain }}
             >
-                {selectedTime.displayTime ||
+              {selectedTime.displayTime ||
                 selectedTime.display_time ||
                 selectedTime.startTime ||
                 selectedTime.start_time}

@@ -80,7 +80,7 @@ export default function BookingSuccessStep({
               ساعت:
             </span>
             <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                {selectedTime.displayTime ||
+              {selectedTime.displayTime ||
                 selectedTime.display_time ||
                 selectedTime.startTime ||
                 selectedTime.start_time}

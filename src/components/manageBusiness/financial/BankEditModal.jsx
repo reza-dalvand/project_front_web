@@ -44,13 +44,18 @@ export default function BankEditModal({
     if (visible) {
       setForm({
         // اگر کد ملی تایید شده باشد، نام تایید شده استفاده می‌شود
-        ownerName: isVerified ? verifiedName : (bankInfo?.ownerName || businessOwnerName || ''),
+        ownerName: isVerified ? verifiedName : bankInfo?.ownerName || businessOwnerName || '',
         bankId: bankInfo?.bankId || null,
         sheba: bankInfo?.sheba || '',
         cardNumber: bankInfo?.cardNumber || '',
         accountNumber: bankInfo?.accountNumber || '',
       });
-      console.log('BankEditModal: Resetting form with bankInfo:', bankInfo, 'and verifiedName:', verifiedName);
+      console.log(
+        'BankEditModal: Resetting form with bankInfo:',
+        bankInfo,
+        'and verifiedName:',
+        verifiedName
+      );
       setErrors({});
       acquireScrollLock(instanceId.current);
     } else {
@@ -101,14 +106,14 @@ export default function BankEditModal({
 
   const validate = () => {
     const e = {};
-    
+
     // اگر کد ملی تایید نشده باشد، اصلا اجازه ثبت ندهیم
     if (!isVerified) {
       e.ownerName = 'ابتدا باید کد ملی خود را تایید کنید';
     } else if (!form.ownerName.trim() || form.ownerName.trim().length < 3) {
       e.ownerName = 'نام کامل صاحب حساب الزامی است';
     }
-    
+
     if (!form.bankId) {
       e.bankId = 'لطفاً بانک را انتخاب کنید';
     }

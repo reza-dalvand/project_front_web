@@ -17,11 +17,11 @@ export default function BottomTabBar() {
     ? [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
         { id: 'explore', icon: FiGrid, label: 'ویترین', path: '/explore' },
-        { id: 'model-requests', icon: FiUser, label: 'اگهی مدل', path: '/model-requests' },
         hasBusiness
           ? { id: 'manage', icon: FiCreditCard, label: 'مدیریت', path: '/manage' }
           : { id: 'create', icon: FiPlusCircle, label: 'ثبت آگهی', path: '/create-business' },
         { id: 'profile', icon: FiUser, label: 'پروفایل', path: '/profile' },
+        { id: 'model-requests', icon: FiUser, label: 'اگهی مدل', path: '/model-requests' },
       ]
     : [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },

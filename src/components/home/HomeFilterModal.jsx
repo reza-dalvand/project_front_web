@@ -13,11 +13,7 @@ import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 export default function HomeFilterModal({ visible, onClose }) {
   const { colors } = useTheme();
   const { provinces } = useProvinces();
-  const {
-    provinceId,
-    cityId,
-    setLocation,
-  } = useGlobalLocationStore();
+  const { provinceId, cityId, setLocation } = useGlobalLocationStore();
 
   // ✅ خواندن وضعیت GPS از استور گلوبال
   const gpsEnabled = useGlobalLocationStore((s) => s.gpsEnabled);
@@ -52,7 +48,6 @@ export default function HomeFilterModal({ visible, onClose }) {
   return (
     <BottomSheet visible={visible} onClose={onClose} title="فیلتر موقعیت مکانی" snapPoint={0.55}>
       <div className="space-y-5 pb-4">
-
         {/* ═══ پیام هشدار وقتی GPS فعال است ═══ */}
         {gpsEnabled && (
           <div
@@ -69,16 +64,10 @@ export default function HomeFilterModal({ visible, onClose }) {
               <FiNavigation size={20} color="#2196F3" />
             </div>
             <div className="flex-1">
-              <p
-                className="text-sm font-[Vazir-Bold] mb-1"
-                style={{ color: '#2196F3' }}
-              >
+              <p className="text-sm font-[Vazir-Bold] mb-1" style={{ color: '#2196F3' }}>
                 فیلتر موقعیت مکانی فعال است
               </p>
-              <p
-                className="text-xs font-[Vazir] leading-5"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
                 تا وقتی این فیلتر فعاله نمیشه استان و شهر رو انتخاب کرد
               </p>
             </div>

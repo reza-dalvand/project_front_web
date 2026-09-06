@@ -20,10 +20,10 @@ const TransactionDetailModal = dynamic(
   () => import('@/components/manageBusiness/financial/TransactionDetailModal'),
   { ssr: false, loading: () => null }
 );
-const BankEditModal = dynamic(
-  () => import('@/components/manageBusiness/financial/BankEditModal'),
-  { ssr: false, loading: () => null }
-);
+const BankEditModal = dynamic(() => import('@/components/manageBusiness/financial/BankEditModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function FinancialManagementPage() {
   const { colors } = useTheme();
@@ -137,19 +137,15 @@ export default function FinancialManagementPage() {
       </div>
 
       {/* مدال‌ها */}
-      <TransactionDetailModal
-        visible={detailVisible}
-        tx={selectedTx}
-        onClose={handleCloseDetail}
-      />
+      <TransactionDetailModal visible={detailVisible} tx={selectedTx} onClose={handleCloseDetail} />
       <BankEditModal
         visible={bankEditVisible}
         onClose={() => setBankEditVisible(false)}
         onSave={handleSaveBankInfo}
         bankInfo={bankInfo}
         businessOwnerName={verifiedName || businessData?.ownerName || ''}
-        isVerified={isNationalIdVerified}    
-        verifiedName={verifiedName}           
+        isVerified={isNationalIdVerified}
+        verifiedName={verifiedName}
         saving={bankSaving}
       />
     </ScreenWrapper>

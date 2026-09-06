@@ -98,10 +98,7 @@ export default function AppointmentListItem({
       </div>
 
       {/* نام مشتری */}
-      <span
-        className="text-xs font-[Vazir-Bold] line-clamp-1"
-        style={{ color: colors.textMain }}
-      >
+      <span className="text-xs font-[Vazir-Bold] line-clamp-1" style={{ color: colors.textMain }}>
         {appointment.customerName}
       </span>
 
@@ -161,9 +158,7 @@ export default function AppointmentListItem({
               style={{ backgroundColor: '#FF9800' }}
             >
               <FiKey size={11} color="#fff" />
-              <span className="text-[9px] font-[Vazir-Bold] text-white">
-                وارد کردن کد
-              </span>
+              <span className="text-[9px] font-[Vazir-Bold] text-white">وارد کردن کد</span>
               <FiChevronLeft size={11} color="#fff" />
             </div>
           )}

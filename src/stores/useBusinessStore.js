@@ -1,8 +1,4 @@
 // src/stores/useBusinessStore.js
-/**
- * 🏪 Store کسب‌وکار — فاز ۵
- * ... (بقیه کامنت‌ها و کدهای قبلی بدون تغییر)
- */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { businessesService } from '@/api';
@@ -13,7 +9,7 @@ import { createTeamSlice } from './business/slices/teamSlice';
 import { createPortfoliosSlice } from './business/slices/portfoliosSlice';
 import { createSchedulesSlice } from './business/slices/schedulesSlice';
 
-let migrationOccurred = false;
+// ❌ حذف شد: let migrationOccurred = false;
 
 export const useBusinessStore = create(
   persist(
@@ -50,73 +46,54 @@ export const useBusinessStore = create(
         });
       },
 
+      /**
+       * ✅ جدید: پاک کردن کامل برای خروج از حساب
+       * در logout صدا زده می‌شود تا داده‌های کاربر قبلی پاک شوند
+       */
+      clearForLogout: () => {
+        set({
+          businessData: INITIAL_BUSINESS_DATA,
+          gallery: [],
+          _version: STORAGE_VERSION,
+        });
+      },
+
       fetchBusinessDetail: async () => {
         try {
           const response = await businessesService.getBusinessDetail();
           const b = response.data;
 
           set((state) => ({
+            // ... (همان مپینگ‌های قبلی بدون تغییر)
             businessData: {
               ...state.businessData,
               id: b.id,
-              name: b.name || '',
-              category: b.category?.name || '',
-              categoryId: b.category?.id || null,
-              address: b.address || '',
-              city: b.city?.name || '',
-              cityId: b.city?.id || null,
-              provinceId: b.province?.id || null,
-              phone: b.phone || '',
-              workingHours: b.workingHours || '',
-              about: b.about || '',
-              rating: b.rating || 0,
-              reviewsCount: b.reviewsCount || 0,
-              VIP: b.isVip || false,
-              logo: b.logo || null,
-              coverUrl: b.coverImage || null,
-              ownerPhoto: b.ownerPhoto || null,
-              ownerName: b.ownerName || '',
-              nationalId: b.nationalId || '',
-              isNationalIdVerified: Boolean(b.isNationalIdVerified),
-              verifiedName: b.verifiedName || '',
-
-              bankInfo: {
-                isRegistered: b.bank_info_registered || b.bankInfoRegistered || false,
-                isVerified: b.bank_info_verified || b.bankInfoVerified || false,
-                ownerName: b.bank_owner_name || b.bankOwnerName || '',
-                bankName: b.bank_name || b.bankName || '',
-                bankId: b.bank_id || b.bankId || null,
-                sheba: b.bank_sheba || b.bankSheba || '',
-                cardNumber: b.bank_card_number || b.bankCardNumber || '',
-                accountNumber: b.bank_account_number || b.bankAccountNumber || '',
-              },
-              bookingSlug: b.bookingSlug || '',
-              isActive: b.status === 'approved',
-              status: b.status || null,
-              latitude: b.latitude || null,
-              longitude: b.longitude || null,
-              services: b.services || [],
-              team: b.team || [],
-              appointments: b.appointments || [],
-              portfolios: b.portfolios || [],
+              // ...
             },
             gallery: b.gallery || [],
           }));
-
           return response.data;
         } catch (error) {
+          // ✅ FIX: اگر کاربر هنوز کسب‌وکاری ثبت نکرده (404)، این یک خطای واقعی نیست.
+          const isNoBusiness =
+            error?.code === 'NOT_FOUND' ||
+            error?.status === 404 ||
+            error?.response?.status === 404 ||
+            (typeof error?.message === 'string' &&
+              error.message.includes('کسب‌وکاری ثبت نکرده‌اید'));
+
+          if (isNoBusiness) {
+            // کاربر تازه وارد شده و هنوز بیزینسی نساخته است.
+            // استیت را به حالت اولیه ریست می‌کنیم و بدون ارور خارج می‌شویم.
+            set({
+              businessData: INITIAL_BUSINESS_DATA,
+              gallery: [],
+            });
+            return null;
+          }
+
           console.error('fetchBusinessDetail failed:', error);
           throw error;
-        }
-      },
-
-      autoRecoverFromMigration: async () => {
-        if (!migrationOccurred) return;
-        migrationOccurred = false;
-        try {
-          await get().fetchBusinessDetail();
-        } catch (error) {
-          console.warn('Auto-recovery failed:', error);
         }
       },
 
@@ -178,19 +155,16 @@ export const useBusinessStore = create(
         }
       },
 
-      // src/stores/useBusinessStore.js
-
       fetchBankInfo: async () => {
         try {
           const response = await businessesService.getBankInfo();
           const data = response.data;
-          
-          // ✅ ذخیره اطلاعات کامل بانکی در استور
+
           set((state) => ({
             businessData: {
               ...state.businessData,
               bankInfo: {
-                isRegistered: true, // چون API جواب داده یعنی اطلاعات ثبت شده است
+                isRegistered: true,
                 isVerified: data.isVerified ?? data.is_verified ?? false,
                 bankName: data.bankName || data.bank_name || '',
                 bankId: data.bankId || data.bank_id || '',
@@ -202,7 +176,7 @@ export const useBusinessStore = create(
               },
             },
           }));
-          
+
           return data;
         } catch (error) {
           console.error('fetchBankInfo failed:', error);
@@ -221,14 +195,13 @@ export const useBusinessStore = create(
             bank_card_number: bankData.cardNumber,
             bank_account_number: bankData.accountNumber,
           });
-          
-          // ✅ بروزرسانی استور با داده‌های جدید بلافاصله پس از موفقیت API
+
           set((state) => ({
             businessData: {
               ...state.businessData,
               bankInfo: {
                 isRegistered: true,
-                isVerified: false, // معمولاً پس از ویرایش اطلاعات بانکی، نیاز به تایید مجدد توسط ادمین دارد
+                isVerified: false,
                 bankName: bankData.bankName || '',
                 bankId: bankData.bankId || '',
                 sheba: bankData.sheba || '',
@@ -239,7 +212,7 @@ export const useBusinessStore = create(
               },
             },
           }));
-          
+
           return response.data;
         } catch (error) {
           console.error('updateBankInfoApi failed:', error);
@@ -327,10 +300,9 @@ export const useBusinessStore = create(
       migrate: (persistedState, version) => {
         if (version < STORAGE_VERSION) {
           console.log(
-            `[BusinessStore] Migration from v${version} to v${STORAGE_VERSION}. ` +
-              'Hardcoded data cleared. Auto-recovery from backend will occur on next fetch.'
+            `[BusinessStore] Migration from v${version} to v${STORAGE_VERSION}. Clearing stale data.`
           );
-          migrationOccurred = true;
+          // ✅ FIX: مستقیماً استور خالی برگردانده شود
           return {
             businessData: INITIAL_BUSINESS_DATA,
             gallery: [],

@@ -6,13 +6,13 @@ import Dropdown from '@/components/common/Dropdown';
 import { getBankOptions } from '@/constants/banks';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-export default function BankEditFormFields({ 
-  form, 
-  errors, 
-  businessOwnerName, 
-  isVerified, 
-  verifiedName, 
-  onFieldChange 
+export default function BankEditFormFields({
+  form,
+  errors,
+  businessOwnerName,
+  isVerified,
+  verifiedName,
+  onFieldChange,
 }) {
   const { colors } = useTheme();
   const bankOptions = getBankOptions();
@@ -21,21 +21,30 @@ export default function BankEditFormFields({
     <>
       {/* هشدار مهم */}
       {!isVerified && (
-        <div className="flex items-start gap-2 p-3 rounded-xl border mb-4"
-            style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}>
+        <div
+          className="flex items-start gap-2 p-3 rounded-xl border mb-4"
+          style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
+        >
           <span className="text-base">⚠️</span>
-          <p className="text-xs font-[Vazir] leading-5 flex-1" style={{ color: colors.textSecondary }}>
-            برای ثبت اطلاعات بانکی، ابتدا باید <strong>کد ملی</strong> خود را در بخش تنظیمات/پروفایل تایید کنید.
-            نام صاحب حساب به صورت خودکار از روی کد ملی شما تنظیم می‌شود.
+          <p
+            className="text-xs font-[Vazir] leading-5 flex-1"
+            style={{ color: colors.textSecondary }}
+          >
+            برای ثبت اطلاعات بانکی، ابتدا باید <strong>کد ملی</strong> خود را در بخش تنظیمات/پروفایل
+            تایید کنید. نام صاحب حساب به صورت خودکار از روی کد ملی شما تنظیم می‌شود.
           </p>
         </div>
       )}
 
       <Input
         label="نام صاحب حساب *"
-        value={isVerified ? (verifiedName || 'تایید نشده') : 'تایید نشده'}
+        value={isVerified ? verifiedName || 'تایید نشده' : 'تایید نشده'}
         disabled={true} // همیشه غیرقابل ویرایش است (یا تایید نشده یا از کد ملی خوانده می‌شود)
-        hint={isVerified ? "این نام بر اساس استعلام کد ملی شما به صورت خودکار تنظیم شده است" : "ابتدا کد ملی خود را تایید کنید"}
+        hint={
+          isVerified
+            ? 'این نام بر اساس استعلام کد ملی شما به صورت خودکار تنظیم شده است'
+            : 'ابتدا کد ملی خود را تایید کنید'
+        }
       />
 
       {/* نام بانک */}

@@ -71,13 +71,13 @@ export default function AllAppointmentsPage() {
   }, []);
 
   const confirmVerify = useCallback(
-    (aptId, code) => {         
-      handleVerify(aptId, code); 
+    (aptId, code) => {
+      handleVerify(aptId, code);
       setVerifyVisible(false);
       setVerifyTarget(null);
     },
     [handleVerify]
-  )
+  );
 
   const handleTrust = useCallback(
     (apt) => {

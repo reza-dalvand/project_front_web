@@ -30,8 +30,8 @@ export const paymentsService = {
 
   verifyPayment: (authority, status) => {
     return apiClient.post('/payments/verify/', {
-        authority: authority,
-        status: status,
+      authority: authority,
+      status: status,
     });
   },
 };

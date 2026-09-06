@@ -24,9 +24,9 @@ export default function VerifyCodeModal({
   const { showToast } = useToast();
   const instanceId = useRef('verify-code-modal');
   const inputRefs = useRef([]);
-  
+
   // ✅ FIX: تغییر نام state برای شفافیت بیشتر (اختیاری اما توصیه شده)
-  const [code, setCode] = useState(['', '', '', '']); 
+  const [code, setCode] = useState(['', '', '', '']);
   const [currentBox, setCurrentBox] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,21 +56,20 @@ export default function VerifyCodeModal({
   if (!visible || !appointment) return null;
 
   const handleConfirm = async () => {
-      const enteredCode = code.join('');
-      
-      if (enteredCode.length < CODE_LENGTH) {
-        setError(`کد تایید ${toPersianDigit(CODE_LENGTH)} رقمی را کامل وارد کنید`);
-        return;
-      }
+    const enteredCode = code.join('');
 
-      setLoading(true);
-      setError('');
+    if (enteredCode.length < CODE_LENGTH) {
+      setError(`کد تایید ${toPersianDigit(CODE_LENGTH)} رقمی را کامل وارد کنید`);
+      return;
+    }
 
-      // ✅ فقط پاس دادن کد به والد — ارسال API اینجا انجام نمی‌شود
-      onConfirm?.(appointment.id, enteredCode);
-      setLoading(false);
+    setLoading(true);
+    setError('');
+
+    // ✅ فقط پاس دادن کد به والد — ارسال API اینجا انجام نمی‌شود
+    onConfirm?.(appointment.id, enteredCode);
+    setLoading(false);
   };
-  
 
   const handleChange = (text, index) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
@@ -93,9 +92,9 @@ export default function VerifyCodeModal({
     const digit = cleaned[0] || '';
     newCode[index] = digit;
     setCode(newCode);
-    
+
     if (error) setError('');
-    
+
     if (digit && index < CODE_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
       setCurrentBox(index + 1);
@@ -196,8 +195,8 @@ export default function VerifyCodeModal({
                     error && digit === ''
                       ? '#E53935'
                       : currentBox === index
-                      ? colors.primary
-                      : colors.border
+                        ? colors.primary
+                        : colors.border
                   }`,
                   color: colors.textMain,
                   fontSize: '24px',

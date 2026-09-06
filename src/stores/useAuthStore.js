@@ -102,14 +102,25 @@ export const useAuthStore = create(
       /**
        * خروج از همه دستگاه‌ها
        */
-      logoutAllDevices: async () => {
+      logout: async () => {
         const refreshToken = useTokenStore.getState().getRefreshToken();
+
         try {
           if (refreshToken) {
             await authService.logout(refreshToken, true);
           }
         } catch {}
+
         useTokenStore.getState().clearTokens();
+
+        // ✅ FIX: استور کسب‌وکار هم پاک شود
+        try {
+          const { useBusinessStore } = await import('./useBusinessStore');
+          useBusinessStore.getState().clearForLogout();
+        } catch {
+          // ignore
+        }
+
         set({
           isAuthenticated: false,
           user: null,
