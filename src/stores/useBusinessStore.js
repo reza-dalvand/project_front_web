@@ -108,15 +108,15 @@ export const useBusinessStore = create(
               })),
               team: b.team || [],
               bankInfo: {
-                isRegistered: Boolean(b.bankInfoRegistered),
-                isVerified: Boolean(b.bankInfoVerified),
-                bankName: b.bankName || '',
-                bankId: b.bankId || '',
-                sheba: b.bankSheba || '',
-                cardNumber: b.bankCardNumber || '',
-                ownerName: b.bankOwnerName || '',
-                accountNumber: b.bankAccountNumber || '',
-                nationalId: b.bankNationalId || '',
+                isRegistered: Boolean(b.bankInfoRegistered ?? b.is_registered),
+                isVerified: Boolean(b.bankInfoVerified ?? b.is_verified),
+                bankName: b.bankName || b.bank_name || '',
+                bankId: b.bankId || b.bank_id || '',
+                sheba: b.bankSheba || b.sheba || '',
+                cardNumber: b.bankCardNumber || b.cardNumber || '',
+                ownerName: b.bankOwnerName || b.ownerName || b.owner_name || '',
+                accountNumber: b.bankAccountNumber || b.accountNumber || b.account_number || '',
+                nationalId: b.bankNationalId || b.nationalId || b.national_id || '',
               },
             },
             gallery: b.gallery || [],
@@ -213,6 +213,9 @@ export const useBusinessStore = create(
         }
       },
 
+      // ═══════════════════════════════════════════════
+      //   ۱. اصلاح fetchBankInfo (برای پر کردن صحیح مودال)
+      // ═══════════════════════════════════════════════
       fetchBankInfo: async () => {
         try {
           const response = await businessesService.getBankInfo();
@@ -221,15 +224,16 @@ export const useBusinessStore = create(
             businessData: {
               ...state.businessData,
               bankInfo: {
-                isRegistered: Boolean(data.bankInfoRegistered ?? true),
-                isVerified: Boolean(data.bankInfoVerified),    
-                bankName: data.bankName || '',
-                bankId: data.bankId || '',
-                sheba: data.sheba || '',
-                cardNumber: data.cardNumber || '',
-                ownerName: data.ownerName || '',
-                accountNumber: data.accountNumber || '',
-                nationalId: data.bankNationalId || '',   
+                isRegistered: Boolean(data.bankInfoRegistered ?? data.is_registered ?? true),
+                isVerified: Boolean(data.bankInfoVerified ?? data.is_verified),
+                // ✅ پشتیبانی از هر دو حالت camelCase و snake_case
+                bankName: data.bankName || data.bank_name || '',
+                bankId: data.bankId || data.bank_id || '',
+                sheba: data.bankSheba || data.sheba || '',
+                cardNumber: data.bankCardNumber || data.cardNumber || '',
+                ownerName: data.bankOwnerName || data.ownerName || data.owner_name || '',
+                accountNumber: data.bankAccountNumber || data.accountNumber || data.account_number || '',
+                nationalId: data.bankNationalId || data.nationalId || data.national_id || '',
               },
             },
           }));
@@ -240,30 +244,35 @@ export const useBusinessStore = create(
         }
       },
 
+      // ═══════════════════════════════════════════════
+      //   ۲. اصلاح updateBankInfoApi (برای ارسال صحیح به بک‌اند)
+      // ═══════════════════════════════════════════════
       updateBankInfoApi: async (bankData) => {
         try {
+          // bankData از مودال می‌آید و کلیدهای snake_case دارد (مثل owner_name, bank_name)
           const response = await businessesService.updateBankInfo({
-            bank_owner_name: bankData.ownerName,
-            bank_national_id: bankData.nationalId,
-            bank_name: bankData.bankName,
-            bank_id: bankData.bankId,
-            bank_sheba: bankData.sheba,
-            bank_card_number: bankData.cardNumber,
-            bank_account_number: bankData.accountNumber,
+            owner_name: bankData.owner_name || bankData.ownerName || '',
+            national_id: bankData.national_id || bankData.nationalId || '',
+            bankName: bankData.bank_name || bankData.bankName || '',
+            bank_id: bankData.bank_id || bankData.bankId || '',
+            sheba: bankData.sheba || '',
+            card_number: bankData.card_number || bankData.cardNumber || '',
+            account_number: bankData.account_number || bankData.accountNumber || '',
           });
+          
           set((state) => ({
             businessData: {
               ...state.businessData,
               bankInfo: {
                 isRegistered: true,
                 isVerified: false,
-                bankName: bankData.bankName || '',
-                bankId: bankData.bankId || '',
+                bankName: bankData.bank_name || bankData.bankName || '',
+                bankId: bankData.bank_id || bankData.bankId || '',
                 sheba: bankData.sheba || '',
-                cardNumber: bankData.cardNumber || '',
-                ownerName: bankData.ownerName || '',
-                accountNumber: bankData.accountNumber || '',
-                nationalId: bankData.nationalId || '',
+                cardNumber: bankData.card_number || bankData.cardNumber || '',
+                ownerName: bankData.owner_name || bankData.ownerName || '',
+                accountNumber: bankData.account_number || bankData.accountNumber || '',
+                nationalId: bankData.national_id || bankData.nationalId || '',
               },
             },
           }));

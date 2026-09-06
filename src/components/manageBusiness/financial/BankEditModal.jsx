@@ -1,91 +1,81 @@
 // src/components/manageBusiness/financial/BankEditModal.jsx
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect } from 'react';
+import { FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import BankEditHeader from './BankEditHeader';
-import BankEditFormFields from './BankEditFormFields';
-import BankEditFooter from './BankEditFooter';
-import { toEnglishDigits } from '@/utils/numberUtils';
-import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
+
+const IRANIAN_BANKS = [
+  { id: 'meli', label: 'بانک ملی ایران' },
+  { id: 'mellat', label: 'بانک ملت' },
+  { id: 'saman', label: 'بانک سامان' },
+  { id: 'pasargad', label: 'بانک پاسارگاد' },
+  { id: 'saderat', label: 'بانک صادرات ایران' },
+  { id: 'tejarat', label: 'بانک تجارت' },
+  { id: 'sepah', label: 'بانک سپه' },
+  { id: 'keshavarzi', label: 'بانک کشاورزی' },
+  { id: 'maskan', label: 'بانک مسکن' },
+  { id: 'refah', label: 'بانک رفاه کارگران' },
+  { id: 'parsian', label: 'بانک پارسیان' },
+  { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
+  { id: 'karafarin', label: 'بانک کارآفرین' },
+  { id: 'tosee', label: 'بانک توسعه صادرات' },
+  { id: 'post_bank', label: 'پست بانک ایران' },
+  { id: 'shahr', label: 'بانک شهر' },
+];
 
 export default function BankEditModal({
   visible,
   onClose,
   onSave,
   bankInfo,
-  businessOwnerName,
-  isVerified = false,
-  verifiedName = '',
   saving = false,
 }) {
   const { colors } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const instanceId = useRef('bank-edit-modal');
-  const [form, setForm] = useState({
-    ownerName: '',
-    bankId: null,
+
+  const [formData, setFormData] = useState({
+    bank_name: '',
+    bank_id: '',
     sheba: '',
-    cardNumber: '',
-    accountNumber: '',
+    card_number: '',
+    owner_name: '',
   });
 
   const [errors, setErrors] = useState({});
 
+  // پر کردن فرم هنگام باز شدن
   useEffect(() => {
-    setMounted(true);
-    return () => {
-      setMounted(false);
-      releaseScrollLock(instanceId.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (visible) {
-      setForm({
-        // اگر کد ملی تایید شده باشد، نام تایید شده استفاده می‌شود
-        ownerName: isVerified ? verifiedName : bankInfo?.ownerName || businessOwnerName || '',
-        bankId: bankInfo?.bankId || null,
-        sheba: bankInfo?.sheba || '',
-        cardNumber: bankInfo?.cardNumber || '',
-        accountNumber: bankInfo?.accountNumber || '',
+    if (visible && bankInfo) {
+      setFormData({
+        bank_name: bankInfo.bankName || '',
+        bank_id: bankInfo.bankId || '',
+        sheba: bankInfo.sheba || '',
+        card_number: bankInfo.cardNumber || '',
+        // ✅ نام صاحب حساب از مقادیر قبلی پر می‌شود،
+        // ولی کاربر می‌تواند آن را تغییر دهد
+        owner_name: bankInfo.ownerName || '',
       });
-      console.log(
-        'BankEditModal: Resetting form with bankInfo:',
-        bankInfo,
-        'and verifiedName:',
-        verifiedName
-      );
       setErrors({});
-      acquireScrollLock(instanceId.current);
-    } else {
-      releaseScrollLock(instanceId.current);
     }
-    return () => {
-      releaseScrollLock(instanceId.current);
-    };
-  }, [visible, bankInfo, businessOwnerName, isVerified, verifiedName]);
+  }, [visible, bankInfo]);
 
-  useEffect(() => {
-    if (!visible) return;
-    const handleEsc = (e) => {
-      if (e.key === 'Escape') onClose?.();
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [visible, onClose]);
-
-  const updateField = (key, val) => {
-    setForm((prev) => ({ ...prev, [key]: val }));
-    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: '' }));
+  const updateField = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
   };
 
   const handleShebaChange = (text) => {
-    let val = text.trim().toUpperCase();
-    if (!val.startsWith('IR') && val.length > 0 && !val.startsWith('I')) {
-      val = 'IR' + val;
+    let cleaned = toEnglishDigits(text).trim().toUpperCase();
+    if (!cleaned.startsWith('IR') && cleaned.length > 0 && !cleaned.startsWith('I')) {
+      cleaned = 'IR' + cleaned;
     }
-    const cleaned = val.replace(/[^0-9IR]/g, '');
+    cleaned = cleaned.replace(/[^0-9IR]/g, '');
     if (cleaned.length <= 26) {
       updateField('sheba', cleaned);
     }
@@ -94,103 +84,231 @@ export default function BankEditModal({
   const handleCardChange = (text) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     if (cleaned.length <= 16) {
-      updateField('cardNumber', cleaned);
+      updateField('card_number', cleaned);
     }
-  };
-
-  const handleFieldChange = (key, val) => {
-    if (key === 'sheba') handleShebaChange(val);
-    else if (key === 'cardNumber') handleCardChange(val);
-    else updateField(key, val);
-  };
-
-  const validate = () => {
-    const e = {};
-
-    // اگر کد ملی تایید نشده باشد، اصلا اجازه ثبت ندهیم
-    if (!isVerified) {
-      e.ownerName = 'ابتدا باید کد ملی خود را تایید کنید';
-    } else if (!form.ownerName.trim() || form.ownerName.trim().length < 3) {
-      e.ownerName = 'نام کامل صاحب حساب الزامی است';
-    }
-
-    if (!form.bankId) {
-      e.bankId = 'لطفاً بانک را انتخاب کنید';
-    }
-    const enSheba = toEnglishDigits(form.sheba).trim().toUpperCase();
-    if (!enSheba) {
-      e.sheba = 'شماره شبا الزامی است';
-    } else if (!enSheba.startsWith('IR')) {
-      e.sheba = 'شماره شبا باید با IR شروع شود';
-    } else {
-      const digitsAfterIR = enSheba.slice(2).replace(/[^0-9]/g, '');
-      if (digitsAfterIR.length !== 24) {
-        e.sheba = 'شماره شبا باید IR + ۲۴ رقم باشد';
-      }
-    }
-    const enCard = toEnglishDigits(form.cardNumber).replace(/[^0-9]/g, '');
-    if (!enCard) {
-      e.cardNumber = 'شماره کارت الزامی است';
-    } else if (enCard.length !== 16) {
-      e.cardNumber = 'شماره کارت باید دقیقاً ۱۶ رقم باشد';
-    }
-    setErrors(e);
-    return Object.keys(e).length === 0;
   };
 
   const handleSubmit = () => {
-    if (!validate()) return;
-    const IRANIAN_BANKS = [
-      { id: 'meli', label: 'بانک ملی ایران' },
-      { id: 'mellat', label: 'بانک ملت' },
-      { id: 'saman', label: 'بانک سامان' },
-      { id: 'pasargad', label: 'بانک پاسارگاد' },
-      { id: 'saderat', label: 'بانک صادرات ایران' },
-      { id: 'tejarat', label: 'بانک تجارت' },
-      { id: 'sepah', label: 'بانک سپه' },
-      { id: 'keshavarzi', label: 'بانک کشاورزی' },
-      { id: 'maskan', label: 'بانک مسکن' },
-      { id: 'refah', label: 'بانک رفاه کارگران' },
-      { id: 'parsian', label: 'بانک پارسیان' },
-      { id: 'eghtesad', label: 'بانک اقتصاد نوین' },
-    ];
-    const selectedBank = IRANIAN_BANKS.find((b) => b.id === form.bankId);
-    onSave({
-      ...form,
-      bankName: selectedBank?.label || '',
-    });
+    const newErrors = {};
+
+    // ✅ نام صاحب حساب: فقط بررسی خالی نبودن
+    // هیچ مقایسه‌ای با هیچ جای دیگری انجام نمی‌شود
+    if (!formData.owner_name.trim()) {
+      newErrors.owner_name = 'نام صاحب حساب الزامی است';
+    }
+
+    if (!formData.bank_name) {
+      newErrors.bank_name = 'نام بانک را انتخاب کنید';
+    }
+
+    if (formData.sheba && !formData.sheba.startsWith('IR')) {
+      newErrors.sheba = 'شماره شبا باید با IR شروع شود';
+    }
+    if (formData.sheba && formData.sheba.length !== 26) {
+      newErrors.sheba = 'شماره شبا باید ۲۶ کاراکتر باشد (IR + ۲۴ رقم)';
+    }
+
+    if (formData.card_number && formData.card_number.length !== 16) {
+      newErrors.card_number = 'شماره کارت باید ۱۶ رقم باشد';
+    }
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    onSave(formData);
   };
 
-  if (!mounted || !visible) return null;
+  if (!visible) return null;
 
-  const content = (
+  return (
     <div
-      className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center"
+      className="fixed inset-0 z-[10000] flex items-end md:items-center justify-center"
       style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="w-full max-w-lg max-h-[92vh] rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden"
+        className="w-full max-w-lg max-h-[90vh] rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden"
         style={{
           backgroundColor: colors.cardBackground,
           borderTop: `1px solid ${colors.border}`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <BankEditHeader onClose={onClose} />
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          <BankEditFormFields
-            form={form}
-            errors={errors}
-            businessOwnerName={businessOwnerName}
-            isVerified={isVerified}
-            verifiedName={verifiedName}
-            onFieldChange={handleFieldChange}
-          />
+        {/* هدر */}
+        <div
+          className="flex items-center justify-between px-5 py-4 border-b flex-shrink-0"
+          style={{ borderColor: colors.border }}
+        >
+          <h3
+            className="text-base"
+            style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}
+          >
+            {bankInfo?.bankName ? 'ویرایش حساب بانکی' : 'ثبت حساب بانکی'}
+          </h3>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: colors.background }}
+          >
+            <FiX size={20} style={{ color: colors.textMain }} />
+          </button>
         </div>
-        <BankEditFooter onClose={onClose} onSubmit={handleSubmit} saving={saving} />
+
+        {/* محتوا */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {/* ✅ نام صاحب حساب — دستی، بدون مقایسه */}
+          <div>
+            <label
+              className="block text-sm mb-2"
+              style={{ color: colors.textMain, fontFamily: 'Vazir-Medium' }}
+            >
+              نام صاحب حساب <span style={{ color: '#E53935' }}>*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.owner_name}
+              onChange={(e) => updateField('owner_name', e.target.value)}
+              placeholder="نام و نام خانوادگی صاحب حساب"
+              className="w-full px-4 h-12 rounded-xl border-2 outline-none text-sm transition-colors"
+              style={{
+                backgroundColor: colors.background,
+                borderColor: errors.owner_name ? '#E53935' : colors.border,
+                color: colors.textMain,
+                fontFamily: 'Vazir',
+              }}
+            />
+            {errors.owner_name && (
+              <p className="text-xs mt-1" style={{ color: '#E53935' }}>
+                {errors.owner_name}
+              </p>
+            )}
+          </div>
+
+          {/* نام بانک */}
+          <div>
+            <label
+              className="block text-sm mb-2"
+              style={{ color: colors.textMain, fontFamily: 'Vazir-Medium' }}
+            >
+              نام بانک <span style={{ color: '#E53935' }}>*</span>
+            </label>
+            <select
+              value={formData.bank_name}
+              onChange={(e) => {
+                const bank = IRANIAN_BANKS.find((b) => b.label === e.target.value);
+                setFormData((prev) => ({
+                  ...prev,
+                  bank_name: e.target.value,
+                  bank_id: bank ? bank.id : '',
+                }));
+                if (errors.bank_name) {
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.bank_name;
+                    return next;
+                  });
+                }
+              }}
+              className="w-full px-4 h-12 rounded-xl border-2 outline-none text-sm transition-colors"
+              style={{
+                backgroundColor: colors.background,
+                borderColor: errors.bank_name ? '#E53935' : colors.border,
+                color: colors.textMain,
+                fontFamily: 'Vazir',
+              }}
+            >
+              <option value="">انتخاب کنید...</option>
+              {IRANIAN_BANKS.map((bank) => (
+                <option key={bank.id} value={bank.label}>
+                  {bank.label}
+                </option>
+              ))}
+            </select>
+            {errors.bank_name && (
+              <p className="text-xs mt-1" style={{ color: '#E53935' }}>
+                {errors.bank_name}
+              </p>
+            )}
+          </div>
+
+          {/* شماره شبا */}
+          <div>
+            <label
+              className="block text-sm mb-2"
+              style={{ color: colors.textMain, fontFamily: 'Vazir-Medium' }}
+            >
+              شماره شبا
+            </label>
+            <input
+              type="text"
+              value={formData.sheba}
+              onChange={(e) => handleShebaChange(e.target.value)}
+              placeholder="IR000000000000000000000000"
+              dir="ltr"
+              maxLength={26}
+              className="w-full px-4 h-12 rounded-xl border-2 outline-none text-sm transition-colors"
+              style={{
+                backgroundColor: colors.background,
+                borderColor: errors.sheba ? '#E53935' : colors.border,
+                color: colors.textMain,
+                fontFamily: 'Vazir',
+                textAlign: 'left',
+              }}
+            />
+            {errors.sheba && (
+              <p className="text-xs mt-1" style={{ color: '#E53935' }}>
+                {errors.sheba}
+              </p>
+            )}
+          </div>
+
+          {/* شماره کارت */}
+          <div>
+            <label
+              className="block text-sm mb-2"
+              style={{ color: colors.textMain, fontFamily: 'Vazir-Medium' }}
+            >
+              شماره کارت
+            </label>
+            <input
+              type="text"
+              value={formData.card_number ? toPersianDigit(formData.card_number) : ''}
+              onChange={(e) => handleCardChange(e.target.value)}
+              placeholder="۶۰۳۷۹۹۱۸۱۲۳۴۵۶۷۸"
+              dir="ltr"
+              maxLength={16}
+              className="w-full px-4 h-12 rounded-xl border-2 outline-none text-sm transition-colors"
+              style={{
+                backgroundColor: colors.background,
+                borderColor: errors.card_number ? '#E53935' : colors.border,
+                color: colors.textMain,
+                fontFamily: 'Vazir',
+                textAlign: 'left',
+              }}
+            />
+            {errors.card_number && (
+              <p className="text-xs mt-1" style={{ color: '#E53935' }}>
+                {errors.card_number}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* فوتر */}
+        <div
+          className="px-5 py-4 border-t flex-shrink-0"
+          style={{ borderColor: colors.border }}
+        >
+          <button
+            onClick={handleSubmit}
+            disabled={saving}
+            className="w-full py-3.5 rounded-2xl text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            style={{ backgroundColor: colors.primary, fontFamily: 'Vazir-Bold' }}
+          >
+            {saving ? 'در حال ثبت...' : 'ثبت اطلاعات'}
+          </button>
+        </div>
       </div>
     </div>
   );
-  return createPortal(content, document.body);
 }

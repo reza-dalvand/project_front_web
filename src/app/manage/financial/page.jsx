@@ -15,16 +15,15 @@ import FinancialTabs from '@/components/manageBusiness/financial/FinancialTabs';
 import TransactionItem from '@/components/manageBusiness/financial/TransactionItem';
 import { usePaymentManager } from '@/hooks/usePaymentManager';
 import dynamic from 'next/dynamic';
-import { useAuthStore } from '@/stores/useAuthStore';
 
 const TransactionDetailModal = dynamic(
   () => import('@/components/manageBusiness/financial/TransactionDetailModal'),
   { ssr: false, loading: () => null }
 );
-const BankEditModal = dynamic(() => import('@/components/manageBusiness/financial/BankEditModal'), {
-  ssr: false,
-  loading: () => null,
-});
+const BankEditModal = dynamic(
+  () => import('@/components/manageBusiness/financial/BankEditModal'),
+  { ssr: false, loading: () => null }
+);
 
 export default function FinancialManagementPage() {
   const { colors } = useTheme();
@@ -34,7 +33,6 @@ export default function FinancialManagementPage() {
   const updateBankInfoApi = useBusinessStore((s) => s.updateBankInfoApi);
   const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
   const { showToast } = useToast();
-  const user = useAuthStore((s) => s.user);
 
   const {
     businessStats,
@@ -52,19 +50,27 @@ export default function FinancialManagementPage() {
 
   const [bankEditVisible, setBankEditVisible] = useState(false);
   const [bankSaving, setBankSaving] = useState(false);
+  const fetchBankInfo = useBusinessStore((s) => s.fetchBankInfo);
 
   const bankInfo = businessData?.bankInfo || { isRegistered: false, isVerified: false };
-  const isNationalIdVerified =
-    Boolean(businessData?.isNationalIdVerified) || Boolean(user?.isNationalIdVerified);
-  const verifiedName = user?.verifiedName || businessData?.verifiedName || '';
+  
+  const handleOpenBankEdit = async () => {
+    setBankEditVisible(true);
+    try {
+      await fetchBankInfo();
+    } catch (err) {
+      console.error('Failed to fetch bank info:', err);
+    }
+  };
 
   const handleSaveBankInfo = async (data) => {
     setBankSaving(true);
     try {
+      // ✅ مستقیم به بک‌اند — بدون هیچ مقایسه‌ای
       await updateBankInfoApi(data);
       await fetchBusinessDetail();
       setBankEditVisible(false);
-      showToast('اطلاعات حساب بانکی ثبت شد و وارد مرحله تایید شد', 'success');
+      showToast('اطلاعات حساب بانکی ثبت شد', 'success');
     } catch (err) {
       showToast(err.message || 'خطا در ثبت اطلاعات بانکی', 'error');
     } finally {
@@ -101,8 +107,8 @@ export default function FinancialManagementPage() {
         {/* اطلاعات بانکی */}
         <BankInfoCard
           bankInfo={bankInfo}
-          onEdit={() => setBankEditVisible(true)}
-          businessOwnerName={verifiedName || businessData?.ownerName || ''}
+          onEdit={handleOpenBankEdit} 
+          businessOwnerName={businessData?.ownerName || ''}
           hasActiveAppointments={
             (businessStats?.blocked || 0) > 0 || (businessStats?.settling || 0) > 0
           }
@@ -140,15 +146,16 @@ export default function FinancialManagementPage() {
       </div>
 
       {/* مدال‌ها */}
-      <TransactionDetailModal visible={detailVisible} tx={selectedTx} onClose={handleCloseDetail} />
+      <TransactionDetailModal
+        visible={detailVisible}
+        tx={selectedTx}
+        onClose={handleCloseDetail}
+      />
       <BankEditModal
         visible={bankEditVisible}
         onClose={() => setBankEditVisible(false)}
         onSave={handleSaveBankInfo}
         bankInfo={bankInfo}
-        businessOwnerName={verifiedName || businessData?.ownerName || ''}
-        isVerified={isNationalIdVerified}
-        verifiedName={verifiedName}
         saving={bankSaving}
       />
     </ScreenWrapper>
