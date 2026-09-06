@@ -279,7 +279,7 @@ export default function NationalIdVerificationStep({
         size="lg"
         fullWidth
         icon={<FiArrowLeft size={18} color="#fff" />}
-        iconPosition="left"
+        iconPosition="right"
         style={{ backgroundColor: '#4CAF50', opacity: !isValid ? 0.5 : 1 }}
       />
     </div>

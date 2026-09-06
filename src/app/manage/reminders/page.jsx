@@ -11,6 +11,7 @@ import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { remindersService } from '@/api';
+import Button from '@/components/common/Button';
 
 const REMINDER_THRESHOLD_DAYS = 2;
 
@@ -30,7 +31,9 @@ export default function RemindersPage() {
       setIsLoading(true);
       try {
         const result = await remindersService.getBusinessReminders();
-        setCustomers(result.data || []);
+        // ✅ اصلاح: مدیریت حالت‌های مختلف بازگشتی (wrapped یا unwrapped)
+        const items = result?.data || result || [];
+        setCustomers(Array.isArray(items) ? items : []);
       } catch (error) {
         console.error('Failed to fetch reminders:', error);
         showToast('خطا در بارگذاری یادآوری‌ها', 'error');
@@ -43,26 +46,47 @@ export default function RemindersPage() {
 
   // ═══ مشتریان نیازمند یادآوری ═══
   const dueCustomers = useMemo(() => {
-    return customers.filter((c) => c.days_remaining <= REMINDER_THRESHOLD_DAYS);
+    return customers.filter((c) => {
+      // ✅ اصلاح: پشتیبانی از camelCase (تولید شده توسط normalizer) و snake_case
+      const days = c.daysRemaining ?? c.days_remaining;
+      return days !== undefined && days !== null && days <= REMINDER_THRESHOLD_DAYS;
+    });
   }, [customers]);
 
   // ═══ مشتریان قابل ارسال ═══
   const sendableCustomers = useMemo(() => {
     return dueCustomers.filter((c) => {
-      if (!c.reminder_sent) return true;
-      if (c.has_new_booking_after_send) return true;
+      const sent = c.reminderSent ?? c.reminder_sent;
+      const hasNew = c.hasNewBookingAfterSend ?? c.has_new_booking_after_send;
+      
+      if (!sent) return true;
+      if (hasNew) return true;
       return false;
     });
   }, [dueCustomers]);
+  
 
   // ═══ آمار ═══
   const stats = useMemo(() => {
     return {
-      totalDue: dueCustomers.length,
-      overdue: dueCustomers.filter((c) => c.days_remaining < 0).length,
-      sentToday: customers.filter((c) => c.reminder_sent && c.sent_date).length,
+      // ✅ اصلاح ۱: نیازمند یادآوری = کسانی که موعدشان نزدیک است و هنوز ارسال نشده‌اند
+      // (دقیقاً همان لیست sendableCustomers)
+      totalDue: sendableCustomers.length,
+      
+      // ✅ اصلاح ۲: گذشته از موعد (از بین نیازمندانِ ارسال نشده)
+      overdue: sendableCustomers.filter((c) => {
+        const days = c.daysRemaining ?? c.days_remaining;
+        return days < 0;
+      }).length,
+      
+      // ✅ اصلاح ۳: ارسال شده (پشتیبانی از هر دو فرمت snake_case و camelCase)
+      sentToday: customers.filter((c) => {
+        const isSent = c.reminderSent ?? c.reminder_sent;
+        const sentDate = c.sentDate || c.sent_date;
+        return isSent && sentDate;
+      }).length,
     };
-  }, [dueCustomers, customers]);
+  }, [sendableCustomers, customers]);
 
   // ═══ انتخاب/لغو انتخاب ═══
   const toggleCustomer = useCallback((customerId) => {
@@ -90,11 +114,18 @@ export default function RemindersPage() {
     try {
       await remindersService.sendReminders(selectedIds);
 
-      // بروزرسانی محلی
       setCustomers((prev) =>
         prev.map((c) =>
           selectedIds.includes(c.id)
-            ? { ...c, reminder_sent: true, sent_date: 'امروز', has_new_booking_after_send: false }
+            ? { 
+                ...c, 
+                reminder_sent: true, 
+                reminderSent: true,
+                sent_date: 'امروز', 
+                sentDate: 'امروز',
+                has_new_booking_after_send: false,
+                hasNewBookingAfterSend: false 
+              }
             : c
         )
       );
@@ -181,16 +212,20 @@ export default function RemindersPage() {
           dueCustomers.map((customer) => {
             const isSendable = sendableCustomers.some((c) => c.id === customer.id);
             const isSelected = selectedIds.includes(customer.id);
-            const isOverdue = customer.days_remaining < 0;
-            const isToday = customer.days_remaining === 0;
-            const customerName = customer.customer_name || customer.customerName;
-            const customerPhone = customer.customer_phone || customer.customerPhone;
-            const serviceName = customer.service_name || customer.serviceName;
-            const lastServiceDate = customer.last_service_date || customer.lastServiceDate;
-            const dueDate = customer.due_date || customer.dueDate;
-            const daysRemaining = customer.days_remaining;
-            const reminderSent = customer.reminder_sent;
-            const sentDate = customer.sent_date || customer.sentDate;
+            
+            // ✅ استخراج متغیرها با پشتیبانی از هر دو فرمت
+            const customerName = customer.customerName || customer.customer_name;
+            const customerPhone = customer.customerPhone || customer.customer_phone;
+            const serviceName = customer.serviceName || customer.service_name;
+            const lastServiceDate = customer.lastServiceDate || customer.last_service_date;
+            const dueDate = customer.dueDate || customer.due_date;
+            const daysRemaining = customer.daysRemaining ?? customer.days_remaining;
+            const reminderSent = customer.reminderSent ?? customer.reminder_sent;
+            const sentDate = customer.sentDate || customer.sent_date;
+
+            // ✅ اصلاح: استفاده از متغیر استخراج شده به جای دسترسی مستقیم که undefined بود
+            const isOverdue = daysRemaining < 0;
+            const isToday = daysRemaining === 0;
 
             return (
               <button
