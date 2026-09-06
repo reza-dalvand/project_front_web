@@ -15,6 +15,7 @@ import FinancialTabs from '@/components/manageBusiness/financial/FinancialTabs';
 import TransactionItem from '@/components/manageBusiness/financial/TransactionItem';
 import { usePaymentManager } from '@/hooks/usePaymentManager';
 import dynamic from 'next/dynamic';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 const TransactionDetailModal = dynamic(
   () => import('@/components/manageBusiness/financial/TransactionDetailModal'),
@@ -33,6 +34,7 @@ export default function FinancialManagementPage() {
   const updateBankInfoApi = useBusinessStore((s) => s.updateBankInfoApi);
   const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
   const { showToast } = useToast();
+  const user = useAuthStore((s) => s.user);
 
   const {
     businessStats,
@@ -52,8 +54,9 @@ export default function FinancialManagementPage() {
   const [bankSaving, setBankSaving] = useState(false);
 
   const bankInfo = businessData?.bankInfo || { isRegistered: false, isVerified: false };
-  const isNationalIdVerified = Boolean(businessData?.isNationalIdVerified);
-  const verifiedName = businessData?.verifiedName || '';
+  const isNationalIdVerified =
+    Boolean(businessData?.isNationalIdVerified) || Boolean(user?.isNationalIdVerified);
+  const verifiedName = user?.verifiedName || businessData?.verifiedName || '';
 
   const handleSaveBankInfo = async (data) => {
     setBankSaving(true);

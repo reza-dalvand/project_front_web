@@ -87,6 +87,7 @@ export const businessesService = {
     return apiClient.get('/businesses/bank-info/');
   },
 
+
   /**
    * ویرایش اطلاعات بانکی کسب‌وکار
    * PUT /businesses/bank-info/

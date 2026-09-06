@@ -52,12 +52,10 @@ function BusinessInitializer() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchBusinessDetail().catch((err) => {
-        // ✅ FIX: اگر ارور صرفاً به دلیل نداشتن کسب‌وکار بود، آن را لاگ نکن
         const isNoBusiness =
           err?.code === 'NOT_FOUND' ||
           err?.status === 404 ||
           (typeof err?.message === 'string' && err.message.includes('کسب‌وکاری ثبت نکرده‌اید'));
-
         if (!isNoBusiness) {
           console.warn('Business fetch failed:', err);
         }

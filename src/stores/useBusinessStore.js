@@ -9,14 +9,14 @@ import { createTeamSlice } from './business/slices/teamSlice';
 import { createPortfoliosSlice } from './business/slices/portfoliosSlice';
 import { createSchedulesSlice } from './business/slices/schedulesSlice';
 
-// ❌ حذف شد: let migrationOccurred = false;
-
 export const useBusinessStore = create(
   persist(
     (set, get) => ({
       businessData: INITIAL_BUSINESS_DATA,
       gallery: [],
       _version: STORAGE_VERSION,
+
+      businessStatus: null, // 'pending' | 'approved' | 'rejected' | null
 
       ...createServicesSlice(set, get),
       ...createAppointmentsSlice(set),
@@ -32,29 +32,29 @@ export const useBusinessStore = create(
       deleteBusiness: () => {
         set((state) => ({
           businessData: { ...state.businessData, isActive: false },
+          businessStatus: null,
         }));
         return true;
       },
 
-      getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
+      getActiveServices: () =>
+        get().businessData.services.filter((s) => s.isActive !== false),
 
       resetToDefaults: () => {
         set({
           businessData: INITIAL_BUSINESS_DATA,
           gallery: [],
           _version: STORAGE_VERSION,
+          businessStatus: null,
         });
       },
 
-      /**
-       * ✅ جدید: پاک کردن کامل برای خروج از حساب
-       * در logout صدا زده می‌شود تا داده‌های کاربر قبلی پاک شوند
-       */
       clearForLogout: () => {
         set({
           businessData: INITIAL_BUSINESS_DATA,
           gallery: [],
           _version: STORAGE_VERSION,
+          businessStatus: null,
         });
       },
 
@@ -62,36 +62,84 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.getBusinessDetail();
           const b = response.data;
-
           set((state) => ({
-            // ... (همان مپینگ‌های قبلی بدون تغییر)
             businessData: {
               ...state.businessData,
               id: b.id,
-              // ...
+              name: b.name || '',
+              category: b.categoryName || b.category?.name || '',
+              categoryId: b.categoryId || b.category?.id || null,
+              address: b.address || '',
+              city: b.cityName || b.city?.name || '',
+              cityId: b.cityId || b.city?.id || null,
+              provinceId: b.provinceId || b.province?.id || null,
+              phone: b.phone || '',
+              workingHours: b.workingHours || '',
+              about: b.about || '',
+              rating: b.rating || 0,
+              reviewsCount: b.reviewsCount || 0,
+              VIP: b.isVip || false,
+              logo: b.logo || null,
+              coverUrl: b.coverImage || null,
+              ownerPhoto: b.ownerPhoto || null,
+              ownerName: b.ownerName || '',
+              verifiedName: b.verifiedName || '',
+              nationalId: b.nationalId || '',                          
+              isNationalIdVerified: Boolean(b.isNationalIdVerified), 
+              bookingSlug: b.bookingSlug || '',
+              latitude: b.latitude || null,
+              longitude: b.longitude || null,
+              isActive: b.status === 'approved',
+              status: b.status || null,
+              services: (b.services || []).map((s) => ({
+                id: s.id,
+                name: s.name,
+                typeId: s.subService?.typeId || s.typeId || '',
+                typeName: s.subService?.name || s.typeName || '',
+                originalPrice: s.originalPrice ?? 0,
+                discountPercent: s.discountPercent ?? 0,
+                finalPrice: s.finalPrice ?? s.originalPrice ?? 0,
+                duration: s.duration || 60,
+                hasDeposit: s.hasDeposit ?? false,
+                depositAmount: s.depositAmount || 0,
+                renewalDays: s.renewalDays || 0,
+                isActive: s.isActive !== false,
+                description: s.description || '',
+              })),
+              team: b.team || [],
+              bankInfo: {
+                isRegistered: Boolean(b.bankInfoRegistered),
+                isVerified: Boolean(b.bankInfoVerified),
+                bankName: b.bankName || '',
+                bankId: b.bankId || '',
+                sheba: b.bankSheba || '',
+                cardNumber: b.bankCardNumber || '',
+                ownerName: b.bankOwnerName || '',
+                accountNumber: b.bankAccountNumber || '',
+                nationalId: b.bankNationalId || '',
+              },
             },
             gallery: b.gallery || [],
+            // ✅ FIX: وضعیت بیزینس هم آپدیت شود
+            businessStatus: b.status || state.businessStatus,
           }));
           return response.data;
         } catch (error) {
-          // ✅ FIX: اگر کاربر هنوز کسب‌وکاری ثبت نکرده (404)، این یک خطای واقعی نیست.
           const isNoBusiness =
             error?.code === 'NOT_FOUND' ||
             error?.status === 404 ||
-            error?.response?.status === 404 ||
             (typeof error?.message === 'string' &&
               error.message.includes('کسب‌وکاری ثبت نکرده‌اید'));
-
           if (isNoBusiness) {
-            // کاربر تازه وارد شده و هنوز بیزینسی نساخته است.
-            // استیت را به حالت اولیه ریست می‌کنیم و بدون ارور خارج می‌شویم.
             set({
               businessData: INITIAL_BUSINESS_DATA,
               gallery: [],
+              businessStatus: null,
             });
             return null;
           }
-
+          // ✅ FIX: اگر خطا غیر از "بیزینس ندارید" بود، استور را ریست نکن
+          // فقط ارور را لاگ کن تا داده‌های قبلی حفظ شوند
           console.error('fetchBusinessDetail failed:', error);
           throw error;
         }
@@ -100,7 +148,12 @@ export const useBusinessStore = create(
       fetchBusinessStatus: async () => {
         try {
           const response = await businessesService.getBusinessStatus();
-          return response.data;
+          const data = response.data;
+          // ✅ FIX: اگر بیزینس وجود دارد، status را در استور ذخیره کن
+          if (data?.hasBusiness) {
+            set({ businessStatus: data.status || 'pending' });
+          }
+          return data;
         } catch (error) {
           console.error('fetchBusinessStatus failed:', error);
           throw error;
@@ -111,20 +164,27 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.createBusiness(formData);
           const b = response.data;
-
           set((state) => ({
             businessData: {
               ...state.businessData,
               id: b.id,
               name: b.name || '',
-              category: b.category?.name || '',
+              category: b.categoryName || b.category?.name || '',
               address: b.address || '',
               bookingSlug: b.bookingSlug || '',
               isActive: b.status === 'approved',
-              status: b.status || null,
+              status: b.status || 'pending',
+              ownerName: b.ownerName || '',
+              verifiedName: b.verifiedName || '',           
+              nationalId: b.nationalId || '',                      
+              isNationalIdVerified: Boolean(b.isNationalIdVerified), 
+              phone: b.phone || '',
+              latitude: b.latitude || null,
+              longitude: b.longitude || null,
             },
+            // ✅ FIX: وضعیت بیزینس بلافاصله ست شود
+            businessStatus: b.status || 'pending',
           }));
-
           return response.data;
         } catch (error) {
           console.error('createBusinessApi failed:', error);
@@ -136,7 +196,6 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.updateBusiness(data);
           const b = response.data;
-
           set((state) => ({
             businessData: {
               ...state.businessData,
@@ -147,7 +206,6 @@ export const useBusinessStore = create(
               about: b.about || state.businessData.about,
             },
           }));
-
           return response.data;
         } catch (error) {
           console.error('updateBusinessApi failed:', error);
@@ -159,24 +217,22 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.getBankInfo();
           const data = response.data;
-
           set((state) => ({
             businessData: {
               ...state.businessData,
               bankInfo: {
-                isRegistered: true,
-                isVerified: data.isVerified ?? data.is_verified ?? false,
-                bankName: data.bankName || data.bank_name || '',
-                bankId: data.bankId || data.bank_id || '',
+                isRegistered: Boolean(data.bankInfoRegistered ?? true),
+                isVerified: Boolean(data.bankInfoVerified),    
+                bankName: data.bankName || '',
+                bankId: data.bankId || '',
                 sheba: data.sheba || '',
-                cardNumber: data.cardNumber || data.card_number || '',
-                ownerName: data.ownerName || data.owner_name || '',
-                accountNumber: data.accountNumber || data.account_number || '',
-                nationalId: data.nationalId || data.national_id || '',
+                cardNumber: data.cardNumber || '',
+                ownerName: data.ownerName || '',
+                accountNumber: data.accountNumber || '',
+                nationalId: data.bankNationalId || '',   
               },
             },
           }));
-
           return data;
         } catch (error) {
           console.error('fetchBankInfo failed:', error);
@@ -195,7 +251,6 @@ export const useBusinessStore = create(
             bank_card_number: bankData.cardNumber,
             bank_account_number: bankData.accountNumber,
           });
-
           set((state) => ({
             businessData: {
               ...state.businessData,
@@ -212,7 +267,6 @@ export const useBusinessStore = create(
               },
             },
           }));
-
           return response.data;
         } catch (error) {
           console.error('updateBankInfoApi failed:', error);
@@ -225,6 +279,7 @@ export const useBusinessStore = create(
           await businessesService.deleteBusiness();
           set((state) => ({
             businessData: { ...state.businessData, isActive: false },
+            businessStatus: null,
           }));
         } catch (error) {
           console.error('deleteBusinessApi failed:', error);
@@ -292,20 +347,19 @@ export const useBusinessStore = create(
           ? localStorage
           : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
+      // ✅ FIX: businessStatus هم persist شود
       partialize: (state) => ({
         businessData: state.businessData,
         gallery: state.gallery,
+        businessStatus: state.businessStatus,
         _version: STORAGE_VERSION,
       }),
       migrate: (persistedState, version) => {
         if (version < STORAGE_VERSION) {
-          console.log(
-            `[BusinessStore] Migration from v${version} to v${STORAGE_VERSION}. Clearing stale data.`
-          );
-          // ✅ FIX: مستقیماً استور خالی برگردانده شود
           return {
             businessData: INITIAL_BUSINESS_DATA,
             gallery: [],
+            businessStatus: null,
             _version: STORAGE_VERSION,
           };
         }
@@ -315,6 +369,7 @@ export const useBusinessStore = create(
   )
 );
 
+// ─── Selectors ───
 export const useBusinessName = () => useBusinessStore((s) => s.businessData?.name);
 export const useBusinessServices = () => useBusinessStore((s) => s.businessData?.services || []);
 export const useBusinessAppointments = () =>
@@ -325,5 +380,9 @@ export const useBusinessGallery = () => useBusinessStore((s) => s.gallery);
 export const useBusinessIsActive = () => useBusinessStore((s) => s.businessData?.isActive);
 export const useBusinessBankInfo = () => useBusinessStore((s) => s.businessData?.bankInfo);
 export const useBusinessBookingSlug = () => useBusinessStore((s) => s.businessData?.bookingSlug);
+
+export const useHasAnyBusiness = () =>
+  useBusinessStore((s) => Boolean(s.businessData?.id) || Boolean(s.businessStatus));
+
 export const useBusinessHasData = () =>
   useBusinessStore((s) => Boolean(s.businessData?.id && s.businessData?.name));

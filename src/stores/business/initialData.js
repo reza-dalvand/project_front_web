@@ -48,6 +48,7 @@ export const INITIAL_BUSINESS_DATA = {
   ownerName: '',
   verifiedName: '',
   nationalId: '',
+  isNationalIdVerified: false,
 
   // ─── حساب بانکی ───
   bankInfo: {

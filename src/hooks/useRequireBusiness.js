@@ -1,12 +1,12 @@
 // src/hooks/useRequireBusiness.js
 /**
- * محافظ صفحات کسب‌وکار
- *
- * قوانین:
- *  ۱. لاگین نیست → ریدایرکت به /auth/login
- *  ۲. لاگین هست ولی کسب‌وکار ندارد → ریدایرکت به /create-business
- *  ۳. لاگین هست و کسب‌وکار دارد → دسترسی مجاز
- */
+* محافظ صفحات کسب‌وکار
+*
+* قوانین:
+*  ۱. لاگین نیست → ریدایرکت به /auth/login
+*  ۲. لاگین هست ولی کسب‌وکار ندارد → ریدایرکت به /create-business
+*  ۳. لاگین هست و کسب‌وکار دارد (در هر وضعیت: pending, approved, rejected) → دسترسی مجاز
+*/
 'use client';
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -16,12 +16,15 @@ import { useBusinessStore } from '@/stores/useBusinessStore';
 export const useRequireBusiness = () => {
   const router = useRouter();
   const pathname = usePathname();
-
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const authHydrated = useAuthStore((s) => s._hydrated);
   const checkSession = useAuthStore((s) => s.checkSession);
 
-  const hasBusiness = useBusinessStore((s) => Boolean(s.businessData?.id && s.businessData?.name));
+  // ✅ FIX: بررسی ساده‌تر — فقط وجود id یا businessStatus کافی است
+  // نیازی به تأیید شدن بیزینس نیست — حتی بیزینس pending هم باید قابل مدیریت باشد
+  const hasBusiness = useBusinessStore(
+    (s) => Boolean(s.businessData?.id) || Boolean(s.businessStatus)
+  );
 
   useEffect(() => {
     if (!authHydrated) return;
@@ -40,7 +43,6 @@ export const useRequireBusiness = () => {
         return;
       }
 
-      // ─── ۳. کسب‌وکار ندارد → ساخت کسب‌وکار ───
       if (!hasBusiness) {
         router.replace('/create-business');
       }

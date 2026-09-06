@@ -10,8 +10,13 @@ export default function BottomTabBar() {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, openAuthModal } = useAuth();
+
+  // ✅ FIX: بررسی ساده‌تر و مقاوم‌تر
+  // فقط وجود id کافی است — نیازی به name نیست
+  // همچنین اگر businessStatus ست شده باشد، یعنی بیزینس وجود دارد
   const businessData = useBusinessStore((s) => s.businessData);
-  const hasBusiness = Boolean(businessData?.id && businessData?.name);
+  const businessStatus = useBusinessStore((s) => s.businessStatus);
+  const hasBusiness = Boolean(businessData?.id) || Boolean(businessStatus);
 
   const tabs = isAuthenticated
     ? [
@@ -20,17 +25,21 @@ export default function BottomTabBar() {
         hasBusiness
           ? { id: 'manage', icon: FiCreditCard, label: 'مدیریت', path: '/manage' }
           : { id: 'create', icon: FiPlusCircle, label: 'ثبت آگهی', path: '/create-business' },
+          { id: 'model-requests', icon: FiUser, label: 'اگهی مدل', path: '/model-requests' },
         { id: 'profile', icon: FiUser, label: 'پروفایل', path: '/profile' },
-        { id: 'model-requests', icon: FiUser, label: 'اگهی مدل', path: '/model-requests' },
       ]
     : [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
         { id: 'explore', icon: FiGrid, label: 'ویترین', path: '/explore' },
-        { id: 'model-requests', icon: FiUser, label: 'درخواست مدل', path: '/model-requests' },
+        {
+          id: 'model-requests',
+          icon: FiUser,
+          label: 'درخواست مدل',
+          path: '/model-requests',
+        },
         { id: 'login', icon: FiLogIn, label: 'ورود و ثبت‌نام', isAuthAction: true },
       ];
 
-  // تشخیص مسیر فعال
   const isActive = (tab) => {
     if (tab.isAuthAction) return false;
     if (tab.path === '/') return pathname === '/';
