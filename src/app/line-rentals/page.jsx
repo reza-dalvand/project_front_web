@@ -1,4 +1,3 @@
-// src/app/line-rentals/page.jsx
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,13 +14,50 @@ import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
 export default function LineRentalsPage() {
   const router = useRouter();
-  const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
   const nearbyEnabled = useNearbyStore((s) => s.enabled);
   const userLocation = useNearbyStore((s) => s.userLocation);
   const [rentals, setRentals] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [collabFilter, setCollabFilter] = useState('all');
-  const { provinceId, cityId, latitude, longitude } = useGlobalLocationStore();
+
+  // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
+  const [locationState, setLocationState] = useState({
+    provinceId: null,
+    cityId: null,
+    latitude: null,
+    longitude: null,
+    gpsEnabled: false,
+    locationType: 'all',
+  });
+
+  useEffect(() => {
+    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
+      setLocationState({
+        provinceId: state.provinceId,
+        cityId: state.cityId,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled,
+        locationType: state.locationType,
+      });
+    });
+
+    const initialState = useGlobalLocationStore.getState();
+    setLocationState({
+      provinceId: initialState.provinceId,
+      cityId: initialState.cityId,
+      latitude: initialState.latitude,
+      longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled,
+      locationType: initialState.locationType,
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const getLocationParams = useCallback(() => {
+    return useGlobalLocationStore.getState().getLocationParams();
+  }, []);
 
   useEffect(() => {
     const fetchRentals = async () => {
@@ -46,7 +82,17 @@ export default function LineRentalsPage() {
     };
 
     fetchRentals();
-  }, [nearbyEnabled, userLocation, provinceId, cityId, latitude, longitude]);
+  }, [
+    nearbyEnabled,
+    userLocation,
+    locationState.provinceId,
+    locationState.cityId,
+    locationState.latitude,
+    locationState.longitude,
+    locationState.gpsEnabled,
+    locationState.locationType,
+    getLocationParams,
+  ]);
 
   const filteredRentals = useMemo(() => {
     if (collabFilter === 'all') return rentals;

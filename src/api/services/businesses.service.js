@@ -1,4 +1,3 @@
-// src/api/services/businesses.service.js
 /**
 * 🏪 Businesses Service — نسخه نهایی هماهنگ با بک‌اند
 *
@@ -32,17 +31,26 @@ export const businessesService = {
 
   // ═══════════ List ═══════════
   getBusinessList: (params = {}) => {
-    return apiClient.get('/businesses/list/', { params });
+    return apiClient.get('/businesses/list/', {
+      params: {
+        ...params,
+        _t: Date.now(), // ✅ Cache buster
+      },
+    });
   },
 
   // ═══════════ Status ═══════════
   getBusinessStatus: () => {
-    return apiClient.get('/businesses/status/');
+    return apiClient.get('/businesses/status/', {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   // ═══════════ Detail (مالک) ═══════════
   getBusinessDetail: () => {
-    return apiClient.get('/businesses/detail/');
+    return apiClient.get('/businesses/detail/', {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   updateBusiness: async (data) => {
@@ -57,7 +65,9 @@ export const businessesService = {
 
   // ═══════════ Bank Info ═══════════
   getBankInfo: () => {
-    return apiClient.get('/businesses/bank-info/');
+    return apiClient.get('/businesses/bank-info/', {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   /**
@@ -91,12 +101,16 @@ export const businessesService = {
 
   // ═══════════ Public (مشتری) ═══════════
   getPublicBusiness: (bookingSlug) => {
-    return apiClient.get(`/businesses/public/${bookingSlug}/`);
+    return apiClient.get(`/businesses/public/${bookingSlug}/`, {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   // ═══════════ Gallery ═══════════
   getGallery: () => {
-    return apiClient.get('/businesses/gallery/');
+    return apiClient.get('/businesses/gallery/', {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   uploadGalleryImage: (imageFile, sortOrder = 0) => {

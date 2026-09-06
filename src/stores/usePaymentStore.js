@@ -96,17 +96,20 @@ export const usePaymentStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const result = await paymentsService.getBusinessTransactions(params);
-      set({ transactions: result.data || [], isLoading: false });
-      return result.data;
+      const data = result.data;
+      
+      // ✅ FIX: استخراج آرایه از پاسخ صفحه‌بندی‌شده (Paginated) بک‌اند
+      // ساختار پاسخ بک‌اند: { count, next, previous, results: [...] }
+      const list = Array.isArray(data) ? data : (data?.results || []);
+      
+      set({ transactions: list, isLoading: false });
+      return list;
     } catch (error) {
       console.error('fetchBusinessTransactions failed:', error);
       set({ error: error.message, isLoading: false });
       throw error;
     }
   },
-
-  // ❌ requestSettlement حذف شد — تسویه خودکار است
-  // ❌ fetchSettlements حذف شد — تسویه خودکار است
 
   // ─── Customer Payments ───
   /**
@@ -116,8 +119,13 @@ export const usePaymentStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const result = await paymentsService.getPaymentHistory(params);
-      set({ customerPayments: result.data || [], isLoading: false });
-      return result.data;
+      const data = result.data;
+      
+      // ✅ FIX: استخراج آرایه از پاسخ صفحه‌بندی‌شده بک‌اند
+      const list = Array.isArray(data) ? data : (data?.results || []);
+
+      set({ customerPayments: list, isLoading: false });
+      return list;
     } catch (error) {
       console.error('fetchCustomerPayments failed:', error);
       set({ error: error.message, isLoading: false });
@@ -147,6 +155,7 @@ export const usePaymentStore = create((set, get) => ({
    */
   getFilteredTransactions: (status) => {
     const { transactions } = get();
+    if (!Array.isArray(transactions)) return []; // ✅ Safety Check
     if (!status || status === 'all') return transactions;
     return transactions.filter((tx) => tx.status === status);
   },
@@ -156,6 +165,7 @@ export const usePaymentStore = create((set, get) => ({
    */
   getTotalByStatus: (status) => {
     const { transactions } = get();
+    if (!Array.isArray(transactions)) return 0; // ✅ Safety Check
     return transactions
       .filter((tx) => tx.status === status)
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);

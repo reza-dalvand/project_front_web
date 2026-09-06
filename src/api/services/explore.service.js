@@ -1,4 +1,3 @@
-// src/api/services/explore.service.js
 /**
  * 🖼️ Explore Service — ویترین + اسلایدر صفحه هوم
  *
@@ -20,14 +19,21 @@ export const exploreService = {
    *     is_favorited, created_at }
    */
   getPosts: (params = {}) => {
-    return apiClient.get('/explore/posts/', { params });
+    return apiClient.get('/explore/posts/', {
+      params: {
+        ...params,
+        _t: Date.now(), // ✅ Cache buster
+      },
+    });
   },
 
   /**
    * دریافت جزئیات یک پست ویترین
    */
   getPostDetail: (postId) => {
-    return apiClient.get(`/explore/posts/${postId}/`);
+    return apiClient.get(`/explore/posts/${postId}/`, {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   /**
@@ -36,13 +42,20 @@ export const exploreService = {
    * @param {object} params - { page, page_size, category_id, business_id }
    */
   getPortfolios: (params = {}) => {
-    return apiClient.get('/portfolios/', { params });
+    return apiClient.get('/portfolios/', {
+      params: {
+        ...params,
+        _t: Date.now(), // ✅ Cache buster
+      },
+    });
   },
 
   /**
    * دریافت جزئیات یک نمونه‌کار
    */
   getPortfolioDetail: (portfolioId) => {
-    return apiClient.get(`/portfolios/${portfolioId}/`);
+    return apiClient.get(`/portfolios/${portfolioId}/`, {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 };

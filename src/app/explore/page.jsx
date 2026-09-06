@@ -1,4 +1,3 @@
-// src/app/explore/page.jsx
 'use client';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -46,12 +45,44 @@ export default function ExplorePage() {
 
   const isFetchingRef = useRef(false);
 
-  // ✅ هوک‌ها باید دقیقاً اینجا (داخل بدنه کامپوننت) تعریف شوند:
-  const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
-  const globalProvinceId = useGlobalLocationStore((s) => s.provinceId);
-  const globalCityId = useGlobalLocationStore((s) => s.cityId);
-  const globalLatitude = useGlobalLocationStore((s) => s.latitude);
-  const globalLongitude = useGlobalLocationStore((s) => s.longitude);
+  // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
+  const [locationState, setLocationState] = useState({
+    provinceId: null,
+    cityId: null,
+    latitude: null,
+    longitude: null,
+    gpsEnabled: false,
+    locationType: 'all',
+  });
+
+  useEffect(() => {
+    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
+      setLocationState({
+        provinceId: state.provinceId,
+        cityId: state.cityId,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled,
+        locationType: state.locationType,
+      });
+    });
+
+    const initialState = useGlobalLocationStore.getState();
+    setLocationState({
+      provinceId: initialState.provinceId,
+      cityId: initialState.cityId,
+      latitude: initialState.latitude,
+      longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled,
+      locationType: initialState.locationType,
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const getLocationParams = useCallback(() => {
+    return useGlobalLocationStore.getState().getLocationParams();
+  }, []);
 
   const fetchPortfolios = useCallback(
     async (pageNum = 1, append = false) => {
@@ -135,11 +166,13 @@ export default function ExplorePage() {
     },
     [
       filters.mainCategory,
+      locationState.provinceId,
+      locationState.cityId,
+      locationState.latitude,
+      locationState.longitude,
+      locationState.gpsEnabled,
+      locationState.locationType,
       getLocationParams,
-      globalProvinceId,
-      globalCityId,
-      globalLatitude,
-      globalLongitude,
     ]
   );
 

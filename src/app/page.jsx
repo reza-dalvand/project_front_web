@@ -1,4 +1,3 @@
-// src/app/page.jsx
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -45,19 +44,47 @@ export default function HomePage() {
   const { pendingReviews, addPendingReview } = useReviewStore();
   const isDark = resolvedTheme === 'dark';
 
-  // ═══════ ✅ تغییر: استفاده از useGlobalLocationStore به جای useNearbyStore ═══════
-  const gpsEnabled = useGlobalLocationStore((s) => s.gpsEnabled);
-  const gpsLoading = useGlobalLocationStore((s) => s.gpsLoading);
-  const enableGps = useGlobalLocationStore((s) => s.enableGps);
-  const disableGps = useGlobalLocationStore((s) => s.disableGps);
-  const handleGpsError = useGlobalLocationStore((s) => s.handleGpsError);
-  const setGpsLoading = useGlobalLocationStore((s) => s.setGpsLoading);
-  const globalLatitude = useGlobalLocationStore((s) => s.latitude);
-  const globalLongitude = useGlobalLocationStore((s) => s.longitude);
+  // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
+  const [locationState, setLocationState] = useState({
+    provinceId: null,
+    cityId: null,
+    latitude: null,
+    longitude: null,
+    gpsEnabled: false,
+    gpsLoading: false,
+    locationType: 'all',
+  });
 
-  const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
-  const globalProvinceId = useGlobalLocationStore((s) => s.provinceId);
-  const globalCityId = useGlobalLocationStore((s) => s.cityId);
+  useEffect(() => {
+    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
+      setLocationState({
+        provinceId: state.provinceId,
+        cityId: state.cityId,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled,
+        gpsLoading: state.gpsLoading,
+        locationType: state.locationType,
+      });
+    });
+
+    const initialState = useGlobalLocationStore.getState();
+    setLocationState({
+      provinceId: initialState.provinceId,
+      cityId: initialState.cityId,
+      latitude: initialState.latitude,
+      longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled,
+      gpsLoading: initialState.gpsLoading,
+      locationType: initialState.locationType,
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const getLocationParams = useCallback(() => {
+    return useGlobalLocationStore.getState().getLocationParams();
+  }, []);
 
   // ─── State‌ها ───
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,10 +105,11 @@ export default function HomePage() {
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
+        const locationParams = getLocationParams();
         const [adsRes, catRes, lineRes] = await Promise.allSettled([
-          exploreService.getPosts({ page_size: 6, ...getLocationParams() }),
+          exploreService.getPosts({ page_size: 6, ...locationParams }),
           categoriesService.getServiceCategories(),
-          adsService.getLineRentals({ page_size: 6, ...getLocationParams() }),
+          adsService.getLineRentals({ page_size: 6, ...locationParams }),
         ]);
         if (adsRes.status === 'fulfilled') {
           const posts = adsRes.value.data || [];
@@ -120,7 +148,15 @@ export default function HomePage() {
       }
     };
     fetchAllData();
-  }, [gpsEnabled, globalLatitude, globalLongitude, globalProvinceId, globalCityId]);
+  }, [
+    locationState.provinceId,
+    locationState.cityId,
+    locationState.latitude,
+    locationState.longitude,
+    locationState.gpsEnabled,
+    locationState.locationType,
+    getLocationParams,
+  ]);
 
   // ═══════ دریافت نوبت‌های گذشته برای نظردهی ═══════
   useEffect(() => {
@@ -155,8 +191,11 @@ export default function HomePage() {
     });
   }, [doneAppointments, addPendingReview]);
 
-  // ═══════ ✅ تغییر: NearbyToggle دقیقاً مثل GPS در HomeFilterModal ═══════
+  // ═══════ ✅ تغییر: NearbyToggle با استفاده از getState ═══════
   const handleNearbyToggle = useCallback(async () => {
+    const { gpsEnabled, disableGps, enableGps, handleGpsError, setGpsLoading } =
+      useGlobalLocationStore.getState();
+
     if (gpsEnabled) {
       disableGps();
       showToast('فیلتر موقعیت مکانی غیرفعال شد', 'info');
@@ -180,19 +219,25 @@ export default function HomePage() {
     } finally {
       setGpsLoading(false);
     }
-  }, [gpsEnabled, disableGps, setGpsLoading, enableGps, handleGpsError, showToast]);
+  }, [showToast]);
 
-  // ═══════ ✅ تغییر: فیلتر اجاره لاین بر اساس استور گلوبال ═══════
+  // ═══════ ✅ تغییر: فیلتر اجاره لاین بر اساس locationState ═══════
   const filteredLineRentals = useMemo(() => {
-    if (!gpsEnabled || !globalLatitude || !globalLongitude) return lineRentals;
+    if (!locationState.gpsEnabled || !locationState.latitude || !locationState.longitude)
+      return lineRentals;
     return lineRentals.filter((ad) => {
       const lat = ad.latitude || ad.lat;
       const lng = ad.longitude || ad.lng;
       if (!lat || !lng) return false;
-      const dist = calculateDistance(globalLatitude, globalLongitude, lat, lng);
+      const dist = calculateDistance(locationState.latitude, locationState.longitude, lat, lng);
       return dist <= 10;
     });
-  }, [gpsEnabled, globalLatitude, globalLongitude, lineRentals]);
+  }, [
+    locationState.gpsEnabled,
+    locationState.latitude,
+    locationState.longitude,
+    lineRentals,
+  ]);
 
   // ═══════ hasActiveFilter ═══════
   const hasActiveFilter = useMemo(
@@ -295,11 +340,11 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* ─── 📍 دکمه نزدیک‌ترین‌ها — ✅ تغییر: از استور گلوبال ═══ */}
+        {/* ─── 📍 دکمه نزدیک‌ترین‌ها ═══ */}
         <section>
           <NearbyToggle
-            nearbyEnabled={gpsEnabled}
-            nearbyLoading={gpsLoading}
+            nearbyEnabled={locationState.gpsEnabled}
+            nearbyLoading={locationState.gpsLoading}
             onToggle={handleNearbyToggle}
           />
         </section>
@@ -321,7 +366,7 @@ export default function HomePage() {
         )}
 
         {/* ─── ۳. فرصت‌های همکاری / اجاره لاین ─── */}
-        {lineRentals.length > 0 && (
+        {filteredLineRentals.length > 0 && (
           <section>
             <SectionHeader
               icon={<span style={{ fontSize: 18 }}>🏢</span>}
@@ -330,12 +375,12 @@ export default function HomePage() {
               rightElement={
                 <SeeAllButton
                   onPress={() => router.push('/line-rentals')}
-                  count={lineRentals.length}
+                  count={filteredLineRentals.length}
                 />
               }
             />
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-              {lineRentals.map((rental) => (
+              {filteredLineRentals.map((rental) => (
                 <LineRentalCard key={rental.id} rental={rental} onPress={handleLineRentalPress} />
               ))}
             </div>

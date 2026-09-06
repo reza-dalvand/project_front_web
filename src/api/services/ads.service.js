@@ -1,4 +1,3 @@
-// src/api/services/ads.service.js
 /**
  * 📢 Ads Service — هماهنگ کامل با بک‌اند
  *
@@ -37,7 +36,12 @@ export const adsService = {
    *     created_jalali, expires_jalali, created_at, distance }
    */
   getModelRequests: (params = {}) => {
-    return apiClient.get('/ads/model-requests/', { params });
+    return apiClient.get('/ads/model-requests/', {
+      params: {
+        ...params,
+        _t: Date.now(), // ✅ Cache buster
+      },
+    });
   },
 
   /**
@@ -48,7 +52,9 @@ export const adsService = {
    *   ModelRequestListSerializer + business_booking_slug, service_image_url
    */
   getModelRequestDetail: (requestId) => {
-    return apiClient.get(`/ads/model-requests/${requestId}/`);
+    return apiClient.get(`/ads/model-requests/${requestId}/`, {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   // ═══════════ Model Requests - Business ═══════════
@@ -58,7 +64,9 @@ export const adsService = {
    * GET /ads/my-model-requests/
    */
   getMyModelRequests: () => {
-    return apiClient.get('/ads/my-model-requests/');
+    return apiClient.get('/ads/my-model-requests/', {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   /**
@@ -124,7 +132,12 @@ export const adsService = {
    *     created_jalali, expires_jalali, created_at, distance }
    */
   getLineRentals: (params = {}) => {
-    return apiClient.get('/ads/line-rentals/', { params });
+    return apiClient.get('/ads/line-rentals/', {
+      params: {
+        ...params,
+        _t: Date.now(), // ✅ Cache buster
+      },
+    });
   },
 
   /**
@@ -135,7 +148,9 @@ export const adsService = {
    *   LineRentalListSerializer + business_booking_slug, line_image_url
    */
   getLineRentalDetail: (rentalId) => {
-    return apiClient.get(`/ads/line-rentals/${rentalId}/`);
+    return apiClient.get(`/ads/line-rentals/${rentalId}/`, {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   // ═══════════ Line Rentals - Business ═══════════
@@ -145,7 +160,9 @@ export const adsService = {
    * GET /ads/my-line-rentals/
    */
   getMyLineRentals: () => {
-    return apiClient.get('/ads/my-line-rentals/');
+    return apiClient.get('/ads/my-line-rentals/', {
+      params: { _t: Date.now() }, // ✅ Cache buster
+    });
   },
 
   /**

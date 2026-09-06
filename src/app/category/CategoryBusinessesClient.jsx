@@ -1,6 +1,5 @@
-// src/app/category/CategoryBusinessesClient.jsx
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -10,7 +9,7 @@ import BusinessListCard from '@/components/home/BusinessListCard';
 import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import dynamic from 'next/dynamic';
-import { businessesService, categoriesService } from '@/api';
+import { businessesService } from '@/api';
 import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
 const CategoryFilterModal = dynamic(() => import('@/components/home/CategoryFilterModal'), {
@@ -21,7 +20,6 @@ const CategoryFilterModal = dynamic(() => import('@/components/home/CategoryFilt
 export default function CategoryBusinessesPage({ categoryId }) {
   const router = useRouter();
   const { colors } = useTheme();
-  const getLocationParams = useGlobalLocationStore((s) => s.getLocationParams);
 
   const [categoryName, setCategoryName] = useState('دسته‌بندی');
   const [businesses, setBusinesses] = useState([]);
@@ -33,13 +31,48 @@ export default function CategoryBusinessesPage({ categoryId }) {
     sortBy: 'all',
   });
 
-  // ✅ FIX: سلکتورهای جداگانه به جای سابسکرایب کل استور
-  const provinceId = useGlobalLocationStore((s) => s.provinceId);
-  const cityId = useGlobalLocationStore((s) => s.cityId);
-  const latitude = useGlobalLocationStore((s) => s.latitude);
-  const longitude = useGlobalLocationStore((s) => s.longitude);
+  // ✅ FIX: استفاده از subscribe برای اطمینان از re-render
+  const [locationState, setLocationState] = useState({
+    provinceId: null,
+    cityId: null,
+    latitude: null,
+    longitude: null,
+    gpsEnabled: false,
+    locationType: 'all',
+  });
 
-  // ═══════ ✅ FIX: دریافت لیست با مدیریت خطا و اتمام لودینگ ═══════
+  useEffect(() => {
+    // Subscribe به تغییرات استور
+    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
+      setLocationState({
+        provinceId: state.provinceId,
+        cityId: state.cityId,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled,
+        locationType: state.locationType,
+      });
+    });
+    
+    // Initial state
+    const initialState = useGlobalLocationStore.getState();
+    setLocationState({
+      provinceId: initialState.provinceId,
+      cityId: initialState.cityId,
+      latitude: initialState.latitude,
+      longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled,
+      locationType: initialState.locationType,
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const getLocationParams = useCallback(() => {
+    return useGlobalLocationStore.getState().getLocationParams();
+  }, []);
+
+  // ═══════ FIX: دریافت لیست با dependency صحیح ═══════
   useEffect(() => {
     const fetchBusinesses = async () => {
       setIsLoading(true);
@@ -49,6 +82,7 @@ export default function CategoryBusinessesPage({ categoryId }) {
           category_id: categoryId,
           page_size: 50,
           ...locationParams,
+          _t: Date.now(), // ✅ Cache buster
         });
         const data = response.data || [];
         setBusinesses(
@@ -69,21 +103,26 @@ export default function CategoryBusinessesPage({ categoryId }) {
         );
       } catch (error) {
         console.error('Failed to fetch category businesses:', error);
-        // ✅ FIX: در صورت خطا، لیست خالی شود تا "یافت نشد" نمایش داده شود
         setBusinesses([]);
       } finally {
-        // ✅ FIX اصلی: حتماً لودینگ را ببند
         setIsLoading(false);
       }
     };
     fetchBusinesses();
-  }, [categoryId, provinceId, cityId, latitude, longitude, getLocationParams]);
+  }, [
+    categoryId,
+    locationState.provinceId,
+    locationState.cityId,
+    locationState.latitude,
+    locationState.longitude,
+    locationState.gpsEnabled,
+    locationState.locationType,
+    getLocationParams,
+  ]);
 
-  // تشخیص فیلتر فعال
   const hasActiveFilter =
     (filters.serviceType && filters.serviceType !== 'all') || filters.sortBy !== 'all';
 
-  // فیلتر و جستجو
   const filteredData = useMemo(() => {
     let data = [...businesses];
     if (search.trim()) {
