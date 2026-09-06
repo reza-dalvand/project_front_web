@@ -124,28 +124,28 @@ export default function PortfolioFormSheet({
   };
 
   // ═══ بخش handleSave را جایگزین کنید ═══
-  const handleSave = () => {
-    if (!validate()) return;
-    setSaving(true);
+const handleSave = () => {
+  if (!validate()) return;
+  setSaving(true);
 
-    const formData = new FormData();
-    formData.append('title', title.trim());
-    formData.append('description', description.trim());
+  const formData = new FormData();
+  formData.append('title', title.trim());
+  formData.append('description', description.trim());
 
-    // ✅ فقط مقادیر معتبر اضافه شوند
-    if (categoryId) formData.append('category', String(categoryId));
-    if (subServiceId) formData.append('sub_service', String(subServiceId));
+  // ✅ فقط مقادیر معتبر اضافه شوند
+  if (categoryId) formData.append('category', String(categoryId));
+  if (subServiceId) formData.append('sub_service', String(subServiceId));
 
-    // ✅ فقط اگر تصویر جدید آپلود شده باشد
-    if (images.length > 0) {
-      images.forEach((file) => {
-        formData.append('images', file);
-      });
-      formData.append('cover_image', images[0]);
-    }
+  // ✅ فقط تصاویر گالری — دیگر cover_image ارسال نمی‌شود
+  if (images.length > 0) {
+    images.forEach((file) => {
+      formData.append('images', file);
+    });
+  }
 
-    onSave(formData, editingPortfolio?.id);
-  };
+  onSave(formData, editingPortfolio?.id);
+};
+
   // ─── Cleanup previews ───
   useEffect(() => {
     return () => {

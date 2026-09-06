@@ -113,10 +113,12 @@ export default function ExplorePage() {
           type: 'portfolio',
           caption: portfolio.title || 'نمونه‌کار',
           description: portfolio.description || '',
-          coverImage: portfolio.coverImageUrl || portfolio.cover_image_url || null,
+          
+          // ✅ فقط از images استفاده کن
           images: (portfolio.images || []).map(
             (img) => img.image_url || img.imageUrl || img.image || img
           ),
+          
           businessId: portfolio.business || portfolio.businessId,
           businessName:
             portfolio.businessName || portfolio.business_name || portfolio.business?.name || '',

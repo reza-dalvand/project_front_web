@@ -11,20 +11,21 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, pr
   const imageCount = portfolio.images?.length || 1;
 
   const coverSrc = useMemo(() => {
-    // اولویت ۱: مسیر کامل کاور
-    if (portfolio.coverImageUrl) return portfolio.coverImageUrl;
-    // اولویت ۲: مسیر نسبی کاور
-    if (portfolio.coverImage && typeof portfolio.coverImage === 'string') {
-      return portfolio.coverImage.startsWith('http')
-        ? portfolio.coverImage
-        : getFullImageUrl(portfolio.coverImage);
-    }
-    // اولویت ۳: اولین تصویر گالری
+    // ✅ اولویت ۱: اولین تصویر گالری (sort_order=0)
     if (portfolio.images && portfolio.images.length > 0) {
       const firstImg = portfolio.images[0];
       if (typeof firstImg === 'string') return firstImg;
       return firstImg.imageUrl || firstImg.image_url || firstImg.image || null;
     }
+
+    // ✅ Fallback برای backward compatibility (داده‌های قدیمی)
+    if (portfolio.coverImageUrl) return portfolio.coverImageUrl;
+    if (portfolio.coverImage && typeof portfolio.coverImage === 'string') {
+      return portfolio.coverImage.startsWith('http')
+        ? portfolio.coverImage
+        : getFullImageUrl(portfolio.coverImage);
+    }
+
     return null;
   }, [portfolio]);
 

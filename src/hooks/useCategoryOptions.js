@@ -9,6 +9,9 @@
  */
 import { useState, useEffect } from 'react';
 import { categoriesService } from '@/api';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
+import { useShallow } from 'zustand/react/shallow';
+
 import {
   FiEdit3,
   FiHeart,
@@ -113,19 +116,23 @@ export const useBusinessCategories = () => {
 /**
  * دریافت دسته‌بندی‌های خدمات از بک‌اند
  */
+
+// src/hooks/useCategoryOptions.js
+
 export const useServiceCategories = () => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ✅ Subscribe به تغییرات مکان
-  const locationParams = useGlobalLocationStore((state) => ({
-    provinceId: state.provinceId,
-    cityId: state.cityId,
-    latitude: state.latitude,
-    longitude: state.longitude,
-    locationType: state.locationType,
-  }));
+  const locationParams = useGlobalLocationStore(
+    useShallow((state) => ({
+      provinceId: state.provinceId,
+      cityId: state.cityId,
+      latitude: state.latitude,
+      longitude: state.longitude,
+      locationType: state.locationType,
+    }))
+  );
 
   useEffect(() => {
     setIsLoading(true);
@@ -133,7 +140,6 @@ export const useServiceCategories = () => {
 
     const fetch = async () => {
       try {
-        // ✅ ارسال پارامترهای مکانی
         const params = {};
         if (locationParams.provinceId) params.province_id = locationParams.provinceId;
         if (locationParams.cityId) params.city_id = locationParams.cityId;
@@ -143,23 +149,19 @@ export const useServiceCategories = () => {
         }
 
         const result = await categoriesService.getServiceCategories(params);
+        
+        // ✅ FIX: تکمیل نگاشت داده‌ها (به جای /* ... */)
         setCategories(
-          (result.data || []).map((c) => {
-            const icon = c.icon_name || c.iconName || 'default';
-            return {
-              id: String(c.id),
-              label: c.name,
-              icon: ICON_MAP[icon] || ICON_MAP.default,
-              color: COLOR_MAP[icon] || COLOR_MAP.default,
-              gradient: GRADIENT_MAP[icon] || GRADIENT_MAP.default,
-              count: c.business_count || c.count || 0, // ✅ استفاده از count جدید
-              subServices: (c.sub_services || c.subServices || []).map((s) => ({
-                id: String(s.id),
-                label: s.name,
-                typeId: s.type_id || s.typeId || '',
-              })),
-            };
-          })
+          (result.data || []).map((c) => ({
+            id: String(c.id),
+            label: c.name,
+            // ✅ FilterModal برای ساخت زیردسته‌ها به این فیلد نیاز دارد
+            subServices: (c.sub_services || c.subServices || []).map((s) => ({
+              id: String(s.id),
+              label: s.name,
+              typeId: s.type_id || s.typeId || '',
+            })),
+          }))
         );
       } catch (err) {
         setError(err.message);

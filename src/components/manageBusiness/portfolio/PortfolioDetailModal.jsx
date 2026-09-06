@@ -31,29 +31,25 @@ export default function PortfolioDetailModal({
   }, [portfolio, visible]);
 
   const images = useMemo(() => {
-    // اگر تصاویر گالری وجود دارند
+    // ✅ اولویت ۱: تصاویر گالری
     if (portfolio?.images && portfolio.images.length > 0) {
       return portfolio.images
         .map((img) => {
-          // اگر مستقیماً مسیر باشد (رشته)
           if (typeof img === 'string') return img;
-          // اگر آبجکت باشد → مسیر کامل را استخراج کن
           return img.imageUrl || img.image_url || img.image || null;
         })
-        .filter(Boolean); // مقادیر خالی را حذف کن
+        .filter(Boolean);
     }
 
-    // اگر فقط کاور وجود دارد
+    // ✅ Fallback برای backward compatibility
     if (portfolio?.coverImageUrl) {
       return [portfolio.coverImageUrl];
     }
     if (portfolio?.coverImage) {
-      // مسیر نسبی را به مسیر کامل تبدیل کن
       if (typeof portfolio.coverImage === 'string') {
         if (portfolio.coverImage.startsWith('http')) {
           return [portfolio.coverImage];
         }
-        // مسیر نسبی → با دامنه کامل کن
         return [getFullImageUrl(portfolio.coverImage)];
       }
       return [portfolio.coverImage];

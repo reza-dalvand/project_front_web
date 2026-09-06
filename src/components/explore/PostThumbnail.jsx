@@ -13,7 +13,7 @@ export default function PostThumbnail({ post, onPress }) {
 
   const isMagazine = post.source === 'magazine';
   const hasDiscount = post.discount > 0;
-  const media = post.gallery || post.images || [];
+  const media = post.images || []; 
   const firstImage = media[0] || 'https://picsum.photos/400/400?random=0';
 
   const handleSaveClick = (e) => {

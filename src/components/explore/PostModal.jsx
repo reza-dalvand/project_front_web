@@ -94,22 +94,31 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
   //
   // IMPORTANT:
   // این Hook باید قبل از return شرطی اجرا شود.
-  // =========================================================
-
+// =========================================================
   const gallery = useMemo(() => {
-    if (!post) {
-      return [];
+    if (!post) return [];
+
+    const extractUrl = (img) => {
+      if (typeof img === 'string' && img.length > 0) return img;
+      if (img && typeof img === 'object') {
+        return img.imageUrl || img.image_url || img.image || img.url || null;
+      }
+      return null;
+    };
+
+    // ✅ فقط از images استفاده کن
+    const imagesList = [];
+    if (Array.isArray(post.images)) {
+      for (const img of post.images) {
+        const url = extractUrl(img);
+        if (url && !imagesList.includes(url)) {
+          imagesList.push(url);
+        }
+      }
     }
 
-    const allImages = [
-      ...(post.coverImage ? [extractUrl(post.coverImage)] : []),
-
-      ...(Array.isArray(post.images) ? post.images.map(extractUrl) : []),
-    ].filter(Boolean);
-
-    // حذف تصاویر تکراری
-    return [...new Set(allImages)];
-  }, [post, extractUrl]);
+    return imagesList;
+  }, [post]);
 
   // =========================================================
   // Share
