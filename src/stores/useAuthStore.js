@@ -1,10 +1,11 @@
-// src/stores/useAuthStore.js
 /**
  * Store احراز هویت — فاز ۲ (هماهنگ با بک‌اند)
  *
  * ✅ فاز ۱:
  * - نیازهای پروفایل (needsProfileCompletion) در persist ذخیره می‌شود
  * - رفع چرخه بی‌نهایت تکمیل پروفایل پس از رفرش
+ *
+ * ✅ FIX: حذف logout تکراری — ادغام هر دو نسخه در یک متد
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -28,9 +29,6 @@ export const useAuthStore = create(
 
       setHydrated: () => set({ _hydrated: true }),
 
-      /**
-       * ذخیره شماره در انتظار OTP
-       */
       setPendingAuth: (phone, firstName = '', lastName = '') => {
         set({
           pendingPhone: phone,
@@ -38,12 +36,6 @@ export const useAuthStore = create(
         });
       },
 
-      /**
-       * ورود موفق — ذخیره اطلاعات کاربر و توکن‌ها
-       * @param {object} userData - داده‌های کاربر
-       * @param {object} tokens - { accessToken, refreshToken }
-       * @param {object} options - { isNewUser, needsProfileCompletion }
-       */
       login: (userData, tokens, options = {}) => {
         if (tokens?.accessToken) {
           useTokenStore.getState().setTokens({
@@ -72,24 +64,41 @@ export const useAuthStore = create(
           },
           pendingPhone: null,
           pendingName: null,
-          // ✅ FIX فاز ۱: ذخیره صحیح در state
           needsProfileCompletion: options.needsProfileCompletion ?? false,
         });
       },
 
       /**
-       * خروج — فراخوانی API + پاک کردن state
+       * ✅ FIX: خروج — نسخه ادغام‌شده
+       * @param {boolean} allDevices - خروج از همه دستگاه‌ها
        */
-      logout: async () => {
+      logout: async (allDevices = false) => {
         const refreshToken = useTokenStore.getState().getRefreshToken();
         try {
           if (refreshToken) {
-            await authService.logout(refreshToken, false);
+            await authService.logout(refreshToken, allDevices);
           }
         } catch {
           // آفلاین یا خطای شبکه — فقط state پاک شود
         }
         useTokenStore.getState().clearTokens();
+
+        // پاک کردن استور کسب‌وکار
+        try {
+          const { useBusinessStore } = await import('./useBusinessStore');
+          useBusinessStore.getState().clearForLogout();
+        } catch {
+          // ignore
+        }
+
+        // پاک کردن استور پرداخت
+        try {
+          const { usePaymentStore } = await import('./usePaymentStore');
+          usePaymentStore.getState().clearPaymentState();
+        } catch {
+          // ignore
+        }
+
         set({
           isAuthenticated: false,
           user: null,
@@ -99,69 +108,27 @@ export const useAuthStore = create(
         });
       },
 
-      /**
-       * خروج از همه دستگاه‌ها
-       */
-      logout: async () => {
-        const refreshToken = useTokenStore.getState().getRefreshToken();
-
-        try {
-          if (refreshToken) {
-            await authService.logout(refreshToken, true);
-          }
-        } catch {}
-
-        useTokenStore.getState().clearTokens();
-
-        // ✅ FIX: استور کسب‌وکار هم پاک شود
-        try {
-          const { useBusinessStore } = await import('./useBusinessStore');
-          useBusinessStore.getState().clearForLogout();
-        } catch {
-          // ignore
-        }
-
-        set({
-          isAuthenticated: false,
-          user: null,
-          needsProfileCompletion: false,
-        });
-      },
-
-      /**
-       * بروزرسانی پروفایل کاربر
-       */
       updateUser: (updates) =>
         set((state) => ({
           user: { ...state.user, ...updates },
         })),
 
-      /**
-       * تکمیل پروفایل انجام شد
-       */
       completeProfile: () => {
         set({ needsProfileCompletion: false });
       },
 
-      /**
-       * بررسی اعتبار session
-       * @returns {Promise<boolean>}
-       */
       checkSession: async () => {
         const { accessToken, refreshToken } = useTokenStore.getState();
 
-        // هیچ توکنی نیست
         if (!accessToken && !refreshToken) {
           set({ isAuthenticated: false, user: null });
           return false;
         }
 
-        // Access token هنوز معتبر است
         if (accessToken && !isTokenExpired(accessToken)) {
           return true;
         }
 
-        // Access token منقضی شده — تلاش برای refresh
         if (refreshToken) {
           try {
             const result = await authService.refreshToken(refreshToken);
@@ -188,8 +155,6 @@ export const useAuthStore = create(
           ? localStorage
           : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
-      // ✅ FIX فاز ۱: نیازهای پروفایل هم در ذخیره‌سازی ماندگار می‌شود
-      // تا پس از رفرش صفحه، کاربر وارد چرخه بی‌نهایت تکمیل پروفایل نشود
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
         user: state.user,
