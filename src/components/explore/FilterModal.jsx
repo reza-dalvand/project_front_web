@@ -99,33 +99,6 @@ export default function FilterModal({ visible, onClose, onApply, currentFilters 
       }
     >
       <div className="space-y-6 pb-5">
-        {/* بخش ۱: منبع پست */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#9C27B018' }}
-            >
-              <FiFilter size={16} color="#9C27B0" />
-            </div>
-            <span className="text-sm font-bold" style={{ color: colors.textMain }}>
-              نوع محتوا
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {SOURCE_FILTERS.map((sf) => (
-              <Chip
-                key={sf.id}
-                label={sf.label}
-                selected={source === sf.id}
-                onPress={() => setSource(sf.id)}
-              />
-            ))}
-          </div>
-        </div>
-
-        <Divider />
-
         {/* بخش ۲: دسته‌بندی خدمات */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
@@ -153,30 +126,6 @@ export default function FilterModal({ visible, onClose, onApply, currentFilters 
             options={availableSubCategories.map((c) => ({ id: c.id, label: c.label }))}
             onSelect={setSubCategory}
             disabled={mainCategory === 'all'}
-          />
-        </div>
-
-        <Divider />
-
-        {/* بخش ۴: نوع کسب‌وکار */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#9C27B018' }}
-            >
-              <FiFilter size={16} color="#9C27B0" />
-            </div>
-            <span className="text-sm font-bold" style={{ color: colors.textMain }}>
-              نوع کسب‌وکار
-            </span>
-          </div>
-          <Dropdown
-            label="نوع کسب‌وکار"
-            placeholder="انتخاب نوع کسب‌وکار"
-            value={businessType}
-            options={businessTypes}
-            onSelect={setBusinessType}
           />
         </div>
       </div>

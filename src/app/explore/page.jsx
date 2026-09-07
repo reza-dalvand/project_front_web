@@ -187,7 +187,8 @@ export default function ExplorePage() {
   const filteredPosts = useMemo(() => {
     return allPosts.filter((post) => {
       if (filters.subCategory && filters.subCategory !== 'all') {
-        if (post.subCategory && post.subCategory !== filters.subCategory) {
+        // اگر پست زیردسته ندارد یا زیردسته‌اش مطابقت ندارد، حذف کن
+        if (!post.subCategory || String(post.subCategory) !== String(filters.subCategory)) {
           return false;
         }
       }
