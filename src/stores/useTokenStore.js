@@ -1,14 +1,64 @@
-// src/stores/useTokenStore.js
 /**
  * مدیریت توکن‌های JWT
  * هماهنگ با بک‌اند:
  *   - Access Token: ۱ ساعت اعتبار
- *   - Refresh Token: ۳۰ روز اعتبار با Rotation
+ *   - Refresh Token: ۳۰ روز اعتبار با Rotation + Sliding
+ * 
+ * ✅ FIX: استفاده از @capacitor/preferences در Android
+ * برای جلوگیری از پاک شدن توکن‌ها با clear cache
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
 import { JWT_CONFIG } from '@/api/config';
 import { decodeJWT, isTokenExpired, getTokenRemainingTime } from '@/utils/jwt-utils';
+
+// ═══════════════════════════════════════════════
+//    Custom Storage برای Capacitor
+// ═══════════════════════════════════════════════
+const createCapacitorStorage = () => ({
+  getItem: async (name) => {
+    try {
+      const { value } = await Preferences.get({ key: name });
+      return value ? JSON.parse(value) : null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: async (name, value) => {
+    try {
+      await Preferences.set({ key: name, value: JSON.stringify(value) });
+    } catch {
+      // ignore
+    }
+  },
+  removeItem: async (name) => {
+    try {
+      await Preferences.remove({ key: name });
+    } catch {
+      // ignore
+    }
+  },
+});
+
+// ═══════════════════════════════════════════════
+//    انتخاب Storage بر اساس Platform
+// ═══════════════════════════════════════════════
+const getStorage = () => {
+  // در محیط Node (SSR) یا تست
+  if (typeof window === 'undefined') {
+    return { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  }
+  
+  // در Android (Capacitor) — استفاده از Preferences
+  if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
+    return createCapacitorStorage();
+  }
+  
+  // در Web — استفاده از localStorage
+  return localStorage;
+};
 
 export const useTokenStore = create(
   persist(
@@ -19,11 +69,6 @@ export const useTokenStore = create(
       tokenType: JWT_CONFIG.TOKEN_TYPE,
 
       // ─── Actions ───
-
-      /**
-       * ذخیره توکن‌های جدید
-       * @param {object} tokens - { access, refresh, expiresIn }
-       */
       setTokens: ({ access, refresh }) => {
         set({
           accessToken: access,
@@ -32,29 +77,19 @@ export const useTokenStore = create(
         });
       },
 
-      /**
-       * بروزرسانی فقط Access Token
-       */
       updateAccessToken: (newAccessToken) => {
         set({ accessToken: newAccessToken });
       },
 
-      /**
-       * بروزرسانی Refresh Token (در صورت rotation)
-       */
       updateRefreshToken: (newRefreshToken) => {
         set({ refreshToken: newRefreshToken });
       },
 
-      /**
-       * پاک کردن همه توکن‌ها
-       */
       clearTokens: () => {
         set({ accessToken: null, refreshToken: null });
       },
 
       // ─── Getters ───
-
       getAccessToken: () => get().accessToken,
       getRefreshToken: () => get().refreshToken,
 
@@ -68,7 +103,7 @@ export const useTokenStore = create(
         const { accessToken } = get();
         if (!accessToken) return false;
         const remaining = getTokenRemainingTime(accessToken);
-        return remaining > 0 && remaining < 5 * 60 * 1000;
+        return remaining > 0 && remaining < 5 * 60 * 1000; // کمتر از ۵ دقیقه
       },
 
       getUserIdFromToken: () => {
@@ -80,11 +115,7 @@ export const useTokenStore = create(
     }),
     {
       name: 'beau-token-storage',
-      storage: createJSONStorage(() =>
-        typeof window !== 'undefined'
-          ? localStorage
-          : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
-      ),
+      storage: createJSONStorage(getStorage),
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,

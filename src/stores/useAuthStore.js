@@ -1,22 +1,100 @@
 /**
  * Store احراز هویت — فاز ۲ (هماهنگ با بک‌اند)
- *
- * ✅ فاز ۱:
- * - نیازهای پروفایل (needsProfileCompletion) در persist ذخیره می‌شود
- * - رفع چرخه بی‌نهایت تکمیل پروفایل پس از رفرش
- *
- * ✅ FIX: حذف logout تکراری — ادغام هر دو نسخه در یک متد
+ * 
+ * ✅ FIX: اضافه کردن Periodic Refresh هر ۵۰ دقیقه
+ * ✅ FIX: حذف logout تکراری
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
 import { authService } from '@/api';
 import { useTokenStore } from './useTokenStore';
-import { isTokenExpired } from '@/utils/jwt-utils';
+import { isTokenExpired, isTokenExpiringSoon } from '@/utils/jwt-utils';
 import { useRouter, usePathname } from 'next/navigation';
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//    Custom Storage برای Capacitor
+// ═══════════════════════════════════════════════
+const createCapacitorStorage = () => ({
+  getItem: async (name) => {
+    try {
+      const { value } = await Preferences.get({ key: name });
+      return value ? JSON.parse(value) : null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: async (name, value) => {
+    try {
+      await Preferences.set({ key: name, value: JSON.stringify(value) });
+    } catch {
+      // ignore
+    }
+  },
+  removeItem: async (name) => {
+    try {
+      await Preferences.remove({ key: name });
+    } catch {
+      // ignore
+    }
+  },
+});
+
+const getStorage = () => {
+  if (typeof window === 'undefined') {
+    return { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  }
+  if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
+    return createCapacitorStorage();
+  }
+  return localStorage;
+};
+
+// ═══════════════════════════════════════════════
+//    Periodic Refresh Timer
+// ═══════════════════════════════════════════════
+let refreshTimer = null;
+
+const startPeriodicRefresh = () => {
+  if (refreshTimer) clearInterval(refreshTimer);
+  
+  // هر ۵۰ دقیقه (۱۰ دقیقه قبل از انقضای ۱ ساعته)
+  refreshTimer = setInterval(async () => {
+    const { accessToken, refreshToken } = useTokenStore.getState();
+    
+    if (!refreshToken) {
+      stopPeriodicRefresh();
+      return;
+    }
+    
+    // اگر access token به زودی منقضی می‌شود، refresh کن
+    if (accessToken && isTokenExpiringSoon(accessToken)) {
+      try {
+        const result = await authService.refreshToken(refreshToken);
+        const data = result.data;
+        useTokenStore.getState().setTokens({
+          access: data.access,
+          refresh: data.refresh || refreshToken,
+        });
+      } catch (error) {
+        console.warn('Periodic refresh failed:', error);
+        stopPeriodicRefresh();
+      }
+    }
+  }, 50 * 60 * 1000); // ۵۰ دقیقه
+};
+
+const stopPeriodicRefresh = () => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+};
+
+// ═══════════════════════════════════════════════
 //    ۱. Store اصلی احراز هویت
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 export const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -66,13 +144,15 @@ export const useAuthStore = create(
           pendingName: null,
           needsProfileCompletion: options.needsProfileCompletion ?? false,
         });
+        
+        // ✅ شروع periodic refresh پس از ورود
+        startPeriodicRefresh();
       },
 
-      /**
-       * ✅ FIX: خروج — نسخه ادغام‌شده
-       * @param {boolean} allDevices - خروج از همه دستگاه‌ها
-       */
       logout: async (allDevices = false) => {
+        // ✅ توقف periodic refresh قبل از خروج
+        stopPeriodicRefresh();
+        
         const refreshToken = useTokenStore.getState().getRefreshToken();
         try {
           if (refreshToken) {
@@ -135,7 +215,7 @@ export const useAuthStore = create(
             const data = result.data;
             useTokenStore.getState().setTokens({
               access: data.access,
-              refresh: data.refresh,
+              refresh: data.refresh || refreshToken,
             });
             return true;
           } catch {
@@ -147,29 +227,39 @@ export const useAuthStore = create(
 
         return false;
       },
+      
+      // ✅ متد جدید برای شروع manual refresh timer
+      startRefreshTimer: () => {
+        const { isAuthenticated } = get();
+        if (isAuthenticated) {
+          startPeriodicRefresh();
+        }
+      },
     }),
     {
       name: 'beau-auth-storage',
-      storage: createJSONStorage(() =>
-        typeof window !== 'undefined'
-          ? localStorage
-          : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
-      ),
+      storage: createJSONStorage(getStorage),
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
         user: state.user,
         needsProfileCompletion: state.needsProfileCompletion,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state) state.setHydrated();
+        if (state) {
+          state.setHydrated();
+          // ✅ شروع periodic refresh پس از rehydration اگر کاربر لاگین است
+          if (state.isAuthenticated) {
+            startPeriodicRefresh();
+          }
+        }
       },
     }
   )
 );
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 //    ۲. Store مدال احراز هویت
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 export const useAuthModalStore = create((set, get) => ({
   showAuthModal: false,
   pendingAction: null,
@@ -195,9 +285,9 @@ export const useAuthModalStore = create((set, get) => ({
   },
 }));
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 //    ۳. Hook ترکیبی: useAuth
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 export const useAuth = () => {
   const router = useRouter();
   const pathname = usePathname();
@@ -225,9 +315,9 @@ export const useAuth = () => {
   };
 };
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 //    ۴. Hook مدال: useAuthModal
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 export const useAuthModal = () => {
   const showAuthModal = useAuthModalStore((s) => s.showAuthModal);
   const openAuthModal = useAuthModalStore((s) => s.openAuthModal);

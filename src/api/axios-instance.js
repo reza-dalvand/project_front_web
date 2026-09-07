@@ -118,31 +118,38 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // ✅ FIX فاز ۱: علامت‌گذاری درخواست رفرش برای جلوگیری از حلقه
-      const response = await axios.post(
-        `${API_CONFIG.baseURL}/accounts/auth/token/refresh/`,
+      // ✅ FIX: استفاده از `api` instance بجای `axios` خام
+      // تا interceptors و headers درست اعمال شوند
+      const response = await api.post(
+        '/accounts/auth/token/refresh/',
         { refresh: refreshToken },
         {
-          // ✅ علامت‌گذاری برای شناسایی در صورت خطا
           _isRefreshRequest: true,
           timeout: API_CONFIG.timeout,
+          // جلوگیری از loop در صورت خطا
+          skipAuthInterceptor: true,
         }
       );
 
-      const { access, refresh } = response.data;
+      const { access, refresh: newRefresh } = response.data;
 
       if (!access) {
         throw new Error('Invalid refresh response: no access token');
       }
 
-      setTokens({ access, refresh });
+      // ✅ FIX: ذخیره refresh جدید (اگر rotate فعال باشد)
+      setTokens({ 
+        access, 
+        refresh: newRefresh || refreshToken 
+      });
+      
       processQueue(null, access);
       originalRequest.headers.Authorization = `Bearer ${access}`;
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
 
-      // ✅ خروج خودکار از حساب در صورت شکست رفرش
+      // خروج خودکار از حساب در صورت شکست رفرش
       try {
         const { useAuthStore } = await import('@/stores/useAuthStore');
         const { clearTokens } = useTokenStore.getState();
