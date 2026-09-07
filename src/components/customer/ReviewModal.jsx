@@ -1,9 +1,8 @@
-// src/components/customer/ReviewModal.jsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { FiX, FiStar, FiSend, FiCheck } from 'react-icons/fi';
+import { FiX, FiStar, FiSend, FiCheck, FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import Button from '@/components/common/Button';
@@ -12,7 +11,7 @@ import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { useReviewStore, REVIEW_TAGS } from '@/stores/useReviewStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 
-const MAX_COMMENT_LENGTH = 300; // هماهنگ با بک‌اند: comment max_length=300
+const MAX_COMMENT_LENGTH = 300;
 
 export default function ReviewModal({ visible, appointment, onClose }) {
   const { colors } = useTheme();
@@ -22,6 +21,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
 
   const [rating, setRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [tagVotes, setTagVotes] = useState({}); // ✅ جدید: { tagId: 'like' | 'dislike' }
   const [comment, setComment] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -39,6 +39,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
     if (visible) {
       setRating(0);
       setSelectedTags([]);
+      setTagVotes({});
       setComment('');
       setShowSuccess(false);
       acquireScrollLock(instanceId.current);
@@ -63,7 +64,20 @@ export default function ReviewModal({ visible, appointment, onClose }) {
     );
   };
 
-  // ─── ثبت نظر — هماهنگ با بک‌اند ───
+  // ✅ جدید: رای به تگ
+  const voteTag = (tagId, voteType) => {
+    setTagVotes((prev) => {
+      const current = prev[tagId];
+      if (current === voteType) {
+        // حذف رای
+        const newVotes = { ...prev };
+        delete newVotes[tagId];
+        return newVotes;
+      }
+      return { ...prev, [tagId]: voteType };
+    });
+  };
+
   const handleSubmit = async () => {
     if (rating === 0 && selectedTags.length === 0 && !comment.trim()) {
       showToast('لطفاً حداقل امتیاز یا نظر خود را ثبت کنید', 'warning');
@@ -79,10 +93,17 @@ export default function ReviewModal({ visible, appointment, onClose }) {
     }
 
     try {
+      // ✅ جدید: ارسال رای‌های تگ همراه با نظر
+      const tagVotesArray = Object.entries(tagVotes).map(([tagId, voteType]) => ({
+        tag_id: tagId,
+        vote_type: voteType,
+      }));
+
       await submitReview(appointment.id, {
         rating,
         tags: selectedTags,
         comment: comment.trim(),
+        tag_votes: tagVotesArray,
       });
 
       setShowSuccess(true);
@@ -146,7 +167,6 @@ export default function ReviewModal({ visible, appointment, onClose }) {
         {/* محتوا */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {showSuccess ? (
-            /* ═══ حالت موفقیت ═══ */
             <div className="flex flex-col items-center gap-4 py-8">
               <div
                 className="w-24 h-24 rounded-full flex items-center justify-center shadow-lg"
@@ -180,7 +200,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
             </div>
           ) : (
             <>
-              {/* ═══ امتیاز ═══ */}
+              {/* امتیاز */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div
@@ -198,7 +218,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
                 </div>
               </div>
 
-              {/* ═══ تگ‌ها — هماهنگ با بک‌اند ═══ */}
+              {/* تگ‌ها با لایک/دیسلایک */}
               <div className="space-y-3">
                 <span
                   className="text-sm font-[Vazir-Bold] block"
@@ -209,30 +229,81 @@ export default function ReviewModal({ visible, appointment, onClose }) {
                 <div className="flex flex-wrap gap-2">
                   {REVIEW_TAGS.map((tag) => {
                     const isSelected = selectedTags.includes(tag.id);
+                    const vote = tagVotes[tag.id];
+                    const likes = vote === 'like' ? 1 : 0;
+                    const dislikes = vote === 'dislike' ? 1 : 0;
+
                     return (
-                      <button
+                      <div
                         key={tag.id}
-                        onClick={() => toggleTag(tag.id)}
-                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl
-                          border-[1.5px] text-[13px] font-[Vazir-Medium]
-                          transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
-                        style={{
-                          backgroundColor: isSelected
-                            ? colors.primary + '15'
-                            : colors.cardBackground,
-                          borderColor: isSelected ? colors.primary : colors.border,
-                          color: isSelected ? colors.primary : colors.textMain,
-                        }}
+                        className="flex flex-col items-center gap-1"
                       >
-                        {isSelected && <FiCheck size={13} />}
-                        {tag.label}
-                      </button>
+                        <button
+                          onClick={() => toggleTag(tag.id)}
+                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl
+                            border-[1.5px] text-[13px] font-[Vazir-Medium]
+                            transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                          style={{
+                            backgroundColor: isSelected
+                              ? colors.primary + '15'
+                              : colors.cardBackground,
+                            borderColor: isSelected ? colors.primary : colors.border,
+                            color: isSelected ? colors.primary : colors.textMain,
+                          }}
+                        >
+                          {isSelected && <FiCheck size={13} />}
+                          {tag.label}
+                        </button>
+                        
+                        {/* ✅ جدید: دکمه‌های لایک/دیسلایک */}
+                        <div className="flex items-center gap-2 mt-1">
+                          <button
+                            onClick={() => voteTag(tag.id, 'like')}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg
+                              transition-colors hover:scale-110 active:scale-95"
+                            style={{
+                              backgroundColor: vote === 'like' ? '#4CAF5020' : 'transparent',
+                            }}
+                          >
+                            <FiThumbsUp
+                              size={12}
+                              style={{ color: vote === 'like' ? '#4CAF50' : colors.textSecondary }}
+                            />
+                            <span
+                              className="text-[10px] font-[Vazir-Bold]"
+                              style={{ color: vote === 'like' ? '#4CAF50' : colors.textSecondary }}
+                            >
+                              {toPersianDigit(likes)}
+                            </span>
+                          </button>
+                          
+                          <button
+                            onClick={() => voteTag(tag.id, 'dislike')}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg
+                              transition-colors hover:scale-110 active:scale-95"
+                            style={{
+                              backgroundColor: vote === 'dislike' ? '#F4433620' : 'transparent',
+                            }}
+                          >
+                            <FiThumbsDown
+                              size={12}
+                              style={{ color: vote === 'dislike' ? '#F44336' : colors.textSecondary }}
+                            />
+                            <span
+                              className="text-[10px] font-[Vazir-Bold]"
+                              style={{ color: vote === 'dislike' ? '#F44336' : colors.textSecondary }}
+                            >
+                              {toPersianDigit(dislikes)}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* ═══ نظر متنی ═══ */}
+              {/* نظر متنی */}
               <div className="space-y-2">
                 <label
                   className="text-sm font-[Vazir-Bold] block"
