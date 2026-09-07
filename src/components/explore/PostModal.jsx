@@ -15,10 +15,44 @@ import PostBusinessInfo from './post/PostBusinessInfo';
 import PostCaptionCard from './post/PostCaptionCard';
 
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { useFavoriteStore } from '@/stores/useFavoriteStore';
+import { useAuth } from '@/stores/useAuthStore';
+
 
 export default function PostModal({ post, visible, onClose, onNavigateToProfile, onBooking }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
+  const { isAuthenticated, requireAuth } = useAuth();
+  const togglePostFavorite = useFavoriteStore((s) => s.togglePostFavorite);
+  const isPostFavorited = useFavoriteStore((s) => s.isPostFavorited);
+
+  const isSaved = post?.id ? isPostFavorited(post.id) : false;
+
+  const handleSave = useCallback(async () => {
+    if (!post?.id) return;
+    
+    if (!isAuthenticated) {
+      requireAuth(() => {});
+      return;
+    }
+
+    try {
+      const newState = await togglePostFavorite(post.id, {
+        id: post.id,
+        caption: post.caption || '',
+        businessName: post.businessName || '',
+        image: post.images?.[0]?.imageUrl || post.images?.[0] || null,
+      });
+      
+      showToast(
+        newState ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد',
+        'success'
+      );
+    } catch (error) {
+      console.error('Toggle favorite failed:', error);
+      showToast('خطا در ذخیره علاقه‌مندی', 'error');
+    }
+  }, [post, isAuthenticated, requireAuth, togglePostFavorite, showToast]);
 
   const instanceId = useRef('portfolio-modal');
 
@@ -259,8 +293,12 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
             Header
         ====================================================== */}
 
-        <PostModalHeader onClose={onClose} onShare={handleShare} />
-
+        <PostModalHeader 
+          onClose={onClose} 
+          onShare={handleShare} 
+          onSave={handleSave}
+          isSaved={isSaved}
+        />
         {/* =====================================================
             Scrollable Content
         ====================================================== */}
