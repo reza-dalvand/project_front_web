@@ -68,7 +68,7 @@ export default function FilterModal({ visible, onClose, onApply, currentFilters 
   // ساخت گزینه‌های دسته‌بندی اصلی
   const mainCategoryOptions = [
     { id: 'all', label: 'همه دسته‌ها' },
-    ...(serviceCategories || []).map((c) => ({ id: c.id, label: c.label })), 
+    ...(serviceCategories || []).map((c) => ({ id: c.id, label: c.label })),
   ];
 
   return (

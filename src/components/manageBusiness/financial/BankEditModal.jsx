@@ -24,13 +24,7 @@ const IRANIAN_BANKS = [
   { id: 'shahr', label: 'بانک شهر' },
 ];
 
-export default function BankEditModal({
-  visible,
-  onClose,
-  onSave,
-  bankInfo,
-  saving = false,
-}) {
+export default function BankEditModal({ visible, onClose, onSave, bankInfo, saving = false }) {
   const { colors } = useTheme();
 
   const [formData, setFormData] = useState({
@@ -139,10 +133,7 @@ export default function BankEditModal({
           className="flex items-center justify-between px-5 py-4 border-b flex-shrink-0"
           style={{ borderColor: colors.border }}
         >
-          <h3
-            className="text-base"
-            style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}
-          >
+          <h3 className="text-base" style={{ color: colors.textMain, fontFamily: 'Vazir-Bold' }}>
             {bankInfo?.bankName ? 'ویرایش حساب بانکی' : 'ثبت حساب بانکی'}
           </h3>
           <button
@@ -295,10 +286,7 @@ export default function BankEditModal({
         </div>
 
         {/* فوتر */}
-        <div
-          className="px-5 py-4 border-t flex-shrink-0"
-          style={{ borderColor: colors.border }}
-        >
+        <div className="px-5 py-4 border-t flex-shrink-0" style={{ borderColor: colors.border }}>
           <button
             onClick={handleSubmit}
             disabled={saving}

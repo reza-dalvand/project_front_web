@@ -1,21 +1,21 @@
 /**
-* 🏪 Businesses Service — نسخه نهایی هماهنگ با بک‌اند
-*
-* Endpoints:
-*   POST   /businesses/create/              → ثبت کسب‌وکار (MultiPart)
-*   GET    /businesses/list/                → لیست عمومی (با فیلتر)
-*   GET    /businesses/status/              → وضعیت کسب‌وکار من
-*   GET    /businesses/detail/              → جزئیات (مالک)
-*   PUT    /businesses/detail/              → بروزرسانی (مالک)
-*   GET    /businesses/bank-info/           → اطلاعات بانکی
-*   PUT    /businesses/bank-info/           → ویرایش اطلاعات بانکی
-*   DELETE /businesses/delete/              → حذف کسب‌وکار
-*   GET    /businesses/public/{slug}/       → جزئیات عمومی (مشتری)
-*   GET    /businesses/gallery/             → لیست گالری
-*   POST   /businesses/gallery/upload/      → آپلود تصویر گالری
-*   DELETE /businesses/gallery/{pk}/delete/ → حذف تصویر گالری
-*   POST   /businesses/gallery/reorder/     → تغییر ترتیب گالری
-*/
+ * 🏪 Businesses Service — نسخه نهایی هماهنگ با بک‌اند
+ *
+ * Endpoints:
+ *   POST   /businesses/create/              → ثبت کسب‌وکار (MultiPart)
+ *   GET    /businesses/list/                → لیست عمومی (با فیلتر)
+ *   GET    /businesses/status/              → وضعیت کسب‌وکار من
+ *   GET    /businesses/detail/              → جزئیات (مالک)
+ *   PUT    /businesses/detail/              → بروزرسانی (مالک)
+ *   GET    /businesses/bank-info/           → اطلاعات بانکی
+ *   PUT    /businesses/bank-info/           → ویرایش اطلاعات بانکی
+ *   DELETE /businesses/delete/              → حذف کسب‌وکار
+ *   GET    /businesses/public/{slug}/       → جزئیات عمومی (مشتری)
+ *   GET    /businesses/gallery/             → لیست گالری
+ *   POST   /businesses/gallery/upload/      → آپلود تصویر گالری
+ *   DELETE /businesses/gallery/{pk}/delete/ → حذف تصویر گالری
+ *   POST   /businesses/gallery/reorder/     → تغییر ترتیب گالری
+ */
 import apiClient from '../api-client';
 import api from '../axios-instance';
 import { normalizeSuccessResponse } from '../response-normalizer';

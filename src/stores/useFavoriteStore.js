@@ -25,8 +25,8 @@ export const useFavoriteStore = create(
               id: b.business,
               name: b.businessName,
               logo: b.businessLogo,
-              cover: b.businessCover, 
-              slug: b.businessSlug,  
+              cover: b.businessCover,
+              slug: b.businessSlug,
               category: b.businessCategory || '',
               city: b.businessCity || '',
             })),
@@ -36,8 +36,8 @@ export const useFavoriteStore = create(
               businessName: p.businessName || '',
               businessLogo: p.businessLogo || null,
               businessBookingSlug: p.businessBookingSlug || null,
-              images: p.images || [],  // ✅ آرایه کامل تصاویر
-              image: p.image || (p.images && p.images[0]) || null,  // برای backward compatibility
+              images: p.images || [], // ✅ آرایه کامل تصاویر
+              image: p.image || (p.images && p.images[0]) || null, // برای backward compatibility
             })),
             isLoading: false,
           });

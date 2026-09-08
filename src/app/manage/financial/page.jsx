@@ -20,10 +20,10 @@ const TransactionDetailModal = dynamic(
   () => import('@/components/manageBusiness/financial/TransactionDetailModal'),
   { ssr: false, loading: () => null }
 );
-const BankEditModal = dynamic(
-  () => import('@/components/manageBusiness/financial/BankEditModal'),
-  { ssr: false, loading: () => null }
-);
+const BankEditModal = dynamic(() => import('@/components/manageBusiness/financial/BankEditModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function FinancialManagementPage() {
   const { colors } = useTheme();
@@ -53,7 +53,7 @@ export default function FinancialManagementPage() {
   const fetchBankInfo = useBusinessStore((s) => s.fetchBankInfo);
 
   const bankInfo = businessData?.bankInfo || { isRegistered: false, isVerified: false };
-  
+
   const handleOpenBankEdit = async () => {
     setBankEditVisible(true);
     try {
@@ -107,7 +107,7 @@ export default function FinancialManagementPage() {
         {/* اطلاعات بانکی */}
         <BankInfoCard
           bankInfo={bankInfo}
-          onEdit={handleOpenBankEdit} 
+          onEdit={handleOpenBankEdit}
           businessOwnerName={businessData?.ownerName || ''}
           hasActiveAppointments={
             (businessStats?.blocked || 0) > 0 || (businessStats?.settling || 0) > 0
@@ -146,11 +146,7 @@ export default function FinancialManagementPage() {
       </div>
 
       {/* مدال‌ها */}
-      <TransactionDetailModal
-        visible={detailVisible}
-        tx={selectedTx}
-        onClose={handleCloseDetail}
-      />
+      <TransactionDetailModal visible={detailVisible} tx={selectedTx} onClose={handleCloseDetail} />
       <BankEditModal
         visible={bankEditVisible}
         onClose={() => setBankEditVisible(false)}

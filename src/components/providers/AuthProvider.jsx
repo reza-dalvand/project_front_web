@@ -9,7 +9,7 @@ import { authService } from '@/api';
 
 /**
  * AuthProvider — مدیریت Session Persistence
- * 
+ *
  * مسئولیت‌ها:
  * ۱. Rehydration از storage در startup
  * ۲. Refresh token هنگام بازگشت کاربر به اپ (visibilitychange / appStateChange)
@@ -28,27 +28,27 @@ export default function AuthProvider({ children }) {
       if (now - lastRefreshRef.current < MIN_REFRESH_INTERVAL) {
         return; // جلوگیری از refresh مکرر
       }
-      
+
       const { refreshToken } = useTokenStore.getState();
       if (!refreshToken) return;
 
       lastRefreshRef.current = now;
-      
+
       try {
         const result = await authService.refreshToken(refreshToken);
-        
+
         // ✅ FIX: Defensive programming — بررسی ساختار response
         const data = result?.data;
         if (!data || !data.access) {
           console.warn('Invalid refresh response structure:', result);
           return;
         }
-        
+
         useTokenStore.getState().setTokens({
           access: data.access,
           refresh: data.refresh || refreshToken,
         });
-        
+
         console.log('✅ Token refreshed successfully');
       } catch (error) {
         console.warn('Activity-based refresh failed:', error?.message || error);
@@ -63,7 +63,7 @@ export default function AuthProvider({ children }) {
         }
       };
       document.addEventListener('visibilitychange', handleVisibilityChange);
-      
+
       return () => {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
@@ -72,7 +72,7 @@ export default function AuthProvider({ children }) {
     // ─── Android/iOS: appStateChange ───
     if (platform === 'android' || platform === 'ios') {
       let listener;
-      
+
       CapApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive && isAuthenticated) {
           handleRefresh();

@@ -149,7 +149,7 @@ export const useServiceCategories = () => {
         }
 
         const result = await categoriesService.getServiceCategories(params);
-        
+
         // ✅ FIX: تکمیل نگاشت داده‌ها (به جای /* ... */)
         setCategories(
           (result.data || []).map((c) => ({

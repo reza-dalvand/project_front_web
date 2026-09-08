@@ -53,7 +53,7 @@ export default function CategoryBusinessesPage({ categoryId }) {
         locationType: state.locationType,
       });
     });
-    
+
     // Initial state
     const initialState = useGlobalLocationStore.getState();
     setLocationState({

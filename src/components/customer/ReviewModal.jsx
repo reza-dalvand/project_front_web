@@ -144,7 +144,10 @@ export default function ReviewModal({ visible, appointment, onClose }) {
             <h3 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               {appointment.businessName}
             </h3>
-            <p className="text-[11px] font-[Vazir] truncate" style={{ color: colors.textSecondary }}>
+            <p
+              className="text-[11px] font-[Vazir] truncate"
+              style={{ color: colors.textSecondary }}
+            >
               {appointment.serviceName}
               {appointment.date && (
                 <span> • {toPersianDigit(String(appointment.date).replace(/\//g, '/'))}</span>
@@ -214,13 +217,9 @@ export default function ReviewModal({ visible, appointment, onClose }) {
                         backgroundColor: isLike
                           ? '#4CAF5008'
                           : isDislike
-                          ? '#F4433608'
-                          : colors.background,
-                        borderColor: isLike
-                          ? '#4CAF5040'
-                          : isDislike
-                          ? '#F4433640'
-                          : colors.border,
+                            ? '#F4433608'
+                            : colors.background,
+                        borderColor: isLike ? '#4CAF5040' : isDislike ? '#F4433640' : colors.border,
                       }}
                     >
                       {/* ایموجی */}

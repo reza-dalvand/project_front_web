@@ -25,7 +25,7 @@ export default function BottomTabBar() {
         hasBusiness
           ? { id: 'manage', icon: FiCreditCard, label: 'مدیریت', path: '/manage' }
           : { id: 'create', icon: FiPlusCircle, label: 'ثبت آگهی', path: '/create-business' },
-          { id: 'model-requests', icon: FiUser, label: 'اگهی مدل', path: '/model-requests' },
+        { id: 'model-requests', icon: FiUser, label: 'اگهی مدل', path: '/model-requests' },
         { id: 'profile', icon: FiUser, label: 'پروفایل', path: '/profile' },
       ]
     : [

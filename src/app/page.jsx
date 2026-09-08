@@ -169,16 +169,13 @@ export default function HomePage() {
 
         if (pending.length > 0) {
           const { dismissedAppointments, reviewedBusinessIds } = useReviewStore.getState();
-          
+
           // ✅ پیدا کردن اولین نوبتی که:
           // 1. قبلاً بسته (dismiss) نشده باشد
           // 2. کسب‌وکار آن قبلاً نظر داده نشده باشد
           const reviewableApt = pending.find((apt) => {
             const bizId = apt.business_id || apt.businessId;
-            return (
-              !dismissedAppointments.includes(apt.id) &&
-              !reviewedBusinessIds.includes(bizId)
-            );
+            return !dismissedAppointments.includes(apt.id) && !reviewedBusinessIds.includes(bizId);
           });
 
           if (reviewableApt) {
@@ -191,10 +188,10 @@ export default function HomePage() {
               date: reviewableApt.date_key || reviewableApt.dateKey,
               time: reviewableApt.time_slot || reviewableApt.timeSlot,
             };
-            
+
             // ✅ اضافه کردن به استور تا موقع ثبت نظر، businessId در دسترس باشد
             addPendingReview(aptData);
-            
+
             setCurrentReviewAppointment(aptData);
             setReviewVisible(true);
           }
@@ -249,12 +246,7 @@ export default function HomePage() {
       const dist = calculateDistance(locationState.latitude, locationState.longitude, lat, lng);
       return dist <= 10;
     });
-  }, [
-    locationState.gpsEnabled,
-    locationState.latitude,
-    locationState.longitude,
-    lineRentals,
-  ]);
+  }, [locationState.gpsEnabled, locationState.latitude, locationState.longitude, lineRentals]);
 
   // ═══════ hasActiveFilter ═══════
   const hasActiveFilter = useMemo(

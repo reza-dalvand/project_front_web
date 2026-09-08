@@ -58,13 +58,12 @@ export default function RemindersPage() {
     return dueCustomers.filter((c) => {
       const sent = c.reminderSent ?? c.reminder_sent;
       const hasNew = c.hasNewBookingAfterSend ?? c.has_new_booking_after_send;
-      
+
       if (!sent) return true;
       if (hasNew) return true;
       return false;
     });
   }, [dueCustomers]);
-  
 
   // ═══ آمار ═══
   const stats = useMemo(() => {
@@ -72,13 +71,13 @@ export default function RemindersPage() {
       // ✅ اصلاح ۱: نیازمند یادآوری = کسانی که موعدشان نزدیک است و هنوز ارسال نشده‌اند
       // (دقیقاً همان لیست sendableCustomers)
       totalDue: sendableCustomers.length,
-      
+
       // ✅ اصلاح ۲: گذشته از موعد (از بین نیازمندانِ ارسال نشده)
       overdue: sendableCustomers.filter((c) => {
         const days = c.daysRemaining ?? c.days_remaining;
         return days < 0;
       }).length,
-      
+
       // ✅ اصلاح ۳: ارسال شده (پشتیبانی از هر دو فرمت snake_case و camelCase)
       sentToday: customers.filter((c) => {
         const isSent = c.reminderSent ?? c.reminder_sent;
@@ -117,14 +116,14 @@ export default function RemindersPage() {
       setCustomers((prev) =>
         prev.map((c) =>
           selectedIds.includes(c.id)
-            ? { 
-                ...c, 
-                reminder_sent: true, 
+            ? {
+                ...c,
+                reminder_sent: true,
                 reminderSent: true,
-                sent_date: 'امروز', 
+                sent_date: 'امروز',
                 sentDate: 'امروز',
                 has_new_booking_after_send: false,
-                hasNewBookingAfterSend: false 
+                hasNewBookingAfterSend: false,
               }
             : c
         )
@@ -212,7 +211,7 @@ export default function RemindersPage() {
           dueCustomers.map((customer) => {
             const isSendable = sendableCustomers.some((c) => c.id === customer.id);
             const isSelected = selectedIds.includes(customer.id);
-            
+
             // ✅ استخراج متغیرها با پشتیبانی از هر دو فرمت
             const customerName = customer.customerName || customer.customer_name;
             const customerPhone = customer.customerPhone || customer.customer_phone;

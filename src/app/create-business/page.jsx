@@ -126,8 +126,7 @@ export default function CreateBusinessPage() {
       setSuccessModalVisible(true);
     } catch (error) {
       setSubmitting(false);
-      const msg =
-        error?.details?.non_field_errors?.[0] || error?.message || 'خطا در ثبت';
+      const msg = error?.details?.non_field_errors?.[0] || error?.message || 'خطا در ثبت';
       showToast(msg, 'error');
     }
   };
@@ -190,10 +189,7 @@ export default function CreateBusinessPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <div
-        className="flex flex-col h-screen"
-        style={{ backgroundColor: colors.background }}
-      >
+      <div className="flex flex-col h-screen" style={{ backgroundColor: colors.background }}>
         <Header title="ثبت کسب‌وکار جدید" onBackPress={() => router.back()} />
         {termsAccepted && <StepProgress currentStep={currentStep} totalSteps={totalSteps} />}
         <div className="flex-1 overflow-y-auto">{renderCurrentStep()}</div>

@@ -1,12 +1,12 @@
 // src/hooks/useRequireBusiness.js
 /**
-* محافظ صفحات کسب‌وکار
-*
-* قوانین:
-*  ۱. لاگین نیست → ریدایرکت به /auth/login
-*  ۲. لاگین هست ولی کسب‌وکار ندارد → ریدایرکت به /create-business
-*  ۳. لاگین هست و کسب‌وکار دارد (در هر وضعیت: pending, approved, rejected) → دسترسی مجاز
-*/
+ * محافظ صفحات کسب‌وکار
+ *
+ * قوانین:
+ *  ۱. لاگین نیست → ریدایرکت به /auth/login
+ *  ۲. لاگین هست ولی کسب‌وکار ندارد → ریدایرکت به /create-business
+ *  ۳. لاگین هست و کسب‌وکار دارد (در هر وضعیت: pending, approved, rejected) → دسترسی مجاز
+ */
 'use client';
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';

@@ -95,9 +95,10 @@ export const useReviewStore = create(
             // ✅ از dismissed هم حذف شود (دیگر مهم نیست چون نظر ثبت شد)
             dismissedAppointments: state.dismissedAppointments.filter((id) => id !== appointmentId),
             // ✅ این کسب‌وکار را به لیست نظر داده‌شده‌ها اضافه کن
-            reviewedBusinessIds: businessId && !state.reviewedBusinessIds.includes(businessId)
-              ? [...state.reviewedBusinessIds, businessId]
-              : state.reviewedBusinessIds,
+            reviewedBusinessIds:
+              businessId && !state.reviewedBusinessIds.includes(businessId)
+                ? [...state.reviewedBusinessIds, businessId]
+                : state.reviewedBusinessIds,
             isLoading: false,
           }));
 
@@ -118,7 +119,7 @@ export const useReviewStore = create(
         })),
 
       hasReviewFor: (appointmentId) => get().reviews.some((r) => r.appointmentId === appointmentId),
-      
+
       hasReviewForBusiness: (businessId) => get().reviewedBusinessIds.includes(businessId),
 
       fetchBusinessReviews: async (businessId) => {

@@ -37,8 +37,7 @@ export const useBusinessStore = create(
         return true;
       },
 
-      getActiveServices: () =>
-        get().businessData.services.filter((s) => s.isActive !== false),
+      getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
 
       resetToDefaults: () => {
         set({
@@ -84,8 +83,8 @@ export const useBusinessStore = create(
               ownerPhoto: b.ownerPhoto || null,
               ownerName: b.ownerName || '',
               verifiedName: b.verifiedName || '',
-              nationalId: b.nationalId || '',                          
-              isNationalIdVerified: Boolean(b.isNationalIdVerified), 
+              nationalId: b.nationalId || '',
+              isNationalIdVerified: Boolean(b.isNationalIdVerified),
               bookingSlug: b.bookingSlug || '',
               latitude: b.latitude || null,
               longitude: b.longitude || null,
@@ -175,9 +174,9 @@ export const useBusinessStore = create(
               isActive: b.status === 'approved',
               status: b.status || 'pending',
               ownerName: b.ownerName || '',
-              verifiedName: b.verifiedName || '',           
-              nationalId: b.nationalId || '',                      
-              isNationalIdVerified: Boolean(b.isNationalIdVerified), 
+              verifiedName: b.verifiedName || '',
+              nationalId: b.nationalId || '',
+              isNationalIdVerified: Boolean(b.isNationalIdVerified),
               phone: b.phone || '',
               latitude: b.latitude || null,
               longitude: b.longitude || null,
@@ -232,7 +231,8 @@ export const useBusinessStore = create(
                 sheba: data.bankSheba || data.sheba || '',
                 cardNumber: data.bankCardNumber || data.cardNumber || '',
                 ownerName: data.bankOwnerName || data.ownerName || data.owner_name || '',
-                accountNumber: data.bankAccountNumber || data.accountNumber || data.account_number || '',
+                accountNumber:
+                  data.bankAccountNumber || data.accountNumber || data.account_number || '',
                 nationalId: data.bankNationalId || data.nationalId || data.national_id || '',
               },
             },
@@ -259,7 +259,7 @@ export const useBusinessStore = create(
             card_number: bankData.card_number || bankData.cardNumber || '',
             account_number: bankData.account_number || bankData.accountNumber || '',
           });
-          
+
           set((state) => ({
             businessData: {
               ...state.businessData,

@@ -1,6 +1,6 @@
 /**
  * Store احراز هویت — فاز ۲ (هماهنگ با بک‌اند)
- * 
+ *
  * ✅ FIX: اضافه کردن Periodic Refresh هر ۵۰ دقیقه
  * ✅ FIX: حذف logout تکراری
  */
@@ -58,31 +58,34 @@ let refreshTimer = null;
 
 const startPeriodicRefresh = () => {
   if (refreshTimer) clearInterval(refreshTimer);
-  
+
   // هر ۵۰ دقیقه (۱۰ دقیقه قبل از انقضای ۱ ساعته)
-  refreshTimer = setInterval(async () => {
-    const { accessToken, refreshToken } = useTokenStore.getState();
-    
-    if (!refreshToken) {
-      stopPeriodicRefresh();
-      return;
-    }
-    
-    // اگر access token به زودی منقضی می‌شود، refresh کن
-    if (accessToken && isTokenExpiringSoon(accessToken)) {
-      try {
-        const result = await authService.refreshToken(refreshToken);
-        const data = result.data;
-        useTokenStore.getState().setTokens({
-          access: data.access,
-          refresh: data.refresh || refreshToken,
-        });
-      } catch (error) {
-        console.warn('Periodic refresh failed:', error);
+  refreshTimer = setInterval(
+    async () => {
+      const { accessToken, refreshToken } = useTokenStore.getState();
+
+      if (!refreshToken) {
         stopPeriodicRefresh();
+        return;
       }
-    }
-  }, 50 * 60 * 1000); // ۵۰ دقیقه
+
+      // اگر access token به زودی منقضی می‌شود، refresh کن
+      if (accessToken && isTokenExpiringSoon(accessToken)) {
+        try {
+          const result = await authService.refreshToken(refreshToken);
+          const data = result.data;
+          useTokenStore.getState().setTokens({
+            access: data.access,
+            refresh: data.refresh || refreshToken,
+          });
+        } catch (error) {
+          console.warn('Periodic refresh failed:', error);
+          stopPeriodicRefresh();
+        }
+      }
+    },
+    50 * 60 * 1000
+  ); // ۵۰ دقیقه
 };
 
 const stopPeriodicRefresh = () => {
@@ -144,7 +147,7 @@ export const useAuthStore = create(
           pendingName: null,
           needsProfileCompletion: options.needsProfileCompletion ?? false,
         });
-        
+
         // ✅ شروع periodic refresh پس از ورود
         startPeriodicRefresh();
       },
@@ -152,7 +155,7 @@ export const useAuthStore = create(
       logout: async (allDevices = false) => {
         // ✅ توقف periodic refresh قبل از خروج
         stopPeriodicRefresh();
-        
+
         const refreshToken = useTokenStore.getState().getRefreshToken();
         try {
           if (refreshToken) {
@@ -227,7 +230,7 @@ export const useAuthStore = create(
 
         return false;
       },
-      
+
       // ✅ متد جدید برای شروع manual refresh timer
       startRefreshTimer: () => {
         const { isAuthenticated } = get();

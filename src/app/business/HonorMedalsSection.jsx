@@ -53,7 +53,10 @@ export default function HonorMedalsSection({ businessId }) {
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
-        <div className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin" style={{ color: colors.primary }} />
+        <div
+          className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+          style={{ color: colors.primary }}
+        />
       </div>
     );
   }
@@ -61,11 +64,16 @@ export default function HonorMedalsSection({ businessId }) {
   return (
     <div className="flex flex-col gap-4 pb-2">
       <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FFD70020' }}>
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ backgroundColor: '#FFD70020' }}
+        >
           <FiAward size={18} color="#FFD700" />
         </div>
         <div className="flex-1">
-          <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>نشان‌های افتخار</h3>
+          <h3 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+            نشان‌های افتخار
+          </h3>
           <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
             بر اساس نظرات مشتریان • {toPersianDigit(totalVotes)} رای
           </p>
@@ -92,22 +100,34 @@ export default function HonorMedalsSection({ businessId }) {
               {medal.emoji}
             </div>
 
-            <span className="text-[11px] font-[Vazir-Bold] leading-4 min-h-[32px]" style={{ color: colors.textMain }}>
+            <span
+              className="text-[11px] font-[Vazir-Bold] leading-4 min-h-[32px]"
+              style={{ color: colors.textMain }}
+            >
               {medal.label}
             </span>
 
             {/* ✅ بخش جدید: فقط نمایش آمار (بدون دکمه کلیک) */}
-            <div className="flex items-center gap-3 mt-1 pt-2 w-full justify-center border-t" style={{ borderColor: colors.border }}>
+            <div
+              className="flex items-center gap-3 mt-1 pt-2 w-full justify-center border-t"
+              style={{ borderColor: colors.border }}
+            >
               <div className="flex items-center gap-1">
                 <FiThumbsUp size={13} color="#4CAF50" />
-                <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.textSecondary }}>
+                <span
+                  className="text-[11px] font-[Vazir-Bold]"
+                  style={{ color: colors.textSecondary }}
+                >
                   {toPersianDigit(medal.likes)}
                 </span>
               </div>
               <div className="w-[1px] h-4" style={{ backgroundColor: colors.border }} />
               <div className="flex items-center gap-1">
                 <FiThumbsDown size={13} color="#F44336" />
-                <span className="text-[11px] font-[Vazir-Bold]" style={{ color: colors.textSecondary }}>
+                <span
+                  className="text-[11px] font-[Vazir-Bold]"
+                  style={{ color: colors.textSecondary }}
+                >
                   {toPersianDigit(medal.dislikes)}
                 </span>
               </div>

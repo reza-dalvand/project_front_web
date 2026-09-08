@@ -18,7 +18,6 @@ import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
 import { useAuth } from '@/stores/useAuthStore';
 
-
 export default function PostModal({ post, visible, onClose, onNavigateToProfile, onBooking }) {
   const { colors } = useTheme();
   const { showToast } = useToast();
@@ -30,7 +29,7 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
 
   const handleSave = useCallback(async () => {
     if (!post?.id) return;
-    
+
     if (!isAuthenticated) {
       requireAuth(() => {});
       return;
@@ -43,11 +42,8 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
         businessName: post.businessName || '',
         image: post.images?.[0]?.imageUrl || post.images?.[0] || null,
       });
-      
-      showToast(
-        newState ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد',
-        'success'
-      );
+
+      showToast(newState ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد', 'success');
     } catch (error) {
       console.error('Toggle favorite failed:', error);
       showToast('خطا در ذخیره علاقه‌مندی', 'error');
@@ -128,7 +124,7 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
   //
   // IMPORTANT:
   // این Hook باید قبل از return شرطی اجرا شود.
-// =========================================================
+  // =========================================================
   const gallery = useMemo(() => {
     if (!post) return [];
 
@@ -293,9 +289,9 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
             Header
         ====================================================== */}
 
-        <PostModalHeader 
-          onClose={onClose} 
-          onShare={handleShare} 
+        <PostModalHeader
+          onClose={onClose}
+          onShare={handleShare}
           onSave={handleSave}
           isSaved={isSaved}
         />

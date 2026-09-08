@@ -3,7 +3,7 @@
  * هماهنگ با بک‌اند:
  *   - Access Token: ۱ ساعت اعتبار
  *   - Refresh Token: ۳۰ روز اعتبار با Rotation + Sliding
- * 
+ *
  * ✅ FIX: استفاده از @capacitor/preferences در Android
  * برای جلوگیری از پاک شدن توکن‌ها با clear cache
  */
@@ -50,12 +50,12 @@ const getStorage = () => {
   if (typeof window === 'undefined') {
     return { getItem: () => null, setItem: () => {}, removeItem: () => {} };
   }
-  
+
   // در Android (Capacitor) — استفاده از Preferences
   if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
     return createCapacitorStorage();
   }
-  
+
   // در Web — استفاده از localStorage
   return localStorage;
 };
