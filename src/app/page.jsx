@@ -20,7 +20,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/useToast';
 import { getCurrentLocation, calculateDistance } from '@/utils/geo-utils';
 import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
-import { adsService, categoriesService, exploreService, appointmentsService } from '@/api';
+import { adsService, categoriesService, exploreService, reviewsService } from '@/api';
 
 // ✅ Lazy Load
 const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), {
@@ -41,7 +41,7 @@ export default function HomePage() {
   const { colors, resolvedTheme, setTheme } = useTheme();
   const { isAuthenticated, user, requireAuth } = useAuth();
   const { showToast } = useToast();
-  const { pendingReviews, addPendingReview } = useReviewStore();
+  const { addPendingReview } = useReviewStore();
   const isDark = resolvedTheme === 'dark';
 
   // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
@@ -97,7 +97,6 @@ export default function HomePage() {
   const [ads, setAds] = useState([]);
   const [categories, setCategories] = useState([]);
   const [lineRentals, setLineRentals] = useState([]);
-  const [doneAppointments, setDoneAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // ═══════ دریافت داده‌ها از API ═══════
@@ -108,7 +107,6 @@ export default function HomePage() {
         const locationParams = getLocationParams();
         const [adsRes, catRes, lineRes] = await Promise.allSettled([
           exploreService.getPosts({ page_size: 6, ...locationParams }),
-          // ✅ الف) ارسال پارامترهای مکانی برای محاسبه بدج تعداد دسته‌ها
           categoriesService.getServiceCategories({ ...locationParams }),
           adsService.getLineRentals({ page_size: 6, ...locationParams }),
         ]);
@@ -150,7 +148,6 @@ export default function HomePage() {
     };
     fetchAllData();
   }, [
-    // ✅ ب) dependencyهای مکانی — با تغییر استان/شهر یا روشن/خاموش شدن GPS، بدج‌ها refetch می‌شوند
     locationState.provinceId,
     locationState.cityId,
     locationState.latitude,
@@ -160,38 +157,56 @@ export default function HomePage() {
     getLocationParams,
   ]);
 
-  // ═══════ دریافت نوبت‌های گذشته برای نظردهی ═══════
+  // ═══════ بررسی خودکار نوبت‌های آماده نظردهی (اصلاح شده) ═══════
+  const pendingCheckDone = useRef(false);
   useEffect(() => {
-    if (!isAuthenticated) return;
-    const fetchDoneAppointments = async () => {
+    if (!isAuthenticated || pendingCheckDone.current) return;
+
+    const checkPendingReviews = async () => {
       try {
-        const result = await appointmentsService.getMyAppointments('past');
-        const appointments = result.data || [];
-        const done = appointments.filter((a) => a.status === 'done');
-        setDoneAppointments(done);
+        const result = await reviewsService.getPendingReviews();
+        const pending = result.data || [];
+
+        if (pending.length > 0) {
+          const { dismissedAppointments, reviewedBusinessIds } = useReviewStore.getState();
+          
+          // ✅ پیدا کردن اولین نوبتی که:
+          // 1. قبلاً بسته (dismiss) نشده باشد
+          // 2. کسب‌وکار آن قبلاً نظر داده نشده باشد
+          const reviewableApt = pending.find((apt) => {
+            const bizId = apt.business_id || apt.businessId;
+            return (
+              !dismissedAppointments.includes(apt.id) &&
+              !reviewedBusinessIds.includes(bizId)
+            );
+          });
+
+          if (reviewableApt) {
+            const aptData = {
+              id: reviewableApt.id,
+              businessId: reviewableApt.business_id || reviewableApt.businessId,
+              businessName: reviewableApt.business_name || reviewableApt.businessName,
+              businessLogo: reviewableApt.business_logo || reviewableApt.businessLogo,
+              serviceName: reviewableApt.service_name || reviewableApt.serviceName,
+              date: reviewableApt.date_key || reviewableApt.dateKey,
+              time: reviewableApt.time_slot || reviewableApt.timeSlot,
+            };
+            
+            // ✅ اضافه کردن به استور تا موقع ثبت نظر، businessId در دسترس باشد
+            addPendingReview(aptData);
+            
+            setCurrentReviewAppointment(aptData);
+            setReviewVisible(true);
+          }
+        }
+        pendingCheckDone.current = true;
       } catch (error) {
-        console.error('Failed to fetch done appointments:', error);
+        console.error('Failed to check pending reviews:', error);
       }
     };
-    fetchDoneAppointments();
-  }, [isAuthenticated]);
 
-  // ─── افزودن نوبت‌های انجام‌شده به pendingReviews ───
-  const pendingReviewsInitialized = useRef(false);
-  useEffect(() => {
-    if (pendingReviewsInitialized.current || doneAppointments.length === 0) return;
-    pendingReviewsInitialized.current = true;
-    doneAppointments.forEach((apt) => {
-      addPendingReview({
-        id: apt.id,
-        businessName: apt.business_name || apt.businessName,
-        businessLogo: apt.business_logo || apt.businessLogo,
-        serviceName: apt.service_name || apt.serviceName,
-        date: apt.date_key || apt.dateKey,
-        time: apt.time_slot || apt.timeSlot,
-      });
-    });
-  }, [doneAppointments, addPendingReview]);
+    checkPendingReviews();
+  }, [isAuthenticated, addPendingReview]);
 
   // ═══════ ✅ تغییر: NearbyToggle با استفاده از getState ═══════
   const handleNearbyToggle = useCallback(async () => {
@@ -271,9 +286,15 @@ export default function HomePage() {
     [router]
   );
   const handleReviewClose = useCallback(() => {
+    if (currentReviewAppointment) {
+      // ✅ وقتی کاربر مدال را می‌بندد، این نوبت خاص dismiss می‌شود
+      // اما اگر نوبت جدیدی از همین کسب‌وکار بگیرد، چون ID جدید است، دوباره مدال نمایش داده می‌شود
+      useReviewStore.getState().dismissPendingReview(currentReviewAppointment.id);
+    }
     setReviewVisible(false);
     setCurrentReviewAppointment(null);
-  }, []);
+  }, [currentReviewAppointment]);
+
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
   const handleClearAllFilters = useCallback(() => setFilters({}), []);
 

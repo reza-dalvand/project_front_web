@@ -99,8 +99,8 @@ export default function BusinessInfoCard({ business, onMapPress }) {
           <Image
             src={business.ownerPhoto}
             alt={business.name || 'لوگو کسب‌وکار'}
-            width={80}
-            height={70}
+            fill
+            sizes="88px"
             className="object-cover"
           />
         ) : (

@@ -106,4 +106,12 @@ export const reviewsService = {
     });
   },
 
+    /**
+   * دریافت نوبت‌های آماده نظردهی (۶ ساعت/۱ دقیقه بعد از done شدن)
+   * GET /reviews/pending/
+   */
+  getPendingReviews: () => {
+    return apiClient.get('/reviews/pending/');
+  },
+
 };

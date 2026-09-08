@@ -1,7 +1,7 @@
-// src/stores/useReviewStore.js
 /**
  * Store نظردهی — هماهنگ با بک‌اند
- * ✅ حذف USE_MOCK — فقط API
+ * منطق جدید: فقط یکبار نظر برای هر کسب‌وکار
+ * اگر نظر نداد، بعد از هر نوبت جدید مدال نشان داده می‌شود
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -21,11 +21,22 @@ export const useReviewStore = create(
     (set, get) => ({
       reviews: [],
       pendingReviews: [],
+      dismissedAppointments: [], // ✅ persisted — برای جلوگیری از نمایش مجدد مدال بسته‌شده
+      reviewedBusinessIds: [], // ✅ persisted — کسب‌وکارهایی که کاربر نظر داده
       isLoading: false,
       error: null,
 
       addPendingReview: (appointment) =>
         set((state) => {
+          // اگر قبلاً برای این کسب‌وکار نظر داده، اضافه نکن
+          const bizId = appointment.businessId || appointment.business_id;
+          if (bizId && state.reviewedBusinessIds.includes(bizId)) {
+            return state;
+          }
+          // اگر قبلاً dismiss شده، اضافه نکن
+          if (state.dismissedAppointments.includes(appointment.id)) {
+            return state;
+          }
           if (state.pendingReviews.some((p) => p.appointmentId === appointment.id)) {
             return state;
           }
@@ -34,12 +45,13 @@ export const useReviewStore = create(
               ...state.pendingReviews,
               {
                 appointmentId: appointment.id,
-                businessName: appointment.businessName,
-                businessLogo: appointment.businessLogo,
-                serviceName: appointment.serviceName,
-                employeeName: appointment.employeeName,
-                date: appointment.date,
-                time: appointment.time,
+                businessId: bizId,
+                businessName: appointment.businessName || appointment.business_name,
+                businessLogo: appointment.businessLogo || appointment.business_logo,
+                serviceName: appointment.serviceName || appointment.service_name,
+                employeeName: appointment.employeeName || appointment.employee_name,
+                date: appointment.date || appointment.date_key,
+                time: appointment.time || appointment.time_slot,
                 addedAt: Date.now(),
               },
             ],
@@ -56,20 +68,23 @@ export const useReviewStore = create(
         }
       },
 
-      // ✅ حذف USE_MOCK — فقط API
       submitReview: async (appointmentId, reviewData) => {
         set({ isLoading: true, error: null });
         try {
           await reviewsService.createReview({
             appointment_id: appointmentId,
-            rating: reviewData.rating,
             comment: reviewData.comment || '',
-            tags: reviewData.tags || [],
+            tag_votes: reviewData.tag_votes || [],
           });
+
+          // پیدا کردن businessId از pendingReviews
+          const pending = get().pendingReviews.find((p) => p.appointmentId === appointmentId);
+          const businessId = pending?.businessId;
 
           const newReview = {
             id: `rev_${Date.now()}`,
             appointmentId,
+            businessId,
             ...reviewData,
             submittedAt: Date.now(),
           };
@@ -77,6 +92,12 @@ export const useReviewStore = create(
           set((state) => ({
             reviews: [...state.reviews, newReview],
             pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
+            // ✅ از dismissed هم حذف شود (دیگر مهم نیست چون نظر ثبت شد)
+            dismissedAppointments: state.dismissedAppointments.filter((id) => id !== appointmentId),
+            // ✅ این کسب‌وکار را به لیست نظر داده‌شده‌ها اضافه کن
+            reviewedBusinessIds: businessId && !state.reviewedBusinessIds.includes(businessId)
+              ? [...state.reviewedBusinessIds, businessId]
+              : state.reviewedBusinessIds,
             isLoading: false,
           }));
 
@@ -91,9 +112,14 @@ export const useReviewStore = create(
       dismissPendingReview: (appointmentId) =>
         set((state) => ({
           pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
+          // ✅ فقط این appointment را dismiss کن
+          // اگر نوبت جدیدی از همان کسب‌وکار بیاید، appointmentId جدید است و dismiss نیست
+          dismissedAppointments: [...state.dismissedAppointments, appointmentId],
         })),
 
       hasReviewFor: (appointmentId) => get().reviews.some((r) => r.appointmentId === appointmentId),
+      
+      hasReviewForBusiness: (businessId) => get().reviewedBusinessIds.includes(businessId),
 
       fetchBusinessReviews: async (businessId) => {
         try {
@@ -123,6 +149,47 @@ export const useReviewStore = create(
           throw error;
         }
       },
+
+      // ✅ جدید: دریافت نوبت‌های آماده نظردهی از API
+      fetchPendingReviews: async () => {
+        try {
+          const result = await reviewsService.getPendingReviews();
+          const appointments = result.data || [];
+          const { dismissedAppointments, pendingReviews, reviewedBusinessIds } = get();
+
+          // فقط آن‌هایی که dismiss نشده‌اند، هنوز در pending نیستند، و برای کسب‌وکارشان نظر نداده
+          const newAppointments = appointments.filter((apt) => {
+            const bizId = apt.business_id || apt.businessId;
+            return (
+              !dismissedAppointments.includes(apt.id) &&
+              !pendingReviews.some((p) => p.appointmentId === apt.id) &&
+              !reviewedBusinessIds.includes(bizId)
+            );
+          });
+
+          set((state) => ({
+            pendingReviews: [
+              ...state.pendingReviews,
+              ...newAppointments.map((apt) => ({
+                appointmentId: apt.id,
+                businessId: apt.business_id || apt.businessId,
+                businessName: apt.business_name || apt.businessName,
+                businessLogo: apt.business_logo || apt.businessLogo,
+                serviceName: apt.service_name || apt.serviceName,
+                employeeName: apt.employee_name || apt.employeeName,
+                date: apt.date_key || apt.date,
+                time: apt.time_slot || apt.time,
+                addedAt: Date.now(),
+              })),
+            ],
+          }));
+
+          return newAppointments;
+        } catch (error) {
+          console.error('fetchPendingReviews failed:', error);
+          return [];
+        }
+      },
     }),
     {
       name: 'beau-review-storage',
@@ -134,6 +201,8 @@ export const useReviewStore = create(
       partialize: (state) => ({
         reviews: state.reviews,
         pendingReviews: state.pendingReviews,
+        dismissedAppointments: state.dismissedAppointments,
+        reviewedBusinessIds: state.reviewedBusinessIds,
       }),
     }
   )

@@ -10,6 +10,7 @@ const nextConfig = {
 
   images: {
     unoptimized: true,
+    qualities: [75, 80, 90],
     remotePatterns: [
       // { protocol: 'https', hostname: 'images.unsplash.com' },
       // { protocol: 'https', hostname: 'picsum.photos' },
