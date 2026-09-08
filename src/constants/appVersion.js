@@ -14,6 +14,7 @@ export const STORE_URLS = {
   web: {
     production: 'https://beauclub.ir',
     staging: 'https://staging.beauclub.ir',
+    develop: 'https://develop.beauclub.ir',
   },
 };
 
@@ -24,21 +25,25 @@ export const DEFAULT_STORE_URL = 'https://beauclub.ir';
 export const DEFAULT_STORE_NAME = 'بیو کلاب وب';
 
 /**
- * تبدیل "1.2.3" به عدد قابل مقایسه (10203)
- */
-export const versionToNumber = (version) => {
-  if (!version) return 0;
-  const parts = String(version).split('.').map(Number);
-  return (parts[0] || 0) * 10000 + (parts[1] || 0) * 100 + (parts[2] || 0);
-};
-
-/**
- * مقایسه دو نسخه: -1 (a < b), 0 (a = b), 1 (a > b)
+ * ✅ مقایسه دو نسخه به‌صورت بخش‌به‌بخش
+ * بدون محدودیت اندازه — برای هر نسخه‌ای درست کار می‌کند.
+ *
+ * @param {string} a - نسخه اول (مثلاً "1.0.0")
+ * @param {string} b - نسخه دوم (مثلاً "1.1.0")
+ * @returns {number} -1 (a < b), 0 (a = b), 1 (a > b)
  */
 export const compareVersions = (a, b) => {
-  const numA = versionToNumber(a);
-  const numB = versionToNumber(b);
-  if (numA < numB) return -1;
-  if (numA > numB) return 1;
+  if (!a || !b) return 0;
+  
+  const partsA = String(a).split('.').map(Number);
+  const partsB = String(b).split('.').map(Number);
+  const len = Math.max(partsA.length, partsB.length);
+
+  for (let i = 0; i < len; i++) {
+    const numA = partsA[i] || 0;
+    const numB = partsB[i] || 0;
+    if (numA < numB) return -1;
+    if (numA > numB) return 1;
+  }
   return 0;
 };

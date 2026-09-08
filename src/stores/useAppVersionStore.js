@@ -10,6 +10,7 @@ import {
   DEFAULT_STORE_NAME,
 } from '@/constants/appVersion';
 import apiClient from '@/api/api-client';
+import { Capacitor } from '@capacitor/core';
 
 /**
  * 📦 Store نسخه اپلیکیشن
@@ -119,8 +120,17 @@ export const useAppVersionStore = create(
         const { updateInfo } = get();
         if (!updateInfo) return;
 
-        // در وب، صفحه را ریلود کن
-        window.location.reload();
+        const url = updateInfo.storeUrl || DEFAULT_STORE_URL;
+        
+        if (typeof window !== 'undefined') {
+          if (Capacitor.isNativePlatform()) {
+            // ✅ در اندروید لینک را مستقیماً در اپلیکیشن استور یا مرورگر سیستم باز می‌کند
+            window.open(url, '_system');
+          } else {
+            // ✅ در وب در تب جدید باز می‌کند
+            window.open(url, '_blank');
+          }
+        }
       },
 
       /**
