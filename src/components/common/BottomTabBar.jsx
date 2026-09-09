@@ -7,8 +7,8 @@ import {
   FiPlusSquare,
   FiUser,
   FiLogIn,
+  FiStar,
 } from 'react-icons/fi';
-import { GiNails } from 'react-icons/gi';
 
 
 import { usePathname, useRouter } from 'next/navigation';
@@ -65,7 +65,7 @@ export default function BottomTabBar() {
 
         {
           id: 'model-requests',
-          icon: GiNails,
+          icon: FiStar,
           label: 'آگهی مدل',
           path: '/model-requests',
         },
@@ -94,7 +94,7 @@ export default function BottomTabBar() {
 
         {
           id: 'model-requests',
-          icon: GiNails,
+          icon: FiStar,
           label: 'درخواست مدل',
           path: '/model-requests',
         },
