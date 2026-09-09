@@ -44,7 +44,7 @@ const getServiceEmoji = (serviceName = '') => {
  * مدال جزئیات نوبت
  * نمایش جزئیات کامل + دکمه لغو (در صورت > 12 ساعت)
  */
-export default function AppointmentDetailModal({ visible, appointment, onClose, onCancelRequest }) {
+export default function AppointmentDetailModal({ visible, appointment, onClose }) {
   const { colors } = useTheme();
   const instanceId = useRef('appointment-detail-modal');
 
@@ -66,16 +66,6 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
   if (!visible || !appointment) return null;
 
   const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.reserved;
-  const canCancel =
-    appointment.isUpcoming &&
-    appointment.status !== 'cancelled' &&
-    appointment.status !== 'done' &&
-    (appointment.hoursLeft ?? Infinity) >= 12;
-  const isTooLate =
-    appointment.isUpcoming &&
-    appointment.status !== 'cancelled' &&
-    appointment.status !== 'done' &&
-    (appointment.hoursLeft ?? Infinity) < 12;
 
   const content = (
     <div
@@ -215,51 +205,6 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
               </div>
             )}
           </div>
-          {/* ═══ بخش لغو ═══ */}
-          {canCancel && (
-            <div
-              className="flex items-start gap-3 p-4 rounded-2xl border"
-              style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
-            >
-              <FiInfo size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
-                  امکان لغو این نوبت وجود دارد.
-                </p>
-                <a
-                  href="https://beauclub.ir/rules/cancellation"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] font-[Vazir] underline mt-1 inline-block"
-                  style={{ color: colors.primary }}
-                >
-                  برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
-                </a>
-              </div>
-            </div>
-          )}
-          {isTooLate && (
-            <div
-              className="flex items-start gap-3 p-4 rounded-2xl border"
-              style={{ backgroundColor: '#E5393508', borderColor: '#E5393530' }}
-            >
-              <FiAlertTriangle size={18} color="#E53935" className="flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
-                  امکان لغو این نوبت وجود ندارد.
-                </p>
-                <a
-                  href="https://beau.app/rules/cancellation"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] font-[Vazir] underline mt-1 inline-block"
-                  style={{ color: colors.primary }}
-                >
-                  برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
-                </a>
-              </div>
-            </div>
-          )}
         </div>
         {/* فوتر */}
         <div
@@ -269,27 +214,13 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
             paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
           }}
         >
-          {canCancel ? (
-            <button
-              onClick={() => onCancelRequest?.(appointment)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl
-                border-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
-              style={{ borderColor: '#E53935', backgroundColor: '#E5393508' }}
-            >
-              <FiXCircle size={18} color="#E53935" />
-              <span className="text-sm font-[Vazir-Bold] " style={{ color: '#E53935' }}>
-                لغو نوبت و استرداد وجه
-              </span>
-            </button>
-          ) : (
-            <button
-              onClick={onClose}
-              className="w-full py-3.5 rounded-2xl text-sm font-[Vazir-Bold] transition-all"
-              style={{ backgroundColor: colors.primary, color: '#fff' }}
-            >
-              بستن
-            </button>
-          )}
+          <button
+            onClick={onClose}
+            className="w-full py-3.5 rounded-2xl text-sm font-[Vazir-Bold] transition-all"
+            style={{ backgroundColor: colors.primary, color: '#fff' }}
+          >
+            بستن
+          </button>
         </div>
       </div>
     </div>

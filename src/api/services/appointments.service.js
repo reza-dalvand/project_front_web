@@ -89,18 +89,6 @@ export const appointmentsService = {
   },
 
   /**
-   * لغو نوبت توسط مشتری
-   * POST /appointments/{pk}/cancel/
-   *
-   * Payload: { reason_text: string }
-   */
-  cancelAppointment: (appointmentId, reasonText = '') => {
-    return apiClient.post(`/appointments/${appointmentId}/cancel/`, {
-      reason_text: reasonText,
-    });
-  },
-
-  /**
    * لغو نوبت توسط کسب‌وکار
    * POST /appointments/{pk}/cancel-by-business/
    *

@@ -16,11 +16,6 @@ const AppointmentDetailModal = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const CancelAppointmentModal = dynamic(
-  () => import('@/components/profile/appointments/CancelAppointmentModal'),
-  { ssr: false, loading: () => null }
-);
-
 // ═══════ تنظیمات تب‌ها ═══════
 const TABS = [
   { id: 'upcoming', label: 'آینده', icon: FiCalendar, color: '#2196F3' },
@@ -58,8 +53,6 @@ export default function AppointmentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
-  const [cancelTarget, setCancelTarget] = useState(null);
-  const [cancelVisible, setCancelVisible] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
 
   // ═══════ دریافت نوبت‌ها ═══════
@@ -114,25 +107,6 @@ export default function AppointmentsPage() {
   const handleOpenDetail = (apt) => {
     setSelectedAppointment(apt);
     setDetailVisible(true);
-  };
-
-  const handleCancelRequest = (apt) => {
-    setDetailVisible(false);
-    setCancelTarget(apt);
-    setTimeout(() => setCancelVisible(true), 200);
-  };
-
-  const handleConfirmCancel = async (aptId, reason) => {
-    try {
-      await appointmentsService.cancelAppointment(aptId, reason);
-      showToast('نوبت لغو شد. بیعانه ظرف ۴۸ ساعت واریز می‌شود.', 'success');
-      setCancelVisible(false);
-      setCancelTarget(null);
-      // رفرش لیست
-      fetchAppointments(activeTab);
-    } catch (err) {
-      showToast(err.message || 'خطا در لغو نوبت', 'error');
-    }
   };
 
   // ═══════ رندر ═══════
@@ -230,16 +204,6 @@ export default function AppointmentsPage() {
           setDetailVisible(false);
           setSelectedAppointment(null);
         }}
-        onCancelRequest={handleCancelRequest}
-      />
-      <CancelAppointmentModal
-        visible={cancelVisible}
-        appointment={cancelTarget}
-        onClose={() => {
-          setCancelVisible(false);
-          setCancelTarget(null);
-        }}
-        onConfirmCancel={handleConfirmCancel}
       />
     </div>
   );
