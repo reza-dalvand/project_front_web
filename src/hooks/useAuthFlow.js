@@ -6,15 +6,8 @@
  *   - src/app/auth/verify-otp/page.jsx
  *   - src/components/common/AuthModal.jsx
  *
- * مسئولیت‌ها:
- *   - مدیریت state OTP (آرایه ارقام)
- *   - تایمر ارسال مجدد
- *   - تایید کد OTP (verifyOtp)
- *   - ارسال مجدد کد (resendOtp)
- *   - ذخیره پروفایل کاربر جدید (saveProfile)
- *   - مدیریت خطاها و loading
- *
- * ⚠️ FIX فاز ۱: استفاده از camelCase (accessToken, refreshToken, ...)
+ * ✅ FIX: استفاده از camelCase به جای snake_case
+ *   چون response-normalizer همه کلیدها را به camelCase تبدیل می‌کند
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -24,13 +17,6 @@ import { OTP_CONFIG } from '@/api/config';
 const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;
 const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS;
 
-/**
- * @param {object} options
- * @param {boolean} options.enabled - آیا تایمر فعال باشد (پیش‌فرض: true)
- * @param {function} options.onVerifySuccess - callback پس از تایید موفق
- *   دریافت می‌کند: { user, isNewUser, needsProfileCompletion }
- * @returns {object} - state و action‌های جریان احراز هویت
- */
 export const useAuthFlow = (options = {}) => {
   const { enabled = true, onVerifySuccess } = options;
 
@@ -57,14 +43,8 @@ export const useAuthFlow = (options = {}) => {
   }, [timer, enabled]);
 
   // ─── تایید کد OTP ───
-  /**
-   * @param {string} phone - شماره موبایل
-   * @param {string} code - کد OTP واردشده (otp.join(''))
-   * @returns {Promise<{success: boolean, data?: object, error?: string}>}
-   */
   const verifyOtp = useCallback(
     async (phone, code) => {
-      // بررسی کامل بودن کد
       if (!code || code.length < OTP_LENGTH) {
         const msg = `کد ${OTP_LENGTH} رقمی را کامل وارد کنید`;
         setError(msg);
@@ -77,27 +57,46 @@ export const useAuthFlow = (options = {}) => {
       try {
         const result = await authService.verifyOTP(phone, code);
 
-        // بررسی null بودن data
         if (!result?.data?.user) {
           throw new Error('خطا در ورود. لطفاً دوباره تلاش کنید.');
         }
 
-        // ✅ FIX فاز ۱: camelCase — response-normalizer تبدیل کرده
-        const { user, accessToken, refreshToken, isNewUser, needsProfileCompletion } = result.data;
+        const data = result.data;
 
-        // ذخیره در store
-        login(user, { accessToken, refreshToken }, { isNewUser, needsProfileCompletion });
-
-        // callback اختیاری
-        onVerifySuccess?.({ user, isNewUser, needsProfileCompletion });
+        // ✅ FIX: استفاده از camelCase (response-normalizer کلیدها را تبدیل کرده)
+        //   access_token → accessToken
+        //   refresh_token → refreshToken
+        //   is_suspended → isSuspended
+        //   suspension_reason → suspensionReason
+        //   needs_profile_completion → needsProfileCompletion
+        login(
+          data.user,
+          {
+            accessToken: data.accessToken,       // ✅ FIX: بود data.access_token
+            refreshToken: data.refreshToken,     // ✅ FIX: بود data.refresh_token
+          },
+          {
+            needsProfileCompletion: data.needsProfileCompletion ?? false,  // ✅ FIX
+            isSuspended: data.isSuspended ?? false,                        // ✅ FIX
+            suspensionReason: data.suspensionReason ?? '',                 // ✅ FIX
+          }
+        );
 
         setLoading(false);
-        return { success: true, data: result.data };
+
+        if (onVerifySuccess) {
+          onVerifySuccess({
+            isNewUser: data.isNewUser,                          // ✅ FIX
+            needsProfileCompletion: data.needsProfileCompletion, // ✅ FIX
+            isSuspended: data.isSuspended ?? false,             // ✅ FIX
+          });
+        }
+
+        return { success: true, data };
       } catch (err) {
         setLoading(false);
-        const errorMsg = err.message || 'کد وارد شده صحیح نیست';
+        const errorMsg = err.message || 'خطا در تایید کد';
         setError(errorMsg);
-        setOtp(Array(OTP_LENGTH).fill(''));
         return { success: false, error: errorMsg };
       }
     },
@@ -105,10 +104,6 @@ export const useAuthFlow = (options = {}) => {
   );
 
   // ─── ارسال مجدد کد OTP ───
-  /**
-   * @param {string} phone - شماره موبایل
-   * @returns {Promise<{success: boolean, error?: string}>}
-   */
   const resendOtp = useCallback(async (phone) => {
     try {
       await authService.sendOTP(phone);
@@ -125,11 +120,6 @@ export const useAuthFlow = (options = {}) => {
   }, []);
 
   // ─── ذخیره پروفایل کاربر جدید ───
-  /**
-   * @param {string} firstName
-   * @param {string} lastName
-   * @returns {Promise<{success: boolean, error?: string}>}
-   */
   const saveProfile = useCallback(
     async (firstName, lastName) => {
       if (!firstName.trim() || !lastName.trim()) {
@@ -187,7 +177,6 @@ export const useAuthFlow = (options = {}) => {
   }, [timer]);
 
   return {
-    // State
     otp,
     setOtp,
     loading,
@@ -195,12 +184,8 @@ export const useAuthFlow = (options = {}) => {
     setError,
     timer,
     canResend,
-
-    // ثابت‌ها
     otpLength: OTP_LENGTH,
     resendSeconds: RESEND_SECONDS,
-
-    // Action‌ها
     verifyOtp,
     resendOtp,
     saveProfile,

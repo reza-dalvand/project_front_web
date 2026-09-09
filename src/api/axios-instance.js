@@ -1,11 +1,8 @@
-// src/api/axios-instance.js
 /**
- * 🌐 Axios Instance مرکزی — فاز ۲
+ * 🌐 Axios Instance مرکزی — فاز ۲ + ✅ پشتیبانی از تعلیق کاربر
  *
  * ✅ فاز ۱: رفع ریسک حلقه بی‌نهایت در رفرش توکن
- * - افزودن فلگ _isRefreshRequest برای شناسایی درخواست رفرش
- * - محافظت از تکرار درخواست رفرش
- * - خروج خودکار از حساب در صورت شکست رفرش
+ * ✅ NEW: هندل ACCOUNT_SUSPENDED (403) برای نمایش مدال تعلیق
  */
 import axios from 'axios';
 import { API_CONFIG } from './config';
@@ -36,7 +33,7 @@ api.interceptors.request.use(
 );
 
 // ═══════════════════════════════════════════════
-//    Response Interceptor: مدیریت خطا + refresh
+//    Response Interceptor: مدیریت خطا + refresh + suspension
 // ═══════════════════════════════════════════════
 let isRefreshing = false;
 let failedQueue = [];
@@ -68,10 +65,57 @@ const isAuthEndpoint = (url) => {
   );
 };
 
+/**
+ * ✅ NEW: URLهایی که کاربر تعلیق‌شده هم می‌تواند استفاده کند
+ * این endpointها نباید باعث نمایش مکرر مدال تعلیق شوند
+ */
+const isSuspensionAllowedEndpoint = (url) => {
+  if (!url) return false;
+  return (
+    url.includes('/auth/logout') ||
+    url.includes('/auth/token/refresh') ||
+    url.includes('/support/tickets') ||
+    url.includes('/support/faq')
+  );
+};
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const errorData = error.response?.data;
+    const errorCode = errorData?.error_code || errorData?.code;
+    const statusCode = error.response?.status;
+
+    // ═══════════════════════════════════════════════
+    // ✅ NEW: هندل کاربر تعلیق‌شده (403 + ACCOUNT_SUSPENDED)
+    // ═══════════════════════════════════════════════
+    if (
+      (errorCode === 'ACCOUNT_SUSPENDED' || 
+       (statusCode === 403 && errorCode === 'ACCOUNT_SUSPENDED')) &&
+      !isSuspensionAllowedEndpoint(originalRequest?.url)
+    ) {
+      try {
+        const { useAuthStore } = await import('@/stores/useAuthStore');
+        const authState = useAuthStore.getState();
+
+        // اگر کاربر لاگین است اما suspended نشده، state را آپدیت کن
+        if (authState.isAuthenticated && !authState.isSuspended) {
+          useAuthStore.setState({
+            isSuspended: true,
+            suspensionReason:
+              errorData?.message || 'حساب کاربری شما به دلیل تخلف تعلیق شده است.',
+          });
+        }
+      } catch {
+        // ignore
+      }
+      return Promise.reject(error);
+    }
+
+    // ═══════════════════════════════════════════════
+    // مدیریت خطاهای ۴۰۱ — Refresh Token
+    // ═══════════════════════════════════════════════
 
     // اگر درخواست وجود ندارد یا تکراری است، رد شو
     if (!originalRequest || originalRequest._retry) {
@@ -84,7 +128,7 @@ api.interceptors.response.use(
     }
 
     // فقط برای خطاهای ۴۰۱
-    if (error.response?.status !== 401) {
+    if (statusCode !== 401) {
       return Promise.reject(error);
     }
 
@@ -118,15 +162,12 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // ✅ FIX: استفاده از `api` instance بجای `axios` خام
-      // تا interceptors و headers درست اعمال شوند
       const response = await api.post(
         '/accounts/auth/token/refresh/',
         { refresh: refreshToken },
         {
           _isRefreshRequest: true,
           timeout: API_CONFIG.timeout,
-          // جلوگیری از loop در صورت خطا
           skipAuthInterceptor: true,
         }
       );
@@ -137,7 +178,6 @@ api.interceptors.response.use(
         throw new Error('Invalid refresh response: no access token');
       }
 
-      // ✅ FIX: ذخیره refresh جدید (اگر rotate فعال باشد)
       setTokens({
         access,
         refresh: newRefresh || refreshToken,
