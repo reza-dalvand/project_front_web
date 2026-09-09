@@ -438,27 +438,31 @@ export default function BookingModal({
               />
               {isAuthenticated && <TrustToggle enabled={trustEnabled} onToggle={setTrustEnabled} />}
 
-                 {/* ═══ باکس قوانین لغو (قبل از پرداخت) ═══ */}
-          <div 
-            className="w-full p-4 rounded-2xl border flex items-start gap-3 mt-1"
-            style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
-          >
-            <FiInfo size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-xs font-[Vazir] leading-6" style={{ color: colors.textSecondary }}>
-                امکان لغو نوبت پس از ثبت، فقط توسط صاحب کسب‌وکار یا در صورت انجام نشدن خدمت یا انجام تخلف توسط این واحد، امکان‌پذیر است.
-              </p>
-              <a 
-                href="https://beauclub.ir/rules/cancellation" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-[12px] font-[Vazir-Bold] underline mt-1.5 inline-block"
-                style={{ color: colors.primary }}
+              {/* ═══ باکس قوانین لغو (قبل از پرداخت) ═══ */}
+              <div
+                className="w-full p-4 rounded-2xl border flex items-start gap-3 mt-1"
+                style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
               >
-                مشاهده قوانین کامل لغو و استرداد وجه
-              </a>
-            </div>
-          </div>
+                <FiInfo size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p
+                    className="text-xs font-[Vazir] leading-6"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    امکان لغو نوبت پس از ثبت، فقط توسط صاحب کسب‌وکار یا در صورت انجام نشدن خدمت یا
+                    انجام تخلف توسط این واحد، امکان‌پذیر است.
+                  </p>
+                  <a
+                    href="https://beauclub.ir/rules/cancellation"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12px] font-[Vazir-Bold] underline mt-1.5 inline-block"
+                    style={{ color: colors.primary }}
+                  >
+                    مشاهده قوانین کامل لغو و استرداد وجه
+                  </a>
+                </div>
+              </div>
             </>
           )}
         </div>

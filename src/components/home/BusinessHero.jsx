@@ -43,9 +43,7 @@ export default function BusinessHero({
   // قبل از ۳ رای: ۵.۰ (پیش‌فرض)
   // بعد از ۳ رای: میانگین واقعی
   const displayRating =
-    reviewsCount < MIN_REVIEWS_THRESHOLD
-      ? DEFAULT_RATING
-      : parseFloat(rating || 0);
+    reviewsCount < MIN_REVIEWS_THRESHOLD ? DEFAULT_RATING : parseFloat(rating || 0);
 
   // ✅ اولویت: coverUrl از API → gallery[0] → fallback ثابت
   const coverImage = coverUrl || gallery[0] || FALLBACK_COVER;
@@ -202,9 +200,7 @@ ${bookingLink}
               );
             })}
           </div>
-          <span className="text-[9px] text-white/80">
-            ({toPersianDigit(reviewsCount)})
-          </span>
+          <span className="text-[9px] text-white/80">({toPersianDigit(reviewsCount)})</span>
         </div>
       </div>
 

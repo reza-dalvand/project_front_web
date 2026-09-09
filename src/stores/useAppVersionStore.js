@@ -121,7 +121,7 @@ export const useAppVersionStore = create(
         if (!updateInfo) return;
 
         const url = updateInfo.storeUrl || DEFAULT_STORE_URL;
-        
+
         if (typeof window !== 'undefined') {
           if (Capacitor.isNativePlatform()) {
             // ✅ در اندروید لینک را مستقیماً در اپلیکیشن استور یا مرورگر سیستم باز می‌کند

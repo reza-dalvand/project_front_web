@@ -34,7 +34,7 @@ export const DEFAULT_STORE_NAME = 'بیو کلاب وب';
  */
 export const compareVersions = (a, b) => {
   if (!a || !b) return 0;
-  
+
   const partsA = String(a).split('.').map(Number);
   const partsB = String(b).split('.').map(Number);
   const len = Math.max(partsA.length, partsB.length);

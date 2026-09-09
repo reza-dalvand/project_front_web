@@ -7,10 +7,8 @@ import { useBusinessStore } from '@/stores/useBusinessStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 import Avatar from '@/components/common/Avatar';
 
-
 const MIN_REVIEWS_THRESHOLD = 3;
 const DEFAULT_RATING = 5.0;
-
 
 export default function ManageHeader() {
   const { colors } = useTheme();

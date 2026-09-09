@@ -10,7 +10,6 @@ import {
   FiStar,
 } from 'react-icons/fi';
 
-
 import { usePathname, useRouter } from 'next/navigation';
 
 import { useTheme } from '@/stores/useThemeStore';
@@ -30,8 +29,7 @@ export default function BottomTabBar() {
   const businessStatus = useBusinessStore((s) => s.businessStatus);
 
   // فقط وجود id یا status برای تشخیص داشتن کسب‌وکار کافی است
-  const hasBusiness =
-    Boolean(businessData?.id) || Boolean(businessStatus);
+  const hasBusiness = Boolean(businessData?.id) || Boolean(businessStatus);
 
   const tabs = isAuthenticated
     ? [
@@ -117,10 +115,7 @@ export default function BottomTabBar() {
     }
 
     // سایر مسیرها
-    return (
-      pathname === tab.path ||
-      pathname?.startsWith(`${tab.path}/`)
-    );
+    return pathname === tab.path || pathname?.startsWith(`${tab.path}/`);
   };
 
   const handleTabPress = (tab) => {
@@ -165,8 +160,7 @@ export default function BottomTabBar() {
           backgroundColor: colors.cardBackground,
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           border: `1px solid ${colors.border}`,
-          bottom:
-            'calc(16px + env(safe-area-inset-bottom, 0px))',
+          bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
         }}
       >
         {tabs.map((tab) => {
@@ -197,9 +191,7 @@ export default function BottomTabBar() {
                 <Icon
                   size={24}
                   style={{
-                    color: active
-                      ? colors.primary
-                      : colors.textSecondary,
+                    color: active ? colors.primary : colors.textSecondary,
                     transition: 'color 0.2s',
                   }}
                 />
@@ -215,12 +207,8 @@ export default function BottomTabBar() {
                   leading-tight
                 "
                 style={{
-                  color: active
-                    ? colors.primary
-                    : colors.textSecondary,
-                  fontFamily: active
-                    ? 'Vazir-Bold'
-                    : 'Vazir-Medium',
+                  color: active ? colors.primary : colors.textSecondary,
+                  fontFamily: active ? 'Vazir-Bold' : 'Vazir-Medium',
                 }}
               >
                 {tab.label}
@@ -250,4 +238,3 @@ export default function BottomTabBar() {
     </>
   );
 }
-
