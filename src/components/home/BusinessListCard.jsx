@@ -5,9 +5,20 @@ import { useTheme } from '@/stores/useThemeStore';
 import { Card } from '@/components/common';
 import { toPersianDigit } from '@/utils/numberUtils';
 
+
+const MIN_REVIEWS_THRESHOLD = 3;
+const DEFAULT_RATING = 5.0;
+
+
 export default function BusinessListCard({ business, categoryIcon, onPress }) {
   const { colors } = useTheme();
   const hasDiscount = business.discount > 0;
+
+  const reviewsCount = business.reviewsCount || business.reviews_count || 0;
+  const displayRating =
+    reviewsCount < MIN_REVIEWS_THRESHOLD
+      ? DEFAULT_RATING
+      : business.rating || 0;
 
   return (
     <Card variant="elevated" padding={14} radius={18}>
@@ -48,7 +59,7 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
           >
             <FiStar size={12} color="#FFC107" fill="#FFC107" />
             <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              {toPersianDigit(business.rating)}
+              {toPersianDigit(displayRating)}
             </span>
           </div>
         </div>

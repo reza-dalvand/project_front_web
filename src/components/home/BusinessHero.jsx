@@ -1,14 +1,19 @@
 // src/components/home/BusinessHero.jsx
 'use client';
 import { useState } from 'react';
-import { FiShare2, FiBookmark, FiArrowRight } from 'react-icons/fi';
+import { FiShare2, FiBookmark, FiArrowRight, FiStar } from 'react-icons/fi';
 import Image from 'next/image';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
+import { toPersianDigit } from '@/utils/numberUtils';
 
 // ✅ fallback ثابت — نه random! هر بار یک تصویر ثابت نمایش می‌دهد
 const FALLBACK_COVER = '/images/placeholder-cover.jpg';
+
+// ═══ ثابت‌های امتیاز ═══
+const MIN_REVIEWS_THRESHOLD = 3;
+const DEFAULT_RATING = 5.0;
 
 /**
  * 🏪 BusinessHero - هدر تصویری صفحه جزئیات کسب‌وکار
@@ -17,19 +22,30 @@ const FALLBACK_COVER = '/images/placeholder-cover.jpg';
  */
 export default function BusinessHero({
   gallery = [],
-  coverUrl, // ✅ جدید: URL کاور از API
-  logo, // ✅ جدید: URL لوگو از API
+  coverUrl,
+  logo,
   businessId,
   businessName,
   onBackPress,
   isFavorite = false,
   onFavoritePress,
   ownerPhoto,
+  // ✅ prop های جدید برای نمایش امتیاز
+  rating = 0,
+  reviewsCount = 0,
 }) {
   const { colors } = useTheme();
   const { isAuthenticated, requireAuth } = useAuth();
   const { showToast } = useToast();
   const [showShareToast, setShowShareToast] = useState(false);
+
+  // ✅ محاسبه امتیاز نمایشی
+  // قبل از ۳ رای: ۵.۰ (پیش‌فرض)
+  // بعد از ۳ رای: میانگین واقعی
+  const displayRating =
+    reviewsCount < MIN_REVIEWS_THRESHOLD
+      ? DEFAULT_RATING
+      : parseFloat(rating || 0);
 
   // ✅ اولویت: coverUrl از API → gallery[0] → fallback ثابت
   const coverImage = coverUrl || gallery[0] || FALLBACK_COVER;
@@ -114,22 +130,6 @@ ${bookingLink}
         />
       </div>
 
-      {/* ═══════ لوگو کسب‌وکار (از API) ═══════ */}
-      {/* {ownerPhoto && (
-        <div
-          className="absolute bottom-4 right-4 w-16 h-16 rounded-2xl overflow-hidden border-[3px] shadow-lg z-10"
-          style={{ borderColor: '#fff' }}
-        >
-          <Image
-            src={ownerPhoto}
-            alt={`لوگوی ${businessName || 'کسب‌وکار'}`}
-            width={64}
-            height={64}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )} */}
-
       {/* ═══════ گرادیان پایین ═══════ */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
@@ -176,6 +176,36 @@ ${bookingLink}
             fill={isFavorite ? '#FFD700' : 'transparent'}
           />
         </button>
+      </div>
+
+      {/* ═══════ باکس امتیاز (پایین سمت چپ) ═══════ */}
+      <div className="absolute bottom-4 left-4 z-10">
+        <div
+          className="flex flex-col items-center px-3 py-2 rounded-2xl border backdrop-blur-sm"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            borderColor: 'rgba(255,255,255,0.25)',
+          }}
+        >
+          <span className="text-xl font-[Vazir-Bold] text-white leading-tight">
+            {toPersianDigit(displayRating.toFixed(1))}
+          </span>
+          <div className="flex items-center gap-0.5 my-1">
+            {[...Array(5)].map((_, i) => {
+              const isFilled = i < Math.round(displayRating);
+              return (
+                <FiStar
+                  key={i}
+                  size={11}
+                  className={isFilled ? 'text-yellow-400 fill-yellow-400' : 'text-white/30'}
+                />
+              );
+            })}
+          </div>
+          <span className="text-[9px] text-white/80">
+            ({toPersianDigit(reviewsCount)})
+          </span>
+        </div>
       </div>
 
       {/* ═══════ Toast کپی شدن لینک ═══════ */}

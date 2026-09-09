@@ -264,15 +264,17 @@ export default function BusinessDetailsClient({ businessSlug }) {
     <ScreenWrapper padding={0}>
       <div className="overflow-y-auto pb-[220px]">
         <BusinessHero
+          gallery={business.gallery || []}
+          coverUrl={business.coverImage || business.coverUrl}
           logo={business.logo}
-          coverUrl={business.coverUrl}
-          ownerPhoto={business.ownerPhoto}
-          gallery={gallery}
           businessId={business.id}
           businessName={business.name}
-          onBackPress={goBack}
+          ownerPhoto={business.ownerPhoto}
           isFavorite={isFavorite}
           onFavoritePress={toggleFavorite}
+          onBackPress={() => router.back()}
+          rating={business.rating || 0}
+          reviewsCount={business.reviewsCount || 0}
         />
         <BusinessInfoCard business={business} onMapPress={openMap} />
         <BusinessTabs
