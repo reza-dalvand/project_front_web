@@ -56,6 +56,16 @@ export const appointmentsService = {
   },
 
   /**
+   * آمار نوبت‌های مشتری (برای شمارنده تب‌ها)
+   * GET /appointments/my-stats/
+   *
+   * Response: { upcoming, past, cancelled, total }
+   */
+  getMyAppointmentsStats: () => {
+    return apiClient.get('/appointments/my-stats/');
+  },
+
+  /**
    * لیست نوبت‌های کسب‌وکار
    * GET /appointments/business-appointments/
    *

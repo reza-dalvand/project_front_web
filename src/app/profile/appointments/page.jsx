@@ -55,6 +55,13 @@ export default function AppointmentsPage() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
 
+    // ═══════ شمارنده تب‌ها ═══════
+  const [tabCounts, setTabCounts] = useState({
+    upcoming: 0,
+    past: 0,
+    cancelled: 0,
+  });
+
   // ═══════ دریافت نوبت‌ها ═══════
   const fetchAppointments = useCallback(async (status) => {
     setIsLoading(true);
@@ -88,9 +95,26 @@ export default function AppointmentsPage() {
     }
   }, [showToast]);
 
+
+    // ═══════ دریافت آمار تب‌ها ═══════
+  const fetchStats = useCallback(async () => {
+    try {
+      const result = await appointmentsService.getMyAppointmentsStats();
+      const data = result.data || {};
+      setTabCounts({
+        upcoming: data.upcoming || 0,
+        past: data.past || 0,
+        cancelled: data.cancelled || 0,
+      });
+    } catch (err) {
+      console.error('Failed to fetch appointment stats:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAppointments(activeTab);
-  }, [activeTab, fetchAppointments]);
+    fetchStats(); 
+  }, [activeTab, fetchAppointments, fetchStats]);
 
   // ═══════ هندلرها ═══════
   const handleCopyCode = async (code) => {
@@ -136,11 +160,12 @@ export default function AppointmentsPage() {
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
+            const count = tabCounts[tab.id] || 0;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg transition-colors relative"
                 style={{
                   backgroundColor: isActive ? tab.color + '18' : 'transparent',
                 }}
@@ -152,6 +177,14 @@ export default function AppointmentsPage() {
                 >
                   {tab.label}
                 </span>
+                {count > 0 && (
+                  <span
+                    className="min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 text-[10px] font-[Vazir-Bold] text-white"
+                    style={{ backgroundColor: tab.color }}
+                  >
+                    {toPersianDigit(count)}
+                  </span>
+                )}
               </button>
             );
           })}
