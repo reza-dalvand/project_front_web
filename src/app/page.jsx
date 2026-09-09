@@ -105,22 +105,25 @@ export default function HomePage() {
       setIsLoading(true);
       try {
         const locationParams = getLocationParams();
-        const [adsRes, catRes, lineRes] = await Promise.allSettled([
-          exploreService.getPosts({ page_size: 6, ...locationParams }),
+        // ✅ تغییر: استفاده از getBanners به جای getPosts
+        const [bannersRes, catRes, lineRes] = await Promise.allSettled([
+          adsService.getBanners(), 
           categoriesService.getServiceCategories({ ...locationParams }),
           adsService.getLineRentals({ page_size: 6, ...locationParams }),
         ]);
-        if (adsRes.status === 'fulfilled') {
-          const posts = adsRes.value.data || [];
+        
+        if (bannersRes.status === 'fulfilled') {
+          const banners = bannersRes.value.data || [];
           setAds(
-            posts.map((p, i) => ({
-              id: p.id || i,
-              title: p.caption || p.businessName || 'بیو کلاب',
-              subtitle: p.businessName || '',
-              imageUrl: p.gallery?.[0] || p.images?.[0] || '',
-              businessId: p.businessId || p.business_id,
-              businessSlug: p.businessBookingSlug || p.business_booking_slug,
-              badge: p.discount > 0 ? `${p.discount}%` : null,
+            banners.map((b, i) => ({
+              id: b.id || i,
+              title: b.title || 'بیو کلاب',
+              subtitle: b.description || '',
+              imageUrl: b.imageUrl || b.image_url || '',
+              businessId: b.businessId || b.business_id,
+              businessSlug: b.businessSlug || b.business_slug,
+              badge: b.badge || null,
+              customUrl: b.customUrl || b.custom_url, // ✅ برای لینک‌های دلخواه
             }))
           );
         }
@@ -261,8 +264,12 @@ export default function HomePage() {
   );
   const handleAdPress = useCallback(
     (ad) => {
-      const slug = ad.businessSlug || ad.businessId;
-      if (slug) router.push(`/business?slug=${slug}`);
+      if (ad.businessSlug) {
+        router.push(`/business?slug=${ad.businessSlug}`);
+      } else if (ad.customUrl) {
+        // باز کردن لینک دلخواه (مثلاً لینک ثبت نام یا کمپین خاص)
+        window.open(ad.customUrl, '_blank');
+      }
     },
     [router]
   );
