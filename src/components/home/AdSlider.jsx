@@ -14,7 +14,7 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
   // ✅ FIX (فاز ۴): تشخیص visibility اسلایدر
   const [isInView, setIsInView] = useState(true);
   const sliderRef = useRef(null);
-  
+
   useEffect(() => {
     if (!sliderRef.current) return;
     const observer = new IntersectionObserver(([entry]) => setIsInView(entry.isIntersecting), {

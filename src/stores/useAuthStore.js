@@ -106,7 +106,7 @@ export const useAuthStore = create(
       pendingPhone: null,
       pendingName: null,
       needsProfileCompletion: false,
-      isSuspended: false,       
+      isSuspended: false,
       suspensionReason: '',
       _hydrated: false,
 
@@ -148,8 +148,8 @@ export const useAuthStore = create(
           pendingPhone: null,
           pendingName: null,
           needsProfileCompletion: options.needsProfileCompletion ?? false,
-          isSuspended: options.isSuspended ?? false,         
-          suspensionReason: options.suspensionReason ?? '',     
+          isSuspended: options.isSuspended ?? false,
+          suspensionReason: options.suspensionReason ?? '',
         });
 
         startPeriodicRefresh();
@@ -191,8 +191,8 @@ export const useAuthStore = create(
           pendingPhone: null,
           pendingName: null,
           needsProfileCompletion: false,
-          isSuspended: false,         
-          suspensionReason: '',        
+          isSuspended: false,
+          suspensionReason: '',
         });
       },
 
@@ -251,8 +251,8 @@ export const useAuthStore = create(
         isAuthenticated: state.isAuthenticated,
         user: state.user,
         needsProfileCompletion: state.needsProfileCompletion,
-        isSuspended: state.isSuspended,         
-        suspensionReason: state.suspensionReason, 
+        isSuspended: state.isSuspended,
+        suspensionReason: state.suspensionReason,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

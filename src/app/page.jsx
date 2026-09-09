@@ -107,11 +107,11 @@ export default function HomePage() {
         const locationParams = getLocationParams();
         // ✅ تغییر: استفاده از getBanners به جای getPosts
         const [bannersRes, catRes, lineRes] = await Promise.allSettled([
-          adsService.getBanners(), 
+          adsService.getBanners(),
           categoriesService.getServiceCategories({ ...locationParams }),
           adsService.getLineRentals({ page_size: 6, ...locationParams }),
         ]);
-        
+
         if (bannersRes.status === 'fulfilled') {
           const banners = bannersRes.value.data || [];
           setAds(

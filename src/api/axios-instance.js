@@ -91,8 +91,8 @@ api.interceptors.response.use(
     // ✅ NEW: هندل کاربر تعلیق‌شده (403 + ACCOUNT_SUSPENDED)
     // ═══════════════════════════════════════════════
     if (
-      (errorCode === 'ACCOUNT_SUSPENDED' || 
-       (statusCode === 403 && errorCode === 'ACCOUNT_SUSPENDED')) &&
+      (errorCode === 'ACCOUNT_SUSPENDED' ||
+        (statusCode === 403 && errorCode === 'ACCOUNT_SUSPENDED')) &&
       !isSuspensionAllowedEndpoint(originalRequest?.url)
     ) {
       try {
@@ -103,8 +103,7 @@ api.interceptors.response.use(
         if (authState.isAuthenticated && !authState.isSuspended) {
           useAuthStore.setState({
             isSuspended: true,
-            suspensionReason:
-              errorData?.message || 'حساب کاربری شما به دلیل تخلف تعلیق شده است.',
+            suspensionReason: errorData?.message || 'حساب کاربری شما به دلیل تخلف تعلیق شده است.',
           });
         }
       } catch {

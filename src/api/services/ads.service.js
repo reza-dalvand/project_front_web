@@ -213,8 +213,7 @@ export const adsService = {
     return apiClient.delete(`/ads/my-line-rentals/${rentalId}/delete/`);
   },
 
-
-    // ═══════════ Ad Banners (Slider) ═══════════
+  // ═══════════ Ad Banners (Slider) ═══════════
   getBanners: (params = {}) => {
     return apiClient.get('/ads-management/banners/', {
       params: { ...params, _t: Date.now() },

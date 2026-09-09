@@ -104,16 +104,10 @@ export default function SuspensionModal() {
                   style={{ color: '#F57C00' }}
                 />
                 <div>
-                  <p
-                    className="text-xs font-[Vazir-Bold] mb-1"
-                    style={{ color: '#E65100' }}
-                  >
+                  <p className="text-xs font-[Vazir-Bold] mb-1" style={{ color: '#E65100' }}>
                     دلیل تعلیق:
                   </p>
-                  <p
-                    className="text-sm font-[Vazir] leading-6"
-                    style={{ color: '#BF360C' }}
-                  >
+                  <p className="text-sm font-[Vazir] leading-6" style={{ color: '#BF360C' }}>
                     {suspensionReason}
                   </p>
                 </div>
@@ -125,8 +119,8 @@ export default function SuspensionModal() {
             className="text-sm text-center mb-6 font-[Vazir] leading-6"
             style={{ color: colors.textSecondary }}
           >
-            برای رفع تعلیق و بازگرداندن دسترسی کامل، می‌توانید از راه‌های زیر با
-            پشتیبانی در ارتباط باشید:
+            برای رفع تعلیق و بازگرداندن دسترسی کامل، می‌توانید از راه‌های زیر با پشتیبانی در ارتباط
+            باشید:
           </p>
 
           {/* دکمه‌های تماس */}
