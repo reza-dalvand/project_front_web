@@ -77,4 +77,40 @@ export const reviewsService = {
       reply,
     });
   },
+
+  /**
+   * دریافت تعداد لایک/دیسلایک تگ‌های یک کسب‌وکار
+   * GET /reviews/tag-votes/{business_id}/
+   *
+   * Response: {
+   *   tag_stats: { clean: { selected_count, likes, dislikes }, ... },
+   *   user_votes: { clean: 'like', punctual: 'dislike', ... }
+   * }
+   */
+  getTagVotes: (businessId) => {
+    return apiClient.get(`/reviews/tag-votes/${businessId}/`);
+  },
+
+  /**
+   * ثبت/تغییر لایک یا دیسلایک تگ
+   * POST /reviews/tag-vote/
+   *
+   * Payload: { business_id, tag_id, vote_type: 'like' | 'dislike' }
+   * Response: { action: 'created' | 'changed' | 'removed', vote_type }
+   */
+  toggleTagVote: (businessId, tagId, voteType) => {
+    return apiClient.post('/reviews/tag-vote/', {
+      business_id: businessId,
+      tag_id: tagId,
+      vote_type: voteType,
+    });
+  },
+
+  /**
+   * دریافت نوبت‌های آماده نظردهی (۶ ساعت/۱ دقیقه بعد از done شدن)
+   * GET /reviews/pending/
+   */
+  getPendingReviews: () => {
+    return apiClient.get('/reviews/pending/');
+  },
 };

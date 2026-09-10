@@ -10,10 +10,11 @@ const nextConfig = {
 
   images: {
     unoptimized: true,
+    qualities: [75, 80, 90],
     remotePatterns: [
-      { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'https', hostname: 'picsum.photos' },
-      { protocol: 'https', hostname: 'i.pravatar.cc' },
+      // { protocol: 'https', hostname: 'images.unsplash.com' },
+      // { protocol: 'https', hostname: 'picsum.photos' },
+      // { protocol: 'https', hostname: 'i.pravatar.cc' },
       { protocol: 'https', hostname: '*.tile.openstreetmap.org' },
       { protocol: 'https', hostname: 'api.maptiler.com' },
       // ✅ Production: Arvan Storage

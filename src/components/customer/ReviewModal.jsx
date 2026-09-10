@@ -1,18 +1,25 @@
-// src/components/customer/ReviewModal.jsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { FiX, FiStar, FiSend, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
 import Button from '@/components/common/Button';
-import StarRating from '@/components/common/StarRating';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { useReviewStore, REVIEW_TAGS } from '@/stores/useReviewStore';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { FiX, FiSend, FiCheck, FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
 
-const MAX_COMMENT_LENGTH = 300; // هماهنگ با بک‌اند: comment max_length=300
+const MAX_COMMENT_LENGTH = 300;
+
+const TAG_EMOJIS = {
+  clean: '🧹',
+  punctual: '⏰',
+  quality: '💎',
+  polite: '🙏',
+  fair_price: '💰',
+  recommend: '👍',
+};
 
 export default function ReviewModal({ visible, appointment, onClose }) {
   const { colors } = useTheme();
@@ -20,8 +27,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
   const submitReview = useReviewStore((s) => s.submitReview);
   const isLoading = useReviewStore((s) => s.isLoading);
 
-  const [rating, setRating] = useState(0);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [tagVotes, setTagVotes] = useState({});
   const [comment, setComment] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -37,8 +43,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
 
   useEffect(() => {
     if (visible) {
-      setRating(0);
-      setSelectedTags([]);
+      setTagVotes({});
       setComment('');
       setShowSuccess(false);
       acquireScrollLock(instanceId.current);
@@ -57,16 +62,26 @@ export default function ReviewModal({ visible, appointment, onClose }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
 
-  const toggleTag = (tagId) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
-    );
+  const voteTag = (tagId, voteType) => {
+    setTagVotes((prev) => {
+      const current = prev[tagId];
+      if (current === voteType) {
+        const newVotes = { ...prev };
+        delete newVotes[tagId];
+        return newVotes;
+      }
+      return { ...prev, [tagId]: voteType };
+    });
   };
 
-  // ─── ثبت نظر — هماهنگ با بک‌اند ───
   const handleSubmit = async () => {
-    if (rating === 0 && selectedTags.length === 0 && !comment.trim()) {
-      showToast('لطفاً حداقل امتیاز یا نظر خود را ثبت کنید', 'warning');
+    const tagVotesArray = Object.entries(tagVotes).map(([tagId, voteType]) => ({
+      tag_id: tagId,
+      vote_type: voteType,
+    }));
+
+    if (tagVotesArray.length === 0 && !comment.trim()) {
+      showToast('لطفاً حداقل یک نشان را انتخاب کنید یا نظر بدهید', 'warning');
       return;
     }
 
@@ -80,9 +95,8 @@ export default function ReviewModal({ visible, appointment, onClose }) {
 
     try {
       await submitReview(appointment.id, {
-        rating,
-        tags: selectedTags,
         comment: comment.trim(),
+        tag_votes: tagVotesArray,
       });
 
       setShowSuccess(true);
@@ -130,8 +144,17 @@ export default function ReviewModal({ visible, appointment, onClose }) {
             <h3 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               {appointment.businessName}
             </h3>
-            <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
+            <p
+              className="text-[11px] font-[Vazir] truncate"
+              style={{ color: colors.textSecondary }}
+            >
               {appointment.serviceName}
+              {appointment.date && (
+                <span> • {toPersianDigit(String(appointment.date).replace(/\//g, '/'))}</span>
+              )}
+              {appointment.time && (
+                <span> • {toPersianDigit(String(appointment.time).substring(0, 5))}</span>
+              )}
             </p>
           </div>
           <button
@@ -146,8 +169,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
         {/* محتوا */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {showSuccess ? (
-            /* ═══ حالت موفقیت ═══ */
-            <div className="flex flex-col items-center gap-4 py-8">
+            <div className="flex flex-col items-center gap-4 py-10">
               <div
                 className="w-24 h-24 rounded-full flex items-center justify-center shadow-lg"
                 style={{ backgroundColor: '#43A047' }}
@@ -166,73 +188,93 @@ export default function ReviewModal({ visible, appointment, onClose }) {
               >
                 ممنون که تجربه‌تان را با دیگران به اشتراک گذاشتید
               </p>
-              {selectedTags.length > 0 && (
-                <div
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl border"
-                  style={{ backgroundColor: '#43A04715', borderColor: '#43A04740' }}
-                >
-                  <FiStar size={14} color="#43A047" />
-                  <span className="text-xs font-[Vazir-Bold]" style={{ color: '#43A047' }}>
-                    {toPersianDigit(selectedTags.length)} مورد ثبت شد
-                  </span>
-                </div>
-              )}
             </div>
           ) : (
             <>
-              {/* ═══ امتیاز ═══ */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: '#FFC10720' }}
-                  >
-                    <FiStar size={16} color="#FFC107" />
-                  </div>
-                  <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                    تجربه‌تان چطور بود؟
-                  </span>
-                </div>
-                <div className="flex justify-center py-2">
-                  <StarRating value={rating} size="lg" interactive onRate={setRating} />
-                </div>
+              {/* عنوان */}
+              <div className="text-center space-y-1">
+                <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                  تجربه‌تان چطور بود؟
+                </h3>
+                <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
+                  نظرتان به بهبود خدمات کمک می‌کند
+                </p>
               </div>
 
-              {/* ═══ تگ‌ها — هماهنگ با بک‌اند ═══ */}
-              <div className="space-y-3">
-                <span
-                  className="text-sm font-[Vazir-Bold] block"
-                  style={{ color: colors.textMain }}
-                >
-                  چه چیزی را دوست داشتید؟
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {REVIEW_TAGS.map((tag) => {
-                    const isSelected = selectedTags.includes(tag.id);
-                    return (
-                      <button
-                        key={tag.id}
-                        onClick={() => toggleTag(tag.id)}
-                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl
-                          border-[1.5px] text-[13px] font-[Vazir-Medium]
-                          transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
-                        style={{
-                          backgroundColor: isSelected
-                            ? colors.primary + '15'
-                            : colors.cardBackground,
-                          borderColor: isSelected ? colors.primary : colors.border,
-                          color: isSelected ? colors.primary : colors.textMain,
-                        }}
+              {/* تگ‌ها با لایک/دیسلایک */}
+              <div className="space-y-2">
+                {REVIEW_TAGS.map((tag) => {
+                  const vote = tagVotes[tag.id];
+                  const isLike = vote === 'like';
+                  const isDislike = vote === 'dislike';
+                  const emoji = TAG_EMOJIS[tag.id] || '⭐';
+
+                  return (
+                    <div
+                      key={tag.id}
+                      className="flex items-center gap-3 p-3 rounded-2xl border transition-all duration-200"
+                      style={{
+                        backgroundColor: isLike
+                          ? '#4CAF5008'
+                          : isDislike
+                            ? '#F4433608'
+                            : colors.background,
+                        borderColor: isLike ? '#4CAF5040' : isDislike ? '#F4433640' : colors.border,
+                      }}
+                    >
+                      {/* ایموجی */}
+                      <span className="text-xl flex-shrink-0">{emoji}</span>
+
+                      {/* نام تگ */}
+                      <span
+                        className="flex-1 text-[13px] font-[Vazir-Medium]"
+                        style={{ color: colors.textMain }}
                       >
-                        {isSelected && <FiCheck size={13} />}
                         {tag.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                      </span>
+
+                      {/* دکمه‌های لایک/دیسلایک */}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => voteTag(tag.id, 'like')}
+                          className="flex items-center justify-center w-10 h-10 rounded-xl
+                            transition-all duration-200 hover:scale-110 active:scale-95"
+                          style={{
+                            backgroundColor: isLike ? '#4CAF50' : colors.cardBackground,
+                            border: `1.5px solid ${isLike ? '#4CAF50' : colors.border}`,
+                          }}
+                          aria-label={`لایک ${tag.label}`}
+                        >
+                          <FiThumbsUp
+                            size={16}
+                            style={{ color: isLike ? '#fff' : colors.textSecondary }}
+                            fill={isLike ? '#fff' : 'transparent'}
+                          />
+                        </button>
+
+                        <button
+                          onClick={() => voteTag(tag.id, 'dislike')}
+                          className="flex items-center justify-center w-10 h-10 rounded-xl
+                            transition-all duration-200 hover:scale-110 active:scale-95"
+                          style={{
+                            backgroundColor: isDislike ? '#F44336' : colors.cardBackground,
+                            border: `1.5px solid ${isDislike ? '#F44336' : colors.border}`,
+                          }}
+                          aria-label={`دیسلایک ${tag.label}`}
+                        >
+                          <FiThumbsDown
+                            size={16}
+                            style={{ color: isDislike ? '#fff' : colors.textSecondary }}
+                            fill={isDislike ? '#fff' : 'transparent'}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* ═══ نظر متنی ═══ */}
+              {/* نظر متنی */}
               <div className="space-y-2">
                 <label
                   className="text-sm font-[Vazir-Bold] block"

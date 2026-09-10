@@ -56,6 +56,16 @@ export const appointmentsService = {
   },
 
   /**
+   * آمار نوبت‌های مشتری (برای شمارنده تب‌ها)
+   * GET /appointments/my-stats/
+   *
+   * Response: { upcoming, past, cancelled, total }
+   */
+  getMyAppointmentsStats: () => {
+    return apiClient.get('/appointments/my-stats/');
+  },
+
+  /**
    * لیست نوبت‌های کسب‌وکار
    * GET /appointments/business-appointments/
    *
@@ -86,18 +96,6 @@ export const appointmentsService = {
    */
   getAppointmentDetail: (appointmentId) => {
     return apiClient.get(`/appointments/${appointmentId}/`);
-  },
-
-  /**
-   * لغو نوبت توسط مشتری
-   * POST /appointments/{pk}/cancel/
-   *
-   * Payload: { reason_text: string }
-   */
-  cancelAppointment: (appointmentId, reasonText = '') => {
-    return apiClient.post(`/appointments/${appointmentId}/cancel/`, {
-      reason_text: reasonText,
-    });
   },
 
   /**

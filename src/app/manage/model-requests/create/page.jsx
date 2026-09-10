@@ -51,7 +51,8 @@ function CreateModelRequestPageContent() {
   const handleSave = async (formData) => {
     try {
       if (isEditMode) {
-        await adsService.createModelRequest({
+        // ✅ حالت ویرایش → آپدیت با requestId
+        await adsService.updateModelRequest(requestId, {
           service: formData.serviceId,
           title: formData.title,
           description: formData.description,
@@ -60,10 +61,13 @@ function CreateModelRequestPageContent() {
           is_urgent: formData.isUrgent || false,
           contact_phone: formData.contactPhone,
         });
-        showToast('درخواست جدید ثبت شد (ویرایش مستقیم پشتیبانی نمی‌شود)', 'info');
+        showToast('درخواست مدل با موفقیت ویرایش شد', 'success');
       } else {
-        await adsService.updateModelRequest({
-          service: formData.serviceId,
+        console.log('Updating model request with ID:', requestId, 'and data:', formData);
+
+        // ✅ حالت ایجاد → ساخت جدید
+        await adsService.createModelRequest({
+          service: formData.categoryId,
           title: formData.title,
           description: formData.description,
           cost_type: formData.costType,

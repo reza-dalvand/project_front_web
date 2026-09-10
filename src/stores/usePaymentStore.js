@@ -1,4 +1,3 @@
-// src/stores/usePaymentStore.js
 /**
  * Store مالی و پرداخت
  *
@@ -12,6 +11,7 @@
  */
 import { create } from 'zustand';
 import { paymentsService } from '@/api';
+
 // ═══════ نگاشت وضعیت‌های بک‌اند به متادیتای فرانت ═══════
 export const TX_STATUS_MAP = {
   blocked: {
@@ -58,7 +58,21 @@ export const TX_TYPE_MAP = {
   settlement: { label: 'تسویه', color: '#43A047', icon: 'check-circle' },
 };
 
-// ❌ SETTLEMENT_STATUS_MAP حذف شد — تسویه خودکار است
+/**
+ * ✅ Helper: استخراج لیست از response با فرمت‌های مختلف
+ * فرمت‌های ممکن:
+ *   1. [array]                      → مستقیم آرایه
+ *   2. {results: [...]}             → paginated استاندارد DRF
+ *   3. {data: {results: [...]}}     → double-wrapped (StandardResponseMixin + normalizer)
+ *   4. {data: [...]}                → wrapped ساده
+ */
+const extractListFromResponse = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;
+  if (Array.isArray(data?.data?.results)) return data.data.results;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+};
 
 // ═══════ Store ═══════
 export const usePaymentStore = create((set, get) => ({
@@ -71,9 +85,6 @@ export const usePaymentStore = create((set, get) => ({
   error: null,
 
   // ─── Business Stats ───
-  /**
-   * دریافت آمار مالی کسب‌وکار
-   */
   fetchBusinessStats: async () => {
     set({ isLoadingStats: true, error: null });
     try {
@@ -88,16 +99,13 @@ export const usePaymentStore = create((set, get) => ({
   },
 
   // ─── Business Transactions ───
-  /**
-   * دریافت تراکنش‌های کسب‌وکار
-   * @param {object} params - { status, page, page_size }
-   */
   fetchBusinessTransactions: async (params = {}) => {
     set({ isLoading: true, error: null });
     try {
       const result = await paymentsService.getBusinessTransactions(params);
-      set({ transactions: result.data || [], isLoading: false });
-      return result.data;
+      const list = extractListFromResponse(result.data);
+      set({ transactions: list, isLoading: false });
+      return list;
     } catch (error) {
       console.error('fetchBusinessTransactions failed:', error);
       set({ error: error.message, isLoading: false });
@@ -105,19 +113,14 @@ export const usePaymentStore = create((set, get) => ({
     }
   },
 
-  // ❌ requestSettlement حذف شد — تسویه خودکار است
-  // ❌ fetchSettlements حذف شد — تسویه خودکار است
-
   // ─── Customer Payments ───
-  /**
-   * دریافت تاریخچه پرداخت‌های مشتری
-   */
   fetchCustomerPayments: async (params = {}) => {
     set({ isLoading: true, error: null });
     try {
       const result = await paymentsService.getPaymentHistory(params);
-      set({ customerPayments: result.data || [], isLoading: false });
-      return result.data;
+      const list = extractListFromResponse(result.data);
+      set({ customerPayments: list, isLoading: false });
+      return list;
     } catch (error) {
       console.error('fetchCustomerPayments failed:', error);
       set({ error: error.message, isLoading: false });
@@ -126,11 +129,6 @@ export const usePaymentStore = create((set, get) => ({
   },
 
   // ─── Payment Initiation ───
-  /**
-   * شروع پرداخت بیعانه
-   * @param {number} appointmentId
-   * @returns {object} - { payment_url, track_id, ... }
-   */
   initiatePayment: async (appointmentId) => {
     try {
       const result = await paymentsService.initiatePayment(appointmentId);
@@ -142,28 +140,21 @@ export const usePaymentStore = create((set, get) => ({
   },
 
   // ─── Helpers ───
-  /**
-   * فیلتر تراکنش‌ها بر اساس وضعیت
-   */
   getFilteredTransactions: (status) => {
     const { transactions } = get();
+    if (!Array.isArray(transactions)) return [];
     if (!status || status === 'all') return transactions;
     return transactions.filter((tx) => tx.status === status);
   },
 
-  /**
-   * محاسبه مجموع بر اساس وضعیت
-   */
   getTotalByStatus: (status) => {
     const { transactions } = get();
+    if (!Array.isArray(transactions)) return 0;
     return transactions
       .filter((tx) => tx.status === status)
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
   },
 
-  /**
-   * پاک کردن state (خروج از حساب)
-   */
   clearPaymentState: () => {
     set({
       businessStats: null,

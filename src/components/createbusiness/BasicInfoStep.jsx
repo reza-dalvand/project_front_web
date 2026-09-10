@@ -9,7 +9,6 @@ import ImageUploadSection from './basicinfo/ImageUploadSection';
 import BusinessInfoSection from './basicinfo/BusinessInfoSection';
 import LocationSection from './basicinfo/LocationSection';
 import { categoriesService } from '@/api';
-
 export default function BasicInfoStep({
   formData,
   onUpdate,
@@ -21,7 +20,6 @@ export default function BasicInfoStep({
   const { colors } = useTheme();
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
-
   // ─── اعتبارسنجی ───
   const validateField = useCallback((field, value) => {
     switch (field) {
@@ -57,7 +55,6 @@ export default function BasicInfoStep({
         return '';
     }
   }, []);
-
   const validateAll = useCallback(() => {
     const fields = [
       'name',
@@ -74,7 +71,6 @@ export default function BasicInfoStep({
     ];
     const newErrors = {};
     let hasError = false;
-
     fields.forEach((field) => {
       const error = validateField(field, formData[field]);
       if (error) {
@@ -82,10 +78,8 @@ export default function BasicInfoStep({
         hasError = true;
       }
     });
-
     return { newErrors, isValid: !hasError };
   }, [formData, validateField]);
-
   useEffect(() => {
     const { newErrors, isValid } = validateAll();
     const filtered = {};
@@ -95,7 +89,6 @@ export default function BasicInfoStep({
     setErrors(filtered);
     onValidationChange?.(isValid);
   }, [formData, touched, validateAll, onValidationChange]);
-
   const handleFieldChange = (key, value) => {
     onUpdate(key, value);
     if (errors[key]) {
@@ -108,9 +101,7 @@ export default function BasicInfoStep({
         });
     }
   };
-
   const markTouched = (field) => setTouched((prev) => ({ ...prev, [field]: true }));
-
   const handleProvinceChange = (provinceId) => {
     handleFieldChange('provinceId', provinceId);
     onUpdate('cityId', null);
@@ -118,7 +109,6 @@ export default function BasicInfoStep({
     onUpdate('mapAddress', '');
     markTouched('provinceId');
   };
-
   // ─── ساخت FormData ───
   const buildFormData = () => {
     const fd = new FormData();
@@ -130,19 +120,15 @@ export default function BasicInfoStep({
     fd.append('phone', formData.phone);
     fd.append('working_hours', formData.workingHours);
     fd.append('about', formData.about);
-
     if (formData.location) {
-      fd.append('latitude', String(formData.location.latitude));
-      fd.append('longitude', String(formData.location.longitude));
+      fd.append('latitude', parseFloat(String(formData.location.latitude.toFixed(7))));
+      fd.append('longitude', parseFloat(String(formData.location.longitude.toFixed(7))));
     }
-
     if (formData.coverUrl instanceof File) fd.append('cover_image', formData.coverUrl);
     if (formData.ownerPhoto instanceof File) fd.append('owner_photo', formData.ownerPhoto);
     if (formData.logo instanceof File) fd.append('logo', formData.logo);
-
     return fd;
   };
-
   const handleSave = () => {
     const { newErrors, isValid } = validateAll();
     setErrors(newErrors);
@@ -159,11 +145,9 @@ export default function BasicInfoStep({
       ownerPhoto: true,
       location: true,
     });
-
     if (!isValid) return;
     onSubmit?.(buildFormData());
   };
-
   // ─── شمارنده فیلدهای پرشده ───
   const filledCount = [
     formData.name,
@@ -178,14 +162,11 @@ export default function BasicInfoStep({
     formData.ownerPhoto,
     formData.location,
   ].filter(Boolean).length;
-
   const totalCount = 11;
-
   return (
     <div className="px-5 pt-4 pb-6 space-y-5">
       {/* نوار پیشرفت */}
       <ProgressCard filledCount={filledCount} totalCount={totalCount} />
-
       {/* بخش تصاویر */}
       <ImageUploadSection
         coverUrl={formData.coverUrl}
@@ -196,7 +177,6 @@ export default function BasicInfoStep({
         onCoverTouched={() => markTouched('coverUrl')}
         onOwnerPhotoTouched={() => markTouched('ownerPhoto')}
       />
-
       {/* بخش مشخصات */}
       <BusinessInfoSection
         name={formData.name}
@@ -216,7 +196,6 @@ export default function BasicInfoStep({
         onWorkingHoursTouched={() => markTouched('workingHours')}
         onAboutTouched={() => markTouched('about')}
       />
-
       {/* بخش موقعیت مکانی */}
       <LocationSection
         provinceId={formData.provinceId}
@@ -237,7 +216,6 @@ export default function BasicInfoStep({
         }}
         onAddressTouched={() => markTouched('address')}
       />
-
       {/* دکمه ثبت نهایی */}
       {isFinalStep && (
         <div className="pt-2 pb-4">

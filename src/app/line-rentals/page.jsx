@@ -1,4 +1,3 @@
-// src/app/line-rentals/page.jsx
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,36 +10,89 @@ import { adsService } from '@/api';
 import LineRentalHeader from '@/components/lineRentals/LineRentalHeader';
 import LineRentalFilter from '@/components/lineRentals/LineRentalFilter';
 import LineRentalCard from '@/components/lineRentals/LineRentalCard';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
 export default function LineRentalsPage() {
   const router = useRouter();
-  const { colors } = useTheme();
   const nearbyEnabled = useNearbyStore((s) => s.enabled);
   const userLocation = useNearbyStore((s) => s.userLocation);
   const [rentals, setRentals] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [collabFilter, setCollabFilter] = useState('all');
 
+  // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
+  const [locationState, setLocationState] = useState({
+    provinceId: null,
+    cityId: null,
+    latitude: null,
+    longitude: null,
+    gpsEnabled: false,
+    locationType: 'all',
+  });
+
+  useEffect(() => {
+    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
+      setLocationState({
+        provinceId: state.provinceId,
+        cityId: state.cityId,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled,
+        locationType: state.locationType,
+      });
+    });
+
+    const initialState = useGlobalLocationStore.getState();
+    setLocationState({
+      provinceId: initialState.provinceId,
+      cityId: initialState.cityId,
+      latitude: initialState.latitude,
+      longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled,
+      locationType: initialState.locationType,
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const getLocationParams = useCallback(() => {
+    return useGlobalLocationStore.getState().getLocationParams();
+  }, []);
+
   useEffect(() => {
     const fetchRentals = async () => {
       setIsLoading(true);
       try {
-        const params = {};
-        if (nearbyEnabled && userLocation) {
+        // ✅ FIX: پارامترهای موقعیت از استور سراسری
+        const locationParams = getLocationParams();
+        const params = { ...locationParams };
+        // اگر GPS فعال نبود ولی فیلتر سراسری هم نبود، از موقعیت محلی استفاده کن
+        if (nearbyEnabled && userLocation && !locationParams.lat) {
           params.lat = userLocation.latitude;
           params.lng = userLocation.longitude;
           params.radius = 10;
-          const result = await adsService.getLineRentals(params);
-          setRentals(result.data || []);
         }
+        const result = await adsService.getLineRentals(params);
+        setRentals(result.data || []);
       } catch (error) {
         console.error('Failed to fetch line rentals:', error);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchRentals();
-  }, [nearbyEnabled, userLocation]);
+  }, [
+    nearbyEnabled,
+    userLocation,
+    locationState.provinceId,
+    locationState.cityId,
+    locationState.latitude,
+    locationState.longitude,
+    locationState.gpsEnabled,
+    locationState.locationType,
+    getLocationParams,
+  ]);
 
   const filteredRentals = useMemo(() => {
     if (collabFilter === 'all') return rentals;
@@ -49,7 +101,7 @@ export default function LineRentalsPage() {
 
   const handleRentalPress = useCallback(
     (rental) => {
-      router.push(`/line-rentals/${rental.id}`);
+      router.push(`/line-rentals/detail?id=${rental.id}`);
     },
     [router]
   );

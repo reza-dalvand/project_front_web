@@ -1,8 +1,6 @@
-// src/app/category/[id]/CategoryBusinessesClient.jsx
 'use client';
-
-import { useState, useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -11,21 +9,17 @@ import BusinessListCard from '@/components/home/BusinessListCard';
 import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import dynamic from 'next/dynamic';
+import { businessesService } from '@/api';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
-// ✅ API
-import { businessesService, categoriesService } from '@/api';
-
-// ✅ Lazy Load
 const CategoryFilterModal = dynamic(() => import('@/components/home/CategoryFilterModal'), {
   ssr: false,
   loading: () => null,
 });
 
-export default function CategoryBusinessesPage() {
-  const params = useParams();
+export default function CategoryBusinessesPage({ categoryId }) {
   const router = useRouter();
   const { colors } = useTheme();
-  const categoryId = params.id;
 
   const [categoryName, setCategoryName] = useState('دسته‌بندی');
   const [businesses, setBusinesses] = useState([]);
@@ -37,38 +31,65 @@ export default function CategoryBusinessesPage() {
     sortBy: 'all',
   });
 
-  // ═══════ دریافت نام دسته‌بندی ═══════
-  useEffect(() => {
-    const fetchCategoryName = async () => {
-      try {
-        const result = await categoriesService.getBusinessCategories();
-        const cats = result.data || [];
-        const cat = cats.find((c) => String(c.id) === String(categoryId));
-        if (cat) {
-          setCategoryName(cat.name || cat.title || 'دسته‌بندی');
-        }
-      } catch (error) {
-        console.error('Failed to fetch category name:', error);
-      }
-    };
-    fetchCategoryName();
-  }, [categoryId]);
+  // ✅ FIX: استفاده از subscribe برای اطمینان از re-render
+  const [locationState, setLocationState] = useState({
+    provinceId: null,
+    cityId: null,
+    latitude: null,
+    longitude: null,
+    gpsEnabled: false,
+    locationType: 'all',
+  });
 
-  // ═══════ دریافت لیست کسب‌وکارها ═══════
+  useEffect(() => {
+    // Subscribe به تغییرات استور
+    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
+      setLocationState({
+        provinceId: state.provinceId,
+        cityId: state.cityId,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled,
+        locationType: state.locationType,
+      });
+    });
+
+    // Initial state
+    const initialState = useGlobalLocationStore.getState();
+    setLocationState({
+      provinceId: initialState.provinceId,
+      cityId: initialState.cityId,
+      latitude: initialState.latitude,
+      longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled,
+      locationType: initialState.locationType,
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const getLocationParams = useCallback(() => {
+    return useGlobalLocationStore.getState().getLocationParams();
+  }, []);
+
+  // ═══════ FIX: دریافت لیست با dependency صحیح ═══════
   useEffect(() => {
     const fetchBusinesses = async () => {
       setIsLoading(true);
       try {
+        const locationParams = getLocationParams();
         const response = await businessesService.getBusinessList({
           category_id: categoryId,
           page_size: 50,
+          ...locationParams,
+          _t: Date.now(), // ✅ Cache buster
         });
         const data = response.data || [];
         setBusinesses(
           data.map((b) => ({
             id: b.id,
+            bookingSlug: b.bookingSlug || b.id,
             name: b.name,
-            // ✅ فاز ۳: فقط خوانش camelCase
             category: b.categoryName || '',
             city: b.cityName || '',
             address: b.address,
@@ -81,24 +102,29 @@ export default function CategoryBusinessesPage() {
           }))
         );
       } catch (error) {
-        console.error('Failed to fetch businesses:', error);
+        console.error('Failed to fetch category businesses:', error);
+        setBusinesses([]);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchBusinesses();
-  }, [categoryId]);
+  }, [
+    categoryId,
+    locationState.provinceId,
+    locationState.cityId,
+    locationState.latitude,
+    locationState.longitude,
+    locationState.gpsEnabled,
+    locationState.locationType,
+    getLocationParams,
+  ]);
 
-  // تشخیص فیلتر فعال
   const hasActiveFilter =
     (filters.serviceType && filters.serviceType !== 'all') || filters.sortBy !== 'all';
 
-  // فیلتر و جستجو
   const filteredData = useMemo(() => {
     let data = [...businesses];
-
-    // جستجو
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       data = data.filter(
@@ -108,8 +134,6 @@ export default function CategoryBusinessesPage() {
           (item.category && item.category.toLowerCase().includes(q))
       );
     }
-
-    // مرتب‌سازی
     if (filters.sortBy === 'top_rated') {
       data.sort((a, b) => b.rating - a.rating);
     } else if (filters.sortBy === 'most_booked') {
@@ -117,12 +141,11 @@ export default function CategoryBusinessesPage() {
     } else if (filters.sortBy === 'highest_discount') {
       data.sort((a, b) => (b.discount || 0) - (a.discount || 0));
     }
-
     return data;
   }, [businesses, search, filters]);
 
   const handleBusinessPress = (business) => {
-    router.push(`/business/${business.id}`);
+    router.push(`/business?slug=${business.bookingSlug}`);
   };
 
   return (
@@ -136,7 +159,6 @@ export default function CategoryBusinessesPage() {
         onFilterPress={() => setFilterVisible(true)}
         hasActiveFilter={hasActiveFilter}
       />
-
       <div className="p-4 pb-32 space-y-3">
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -156,7 +178,9 @@ export default function CategoryBusinessesPage() {
             icon="🔍"
             title="کسب‌وکاری یافت نشد"
             description={
-              search ? 'با این عبارت جستجو نتیجه‌ای پیدا نشد' : 'فیلترهای خود را تغییر دهید'
+              search
+                ? 'با این عبارت جستجو نتیجه‌ای پیدا نشد'
+                : 'در این منطقه کسب‌وکاری ثبت نشده یا فیلترهای خود را تغییر دهید'
             }
             actionLabel={search ? 'پاک کردن جستجو' : 'حذف فیلترها'}
             onAction={() => {
@@ -166,8 +190,6 @@ export default function CategoryBusinessesPage() {
           />
         )}
       </div>
-
-      {/* مدال فیلتر */}
       <CategoryFilterModal
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}

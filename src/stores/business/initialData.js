@@ -48,11 +48,20 @@ export const INITIAL_BUSINESS_DATA = {
   ownerName: '',
   verifiedName: '',
   nationalId: '',
+  isNationalIdVerified: false,
 
   // ─── حساب بانکی ───
   bankInfo: {
     isRegistered: false,
     isVerified: false,
+    // ✅ فیلدهای جدید برای نگهداری اطلاعات کامل
+    bankName: '',
+    bankId: '',
+    sheba: '',
+    cardNumber: '',
+    ownerName: '',
+    accountNumber: '',
+    nationalId: '',
   },
 
   // ─── لینک رزرو ───

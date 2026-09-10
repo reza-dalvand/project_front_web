@@ -16,6 +16,9 @@ export default function BusinessMapPanel({
 }) {
   const { colors } = useTheme();
 
+  const lat = parseFloat(business?.location?.latitude ?? business?.latitude ?? 0);
+  const lng = parseFloat(business?.location?.longitude ?? business?.longitude ?? 0);
+
   return (
     <div
       className="border-t p-5 space-y-4"
@@ -79,8 +82,8 @@ export default function BusinessMapPanel({
               direction: 'ltr',
             }}
           >
-            {toPersianDigit(business.location.latitude.toFixed(4))}°N,{' '}
-            {toPersianDigit(business.location.longitude.toFixed(4))}°E
+            {/* ✅ استفاده از متغیرهای ایمن و عددی */}
+            {toPersianDigit(lat.toFixed(4))}°N, {toPersianDigit(lng.toFixed(4))}°E
           </span>
         </div>
       </Card>

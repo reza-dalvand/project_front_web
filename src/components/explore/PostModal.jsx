@@ -1,48 +1,75 @@
 // src/components/explore/PostModal.jsx
+
 'use client';
-import { useEffect, useState, useRef } from 'react';
+
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+
 import { createPortal } from 'react-dom';
+
 import { useTheme } from '@/stores/useThemeStore';
-import { useAuth } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
+
 import GallerySlider from './GallerySlider';
 import PostModalHeader from './post/PostModalHeader';
 import PostBusinessInfo from './post/PostBusinessInfo';
-import PostMagazineInfo from './post/PostMagazineInfo';
-import PostRatingCard from './post/PostRatingCard';
 import PostCaptionCard from './post/PostCaptionCard';
-import PostFooterHint from './post/PostFooterHint';
-import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
-import { useRouter } from 'next/navigation'; // ✅ اضافه شد
 
-export default function PostModal({
-  post,
-  visible,
-  onClose,
-  onSave,
-  onNavigateToProfile, // ✅ این پروپ باید حتماً پاس داده شود
-}) {
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { useFavoriteStore } from '@/stores/useFavoriteStore';
+import { useAuth } from '@/stores/useAuthStore';
+
+export default function PostModal({ post, visible, onClose, onNavigateToProfile, onBooking }) {
   const { colors } = useTheme();
-  const { isAuthenticated, requireAuth } = useAuth();
-  const router = useRouter(); // ✅ اضافه شد
   const { showToast } = useToast();
-  const [isSaved, setIsSaved] = useState(post?.saved || false);
+  const { isAuthenticated, requireAuth } = useAuth();
+  const togglePostFavorite = useFavoriteStore((s) => s.togglePostFavorite);
+  const isPostFavorited = useFavoriteStore((s) => s.isPostFavorited);
+
+  const isSaved = post?.id ? isPostFavorited(post.id) : false;
+
+  const handleSave = useCallback(async () => {
+    if (!post?.id) return;
+
+    if (!isAuthenticated) {
+      requireAuth(() => {});
+      return;
+    }
+
+    try {
+      const newState = await togglePostFavorite(post.id, {
+        id: post.id,
+        caption: post.caption || '',
+        businessName: post.businessName || '',
+        image: post.images?.[0]?.imageUrl || post.images?.[0] || null,
+      });
+
+      showToast(newState ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد', 'success');
+    } catch (error) {
+      console.error('Toggle favorite failed:', error);
+      showToast('خطا در ذخیره علاقه‌مندی', 'error');
+    }
+  }, [post, isAuthenticated, requireAuth, togglePostFavorite, showToast]);
+
+  const instanceId = useRef('portfolio-modal');
+
   const [mounted, setMounted] = useState(false);
-  const instanceId = useRef('post-modal');
+
+  // =========================================================
+  // Mount / Unmount
+  // =========================================================
 
   useEffect(() => {
     setMounted(true);
+
     return () => {
       setMounted(false);
       releaseScrollLock(instanceId.current);
     };
   }, []);
 
-  useEffect(() => {
-    if (post) {
-      setIsSaved(post.saved);
-    }
-  }, [post]);
+  // =========================================================
+  // Scroll Lock
+  // =========================================================
 
   useEffect(() => {
     if (visible) {
@@ -50,144 +77,268 @@ export default function PostModal({
     } else {
       releaseScrollLock(instanceId.current);
     }
+
     return () => {
       releaseScrollLock(instanceId.current);
     };
   }, [visible]);
 
+  // =========================================================
+  // ESC Key
+  // =========================================================
+
   useEffect(() => {
     if (!visible) return;
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') onClose?.();
+
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        onClose?.();
+      }
     };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+
+    window.addEventListener('keydown', handleEsc);
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
   }, [visible, onClose]);
 
-  if (!mounted || !visible || !post) return null;
+  // =========================================================
+  // Extract image URL
+  // =========================================================
 
-  const isMagazine = post.source === 'magazine';
-  const media = post.gallery || post.images || [];
+  const extractUrl = useCallback((img) => {
+    if (typeof img === 'string' && img.length > 0) {
+      return img;
+    }
 
-  // ═══ اشتراک‌گذاری ═══
-  const handleShare = async () => {
-    const postUrl =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/post/${post.id}`
-        : `https://beau.app/post/${post.id}`;
-    const shareMessage = [
-      `🌟 ${post.businessName || 'بیو کلاب'}`,
-      post.caption ? post.caption : '',
-      '',
-      `🔗 ${postUrl}`,
-      '📱 مشاهده در اپلیکیشن بیو کلاب',
-    ]
-      .filter(Boolean)
-      .join('\n');
+    if (img && typeof img === 'object') {
+      return img.imageUrl || img.image_url || img.image || img.url || null;
+    }
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: post.businessName || 'بیو کلاب',
-          text: post.caption || '',
-          url: postUrl,
-        });
-        return;
-      } catch (err) {
-        if (err.name === 'AbortError') return;
+    return null;
+  }, []);
+
+  // =========================================================
+  // Gallery
+  //
+  // IMPORTANT:
+  // این Hook باید قبل از return شرطی اجرا شود.
+  // =========================================================
+  const gallery = useMemo(() => {
+    if (!post) return [];
+
+    const extractUrl = (img) => {
+      if (typeof img === 'string' && img.length > 0) return img;
+      if (img && typeof img === 'object') {
+        return img.imageUrl || img.image_url || img.image || img.url || null;
+      }
+      return null;
+    };
+
+    // ✅ فقط از images استفاده کن
+    const imagesList = [];
+    if (Array.isArray(post.images)) {
+      for (const img of post.images) {
+        const url = extractUrl(img);
+        if (url && !imagesList.includes(url)) {
+          imagesList.push(url);
+        }
       }
     }
-    try {
-      await navigator.clipboard.writeText(shareMessage);
-      showToast('✓ لینک و توضیحات پست کپی شد', 'success');
-    } catch {
-      showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
-    }
-  };
 
-  const handleSave = () => {
-    requireAuth(() => {
-      const newState = !isSaved;
-      setIsSaved(newState);
-      onSave?.(post.id);
-    });
-  };
+    return imagesList;
+  }, [post]);
 
-  const handleProfilePress = () => {
-    onClose();
-    setTimeout(() => {
-      onNavigateToProfile?.(post.businessId);
-    }, 300);
-  };
+  // =========================================================
+  // Share
+  // =========================================================
 
-  // ═══════ ✅ FIX: دکمه رزرو — با fallback ═══════
-  const handleBooking = () => {
-    requireAuth(() => {
-      onClose();
-      setTimeout(() => {
-        if (onNavigateToProfile && post.businessId) {
-          onNavigateToProfile(post.businessId);
-        } else if (typeof window !== 'undefined') {
-          window.location.href = `/business/${post.businessId}`;
+  const handleShare = useCallback(async () => {
+    if (!post) return;
+
+    const shareTitle = post.caption || post.title || 'نمونه‌کار بیو کلاب';
+
+    const shareMessage = `🖼️ ${shareTitle}
+
+🏪 ${post.businessName || ''}
+
+📱 بیو کلاب | رزرو آنلاین خدمات زیبایی`;
+
+    // Native Share
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareMessage,
+          url: typeof window !== 'undefined' ? window.location.href : undefined,
+        });
+
+        return;
+      } catch (err) {
+        // کاربر Share را بسته است
+        if (err?.name === 'AbortError') {
+          return;
         }
-      }, 300);
-    });
+      }
+    }
+
+    // Clipboard fallback
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(shareMessage);
+
+        showToast('لینک و توضیحات کپی شد', 'success');
+      } else {
+        showToast('امکان کپی وجود ندارد', 'error');
+      }
+    } catch {
+      showToast('امکان کپی وجود ندارد', 'error');
+    }
+  }, [post, showToast]);
+
+  // =========================================================
+  // Navigate to Business Profile
+  // =========================================================
+
+  const handleNavigate = useCallback(() => {
+    onClose?.();
+
+    setTimeout(() => {
+      onNavigateToProfile?.(post);
+    }, 300);
+  }, [onClose, onNavigateToProfile, post]);
+
+  // =========================================================
+  // Booking
+  // =========================================================
+
+  const handleBooking = useCallback(() => {
+    onClose?.();
+
+    setTimeout(() => {
+      onBooking?.(post);
+    }, 300);
+  }, [onClose, onBooking, post]);
+
+  // =========================================================
+  // Conditional rendering
+  //
+  // این return باید بعد از تمام Hookها باشد.
+  // =========================================================
+
+  if (!mounted || !visible || !post) {
+    return null;
+  }
+
+  // =========================================================
+  // Business data
+  // =========================================================
+
+  const businessData = {
+    businessName: post.businessName,
+    businessLogo: post.businessLogo,
+    businessOwnerPhoto: post.businessOwnerPhoto,
+
+    // اولویت با slug
+    // اگر slug نبود از businessId استفاده می‌کنیم
+    businessBookingSlug: post.businessBookingSlug || post.businessId,
   };
 
-  const content = (
+  // =========================================================
+  // Caption
+  // =========================================================
+
+  const caption = post.description || post.caption || '';
+
+  // =========================================================
+  // Render
+  // =========================================================
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+      style={{
+        backgroundColor: 'rgba(0,0,0,0.75)',
+      }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose?.();
+        if (e.target === e.currentTarget) {
+          onClose?.();
+        }
       }}
     >
       <div
-        className="relative w-full max-w-lg max-h-[90vh] rounded-3xl overflow-hidden
-        flex flex-col shadow-2xl"
+        className="
+          relative
+          w-full
+          max-w-lg
+          max-h-[92vh]
+          rounded-3xl
+          flex
+          flex-col
+          overflow-hidden
+          shadow-2xl
+        "
         style={{
           backgroundColor: colors.background,
           border: `1px solid ${colors.border}`,
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* هدر */}
+        {/* =====================================================
+            Header
+        ====================================================== */}
+
         <PostModalHeader
-          isSaved={isSaved}
+          onClose={onClose}
           onShare={handleShare}
           onSave={handleSave}
-          onClose={onClose}
+          isSaved={isSaved}
         />
+        {/* =====================================================
+            Scrollable Content
+        ====================================================== */}
 
-        {/* گالری تصاویر */}
-        <div className="w-full bg-black">
-          <GallerySlider gallery={media} />
-        </div>
+        <div
+          className="flex-1 overflow-y-auto"
+          style={{
+            minHeight: '0px',
+          }}
+        >
+          {/* ===================================================
+              Gallery
+          ==================================================== */}
 
-        {/* محتوای اسکرولی */}
-        <div className="flex-1 overflow-y-auto">
-          {/* اطلاعات کسب‌وکار یا مجله */}
-          {isMagazine ? (
-            <PostMagazineInfo post={post} />
-          ) : (
-            <PostBusinessInfo
-              post={post}
-              onProfilePress={handleProfilePress}
-              onBooking={handleBooking} // ✅ FIX: handleBooking اصلاح‌شده
-            />
+          {gallery.length > 0 && (
+            <div className="w-full bg-black">
+              <GallerySlider gallery={gallery} />
+            </div>
           )}
 
-          {/* امتیاز */}
-          {!isMagazine && post.rating > 0 && <PostRatingCard rating={post.rating} />}
+          {/* ===================================================
+              Business Information + Booking
+          ==================================================== */}
 
-          {/* کپشن */}
-          <PostCaptionCard caption={post.caption} isMagazine={isMagazine} />
+          <PostBusinessInfo
+            post={businessData}
+            onProfilePress={handleNavigate}
+            onBooking={handleBooking}
+          />
 
-          {/* راهنما */}
-          <PostFooterHint isMagazine={isMagazine} />
+          {/* ===================================================
+              Caption / Description
+          ==================================================== */}
+
+          <PostCaptionCard caption={caption} isMagazine={post.source === 'magazine'} />
+
+          {/* ===================================================
+              Safe Area
+          ==================================================== */}
+
+          <div className="h-6 safe-bottom" />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
-
-  return createPortal(content, document.body);
 }

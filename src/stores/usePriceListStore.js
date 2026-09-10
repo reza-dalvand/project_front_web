@@ -1,7 +1,4 @@
 // src/stores/usePriceListStore.js
-/**
- * ✅ حذف USE_MOCK — فقط API
- */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { priceListService } from '@/api';
@@ -78,21 +75,40 @@ const buildServicesFromBusiness = () => {
     }));
 };
 
-const mapPriceListFromApi = (data, businessId) => ({
+/**
+ * ✅ نگاشت پاسخ بک‌اند به فرمت فرانت (عمومی)
+ */
+const mapPublicPriceListFromApi = (data, businessId) => ({
   businessId,
   themeId: data.theme || 'classic',
-  // ✅ فاز ۳: خوانش camelCase
-  isPublished: data.isPublished || false,
+  isPublished: data.isPublished ?? data.is_published ?? true,
   services: (data.services || []).map((s) => ({
     id: s.id,
     name: s.name,
-    typeName: s.typeName || s.typeId || '',
-    typeId: s.typeId || '',
-    originalPrice: s.originalPrice,
-    discountPercent: s.discountPercent,
-    finalPrice: s.finalPrice,
-    hasDeposit: s.hasDeposit,
-    depositAmount: s.depositAmount,
+    typeName: s.typeName || s.type_name || '',
+    typeId: s.typeId || s.type_id || '',
+    originalPrice: s.originalPrice ?? s.original_price ?? 0,
+    discountPercent: s.discountPercent ?? s.discount_percent ?? 0,
+    finalPrice: s.finalPrice ?? s.final_price ?? 0,
+    hasDeposit: s.hasDeposit ?? s.has_deposit ?? false,
+    depositAmount: s.depositAmount ?? s.deposit_amount ?? 0,
+  })),
+});
+
+const mapPriceListFromApi = (data, businessId) => ({
+  businessId,
+  themeId: data.theme || 'classic',
+  isPublished: data.isPublished ?? data.is_published ?? false,
+  services: (data.services || []).map((s) => ({
+    id: s.id,
+    name: s.name,
+    typeName: s.typeName || s.type_name || '',
+    typeId: s.typeId || s.type_id || '',
+    originalPrice: s.originalPrice ?? s.original_price ?? 0,
+    discountPercent: s.discountPercent ?? s.discount_percent ?? 0,
+    finalPrice: s.finalPrice ?? s.final_price ?? 0,
+    hasDeposit: s.hasDeposit ?? s.has_deposit ?? false,
+    depositAmount: s.depositAmount ?? s.deposit_amount ?? 0,
   })),
 });
 
@@ -108,6 +124,29 @@ export const usePriceListStore = create(
       isLoading: false,
       error: null,
 
+      /**
+       * ✅ دریافت لیست قیمت عمومی (برای مشتری)
+       */
+      fetchPublicPriceList: async (businessId) => {
+        set({ isLoading: true, error: null });
+        try {
+          const result = await priceListService.getPublicPriceList(businessId);
+          const mapped = mapPublicPriceListFromApi(result.data, businessId);
+          set((s) => ({
+            lists: { ...s.lists, [businessId]: mapped },
+            isLoading: false,
+          }));
+          return mapped;
+        } catch (error) {
+          console.error('fetchPublicPriceList failed:', error);
+          set({ error: error.message, isLoading: false });
+          return null;
+        }
+      },
+
+      /**
+       * دریافت لیست قیمت کسب‌وکار خودم (مالک)
+       */
       fetchPriceList: async (businessId) => {
         set({ isLoading: true, error: null });
         try {
@@ -124,7 +163,7 @@ export const usePriceListStore = create(
           const fallbackList = {
             businessId,
             themeId: 'classic',
-            isPublished: false,
+            isPublished: services.length > 0, // ✅ FIX: اگر سرویس هست، منتشرشده فرض کن
             services,
           };
           set((s) => ({
@@ -164,7 +203,6 @@ export const usePriceListStore = create(
           },
         })),
 
-      // ✅ حذف USE_MOCK — همیشه API
       setTheme: (businessId, themeId) => {
         get().updateList(businessId, { themeId });
         const list = get().lists[businessId];
@@ -173,7 +211,6 @@ export const usePriceListStore = create(
           .catch((err) => console.error('setTheme API failed:', err));
       },
 
-      // ✅ حذف USE_MOCK — همیشه API
       togglePublish: (businessId) => {
         const current = get().lists[businessId] || DEFAULT_LIST(businessId);
         const next = !current.isPublished;

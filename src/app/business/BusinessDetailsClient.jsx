@@ -1,8 +1,7 @@
-// src/app/business/[id]/BusinessDetailsClient.jsx
+// src/app/business/BusinessDetailsClient.jsx
 'use client';
-
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useTheme } from '@/stores/useThemeStore';
 import { useToast } from '@/hooks/useToast';
@@ -20,12 +19,12 @@ import EmptyState from '@/components/common/EmptyState';
 import { businessesService, portfoliosService } from '@/api';
 import { useAuth } from '@/stores/useAuthStore';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
+import { priceListService } from '@/api';
 
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), { ssr: false });
 const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'), { ssr: false });
 const PriceListMenu = dynamic(() => import('@/components/priceList/PriceListMenu'), { ssr: false });
 
-// ✅ نگاشت خدمات کسب‌وکار به فرمت لیست قیمت
 const mapServiceToPriceList = (s) => ({
   id: s.id,
   name: s.name,
@@ -38,15 +37,14 @@ const mapServiceToPriceList = (s) => ({
   depositAmount: s.depositAmount ?? s.deposit_amount ?? 0,
 });
 
-export default function BusinessDetailsPage() {
+export default function BusinessDetailsClient({ businessSlug }) {
   const { colors } = useTheme();
   const router = useRouter();
-  const params = useParams();
   const { showToast } = useToast();
   const { isAuthenticated, requireAuth } = useAuth();
-
   const [business, setBusiness] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('services');
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -54,20 +52,20 @@ export default function BusinessDetailsPage() {
   const toggleBusinessFavorite = useFavoriteStore((s) => s.toggleBusinessFavorite);
   const [activePortfolio, setActivePortfolio] = useState(null);
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
+  const fetchPublicPriceList = usePriceListStore((s) => s.fetchPublicPriceList);
 
-  const isFavorite = isBusinessFavorited(params.id);
-  // ✅ لیست قیمت از استور
-  const priceListFromStore = usePriceListStore((s) => s.lists[params.id]);
-  const fetchPriceList = usePriceListStore((s) => s.fetchPriceList);
+  const isFavorite = business?.id ? isBusinessFavorited(business.id) : false;
+  const priceListFromStore = usePriceListStore((s) => s.lists[business?.id]);
 
-  // ═══════ دریافت جزئیات از API ═══════
+  // ✅ اصلاح ۱: استفاده از businessSlug برای دریافت اطلاعات
   useEffect(() => {
+    if (!businessSlug) return;
     const fetchBusiness = async () => {
       setIsLoading(true);
+      setError(null);
       try {
-        const response = await businessesService.getPublicBusiness(params.id);
+        const response = await businessesService.getPublicBusiness(businessSlug);
         const b = response.data;
-
         const businessData = {
           id: b.id,
           name: b.name,
@@ -75,13 +73,12 @@ export default function BusinessDetailsPage() {
           city: b.city?.name || b.cityName || '',
           address: b.address,
           phone: b.phone,
-          // ✅ فاز ۳: فقط خوانش camelCase
           workingHours: b.workingHours,
           about: b.about,
           rating: b.rating,
           reviewsCount: b.reviewsCount || 0,
           VIP: b.isVip || false,
-          logo: b.logo,
+          logo: b.logo || null,
           coverUrl: b.coverImage || null,
           ownerPhoto: b.ownerPhoto || null,
           ownerName: b.ownerName || '',
@@ -90,6 +87,7 @@ export default function BusinessDetailsPage() {
           latitude: b.latitude,
           longitude: b.longitude,
           gallery: (b.gallery || []).map((img) => img.imageUrl || img.image || img),
+          memberSince: b.memberSince || b.createdAt || '',
           services: (b.services || []).map((s) => ({
             id: s.id,
             name: s.name,
@@ -106,21 +104,19 @@ export default function BusinessDetailsPage() {
           portfolios: [],
         };
         setBusiness(businessData);
-      } catch (error) {
-        console.error('Failed to fetch business:', error);
+      } catch (err) {
+        console.error('Failed to fetch business:', err);
+        setError(err);
         showToast('خطا در بارگذاری اطلاعات کسب‌وکار', 'error');
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchBusiness();
-  }, [params.id, showToast]);
+  }, [businessSlug, showToast]);
 
-  // ═══════ دریافت نمونه‌کارها ═══════
   useEffect(() => {
     if (!business?.id) return;
-
     const fetchPortfolios = async () => {
       try {
         const result = await portfoliosService.getPortfolios({ business_id: business.id });
@@ -132,29 +128,27 @@ export default function BusinessDetailsPage() {
           images: (p.images || []).map((img) => img.image || img),
         }));
         setBusiness((prev) => (prev ? { ...prev, portfolios } : prev));
-      } catch (error) {
-        console.error('Failed to fetch portfolios:', error);
+      } catch (err) {
+        console.error('Failed to fetch portfolios:', err);
       }
     };
-
     fetchPortfolios();
   }, [business?.id]);
 
-  // ✅ دریافت لیست قیمت بعد از لود کسب‌وکار
   useEffect(() => {
     if (business?.id) {
-      fetchPriceList(business.id).catch(() => {});
+      fetchPublicPriceList(business.id).catch(() => {});
     }
-  }, [business?.id, fetchPriceList]);
+  }, [business?.id, fetchPublicPriceList]);
 
-  // ✅ ساخت settings نهایی لیست قیمت
   const priceListSettings = useMemo(() => {
     const storeList = priceListFromStore;
-
     if (storeList) {
+      // اگر سرویس خالی بود ولی سرویس‌های کسب‌وکار موجود بود، از آنها بساز
       if ((!storeList.services || storeList.services.length === 0) && business?.services?.length) {
         return {
           ...storeList,
+          isPublished: true, // ✅ FIX: اگر سرویس هست، نمایش بده
           services: business.services
             .filter((s) => s.isActive !== false)
             .map(mapServiceToPriceList),
@@ -162,7 +156,7 @@ export default function BusinessDetailsPage() {
       }
       return storeList;
     }
-
+    // اگر هنوز از بک‌اند نیامده ولی سرویس داریم، پیش‌نمایش نشان بده
     if (business?.services?.length) {
       return {
         businessId: business.id,
@@ -174,10 +168,9 @@ export default function BusinessDetailsPage() {
     return null;
   }, [priceListFromStore, business]);
 
-  const showPrices =
-    priceListSettings?.isPublished === true && (priceListSettings?.services?.length ?? 0) > 0;
-
-  // ─── Handlers ───
+  const showPrices = Boolean(
+    priceListSettings?.isPublished && priceListSettings?.services?.length > 0
+  );
   const openBooking = useCallback(
     (service) => {
       requireAuth(() => {
@@ -203,24 +196,26 @@ export default function BusinessDetailsPage() {
     setActivePortfolio(null);
   }, []);
 
+  // ✅ اصلاح ۲: استفاده از business.id به جای businessId برای اکشن‌ها
   const toggleFavorite = useCallback(async () => {
     if (!isAuthenticated) {
       requireAuth(() => {});
       return;
     }
+    if (!business?.id) return; // اگر هنوز آی‌دی لود نشده کاری نکن
     try {
-      const newState = await toggleBusinessFavorite(params.id, {
-        id: params.id,
+      const newState = await toggleBusinessFavorite(business.id, {
+        id: business.id,
         name: business?.name,
         category: business?.category,
         city: business?.city,
         logo: business?.logo,
       });
       showToast(newState ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد', 'success');
-    } catch (error) {
-      showToast(error.message || 'خطا در عملیات', 'error');
+    } catch (err) {
+      showToast(err.message || 'خطا در عملیات', 'error');
     }
-  }, [isAuthenticated, requireAuth, toggleBusinessFavorite, params.id, business, showToast]);
+  }, [isAuthenticated, requireAuth, toggleBusinessFavorite, business, showToast]);
 
   const goBack = useCallback(() => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -230,7 +225,10 @@ export default function BusinessDetailsPage() {
     }
   }, [router]);
 
-  const openMap = useCallback(() => router.push(`/business/${params.id}/map`), [router, params.id]);
+  const openMap = useCallback(
+    () => router.push(`/business/map?slug=${businessSlug}`),
+    [router, businessSlug]
+  );
 
   if (isLoading) {
     return (
@@ -242,7 +240,7 @@ export default function BusinessDetailsPage() {
     );
   }
 
-  if (!business) {
+  if (error || !business) {
     return (
       <ScreenWrapper>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -266,23 +264,25 @@ export default function BusinessDetailsPage() {
     <ScreenWrapper padding={0}>
       <div className="overflow-y-auto pb-[220px]">
         <BusinessHero
-          gallery={gallery}
+          gallery={business.gallery || []}
+          coverUrl={business.coverImage || business.coverUrl}
+          logo={business.logo}
           businessId={business.id}
           businessName={business.name}
-          onBackPress={goBack}
+          ownerPhoto={business.ownerPhoto}
           isFavorite={isFavorite}
           onFavoritePress={toggleFavorite}
+          onBackPress={() => router.back()}
+          rating={business.rating || 0}
+          reviewsCount={business.reviewsCount || 0}
         />
-
         <BusinessInfoCard business={business} onMapPress={openMap} />
-
         <BusinessTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
           colors={colors}
           showPrices={showPrices}
         />
-
         <div className="px-5 pt-1">
           {activeTab === 'services' && (
             <div className="flex flex-col gap-3 pb-2">
@@ -291,7 +291,6 @@ export default function BusinessDetailsPage() {
               ))}
             </div>
           )}
-
           {activeTab === 'prices' && priceListSettings && (
             <PriceListMenu
               businessName={business.name}
@@ -299,25 +298,22 @@ export default function BusinessDetailsPage() {
               settings={priceListSettings}
             />
           )}
-
           {activeTab === 'honors' && <HonorMedalsSection businessId={business.id} />}
-
           {activeTab === 'portfolio' && (
             <PortfolioGrid portfolios={portfolios} onPortfolioPress={openPortfolio} />
           )}
-
           {activeTab === 'about' && <BusinessAbout business={business} />}
         </div>
       </div>
 
+      {/* ✅ اصلاح ۳: ارسال business.id به مودال رزرو */}
       <BookingModal
         visible={bookingModalVisible}
         onClose={closeBooking}
         service={selectedService}
-        businessId={business?.id || params.id}
+        businessId={business?.id}
         businessName={business?.name || ''}
       />
-
       <PortfolioModal
         visible={portfolioModalVisible}
         onClose={closePortfolio}

@@ -13,7 +13,6 @@ jest.mock('@/api/api-client', () => ({
   },
 }));
 
-// ماک axios-instance برای updateBusiness (که از آن استفاده می‌کند)
 jest.mock('@/api/axios-instance', () => ({
   __esModule: true,
   default: {
@@ -85,7 +84,11 @@ describe('businessesService', () => {
 
     const result = await businessesService.getPublicBusiness('salon-test');
 
-    expect(apiClient.get).toHaveBeenCalledWith(expect.stringContaining('salon-test'));
+    // ✅ FIX: تابع علاوه بر URL، یک آبجکت params (شامل _t) هم ارسال می‌کند
+    expect(apiClient.get).toHaveBeenCalledWith(
+      expect.stringContaining('salon-test'),
+      expect.anything() // پذیرش هر نوع آرگومان دوم
+    );
     expect(result.data.data.booking_slug).toBe('salon-test');
   });
 });

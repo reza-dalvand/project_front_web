@@ -18,6 +18,7 @@ import NearbyBusinessList from '@/components/nearby/NearbyBusinessList';
 import NearbyModelRequestsSection from '@/components/nearby/NearbyModelRequestsSection';
 import NearbyLineRentalsSection from '@/components/nearby/NearbyLineRentalsSection';
 import LocationInfoBar from '@/components/nearby/LocationInfoBar';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
 // ✅ API Services
 import { businessesService, categoriesService, adsService } from '@/api';
@@ -30,7 +31,7 @@ const LOCATION_CACHE_TTL = 5 * 60 * 1000;
 export default function NearbyPage() {
   const router = useRouter();
   const { colors } = useTheme();
-
+  const globalLocation = useGlobalLocationStore((s) => s.getLocationParams);
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState(null);
@@ -60,12 +61,20 @@ export default function NearbyPage() {
     setLocationLoading(true);
     setLocationError(null);
     try {
-      const loc = await getCurrentLocation();
+      const loc = await getCurrentLocation({ showSettingsPrompt: true });
       cachedLocation = loc;
       cachedLocationTimestamp = Date.now();
       setUserLocation(loc);
     } catch (err) {
-      setLocationError(getLocationErrorMessage(err));
+      cachedLocation = null;
+      cachedLocationTimestamp = 0;
+      setLocationError(err);
+      
+      // GPS خاموش — پیام ملایم‌تر
+      if (err.code === 2 || err.gpsDisabled) {
+        // فقط log کن، toast نشان نده (چون کاربر از Nearby page آمده)
+        console.log('GPS is disabled');
+      }
     } finally {
       setLocationLoading(false);
     }
@@ -78,10 +87,12 @@ export default function NearbyPage() {
   // ═══════ دریافت داده‌ها از API ═══════
   useEffect(() => {
     if (!userLocation) return;
-
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        // ✅ FIX: صفحه نزدیک همیشه بر اساس موقعیت واقعی کاربر کار می‌کند
+        // فیلتر استان/شهر سراسری اینجا اعمال نمی‌شود
+        // چون هدف صفحه "نزدیک‌ترین‌ها" ذاتاً فاصله‌محور است
         const params = {
           lat: userLocation.latitude,
           lng: userLocation.longitude,
@@ -90,7 +101,7 @@ export default function NearbyPage() {
         };
 
         const [catRes, bizRes, modelRes, lineRes] = await Promise.allSettled([
-          categoriesService.getBusinessCategories(),
+          categoriesService.getServiceCategories(),
           businessesService.getBusinessList(params),
           adsService.getModelRequests(params),
           adsService.getLineRentals(params),
@@ -102,7 +113,9 @@ export default function NearbyPage() {
             cats.map((c) => ({
               id: String(c.id),
               name: c.name || c.title,
-              icon: c.icon || 'face',
+              icon: c.iconName || c.icon_name || 'default',
+              gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
+              gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
               count: c.count || 0,
             }))
           );
@@ -113,6 +126,7 @@ export default function NearbyPage() {
           setNearbyBusinesses(
             bizList.map((b) => ({
               id: b.id,
+              bookingSlug: b.bookingSlug || b.id, // ✅ اضافه شود
               name: b.name,
               // ✅ فاز ۳: فقط خوانش camelCase
               category: b.categoryName || '',
@@ -150,7 +164,7 @@ export default function NearbyPage() {
     };
 
     fetchData();
-  }, [userLocation]);
+  }, [userLocation, globalLocation]);
 
   const getLocationErrorMessage = (err) => {
     if (!err) return 'خطای ناشناخته در دریافت موقعیت';
@@ -214,9 +228,18 @@ export default function NearbyPage() {
     }, 500);
   }, [isLoadingMore, hasMore]);
 
-  const handleBusinessPress = useCallback((biz) => router.push(`/business/${biz.id}`), [router]);
-  const handleModelPress = useCallback((req) => router.push(`/model-requests/${req.id}`), [router]);
-  const handleLinePress = useCallback((ad) => router.push(`/line-rentals/${ad.id}`), [router]);
+  const handleBusinessPress = useCallback(
+    (biz) => router.push(`/business?slug=${biz.bookingSlug}`),
+    [router]
+  );
+  const handleModelPress = useCallback(
+    (req) => router.push(`/model-requests/detail?id=${req.id}`),
+    [router]
+  );
+  const handleLinePress = useCallback(
+    (ad) => router.push(`/line-rentals/detail?id=${ad.id}`),
+    [router]
+  );
 
   return (
     <ScreenWrapper scrollable padding={0}>

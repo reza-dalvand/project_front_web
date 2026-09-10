@@ -1,4 +1,3 @@
-// src/app/model-requests/page.jsx
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,22 +10,62 @@ import { adsService } from '@/api';
 import ModelRequestHeader from '@/components/modelRequests/ModelRequestHeader';
 import ModelRequestFilter from '@/components/modelRequests/ModelRequestFilter';
 import ModelRequestCard from '@/components/modelRequests/ModelRequestCard';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
 export default function ModelRequestsPage() {
   const router = useRouter();
-  const { colors } = useTheme();
   const nearbyEnabled = useNearbyStore((s) => s.enabled);
   const userLocation = useNearbyStore((s) => s.userLocation);
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [costFilter, setCostFilter] = useState('all');
 
+  // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
+  const [locationState, setLocationState] = useState({
+    provinceId: null,
+    cityId: null,
+    latitude: null,
+    longitude: null,
+    gpsEnabled: false,
+    locationType: 'all',
+  });
+
+  useEffect(() => {
+    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
+      setLocationState({
+        provinceId: state.provinceId,
+        cityId: state.cityId,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled,
+        locationType: state.locationType,
+      });
+    });
+
+    const initialState = useGlobalLocationStore.getState();
+    setLocationState({
+      provinceId: initialState.provinceId,
+      cityId: initialState.cityId,
+      latitude: initialState.latitude,
+      longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled,
+      locationType: initialState.locationType,
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const getLocationParams = useCallback(() => {
+    return useGlobalLocationStore.getState().getLocationParams();
+  }, []);
+
   useEffect(() => {
     const fetchRequests = async () => {
       setIsLoading(true);
       try {
-        const params = {};
-        if (nearbyEnabled && userLocation) {
+        const locationParams = getLocationParams();
+        const params = { ...locationParams };
+        if (nearbyEnabled && userLocation && !locationParams.lat) {
           params.lat = userLocation.latitude;
           params.lng = userLocation.longitude;
           params.radius = 10;
@@ -40,7 +79,17 @@ export default function ModelRequestsPage() {
       }
     };
     fetchRequests();
-  }, [nearbyEnabled, userLocation]);
+  }, [
+    nearbyEnabled,
+    userLocation,
+    locationState.provinceId,
+    locationState.cityId,
+    locationState.latitude,
+    locationState.longitude,
+    locationState.gpsEnabled,
+    locationState.locationType,
+    getLocationParams,
+  ]);
 
   const filteredRequests = useMemo(() => {
     if (costFilter === 'all') return requests;
@@ -49,7 +98,7 @@ export default function ModelRequestsPage() {
 
   const handleRequestPress = useCallback(
     (request) => {
-      router.push(`/model-requests/${request.id}`);
+      router.push(`/model-requests/detail?id=${request.id}`);
     },
     [router]
   );

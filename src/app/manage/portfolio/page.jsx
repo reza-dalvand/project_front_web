@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { FiPlus, FiImage } from 'react-icons/fi';
+import { FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useToast } from '@/hooks/useToast';
@@ -14,7 +14,7 @@ import {
   PortfolioFormSheet,
   PortfolioDetailModal,
 } from '@/components/manageBusiness/portfolio';
-import { portfoliosService } from '@/api';
+import { portfoliosService } from '@/api'; // ✅ import تکراری حذف شد
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { useRouter } from 'next/navigation';
@@ -28,57 +28,66 @@ export default function ManagePortfolioPage() {
   const services = businessData?.services || [];
 
   const [portfolios, setPortfolios] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [formVisible, setFormVisible] = useState(false);
   const [editingPortfolio, setEditingPortfolio] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [activePortfolio, setActivePortfolio] = useState(null);
 
-  useEffect(() => {
-    const fetchPortfolios = async () => {
-      setIsLoading(true);
-      try {
-        const result = await portfoliosService.getMyPortfolios();
-        setPortfolios(result.data || []);
-      } catch (error) {
-        console.error('Failed to fetch portfolios:', error);
-        showToast('خطا در بارگذاری نمونه‌کارها', 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchPortfolios();
-  }, [showToast, businessData?.portfolios]);
+  const fetchPortfolios = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // ✅ استفاده از getMyPortfolios برای دریافت نمونه‌کارهای همین کسب‌وکار
+      const result = await portfoliosService.getMyPortfolios();
+      let items = result.data || [];
 
-  // ✅ حذف USE_MOCK — فقط API
+      // ✅ شافل کردن آرایه برای نمایش رندوم
+      items = items.sort(() => Math.random() - 0.5);
+
+      setPortfolios(items); // ✅ اصلاح نام state
+    } catch (error) {
+      console.error('Failed to fetch portfolios:', error);
+      showToast('خطا در دریافت نمونه‌کارها', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchPortfolios();
+    }
+  }, [isAuthenticated, fetchPortfolios]);
+
   const handleSave = useCallback(
-    async (portfolioData, editingId) => {
+    async (portfolioData, editId) => {
       try {
-        if (editingId) {
-          await portfoliosService.updatePortfolio(editingId, portfolioData);
+        if (editId) {
+          await portfoliosService.updatePortfolio(editId, portfolioData);
         } else {
           await portfoliosService.createPortfolio(portfolioData);
         }
-        const result = await portfoliosService.getMyPortfolios();
-        setPortfolios(result.data || []);
-        showToast(editingId ? '✓ نمونه‌کار ویرایش شد' : '✓ نمونه‌کار جدید اضافه شد', 'success');
+
+        // refresh لیست
+        await fetchPortfolios();
         setFormVisible(false);
         setEditingPortfolio(null);
+
+        showToast(editId ? '✓ نمونه‌کار ویرایش شد' : '✓ نمونه‌کار اضافه شد', 'success');
       } catch (error) {
         console.error('Save portfolio failed:', error);
         showToast(error.message || 'خطا در ذخیره نمونه‌کار', 'error');
       }
     },
-    [showToast]
+    [showToast, fetchPortfolios]
   );
 
-  // ✅ حذف USE_MOCK — فقط API
   const handleDelete = useCallback(
     async (portfolio) => {
       try {
         await portfoliosService.deletePortfolio(portfolio.id);
-        const result = await portfoliosService.getMyPortfolios();
-        setPortfolios(result.data || []);
+        // ✅ به جای fetch مجدد، آیتم را از state محلی حذف می‌کنیم تا UI سریع‌تر آپدیت شود
+        setPortfolios((prev) => prev.filter((p) => p.id !== portfolio.id));
         showToast('✓ نمونه‌کار حذف شد', 'success');
         setDetailVisible(false);
         setActivePortfolio(null);
@@ -146,10 +155,11 @@ export default function ManagePortfolioPage() {
           </div>
         ) : portfolios.length > 0 ? (
           <div className="flex flex-wrap gap-3 justify-between">
-            {portfolios.map((portfolio) => (
+            {portfolios.map((portfolio, index) => (
               <PortfolioCard
                 key={portfolio.id}
                 portfolio={portfolio}
+                priority={index < 2}
                 onPress={openDetail}
                 onEdit={openEditForm}
                 onDelete={handleDelete}

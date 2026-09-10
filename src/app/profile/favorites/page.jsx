@@ -1,4 +1,3 @@
-// src/app/profile/favorites/page.jsx
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,6 +10,7 @@ import Header from '@/components/common/Header';
 import EmptyState from '@/components/common/EmptyState';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
 import { toPersianDigit } from '@/utils/numberUtils';
+import { PostModal } from '@/components/explore';
 
 export default function FavoritesPage() {
   const { colors } = useTheme();
@@ -22,6 +22,9 @@ export default function FavoritesPage() {
   const toggleBusinessFavorite = useFavoriteStore((s) => s.toggleBusinessFavorite);
   const togglePostFavorite = useFavoriteStore((s) => s.togglePostFavorite);
   const [activeTab, setActiveTab] = useState('businesses');
+  
+  // ✅ جدید: state برای PostModal
+  const [activePost, setActivePost] = useState(null);
 
   useEffect(() => {
     fetchFavorites();
@@ -32,7 +35,14 @@ export default function FavoritesPage() {
     { id: 'posts', label: 'ویترین', count: favoritePosts.length },
   ];
 
-  const handleBusinessPress = useCallback((biz) => router.push(`/business/${biz.id}`), [router]);
+  // ✅ FIX: استفاده از slug به جای id
+  const handleBusinessPress = useCallback((biz) => {
+    if (biz.slug) {
+      router.push(`/business?slug=${biz.slug}`);
+    } else {
+      router.push(`/business?id=${biz.id}`);
+    }
+  }, [router]);
 
   const handleRemoveBusiness = useCallback(
     async (biz) => {
@@ -55,6 +65,21 @@ export default function FavoritesPage() {
     },
     [togglePostFavorite]
   );
+
+  // ✅ جدید: باز کردن مدال پست
+  const handlePostPress = useCallback((post) => {
+    setActivePost({
+      id: post.id,
+      caption: post.caption || '',
+      businessName: post.businessName || '',
+      businessLogo: post.businessLogo || null,
+      businessBookingSlug: post.businessBookingSlug || post.id,
+      images: post.images || [],  
+      source: 'business',
+    });
+  }, []);
+
+  const handlePostClose = useCallback(() => setActivePost(null), []);
 
   if (!isAuthenticated) {
     return (
@@ -115,13 +140,13 @@ export default function FavoritesPage() {
                     onClick={() => handleBusinessPress(biz)}
                     className="w-full flex items-center gap-3 p-3.5 text-right"
                   >
-                    {/* ✅ FIX (فاز ۴): width/height به جای fill بدون ابعاد والد */}
+                    {/* ✅ FIX: استفاده از cover به جای logo */}
                     <Image
-                      src={biz.logo}
+                      src={biz.cover || biz.logo || '/placeholder-business.png'}
                       alt={biz.name}
                       width={46}
                       height={46}
-                      className="rounded-xl"
+                      className="rounded-xl object-cover"
                       loading="lazy"
                       quality={80}
                     />
@@ -174,37 +199,47 @@ export default function FavoritesPage() {
                 {favoritePosts.map((post) => (
                   <div
                     key={post.id}
-                    className="rounded-2xl border overflow-hidden"
+                    className="rounded-2xl border overflow-hidden cursor-pointer"
                     style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
                   >
-                    {/* ✅ FIX (فاز ۴): ابعاد مشخص + lazy loading */}
-                    <div className="relative w-full h-[120px]">
-                      <Image
-                        src={post.image || post.gallery?.[0]}
-                        alt={post.businessName}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                        loading="lazy"
-                        quality={80}
-                      />
-                    </div>
-                    <div className="p-2.5 space-y-1.5">
-                      <span
-                        className="text-[11px] font-[Vazir-Bold] truncate block"
-                        style={{ color: colors.textMain }}
-                      >
-                        {post.businessName}
-                      </span>
-                      <p
-                        className="text-[10px] line-clamp-2"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        {post.caption}
-                      </p>
+                    {/* ✅ FIX: onClick برای باز کردن مدال */}
+                    <button
+                      onClick={() => handlePostPress(post)}
+                      className="w-full text-right"
+                    >
+                      <div className="relative w-full h-[120px]">
+                        <Image
+                          src={post.image || '/placeholder-post.png'}
+                          alt={post.businessName || 'پست'}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                          loading="lazy"
+                          quality={80}
+                        />
+                      </div>
+                      <div className="p-2.5 space-y-1.5">
+                        <span
+                          className="text-[11px] font-[Vazir-Bold] truncate block"
+                          style={{ color: colors.textMain }}
+                        >
+                          {post.businessName}
+                        </span>
+                        <p
+                          className="text-[10px] line-clamp-2"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          {post.caption}
+                        </p>
+                      </div>
+                    </button>
+                    <div
+                      className="flex items-center justify-center px-2.5 py-2 border-t"
+                      style={{ borderColor: colors.border }}
+                    >
                       <button
                         onClick={() => handleRemovePost(post)}
-                        className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
                         style={{ backgroundColor: '#E91E6315' }}
                       >
                         <span className="text-[10px]">🔖</span>
@@ -229,6 +264,23 @@ export default function FavoritesPage() {
           </>
         )}
       </div>
+
+      {/* ✅ جدید: PostModal */}
+      <PostModal
+        post={activePost}
+        visible={!!activePost}
+        onClose={handlePostClose}
+        onNavigateToProfile={(data) => {
+          handlePostClose();
+          const slug = data?.businessBookingSlug || data?.slug;
+          if (slug) router.push(`/business?slug=${slug}`);
+        }}
+        onBooking={(data) => {
+          handlePostClose();
+          const slug = data?.businessBookingSlug || data?.slug;
+          if (slug) router.push(`/business?slug=${slug}`);
+        }}
+      />
     </ScreenWrapper>
   );
 }

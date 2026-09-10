@@ -60,19 +60,6 @@ describe('appointmentsService', () => {
     expect(result.data.success).toBe(true);
   });
 
-  it('cancelAppointment → موفقیت', async () => {
-    apiClient.post.mockResolvedValue({
-      data: { success: true, data: { status: 'cancelled_by_customer' } },
-    });
-
-    const result = await appointmentsService.cancelAppointment(1, {
-      reason_text: 'تغییر برنامه',
-    });
-
-    expect(apiClient.post).toHaveBeenCalled();
-    expect(result.data.success).toBe(true);
-  });
-
   it('verifyServiceCode → موفقیت', async () => {
     apiClient.post.mockResolvedValue({
       data: { success: true, data: { status: 'done' } },

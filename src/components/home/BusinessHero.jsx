@@ -1,33 +1,55 @@
 // src/components/home/BusinessHero.jsx
 'use client';
 import { useState } from 'react';
-import { FiShare2, FiBookmark, FiArrowRight } from 'react-icons/fi';
+import { FiShare2, FiBookmark, FiArrowRight, FiStar } from 'react-icons/fi';
 import Image from 'next/image';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
+import { toPersianDigit } from '@/utils/numberUtils';
+
+// ✅ fallback ثابت — نه random! هر بار یک تصویر ثابت نمایش می‌دهد
+const FALLBACK_COVER = '/images/placeholder-cover.jpg';
+
+// ═══ ثابت‌های امتیاز ═══
+const MIN_REVIEWS_THRESHOLD = 3;
+const DEFAULT_RATING = 5.0;
 
 /**
  * 🏪 BusinessHero - هدر تصویری صفحه جزئیات کسب‌وکار
+ *
+ * ✅ فاز ۵: لوگو و کاور مستقیماً از API خوانده می‌شوند
  */
 export default function BusinessHero({
   gallery = [],
+  coverUrl,
+  logo,
   businessId,
   businessName,
   onBackPress,
   isFavorite = false,
   onFavoritePress,
+  ownerPhoto,
+  // ✅ prop های جدید برای نمایش امتیاز
+  rating = 0,
+  reviewsCount = 0,
 }) {
   const { colors } = useTheme();
   const { isAuthenticated, requireAuth } = useAuth();
   const { showToast } = useToast();
   const [showShareToast, setShowShareToast] = useState(false);
 
-  // فقط اولین تصویر به عنوان کاور ثابت
-  const coverImage = gallery[0] || 'https://picsum.photos/800/600?random=45';
+  // ✅ محاسبه امتیاز نمایشی
+  // قبل از ۳ رای: ۵.۰ (پیش‌فرض)
+  // بعد از ۳ رای: میانگین واقعی
+  const displayRating =
+    reviewsCount < MIN_REVIEWS_THRESHOLD ? DEFAULT_RATING : parseFloat(rating || 0);
+
+  // ✅ اولویت: coverUrl از API → gallery[0] → fallback ثابت
+  const coverImage = coverUrl || gallery[0] || FALLBACK_COVER;
 
   // لینک رزرو اختصاصی
-  const bookingLink = `https://beau.app/book/${businessId || 'biz_1'}`;
+  const bookingLink = `https://beauclub.ir/book/${businessId || 'biz_1'}`;
 
   // ═══════ هندلر اشتراک‌گذاری ═══════
   const handleShare = async () => {
@@ -36,7 +58,6 @@ export default function BusinessHero({
 ${bookingLink}
 ✨ رزرو از اپلیکیشن بیو کلاب`;
 
-    // ۱. استفاده از Web Share API در صورت پشتیبانی
     if (navigator.share) {
       try {
         await navigator.share({
@@ -50,10 +71,8 @@ ${bookingLink}
       }
     }
 
-    // ۲. Fallback: کپی در کلیپ‌بورد
     try {
       let copied = false;
-
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         await navigator.clipboard.writeText(shareMessage);
         copied = true;
@@ -97,7 +116,7 @@ ${bookingLink}
 
   return (
     <div className="relative w-full h-[320px] bg-black overflow-hidden">
-      {/* ═══════ تصویر اصلی ═══════ */}
+      {/* ═══════ تصویر کاور از API ═══════ */}
       <div className="relative w-full h-full">
         <Image
           src={coverImage}
@@ -117,7 +136,6 @@ ${bookingLink}
 
       {/* ═══════ دکمه‌های بالا ═══════ */}
       <div className="absolute top-4 left-4 right-4 flex items-center gap-3 z-10">
-        {/* دکمه بازگشت */}
         <button
           onClick={onBackPress}
           className="w-11 h-11 rounded-full flex items-center justify-center
@@ -131,7 +149,6 @@ ${bookingLink}
 
         <div className="flex-1" />
 
-        {/* دکمه اشتراک‌گذاری */}
         <button
           onClick={handleShare}
           className="w-11 h-11 rounded-full flex items-center justify-center
@@ -143,7 +160,6 @@ ${bookingLink}
           <FiShare2 size={20} color="#fff" />
         </button>
 
-        {/* دکمه ذخیره */}
         <button
           onClick={handleFavorite}
           className="w-11 h-11 rounded-full flex items-center justify-center
@@ -158,6 +174,34 @@ ${bookingLink}
             fill={isFavorite ? '#FFD700' : 'transparent'}
           />
         </button>
+      </div>
+
+      {/* ═══════ باکس امتیاز (پایین سمت چپ) ═══════ */}
+      <div className="absolute bottom-4 left-4 z-10">
+        <div
+          className="flex flex-col items-center px-3 py-2 rounded-2xl border backdrop-blur-sm"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            borderColor: 'rgba(255,255,255,0.25)',
+          }}
+        >
+          <span className="text-xl font-[Vazir-Bold] text-white leading-tight">
+            {toPersianDigit(displayRating.toFixed(1))}
+          </span>
+          <div className="flex items-center gap-0.5 my-1">
+            {[...Array(5)].map((_, i) => {
+              const isFilled = i < Math.round(displayRating);
+              return (
+                <FiStar
+                  key={i}
+                  size={11}
+                  className={isFilled ? 'text-yellow-400 fill-yellow-400' : 'text-white/30'}
+                />
+              );
+            })}
+          </div>
+          <span className="text-[9px] text-white/80">({toPersianDigit(reviewsCount)})</span>
+        </div>
       </div>
 
       {/* ═══════ Toast کپی شدن لینک ═══════ */}

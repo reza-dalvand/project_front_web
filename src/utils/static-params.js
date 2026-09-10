@@ -46,21 +46,15 @@ async function fetchWithTimeout(url, options = {}) {
  */
 export async function getBusinessIds() {
   try {
-    const response = await fetchWithTimeout(
-      `${API_BASE}/businesses/list/?page_size=1000`
-    );
+    const response = await fetchWithTimeout(`${API_BASE}/businesses/list/?page_size=1000`);
 
     if (response?.success && Array.isArray(response.data)) {
-      return response.data
-        .map((b) => b.booking_slug || String(b.id))
-        .filter(Boolean);
+      return response.data.map((b) => b.booking_slug || String(b.id)).filter(Boolean);
     }
 
     // فرمت paginated
     if (response?.success && Array.isArray(response.results)) {
-      return response.results
-        .map((b) => b.booking_slug || String(b.id))
-        .filter(Boolean);
+      return response.results.map((b) => b.booking_slug || String(b.id)).filter(Boolean);
     }
 
     return [];
@@ -76,9 +70,7 @@ export async function getBusinessIds() {
  */
 export async function getCategoryIds() {
   try {
-    const response = await fetchWithTimeout(
-      `${API_BASE}/categories/business-categories/`
-    );
+    const response = await fetchWithTimeout(`${API_BASE}/categories/business-categories/`);
 
     if (response?.success && Array.isArray(response.data)) {
       return response.data.map((c) => String(c.id)).filter(Boolean);
@@ -97,9 +89,7 @@ export async function getCategoryIds() {
  */
 export async function getLineRentalIds() {
   try {
-    const response = await fetchWithTimeout(
-      `${API_BASE}/ads/line-rentals/?page_size=1000`
-    );
+    const response = await fetchWithTimeout(`${API_BASE}/ads/line-rentals/?page_size=1000`);
 
     if (response?.success && Array.isArray(response.data)) {
       return response.data.map((r) => String(r.id)).filter(Boolean);
@@ -122,9 +112,7 @@ export async function getLineRentalIds() {
  */
 export async function getModelRequestIds() {
   try {
-    const response = await fetchWithTimeout(
-      `${API_BASE}/ads/model-requests/?page_size=1000`
-    );
+    const response = await fetchWithTimeout(`${API_BASE}/ads/model-requests/?page_size=1000`);
 
     if (response?.success && Array.isArray(response.data)) {
       return response.data.map((r) => String(r.id)).filter(Boolean);

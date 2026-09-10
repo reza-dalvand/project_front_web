@@ -1,36 +1,34 @@
-// src/components/providers/SplashScreenHider.jsx
 'use client';
 import { useEffect } from 'react';
 
-/**
- * ✅ مخفی‌سازی Splash Screen بدون حذف از DOM
- *
- * ⚠️ نکته مهم: هرگز node را از DOM حذف نکنید!
- * React آن node را در Virtual DOM دارد و اگر حذف شود،
- * خطای hydration mismatch می‌دهد:
- * "Failed to execute 'removeChild' on 'Node'"
- *
- * راه‌حل: فقط display:none بدهید.
- */
+const MIN_VISIBLE_MS = 2000; // حداقل نمایش برند
+const MAX_VISIBLE_MS = 6000; // fallback ایمنی — حتی اگر همه‌چیز خراب شد، قفل نمی‌شود
+const START_TS = Date.now();
+
 export default function SplashScreenHider() {
   useEffect(() => {
-    const splash = document.getElementById('web-splash-screen');
-    if (!splash) return;
+    let done = false;
 
-    // تأخیر کوتاه برای اطمینان از paint شدن کامل اپ
-    const hideTimer = setTimeout(() => {
-      splash.style.opacity = '0';
-      splash.style.pointerEvents = 'none';
+    const hide = () => {
+      if (done) return;
+      done = true;
+      const node = document.getElementById('web-splash-screen');
+      if (!node) return;
+      const wait = Math.max(0, MIN_VISIBLE_MS - (Date.now() - START_TS));
+      setTimeout(() => {
+        node.classList.add('hide');
+        setTimeout(() => node.remove(), 700);
+      }, wait);
+    };
 
-      // بعد از اتمام انیمیشن fade، مخفی کن (نه حذف!)
-      const removeTimer = setTimeout(() => {
-        splash.style.display = 'none';
-      }, 600);
+    if (document.readyState === 'complete') {
+      setTimeout(hide, 300); // فرصت کوتاه برای هیدریشن React
+    } else {
+      window.addEventListener('load', () => setTimeout(hide, 300), { once: true });
+    }
 
-      return () => clearTimeout(removeTimer);
-    }, 300);
-
-    return () => clearTimeout(hideTimer);
+    const t = setTimeout(hide, MAX_VISIBLE_MS);
+    return () => clearTimeout(t);
   }, []);
 
   return null;

@@ -7,6 +7,9 @@ import { useBusinessStore } from '@/stores/useBusinessStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 import Avatar from '@/components/common/Avatar';
 
+const MIN_REVIEWS_THRESHOLD = 3;
+const DEFAULT_RATING = 5.0;
+
 export default function ManageHeader() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -86,16 +89,32 @@ export default function ManageHeader() {
             }}
           >
             <span className="text-xl font-[Vazir-Bold] text-white leading-tight">
-              {/* ✅ FIX: فال‌بک 0 به جای 4.9 */}
-              {toPersianDigit((businessData?.rating || 0).toFixed(1))}
+              {/* ✅ منطق جدید: اگر کمتر از ۳ رای → 5.0 ، در غیر این صورت میانگین واقعی */}
+              {toPersianDigit(
+                (businessData?.reviewsCount || 0) < MIN_REVIEWS_THRESHOLD
+                  ? DEFAULT_RATING.toFixed(1)
+                  : parseFloat(businessData?.rating || 0).toFixed(1)
+              )}
             </span>
-            <div className="flex items-center gap-0.5 my-1">
-              {[...Array(5)].map((_, i) => (
-                <FiStar key={i} size={11} className="text-yellow-400 fill-yellow-400" />
-              ))}
+            <div dir="ltr" className="flex items-center gap-0.5 my-1 ">
+              {[...Array(5)].map((_, i) => {
+                // ✅ محاسبه تعداد ستاره‌های پر
+                const displayRating =
+                  (businessData?.reviewsCount || 0) < MIN_REVIEWS_THRESHOLD
+                    ? DEFAULT_RATING
+                    : parseFloat(businessData?.rating || 0);
+                const isFilled = i < Math.round(displayRating);
+                return (
+                  <FiStar
+                    key={i}
+                    size={11}
+                    className={isFilled ? 'text-yellow-400 fill-yellow-400' : 'text-white/30'}
+                  />
+                );
+              })}
             </div>
             <span className="text-[9px] text-white/80">
-              {/* ✅ FIX: فال‌بک 0 به جای 142 */}({toPersianDigit(businessData?.reviewsCount || 0)})
+              ({toPersianDigit(businessData?.reviewsCount || 0)})
             </span>
           </div>
         </div>

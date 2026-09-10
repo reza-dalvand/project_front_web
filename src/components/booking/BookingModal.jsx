@@ -1,11 +1,13 @@
 // src/components/booking/BookingModal.jsx
 'use client';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { FiCalendar, FiClock, FiX } from 'react-icons/fi';
+import { FiCalendar, FiX, FiInfo } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useToast } from '@/hooks/useToast';
+import { useRouter } from 'next/navigation';
+import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { buildPriceSummary } from '@/utils/price-utils';
 import BookingStepIndicator from './BookingStepIndicator';
 import BookingDateSelector from './BookingDateSelector';
 import BookingTimeSelector from './BookingTimeSelector';
@@ -15,12 +17,7 @@ import BookingSuccessStep from './BookingSuccessStep';
 import BookingFailedStep from './BookingFailedStep';
 import BookingModalFooter from './BookingModalFooter';
 import TrustToggle from './TrustToggle';
-import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
-import { appointmentsService, schedulesService } from '@/api';
-import { toJalaaliKey } from '@/utils/date-converter';
-import { buildPriceSummary } from '@/utils/price-utils';
-import { useAuth } from '@/stores/useAuthStore';
-import { useRouter } from 'next/navigation';
+import { useBookingSteps, useBookingState, useBookingName, useBookingData } from './hooks';
 
 let modalCounter = 0;
 const generateModalId = () => `booking-modal-${++modalCounter}-${Date.now()}`;
@@ -34,94 +31,78 @@ export default function BookingModal({
   onConfirm,
 }) {
   const { colors } = useTheme();
-  const { showToast } = useToast();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const updateUser = useAuthStore((s) => s.updateUser);
-  const currentService = service || {};
   const instanceId = useRef(generateModalId());
-
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [trustEnabled, setTrustEnabled] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bookingResult, setBookingResult] = useState(null);
-  const [availableSlots, setAvailableSlots] = useState([]);
+  const currentService = service || {};
+  const serviceId = currentService.id;
+  const [datesLoading, setDatesLoading] = useState(false);
   const [availableDates, setAvailableDates] = useState([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
+  const abortRef = useRef(null);
+
+  // ─── useBookingState ───
+  const {
+    selectedDate,
+    setSelectedDate,
+    selectedTime,
+    setSelectedTime,
+    trustEnabled,
+    setTrustEnabled,
+    isSubmitting,
+    setIsSubmitting,
+    bookingResult,
+    setBookingResult,
+    availableSlots,
+    setAvailableSlots,
+    slotsLoading,
+    setSlotsLoading,
+    bookingFailed,
+    setBookingFailed,
+    bookingError,
+    setBookingError,
+    resetBookingState,
+  } = useBookingState();
+
+  // ─── useBookingName ───
+  const {
+    firstName,
+    setFirstName,
+    lastName,
+    setLastName,
+    nameConfirmed,
+    setNameConfirmed,
+    nameErrors,
+    setNameErrors,
+    needsNameStep,
+    validateName,
+    prefillNameFromUser,
+    updateUserName,
+    resetNameState,
+  } = useBookingName();
+
+  // ─── useBookingSteps ───
+  const {
+    currentStep,
+    setCurrentStep,
+    STEPS,
+    nameStepId,
+    reviewStepId,
+    dateStepId,
+    timeStepId,
+    handleNext: nextStep,
+    handlePrev: prevStep,
+    resetSteps,
+  } = useBookingSteps(needsNameStep);
+
+  // ─── useBookingData ───
+  const { fetchAvailableDates, fetchAvailableSlots, createAppointment } = useBookingData(
+    businessId,
+    serviceId
+  );
+
   const [mounted, setMounted] = useState(false);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [nameConfirmed, setNameConfirmed] = useState(false);
-  const [nameErrors, setNameErrors] = useState({ firstName: '', lastName: '', confirm: '' });
-  const [bookingFailed, setBookingFailed] = useState(false);
-  const [bookingError, setBookingError] = useState(null);
 
-  const needsNameStep = useMemo(() => {
-    const name = user?.name?.trim();
-    return !name || name === 'کاربر بیو کلاب' || name.length < 3;
-  }, [user?.name]);
-
-  const STEPS = useMemo(() => {
-    if (needsNameStep) {
-      return [
-        { id: 1, label: 'مشخصات', icon: 'user' },
-        { id: 2, label: 'بررسی', icon: 'info' },
-        { id: 3, label: 'تاریخ', icon: 'calendar' },
-        { id: 4, label: 'ساعت', icon: 'clock' },
-      ];
-    }
-    return [
-      { id: 1, label: 'بررسی', icon: 'info' },
-      { id: 2, label: 'تاریخ', icon: 'calendar' },
-      { id: 3, label: 'ساعت', icon: 'clock' },
-    ];
-  }, [needsNameStep]);
-
-  const nameStepId = needsNameStep ? 1 : 0;
-  const reviewStepId = needsNameStep ? 2 : 1;
-  const dateStepId = needsNameStep ? 3 : 2;
-  const timeStepId = needsNameStep ? 4 : 3;
-
-  const validateName = () => {
-    const errors = { firstName: '', lastName: '', confirm: '' };
-    let isValid = true;
-    if (!firstName.trim()) {
-      errors.firstName = 'نام الزامی است';
-      isValid = false;
-    } else if (firstName.trim().length < 2) {
-      errors.firstName = 'نام باید حداقل ۲ کاراکتر باشد';
-      isValid = false;
-    }
-    if (!lastName.trim()) {
-      errors.lastName = 'نام خانوادگی الزامی است';
-      isValid = false;
-    } else if (lastName.trim().length < 2) {
-      errors.lastName = 'نام خانوادگی باید حداقل ۲ کاراکتر باشد';
-      isValid = false;
-    }
-    if (!nameConfirmed) {
-      errors.confirm = 'لطفاً تایید کنید که اطلاعات مطابق کارت بانکی است';
-      isValid = false;
-    }
-    setNameErrors(errors);
-    return isValid;
-  };
-
-  const prefillNameFromUser = () => {
-    if (user?.firstName) setFirstName(user.firstName);
-    if (user?.lastName) setLastName(user.lastName);
-    if (!user?.firstName && !user?.lastName && user?.name) {
-      const parts = user.name.trim().split(' ');
-      if (parts.length >= 2) {
-        setFirstName(parts[0]);
-        setLastName(parts.slice(1).join(' '));
-      }
-    }
-  };
-
+  // ═══════ Mount / Unmount ═══════
   useEffect(() => {
     setMounted(true);
     return () => {
@@ -130,38 +111,67 @@ export default function BookingModal({
     };
   }, []);
 
+  // ═══════ Redirect to Login ═══════
   useEffect(() => {
     if (visible && !isAuthenticated) {
       router.push(`/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`);
       onClose?.();
     }
-  }, [visible, isAuthenticated]);
+  }, [visible, isAuthenticated, router, onClose]);
 
+  // ═══════ ✅ FIX ۱: useEffect اصلی با dependencies کامل ═══════
   useEffect(() => {
-    if (visible) {
-      setCurrentStep(1);
-      setSelectedDate(null);
-      setSelectedTime(null);
-      setTrustEnabled(false);
-      setIsSubmitting(false);
-      setBookingResult(null);
-      setBookingFailed(false);
-      setBookingError(null);
-      setFirstName('');
-      setLastName('');
-      setNameConfirmed(false);
-      setNameErrors({ firstName: '', lastName: '', confirm: '' });
-      setAvailableSlots([]);
-      if (needsNameStep) prefillNameFromUser();
-      acquireScrollLock(instanceId.current);
-      // ✅ همیشه از بک‌اند روزهای آزاد را بگیر
-      if (businessId && currentService.id) fetchAvailableDates();
-    } else {
+    if (!visible) {
       releaseScrollLock(instanceId.current);
+      // لغو request های pending
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
+      return;
     }
-    return () => releaseScrollLock(instanceId.current);
-  }, [visible]);
 
+    abortRef.current = new AbortController();
+
+    resetSteps();
+    resetBookingState();
+    resetNameState();
+    setAvailableSlots([]);
+    setAvailableDates([]);
+
+    if (needsNameStep) {
+      prefillNameFromUser();
+    }
+
+    acquireScrollLock(instanceId.current);
+
+    if (businessId && serviceId) {
+      setDatesLoading(true);
+      fetchAvailableDates()
+        .then((dates) => {
+          if (!abortRef.current?.signal.aborted) {
+            setAvailableDates(dates || []);
+          }
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            console.error('Failed to fetch available dates:', err);
+          }
+        })
+        .finally(() => {
+          if (!abortRef.current?.signal.aborted) {
+            setDatesLoading(false);
+          }
+        });
+    }
+
+    return () => {
+      releaseScrollLock(instanceId.current);
+    };
+    // ✅ FIX ۱: dependencies کامل
+  }, [visible, businessId, serviceId, needsNameStep]);
+
+  // ═══════ Escape Key ═══════
   useEffect(() => {
     if (!visible) return;
     const handleEsc = (e) => {
@@ -169,122 +179,121 @@ export default function BookingModal({
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [visible]);
+  }, [visible]); // handleClose با useCallback پایدار است
 
-  const fetchAvailableDates = async () => {
-    try {
-      const result = await schedulesService.getAvailableDates(businessId, currentService.id, 30);
-      setAvailableDates(result.data || []);
-    } catch (err) {
-      console.error('Failed to fetch available dates:', err);
-    }
-  };
-
-  const fetchAvailableSlots = async (date) => {
-    setSlotsLoading(true);
-    try {
-      const result = await schedulesService.getAvailableSlots(
-        businessId,
-        currentService.id,
-        date.jy,
-        date.jm,
-        date.jd
-      );
-      setAvailableSlots(result.data || []);
-    } catch (err) {
-      console.error('Failed to fetch slots:', err);
-      showToast('خطا در دریافت ساعات آزاد', 'error');
-    } finally {
-      setSlotsLoading(false);
-    }
-  };
-
+  // ═══════ Price Summary ═══════
   const priceSummary = useMemo(() => {
     const originalPrice = currentService.originalPrice ?? currentService.price ?? 0;
     const discountPercent = currentService.discountPercent ?? currentService.discount ?? 0;
-    return buildPriceSummary(
-      originalPrice,
-      discountPercent,
-      currentService.hasDeposit,
-      currentService.depositPercent ?? 30
-    );
+    const hasDeposit = currentService.hasDeposit ?? currentService.has_deposit ?? false;
+    const depositPercent = currentService.depositPercent ?? currentService.deposit_percent ?? 30;
+    return buildPriceSummary(originalPrice, discountPercent, hasDeposit, depositPercent);
   }, [currentService]);
 
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
-    setSelectedTime(null);
-    fetchAvailableSlots(date);
-  };
-  const handleNext = () => {
+  // ═══════ ✅ FIX ۸: useCallback برای جلوگیری از re-render ═══════
+  const handleDateSelect = useCallback(
+    async (date) => {
+      setSelectedDate(date);
+      setSelectedTime(null);
+      setSlotsLoading(true);
+      try {
+        const slots = await fetchAvailableSlots(date);
+        setAvailableSlots(slots || []);
+      } catch (err) {
+        console.error('Failed to fetch slots:', err);
+        setAvailableSlots([]);
+      } finally {
+        setSlotsLoading(false);
+      }
+    },
+    [fetchAvailableSlots, setSelectedDate, setSelectedTime, setAvailableSlots, setSlotsLoading]
+  );
+
+  const handleNext = useCallback(() => {
     if (needsNameStep && currentStep === nameStepId) {
       if (!validateName()) return;
-      const fullName = `${firstName.trim()} ${lastName.trim()}`;
-      updateUser({ name: fullName, firstName: firstName.trim(), lastName: lastName.trim() });
+      updateUserName();
     }
-    if (currentStep < timeStepId) setCurrentStep((p) => p + 1);
-  };
-  const handlePrev = () => {
-    if (currentStep > 1) setCurrentStep((p) => p - 1);
-  };
-  const handleClose = () => {
-    setCurrentStep(1);
-    setSelectedDate(null);
-    setSelectedTime(null);
-    setBookingResult(null);
-    setBookingFailed(false);
-    setBookingError(null);
-    setFirstName('');
-    setLastName('');
-    setNameConfirmed(false);
-    setNameErrors({ firstName: '', lastName: '', confirm: '' });
+    nextStep();
+  }, [needsNameStep, currentStep, nameStepId, validateName, updateUserName, nextStep]);
+
+  const handleClose = useCallback(() => {
+    resetSteps();
+    resetBookingState();
+    resetNameState();
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
     onClose?.();
-  };
-  const handleRetry = () => {
+  }, [resetSteps, resetBookingState, resetNameState, onClose]);
+
+  const handleRetry = useCallback(() => {
     setBookingFailed(false);
     setBookingError(null);
     setCurrentStep(timeStepId);
-  };
+  }, [setBookingFailed, setBookingError, setCurrentStep, timeStepId]);
 
-  // ✅ FIX فاز ۳: ارسال trust_based به بک‌اند
-  const handleConfirm = async () => {
+  const handleConfirm = useCallback(async () => {
     if (!selectedDate || !selectedTime) return;
 
     setIsSubmitting(true);
-
     try {
-      const result = await appointmentsService.createAppointment({
-        service_id: currentService.id,
+      const result = await createAppointment({
+        serviceId: serviceId, // ✅ apiClient خودش به service_id تبدیل می‌کند
         jy: selectedDate.jy,
         jm: selectedDate.jm,
         jd: selectedDate.jd,
-        time_slot: selectedTime.start_time,
-        trust_based: trustEnabled, // ✅ فاز ۳: وضعیت اعتماد
-      });
 
-      setBookingResult(result.data);
-      setBookingFailed(false);
-      setBookingError(null);
-      setIsSubmitting(false);
+        timeSlot: selectedTime.startTime || selectedTime.timeSlot || selectedTime.displayTime,
 
-      onConfirm?.({
-        ...result.data,
-        service: currentService,
-        date: selectedDate,
-        time: selectedTime,
         trustBased: trustEnabled,
       });
+
+      if (result?.success !== false) {
+        const appointmentData = result?.data || result;
+        setBookingResult(appointmentData);
+        setBookingFailed(false);
+        setBookingError(null);
+
+        onConfirm?.({
+          ...appointmentData,
+          service: currentService,
+          date: selectedDate,
+          time: selectedTime,
+          trustBased: trustEnabled,
+        });
+      } else {
+        setBookingFailed(true);
+        setBookingError(result?.error || { message: 'خطا در ثبت نوبت' });
+      }
     } catch (err) {
-      setIsSubmitting(false);
+      console.error('Create appointment error:', err);
       setBookingFailed(true);
       setBookingError({
-        message: err.message || 'ارتباط با درگاه پرداخت برقرار نشد',
-        code: err.code || 'UNKNOWN',
-        trackingCode: err.details?.tracking_code || err.details?.trackingCode || null,
+        message: err?.message || 'خطای شبکه. لطفاً دوباره تلاش کنید.',
+        code: err?.code || 'NETWORK_ERROR',
       });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }, [
+    selectedDate,
+    selectedTime,
+    serviceId,
+    trustEnabled,
+    createAppointment,
+    currentService,
+    onConfirm,
+    setBookingResult,
+    setBookingFailed,
+    setBookingError,
+    setIsSubmitting,
+  ]);
 
+  // ═══════ canProceed ═══════
   const canProceed = useMemo(() => {
+    if (bookingFailed || bookingResult) return false;
     if (needsNameStep && currentStep === nameStepId) {
       return firstName.trim().length >= 2 && lastName.trim().length >= 2 && nameConfirmed;
     }
@@ -292,8 +301,27 @@ export default function BookingModal({
     if (currentStep === dateStepId) return !!selectedDate;
     if (currentStep === timeStepId) return !!selectedTime;
     return false;
-  }, [currentStep, selectedDate, selectedTime, needsNameStep, firstName, lastName, nameConfirmed]);
+  }, [
+    currentStep,
+    selectedDate,
+    selectedTime,
+    needsNameStep,
+    firstName,
+    lastName,
+    nameConfirmed,
+    nameStepId,
+    reviewStepId,
+    dateStepId,
+    timeStepId,
+    bookingFailed,
+    bookingResult,
+  ]);
 
+  // ✅ FIX ۳: استخراج verificationCode با پشتیبانی از هر دو فرمت
+  const verificationCode =
+    bookingResult?.verification_code || bookingResult?.verificationCode || '';
+
+  // ═══════ Render Step Content ═══════
   const renderStepContent = () => {
     if (bookingFailed) {
       return (
@@ -302,8 +330,8 @@ export default function BookingModal({
           selectedDate={selectedDate}
           selectedTime={selectedTime}
           depositAmount={priceSummary.depositAmount}
-          errorMessage={bookingError?.message}
-          trackingCode={bookingError?.trackingCode}
+          errorMessage={bookingError?.message || 'خطا در ثبت نوبت'}
+          trackingCode={bookingError?.trackingCode || bookingError?.tracking_code}
           onRetry={handleRetry}
           onClose={handleClose}
         />
@@ -317,7 +345,7 @@ export default function BookingModal({
           selectedDate={selectedDate}
           selectedTime={selectedTime}
           depositAmount={priceSummary.depositAmount}
-          verificationCode={bookingResult.verification_code}
+          verificationCode={verificationCode}
           onClose={handleClose}
         />
       );
@@ -363,6 +391,7 @@ export default function BookingModal({
           selectedDate={selectedDate}
           onDateSelect={handleDateSelect}
           availableDates={availableDates}
+          isLoading={datesLoading}
         />
       );
     }
@@ -371,13 +400,13 @@ export default function BookingModal({
         <div className="flex flex-col gap-3.5">
           {selectedDate && (
             <button
-              onClick={handlePrev}
+              onClick={prevStep}
               className="flex items-center gap-1.5 self-start py-2 px-3.5 rounded-[14px] border"
               style={{ backgroundColor: colors.primary + '10', borderColor: colors.primary + '40' }}
             >
               <FiCalendar size={16} style={{ color: colors.primary }} />
               <span className="text-[13px] font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                {selectedDate.jd} {selectedDate.jm}/{selectedDate.jy}
+                {selectedDate.jy}/{selectedDate.jm}/{selectedDate.jd}
               </span>
             </button>
           )}
@@ -408,6 +437,32 @@ export default function BookingModal({
                 onSelect={(slot) => setSelectedTime(slot)}
               />
               {isAuthenticated && <TrustToggle enabled={trustEnabled} onToggle={setTrustEnabled} />}
+
+              {/* ═══ باکس قوانین لغو (قبل از پرداخت) ═══ */}
+              <div
+                className="w-full p-4 rounded-2xl border flex items-start gap-3 mt-1"
+                style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
+              >
+                <FiInfo size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p
+                    className="text-xs font-[Vazir] leading-6"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    امکان لغو نوبت پس از ثبت، فقط توسط صاحب کسب‌وکار یا در صورت انجام نشدن خدمت یا
+                    انجام تخلف توسط این واحد، امکان‌پذیر است.
+                  </p>
+                  <a
+                    href="https://beauclub.ir/rules/cancellation"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12px] font-[Vazir-Bold] underline mt-1.5 inline-block"
+                    style={{ color: colors.primary }}
+                  >
+                    مشاهده قوانین کامل لغو و استرداد وجه
+                  </a>
+                </div>
+              </div>
             </>
           )}
         </div>
@@ -429,6 +484,7 @@ export default function BookingModal({
         style={{ backgroundColor: colors.cardBackground, borderTop: `1px solid ${colors.border}` }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div
           className="flex items-center gap-3 px-4 sm:px-5 py-4 border-b flex-shrink-0"
           style={{ borderColor: colors.border }}
@@ -445,7 +501,7 @@ export default function BookingModal({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
-              {bookingFailed ? 'خطا در پرداخت' : 'رزرو نوبت'}
+              {bookingFailed ? 'خطا در ثبت نوبت' : 'رزرو نوبت'}
             </h3>
             <p className="text-xs truncate" style={{ color: colors.textSecondary }}>
               {currentService.name || 'خدمت'}
@@ -459,12 +515,15 @@ export default function BookingModal({
             <FiX size={20} style={{ color: colors.textMain }} />
           </button>
         </div>
+
         {!bookingResult && !bookingFailed && (
           <BookingStepIndicator steps={STEPS} currentStep={currentStep} />
         )}
+
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-2 pb-10 w-full">
           {renderStepContent()}
         </div>
+
         {!bookingResult && !bookingFailed && (
           <div
             className="px-4 sm:px-5 pt-4 border-t flex-shrink-0"
@@ -480,7 +539,7 @@ export default function BookingModal({
               depositAmount={priceSummary.depositAmount}
               isSubmitting={isSubmitting}
               onNext={handleNext}
-              onPrev={handlePrev}
+              onPrev={prevStep}
               onConfirm={handleConfirm}
             />
           </div>
@@ -488,5 +547,6 @@ export default function BookingModal({
       </div>
     </div>
   );
+
   return createPortal(content, document.body);
 }

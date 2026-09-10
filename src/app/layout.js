@@ -3,6 +3,7 @@ import './globals.css';
 import Providers from '@/components/providers';
 import Script from 'next/script';
 import SplashScreenHider from '@/components/providers/SplashScreenHider'; // ✅ اضافه شد
+import SuspensionModal from '@/components/common/SuspensionModal';
 
 export const metadata = {
   metadataBase: new URL('https://beauclub.ir'),
@@ -122,7 +123,7 @@ export default function RootLayout({ children }) {
         </div>
 
         <SplashScreenHider />
-
+        <SuspensionModal />
         <Providers>{children}</Providers>
       </body>
     </html>

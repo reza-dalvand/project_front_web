@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import Image from 'next/image';
 import {
   FiX,
   FiCalendar,
@@ -23,11 +22,29 @@ const STATUS_CONFIG = {
   cancelled: { label: 'لغو شده', color: '#E53935', bg: '#E5393518' },
 };
 
+// ═══ ایموجی بر اساس نام خدمت (هم‌الگو با AppointmentCompactCard) ═══
+const getServiceEmoji = (serviceName = '') => {
+  if (serviceName.includes('ناخن')) return '💅';
+  if (serviceName.includes('میکاپ') || serviceName.includes('گریم')) return '💄';
+  if (
+    serviceName.includes('فیشیال') ||
+    serviceName.includes('پوست') ||
+    serviceName.includes('پاکسازی')
+  )
+    return '✨';
+  if (serviceName.includes('لیزر')) return '⚡';
+  if (serviceName.includes('مو') || serviceName.includes('رنگ') || serviceName.includes('کراتین'))
+    return '🎨';
+  if (serviceName.includes('مژه') || serviceName.includes('ابرو')) return '👁️';
+  if (serviceName.includes('ماساژ')) return '💆‍♀️';
+  return '💆‍♀️';
+};
+
 /**
  * مدال جزئیات نوبت
  * نمایش جزئیات کامل + دکمه لغو (در صورت > 12 ساعت)
  */
-export default function AppointmentDetailModal({ visible, appointment, onClose, onCancelRequest }) {
+export default function AppointmentDetailModal({ visible, appointment, onClose }) {
   const { colors } = useTheme();
   const instanceId = useRef('appointment-detail-modal');
 
@@ -49,16 +66,6 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
   if (!visible || !appointment) return null;
 
   const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.reserved;
-  const canCancel =
-    appointment.isUpcoming &&
-    appointment.status !== 'cancelled' &&
-    appointment.status !== 'done' &&
-    (appointment.hoursLeft ?? Infinity) >= 12;
-  const isTooLate =
-    appointment.isUpcoming &&
-    appointment.status !== 'cancelled' &&
-    appointment.status !== 'done' &&
-    (appointment.hoursLeft ?? Infinity) < 12;
 
   const content = (
     <div
@@ -79,19 +86,18 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
         <div className="flex justify-center pt-3 pb-1 md:hidden">
           <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </div>
-
         {/* هدر */}
         <div
           className="flex items-center gap-3 px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
         >
-          <Image
-            src={appointment.businessLogo}
-            alt={appointment.businessName}
-            width={48}
-            height={48}
-            className="rounded-xl"
-          />
+          {/* ✅ آیکن مرتبط با نوبت (به جای تصویر لوگو) */}
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+            style={{ backgroundColor: colors.primary + '15' }}
+          >
+            {getServiceEmoji(appointment.serviceName || appointment.service_name || '')}
+          </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
               {appointment.businessName}
@@ -108,7 +114,6 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
             <FiX size={20} style={{ color: colors.textMain }} />
           </button>
         </div>
-
         {/* محتوا */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Badge وضعیت */}
@@ -120,7 +125,6 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
               {status.label}
             </span>
           </div>
-
           {/* جزئیات */}
           <div
             className="rounded-2xl border p-4 space-y-3.5"
@@ -142,7 +146,6 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
                 </p>
               </div>
             </div>
-
             <div className="flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -159,7 +162,6 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
                 </p>
               </div>
             </div>
-
             <div className="flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -167,16 +169,7 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
               >
                 <FiUser size={16} color="#9C27B0" />
               </div>
-              <div className="flex-1">
-                <p className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
-                  کارمند
-                </p>
-                <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                  {appointment.employeeName}
-                </p>
-              </div>
             </div>
-
             <div className="flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -193,7 +186,6 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
                 </p>
               </div>
             </div>
-
             {appointment.depositPaid > 0 && (
               <div className="flex items-center gap-3">
                 <div
@@ -213,60 +205,7 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
               </div>
             )}
           </div>
-
-          {/* ═══ بخش لغو ═══ */}
-          {canCancel && (
-            <div
-              className="flex items-start gap-3 p-4 rounded-2xl border"
-              style={{ backgroundColor: '#FF980008', borderColor: '#FF980030' }}
-            >
-              <FiInfo size={18} color="#FF9800" className="flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p
-                  className="text-xs font-[Vazir] leading-5"
-                  style={{ color: colors.textSecondary }}
-                >
-                  امکان لغو این نوبت وجود دارد.
-                </p>
-                <a
-                  href="https://beauclub.ir/rules/cancellation"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] font-[Vazir] underline mt-1 inline-block"
-                  style={{ color: colors.primary }}
-                >
-                  برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
-                </a>
-              </div>
-            </div>
-          )}
-          {isTooLate && (
-            <div
-              className="flex items-start gap-3 p-4 rounded-2xl border"
-              style={{ backgroundColor: '#E5393508', borderColor: '#E5393530' }}
-            >
-              <FiAlertTriangle size={18} color="#E53935" className="flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p
-                  className="text-xs font-[Vazir] leading-5"
-                  style={{ color: colors.textSecondary }}
-                >
-                  امکان لغو این نوبت وجود ندارد.
-                </p>
-                <a
-                  href="https://beau.app/rules/cancellation"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] font-[Vazir] underline mt-1 inline-block"
-                  style={{ color: colors.primary }}
-                >
-                  برای مطالعه قوانین این قسمت به این لینک مراجعه کنید
-                </a>
-              </div>
-            </div>
-          )}
         </div>
-
         {/* فوتر */}
         <div
           className="px-5 pt-4 border-t"
@@ -275,31 +214,16 @@ export default function AppointmentDetailModal({ visible, appointment, onClose, 
             paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
           }}
         >
-          {canCancel ? (
-            <button
-              onClick={() => onCancelRequest?.(appointment)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl
-                border-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
-              style={{ borderColor: '#E53935', backgroundColor: '#E5393508' }}
-            >
-              <FiXCircle size={18} color="#E53935" />
-              <span className="text-sm font-[Vazir-Bold]" style={{ color: '#E53935' }}>
-                لغو نوبت و استرداد وجه
-              </span>
-            </button>
-          ) : (
-            <button
-              onClick={onClose}
-              className="w-full py-3.5 rounded-2xl text-sm font-[Vazir-Bold] transition-all"
-              style={{ backgroundColor: colors.primary, color: '#fff' }}
-            >
-              بستن
-            </button>
-          )}
+          <button
+            onClick={onClose}
+            className="w-full py-3.5 rounded-2xl text-sm font-[Vazir-Bold] transition-all"
+            style={{ backgroundColor: colors.primary, color: '#fff' }}
+          >
+            بستن
+          </button>
         </div>
       </div>
     </div>
   );
-
   return createPortal(content, document.body);
 }

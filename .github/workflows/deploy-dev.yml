@@ -1,13 +1,17 @@
 # ═══════════════════════════════════════════════════════════
 #   Deploy Pipeline - Staging (روی push به develop و staging)
 # ═══════════════════════════════════════════════════════════
-
+permissions:
+  contents: read
+  pull-requests: write    # برای coverage comment
+  actions: read           # برای download artifact
+  
 name: Deploy to develop
 
 on:
   push:
     branches:
-      - develop 
+      - develop
       - staging
     paths:
       - 'src/**'
@@ -194,7 +198,7 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -e
-            SITE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'https://front-dev.beauclub.ir' }}"
+            SITE_URL="${{ secrets.NEXT_PUBLIC_SITE_DOMAIN || 'https://front-dev.beauclub.ir' }}"
             for i in $(seq 1 5); do
               HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SITE_URL}" --max-time 10 || echo "000")
                 echo "Attempt $i: HTTP Code is $HTTP_CODE" 
@@ -221,7 +225,3 @@ jobs:
               chmod -R 755 out
               sudo systemctl reload nginx 2>/dev/null || true
             fi
-
-
-
-            

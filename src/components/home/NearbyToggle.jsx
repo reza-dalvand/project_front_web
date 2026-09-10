@@ -1,10 +1,10 @@
 // src/components/home/NearbyToggle.jsx
 'use client';
+
 import { FiMapPin } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { toPersianDigit } from '@/utils/numberUtils';
 
-export default function NearbyToggle({ nearbyEnabled, nearbyLoading, maxDistanceKm, onToggle }) {
+export default function NearbyToggle({ nearbyEnabled, nearbyLoading, onToggle }) {
   const { colors } = useTheme();
 
   return (
@@ -30,22 +30,24 @@ export default function NearbyToggle({ nearbyEnabled, nearbyLoading, maxDistance
           <FiMapPin size={24} color={nearbyEnabled ? '#2196F3' : colors.primary} />
         )}
       </div>
+
       <div className="flex-1 text-right">
         <span
           className="text-sm font-[Vazir-Bold] block"
           style={{ color: nearbyEnabled ? '#2196F3' : colors.textMain }}
         >
-          {nearbyEnabled ? 'نزدیک‌ترین‌ها فعال است' : 'نزدیک‌ترین‌ها به من'}
+          {nearbyEnabled ? 'در حال نمایش نزدیک‌ترین موارد' : 'نزدیک‌ترین‌ها به من'}
         </span>
         <span
-          className="text-[11px] font-[Vazir] block mt-0.5"
+          className="text-[11px] font-[Vazir] block mt-1"
           style={{ color: colors.textSecondary }}
         >
           {nearbyEnabled
-            ? `تا ${toPersianDigit(maxDistanceKm)} کیلومتری شما`
+            ? ' فیلتر استان و شهر با فعال بودن این گزینه غیر فعال می‌شود.'
             : 'سالن‌ها، کلینیک‌ها و مراکز اطراف شما'}
         </span>
       </div>
+
       <div
         className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
         style={{ backgroundColor: nearbyEnabled ? '#2196F3' : colors.border }}

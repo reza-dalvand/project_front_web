@@ -1,57 +1,57 @@
 // src/components/explore/ActiveFilterChips.jsx
 'use client';
+import { FiX, FiStar } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import Chip from '@/components/common/Chip';
-import { SOURCE_FILTERS } from '@/constants/exploreFilters';
-import { useProvinces, useCities } from '@/hooks/useLocationOptions';
-import { useBusinessCategories, useServiceCategories } from '@/hooks/useCategoryOptions';
+import { useServiceCategories, useSubServices } from '@/hooks/useCategoryOptions';
+
+function Chip({ label, icon, onRemove, color }) {
+  const { colors } = useTheme();
+  return (
+    <div
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium"
+      style={{
+        backgroundColor: (color || colors.primary) + '12',
+        borderColor: (color || colors.primary) + '30',
+        color: color || colors.primary,
+      }}
+    >
+      {icon}
+      <span>{label}</span>
+      <button onClick={onRemove} className="mr-0.5 hover:opacity-70">
+        <FiX size={12} />
+      </button>
+    </div>
+  );
+}
 
 export default function ActiveFilterChips({ filters, onChange }) {
   const { colors } = useTheme();
-  const { provinces } = useProvinces();
-  const { cities } = useCities(filters.province);
-  const { categories: businessTypes } = useBusinessCategories();
-  const { categories: serviceCategories } = useServiceCategories();
+  const { categories } = useServiceCategories();
+  const { subServices } = useSubServices(
+    filters.mainCategory !== 'all' ? filters.mainCategory : null
+  );
 
-  const hasActive =
-    filters.province ||
-    filters.city ||
-    filters.businessType ||
-    filters.mainCategory !== 'all' ||
-    filters.subCategory !== 'all' ||
-    filters.source !== 'all';
-
-  if (!hasActive) return null;
-
-  const getSourceLabel = (sourceId) => SOURCE_FILTERS.find((s) => s.id === sourceId)?.label;
-
-  const getMainCategoryLabel = (categoryId) =>
-    serviceCategories.find((c) => c.id === categoryId)?.label;
-
-  const getSubCategoryLabel = (mainCat, subCat) => {
-    const cat = serviceCategories.find((c) => c.id === mainCat);
-    return cat?.subServices?.find((s) => s.id === subCat)?.label;
+  const getMainCategoryLabel = (id) => {
+    if (id === 'all') return null;
+    return categories.find((c) => String(c.id) === String(id))?.name || 'دسته';
   };
 
-  return (
-    <div
-      className="py-2.5 border-b overflow-x-auto"
-      style={{
-        borderBottomColor: colors.border,
-        backgroundColor: colors.background,
-      }}
-    >
-      <div className="flex gap-2 px-4 whitespace-nowrap">
-        {/* فیلتر منبع */}
-        {filters.source !== 'all' && (
-          <Chip
-            label={getSourceLabel(filters.source)}
-            selected
-            onRemove={() => onChange({ ...filters, source: 'all' })}
-          />
-        )}
+  const getSubCategoryLabel = (mainId, subId) => {
+    if (subId === 'all') return null;
+    return subServices.find((s) => String(s.id) === String(subId))?.name || 'زیردسته';
+  };
 
-        {/* فیلتر دسته‌بندی کلی */}
+  const hasAnyFilter =
+    filters.mainCategory !== 'all' ||
+    filters.subCategory !== 'all' ||
+    (filters.source && filters.source !== 'all');
+
+  if (!hasAnyFilter) return null;
+
+  return (
+    <div className="px-4 py-2">
+      <div className="flex flex-wrap gap-2">
+        {/* ✅ فیلتر دسته اصلی */}
         {filters.mainCategory !== 'all' && (
           <Chip
             label={getMainCategoryLabel(filters.mainCategory)}
@@ -60,7 +60,7 @@ export default function ActiveFilterChips({ filters, onChange }) {
           />
         )}
 
-        {/* فیلتر زیردسته */}
+        {/* ✅ فیلتر زیردسته */}
         {filters.subCategory !== 'all' && filters.mainCategory !== 'all' && (
           <Chip
             label={getSubCategoryLabel(filters.mainCategory, filters.subCategory)}
@@ -69,32 +69,16 @@ export default function ActiveFilterChips({ filters, onChange }) {
           />
         )}
 
-        {/* فیلتر استان */}
-        {filters.province && (
+        {/* ✅ فیلتر منبع */}
+        {filters.source && filters.source !== 'all' && (
           <Chip
-            label={provinces.find((p) => p.id === filters.province)?.label}
-            selected
-            onRemove={() => onChange({ ...filters, province: null, city: null })}
+            label={filters.source === 'business' ? 'کسب‌وکارها' : 'کاربران'}
+            color="#FF9800"
+            onRemove={() => onChange({ ...filters, source: 'all' })}
           />
         )}
 
-        {/* فیلتر شهر */}
-        {filters.city && (
-          <Chip
-            label={cities.find((c) => c.id === filters.city)?.label}
-            selected
-            onRemove={() => onChange({ ...filters, city: null })}
-          />
-        )}
-
-        {/* فیلتر نوع کسب‌وکار */}
-        {filters.businessType && (
-          <Chip
-            label={businessTypes.find((t) => t.id === filters.businessType)?.label}
-            selected
-            onRemove={() => onChange({ ...filters, businessType: null })}
-          />
-        )}
+        {/* ❌ چیپ‌های استان/شهر حذف شدند — مکان سراسری در هدر مدیریت می‌شود */}
       </div>
     </div>
   );

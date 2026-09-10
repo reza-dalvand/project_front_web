@@ -1,6 +1,5 @@
-// src/app/explore/page.jsx
 'use client';
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -8,24 +7,19 @@ import { useAuth } from '@/stores/useAuthStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import SectionHeader from '@/components/common/SectionHeader';
 import { PostGrid, ActiveFilterChips, FilterModal, PostModal } from '@/components/explore';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 import { exploreService } from '@/api';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
-import {
-  PROVINCES,
-  CITIES,
-  BUSINESS_TYPES,
-  MAIN_CATEGORIES,
-  SUB_CATEGORIES,
-  SOURCE_FILTERS,
-} from '@/constants/exploreFilters';
 
-const INITIAL_FILTERS = {
-  province: null,
-  city: null,
-  businessType: null,
-  mainCategory: 'all',
-  subCategory: 'all',
-  source: 'all',
+const PAGE_SIZE = 21;
+
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 };
 
 export default function ExplorePage() {
@@ -33,85 +27,205 @@ export default function ExplorePage() {
   const router = useRouter();
   const { isAuthenticated, requireAuth } = useAuth();
   const togglePostFavorite = useFavoriteStore((s) => s.togglePostFavorite);
+
   const [allPosts, setAllPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
   const [activePost, setActivePost] = useState(null);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [filters, setFilters] = useState(INITIAL_FILTERS);
 
-  // ─── دریافت پست‌ها از API ───
+  const [filters, setFilters] = useState({
+    mainCategory: 'all',
+    subCategory: 'all',
+    source: 'all',
+  });
+
+  const isFetchingRef = useRef(false);
+
+  // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
+  const [locationState, setLocationState] = useState({
+    provinceId: null,
+    cityId: null,
+    latitude: null,
+    longitude: null,
+    gpsEnabled: false,
+    locationType: 'all',
+  });
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      setIsLoading(true);
-      try {
-        const result = await exploreService.getPosts();
-        setAllPosts(result.data || []);
-      } catch (error) {
-        console.error('Failed to fetch posts:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchPosts();
+    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
+      setLocationState({
+        provinceId: state.provinceId,
+        cityId: state.cityId,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled,
+        locationType: state.locationType,
+      });
+    });
+
+    const initialState = useGlobalLocationStore.getState();
+    setLocationState({
+      provinceId: initialState.provinceId,
+      cityId: initialState.cityId,
+      latitude: initialState.latitude,
+      longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled,
+      locationType: initialState.locationType,
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  // فیلتر پست‌ها
+  const getLocationParams = useCallback(() => {
+    return useGlobalLocationStore.getState().getLocationParams();
+  }, []);
+
+  const fetchPortfolios = useCallback(
+    async (pageNum = 1, append = false) => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
+
+      if (pageNum === 1) setIsLoading(true);
+      else setIsLoadingMore(true);
+
+      try {
+        const params = {
+          page: pageNum,
+          page_size: PAGE_SIZE,
+        };
+
+        if (filters.mainCategory !== 'all') {
+          params.category_id = filters.mainCategory;
+        }
+
+        // استفاده از getLocationParams برای دریافت پارامترهای مکان
+        const locationParams = getLocationParams();
+        Object.assign(params, locationParams);
+
+        const result = await exploreService.getPortfolios(params);
+
+        const mappedData = (result.data || []).map((portfolio) => ({
+          id: portfolio.id,
+          type: 'portfolio',
+          caption: portfolio.title || 'نمونه‌کار',
+          description: portfolio.description || '',
+
+          // ✅ فقط از images استفاده کن
+          images: (portfolio.images || []).map(
+            (img) => img.image_url || img.imageUrl || img.image || img
+          ),
+
+          businessId: portfolio.business || portfolio.businessId,
+          businessName:
+            portfolio.businessName || portfolio.business_name || portfolio.business?.name || '',
+          businessLogo:
+            portfolio.businessLogo || portfolio.business_logo || portfolio.business?.logo || null,
+          businessOwnerPhoto:
+            portfolio.businessOwnerPhoto || portfolio.business_owner_photo || null,
+          businessBookingSlug:
+            portfolio.businessBookingSlug || portfolio.business_booking_slug || '',
+          mainCategory: portfolio.category || portfolio.categoryId || null,
+          mainCategoryName:
+            portfolio.categoryName || portfolio.category_name || portfolio.category?.name || '',
+          subCategory: portfolio.subService || portfolio.sub_service || null,
+          subCategoryName:
+            portfolio.subServiceName ||
+            portfolio.sub_service_name ||
+            portfolio.sub_service?.name ||
+            '',
+          source: 'business',
+          createdAt: portfolio.createdAt || portfolio.created_at || '',
+        }));
+
+        const shuffled = shuffleArray(mappedData);
+
+        if (append) {
+          setAllPosts((prev) => [...prev, ...shuffled]);
+        } else {
+          setAllPosts(shuffled);
+        }
+
+        const pagination = result.meta || result.pagination || {};
+        const total = pagination.count || totalCount;
+        setTotalCount(total);
+
+        const hasNext =
+          pagination.hasNext !== undefined ? pagination.hasNext : pageNum * PAGE_SIZE < total;
+        setHasMore(hasNext);
+        setPage(pageNum);
+      } catch (error) {
+        console.error('Failed to fetch portfolios:', error);
+        if (!append) setAllPosts([]);
+      } finally {
+        isFetchingRef.current = false;
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [
+      filters.mainCategory,
+      locationState.provinceId,
+      locationState.cityId,
+      locationState.latitude,
+      locationState.longitude,
+      locationState.gpsEnabled,
+      locationState.locationType,
+      getLocationParams,
+    ]
+  );
+
+  useEffect(() => {
+    setAllPosts([]);
+    setPage(1);
+    fetchPortfolios(1, false);
+  }, [fetchPortfolios]);
+
   const filteredPosts = useMemo(() => {
     return allPosts.filter((post) => {
-      if (filters.province && post.provinceId !== filters.province) return false;
-      if (filters.city && post.cityId !== filters.city) return false;
-      if (filters.businessType && post.businessTypeId !== filters.businessType) return false;
-      if (filters.source !== 'all') {
-        if (filters.source === 'business' && post.source === 'magazine') return false;
-        if (filters.source === 'magazine' && post.source !== 'magazine') return false;
-      }
-      if (filters.mainCategory !== 'all') {
-        if (post.mainCategory && post.mainCategory !== filters.mainCategory) return false;
-      }
-      if (filters.subCategory !== 'all' && filters.mainCategory !== 'all') {
-        if (post.subCategory && post.subCategory !== filters.subCategory) return false;
+      if (filters.subCategory && filters.subCategory !== 'all') {
+        // اگر پست زیردسته ندارد یا زیردسته‌اش مطابقت ندارد، حذف کن
+        if (!post.subCategory || String(post.subCategory) !== String(filters.subCategory)) {
+          return false;
+        }
       }
       return true;
     });
-  }, [allPosts, filters]);
+  }, [allPosts, filters.subCategory]);
 
-  // ─── Toggle علاقه‌مندی ───
-  const handleSave = useCallback(
-    async (postId) => {
-      if (!isAuthenticated) {
-        requireAuth(() => {});
-        return;
-      }
-      const post = allPosts.find((p) => p.id === postId);
-      try {
-        await togglePostFavorite(postId, post);
-      } catch (error) {
-        console.error('Toggle favorite failed:', error);
-      }
-    },
-    [isAuthenticated, requireAuth, togglePostFavorite, allPosts]
-  );
+  const handleLoadMore = useCallback(() => {
+    if (!isLoadingMore && hasMore) {
+      fetchPortfolios(page + 1, true);
+    }
+  }, [page, isLoadingMore, hasMore, fetchPortfolios]);
 
   const handlePostPress = useCallback((post) => setActivePost(post), []);
   const handlePostClose = useCallback(() => setActivePost(null), []);
   const handleFilterOpen = useCallback(() => setFilterVisible(true), []);
   const handleFilterClose = useCallback(() => setFilterVisible(false), []);
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
-  const handleClearFilters = useCallback(() => setFilters(INITIAL_FILTERS), []);
+  const handleClearFilters = useCallback(() => {
+    setFilters({ mainCategory: 'all', subCategory: 'all', source: 'all' });
+  }, []);
 
-  // ═══════ هندلر ناوبری به صفحه کسب‌وکار ═══════
   const handleNavigateToBusiness = useCallback(
-    (businessId) => {
-      if (businessId) {
-        router.push(`/business/${businessId}`);
-      }
+    (data) => {
+      const slug =
+        data?.businessBookingSlug ||
+        data?.business_booking_slug ||
+        data?.businessId ||
+        data?.business_id ||
+        data;
+      if (slug) router.push(`/business?slug=${slug}`);
     },
     [router]
   );
 
   return (
     <ScreenWrapper scrollable={false} padding={0}>
-      {/* هدر */}
       <div
         className="px-5 pt-3.5 border-b"
         style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}
@@ -125,10 +239,7 @@ export default function ExplorePage() {
             <button
               onClick={handleFilterOpen}
               className="w-10 h-10 rounded-xl border flex items-center justify-center"
-              style={{
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-              }}
+              style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
             >
               <FiFilter size={18} style={{ color: colors.textMain }} />
             </button>
@@ -136,20 +247,21 @@ export default function ExplorePage() {
         />
       </div>
 
-      {/* چیپ‌های فیلتر فعال */}
       <ActiveFilterChips filters={filters} onChange={handleFilterChange} />
 
-      {/* Grid پست‌ها */}
       <div className="flex-1 overflow-y-auto px-2 pt-2">
         <PostGrid
           posts={filteredPosts}
           onPostPress={handlePostPress}
           onClearFilters={handleClearFilters}
+          onLoadMore={handleLoadMore}
           isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          hasMore={hasMore}
+          totalLoaded={filteredPosts.length}
         />
       </div>
 
-      {/* مدال فیلتر */}
       <FilterModal
         visible={filterVisible}
         onClose={handleFilterClose}
@@ -161,8 +273,8 @@ export default function ExplorePage() {
         post={activePost}
         visible={!!activePost}
         onClose={handlePostClose}
-        onSave={handleSave}
-        onNavigateToProfile={handleNavigateToBusiness}
+        onNavigateToProfile={() => handleNavigateToBusiness(activePost)}
+        onBooking={() => handleNavigateToBusiness(activePost)}
       />
     </ScreenWrapper>
   );

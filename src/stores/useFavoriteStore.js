@@ -25,14 +25,19 @@ export const useFavoriteStore = create(
               id: b.business,
               name: b.businessName,
               logo: b.businessLogo,
+              cover: b.businessCover,
+              slug: b.businessSlug,
               category: b.businessCategory || '',
               city: b.businessCity || '',
             })),
             favoritePosts: (result.data.posts || []).map((p) => ({
-              id: p.post,
+              id: p.id || p.post,
               caption: p.caption || '',
               businessName: p.businessName || '',
-              image: p.image || null,
+              businessLogo: p.businessLogo || null,
+              businessBookingSlug: p.businessBookingSlug || null,
+              images: p.images || [], // ✅ آرایه کامل تصاویر
+              image: p.image || (p.images && p.images[0]) || null, // برای backward compatibility
             })),
             isLoading: false,
           });

@@ -9,7 +9,7 @@ import Avatar from '@/components/common/Avatar';
 import Button from '@/components/common/Button';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
-import { appointmentsService } from '@/api';
+
 const CODE_LENGTH = 4;
 
 export default function VerifyCodeModal({
@@ -25,6 +25,7 @@ export default function VerifyCodeModal({
   const instanceId = useRef('verify-code-modal');
   const inputRefs = useRef([]);
 
+  // ✅ FIX: تغییر نام state برای شفافیت بیشتر (اختیاری اما توصیه شده)
   const [code, setCode] = useState(['', '', '', '']);
   const [currentBox, setCurrentBox] = useState(0);
   const [error, setError] = useState('');
@@ -56,6 +57,7 @@ export default function VerifyCodeModal({
 
   const handleConfirm = async () => {
     const enteredCode = code.join('');
+
     if (enteredCode.length < CODE_LENGTH) {
       setError(`کد تایید ${toPersianDigit(CODE_LENGTH)} رقمی را کامل وارد کنید`);
       return;
@@ -64,30 +66,16 @@ export default function VerifyCodeModal({
     setLoading(true);
     setError('');
 
-    try {
-      await appointmentsService.verifyServiceCode(appointment.id, enteredCode);
-      await new Promise((r) => setTimeout(r, 1200));
-      if (enteredCode !== appointment.verificationCode) {
-        setError('کد وارد شده صحیح نیست. لطفاً از مشتری کد درست را بپرسید.');
-        setCode(['', '', '', '']);
-        setCurrentBox(0);
-        setLoading(false);
-        setTimeout(() => inputRefs.current[0]?.focus(), 100);
-        return;
-      }
-      setLoading(false);
-      onConfirm?.(appointment.id, enteredCode);
-    } catch (err) {
-      setLoading(false);
-      setError(err.message || 'خطا در تایید کد');
-      showToast(err.message || 'خطا در تایید کد', 'error');
-    }
+    // ✅ فقط پاس دادن کد به والد — ارسال API اینجا انجام نمی‌شود
+    onConfirm?.(appointment.id, enteredCode);
+    setLoading(false);
   };
 
   const handleChange = (text, index) => {
     const cleaned = toEnglishDigits(text).replace(/[^0-9]/g, '');
     const newCode = [...code];
 
+    // پشتیبانی از پیست کردن چند رقم
     if (cleaned.length > 1) {
       const digits = cleaned.slice(0, CODE_LENGTH).split('');
       digits.forEach((digit, i) => {
@@ -100,9 +88,11 @@ export default function VerifyCodeModal({
       return;
     }
 
+    // ورود تک رقمی
     const digit = cleaned[0] || '';
     newCode[index] = digit;
     setCode(newCode);
+
     if (error) setError('');
 
     if (digit && index < CODE_LENGTH - 1) {

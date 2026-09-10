@@ -44,8 +44,8 @@ export default function PortfolioGrid({ portfolios, onPortfolioPress }) {
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 50vw, 300px"
-                loading="lazy"
                 quality={80}
+                priority
               />
               <div
                 className="absolute bottom-0 left-0 right-0 h-[50%]"

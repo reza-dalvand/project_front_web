@@ -13,7 +13,7 @@ export default function PostThumbnail({ post, onPress }) {
 
   const isMagazine = post.source === 'magazine';
   const hasDiscount = post.discount > 0;
-  const media = post.gallery || post.images || [];
+  const media = post.images || [];
   const firstImage = media[0] || 'https://picsum.photos/400/400?random=0';
 
   const handleSaveClick = (e) => {
@@ -41,6 +41,7 @@ export default function PostThumbnail({ post, onPress }) {
         src={firstImage}
         alt={post.businessName}
         fill
+        priority
         sizes="(max-width: 768px) 33vw, 200px"
         className="object-cover group-hover:scale-105 transition-transform duration-300"
       />

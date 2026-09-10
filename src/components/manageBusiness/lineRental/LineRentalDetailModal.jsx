@@ -45,11 +45,9 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
 
   if (!mounted || !visible || !ad) return null;
 
-  const statusConfig = {
-    active: { label: 'فعال', variant: 'success' },
-    inactive: { label: 'غیرفعال', variant: 'error' },
-  };
-  const st = statusConfig[ad.status] || statusConfig.inactive;
+  const st = !ad.isActive
+    ? { label: 'فعال', variant: 'success' }
+    : { label: 'غیرفعال', variant: 'error' };
 
   const handleCall = () => {
     if (ad.contactPhone) {
@@ -215,13 +213,13 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
           {/* تاریخ‌ها */}
           {(ad.createdAt || ad.expiresAt) && (
             <Card variant="default" padding={14} radius={14}>
-              {ad.createdAt && <InfoRow icon="📅" label="تاریخ ایجاد" value={ad.createdAt} />}
-              {ad.expiresAt && <InfoRow icon="⏰" label="تاریخ انقضا" value={ad.expiresAt} />}
+              {ad.createdAt && <InfoRow icon="📅" label="تاریخ ایجاد" value={ad.createdJalali} />}
+              {ad.expiresAt && <InfoRow icon="⏰" label="تاریخ انقضا" value={ad.expiresJalali} />}
             </Card>
           )}
 
           {/* غیرفعال */}
-          {ad.status === 'inactive' && (
+          {!ad.isActive && (
             <div
               className="flex items-center gap-2 p-3 rounded-xl border"
               style={{ backgroundColor: '#E5393510', borderColor: '#E5393530' }}
@@ -234,30 +232,32 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
           )}
 
           {/* دکمه‌ها */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              title="ویرایش"
-              onPress={() => {
-                onClose();
-                setTimeout(() => onEdit?.(ad), 300);
-              }}
-              variant="outline"
-              size="lg"
-              className="flex-1"
-              icon={<FiEdit2 size={16} style={{ color: colors.primary }} />}
-              iconPosition="right"
-            />
-            <Button
-              title="حذف"
-              onPress={handleDeleteRequest}
-              variant="primary"
-              size="lg"
-              className="flex-1"
-              style={{ backgroundColor: '#E53935', borderColor: '#E53935' }}
-              icon={<FiTrash2 size={16} color="#fff" />}
-              iconPosition="right"
-            />
-          </div>
+          {ad.isActive && (
+            <div className="flex gap-3 pt-2">
+              <Button
+                title="ویرایش"
+                onPress={() => {
+                  onClose();
+                  setTimeout(() => onEdit?.(ad), 300);
+                }}
+                variant="outline"
+                size="lg"
+                className="flex-1"
+                icon={<FiEdit2 size={16} style={{ color: colors.primary }} />}
+                iconPosition="right"
+              />
+              <Button
+                title="حذف"
+                onPress={handleDeleteRequest}
+                variant="primary"
+                size="lg"
+                className="flex-1"
+                style={{ backgroundColor: '#E53935', borderColor: '#E53935' }}
+                icon={<FiTrash2 size={16} color="#fff" />}
+                iconPosition="right"
+              />
+            </div>
+          )}
         </div>
       </div>
       <ConfirmDialog

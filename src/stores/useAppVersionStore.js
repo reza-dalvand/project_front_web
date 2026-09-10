@@ -10,6 +10,7 @@ import {
   DEFAULT_STORE_NAME,
 } from '@/constants/appVersion';
 import apiClient from '@/api/api-client';
+import { Capacitor } from '@capacitor/core';
 
 /**
  * 📦 Store نسخه اپلیکیشن
@@ -65,8 +66,27 @@ export const useAppVersionStore = create(
             return;
           }
 
+          // ✅ فاز جدید: بررسی پلتفرم و تنظیمات ادمین
+          const isNative = Capacitor.isNativePlatform();
+          
+          // در وب اصلاً مدال آپدیت نشان نده (وب خودش آپدیت می‌شود)
+          if (!isNative) {
+            set({ updateInfo: null, checking: false });
+            return;
+          }
+
           // بررسی آپدیت اجباری
           const isForce = compareMin < 0 || config.isForceUpdate === true;
+
+          // ✅ فاز جدید: بررسی تنظیمات ادمین برای اندروید
+          if (isForce && !config.androidForceUpdateEnabled) {
+            set({ updateInfo: null, checking: false });
+            return;
+          }
+          if (!isForce && !config.androidOptionalUpdateEnabled) {
+            set({ updateInfo: null, checking: false });
+            return;
+          }
 
           // اگر آپدیت اختیاری است و کاربر قبلاً رد کرده
           if (!isForce) {
@@ -119,8 +139,17 @@ export const useAppVersionStore = create(
         const { updateInfo } = get();
         if (!updateInfo) return;
 
-        // در وب، صفحه را ریلود کن
-        window.location.reload();
+        const url = updateInfo.storeUrl || DEFAULT_STORE_URL;
+
+        if (typeof window !== 'undefined') {
+          if (Capacitor.isNativePlatform()) {
+            // ✅ در اندروید لینک را مستقیماً در اپلیکیشن استور یا مرورگر سیستم باز می‌کند
+            window.open(url, '_system');
+          } else {
+            // ✅ در وب در تب جدید باز می‌کند
+            window.open(url, '_blank');
+          }
+        }
       },
 
       /**

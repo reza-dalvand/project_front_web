@@ -1,4 +1,3 @@
-// src/app/page.jsx
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -8,35 +7,30 @@ import { FiGrid, FiUser, FiStar, FiAward } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import { useReviewStore } from '@/stores/useReviewStore';
-import { useNearbyStore } from '@/stores/useNearbyStore';
 import { SectionHeader, BottomTabBar } from '@/components/common';
 import HomeHeader from '@/components/home/HomeHeader';
 import AdSlider from '@/components/home/AdSlider';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import SeeAllButton from '@/components/home/SeeAllButton';
 import ActiveFiltersBar from '@/components/home/ActiveFiltersBar';
-import ModelRequestCard from '@/components/home/ModelRequestCard';
 import LineRentalCard from '@/components/home/LineRentalCard';
 import NearbyToggle from '@/components/home/NearbyToggle';
 import RegisterBanner from '@/components/home/RegisterBanner';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/useToast';
 import { getCurrentLocation, calculateDistance } from '@/utils/geo-utils';
-
-// ✅ API Services
-import { adsService, categoriesService, exploreService, appointmentsService } from '@/api';
+import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
+import { adsService, categoriesService, exploreService, reviewsService } from '@/api';
 
 // ✅ Lazy Load
 const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), {
   ssr: false,
   loading: () => null,
 });
-
 const HomeFilterModal = dynamic(() => import('@/components/home/HomeFilterModal'), {
   ssr: false,
   loading: () => null,
 });
-
 const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), {
   ssr: false,
   loading: () => null,
@@ -47,19 +41,50 @@ export default function HomePage() {
   const { colors, resolvedTheme, setTheme } = useTheme();
   const { isAuthenticated, user, requireAuth } = useAuth();
   const { showToast } = useToast();
-  const { pendingReviews, addPendingReview } = useReviewStore();
+  const { addPendingReview } = useReviewStore();
   const isDark = resolvedTheme === 'dark';
 
-  // ═══════ Nearby States ═══════
-  const nearbyEnabled = useNearbyStore((s) => s.enabled);
-  const nearbyLoading = useNearbyStore((s) => s.loading);
-  const nearbyDenied = useNearbyStore((s) => s.denied);
-  const userLocation = useNearbyStore((s) => s.userLocation);
-  const maxDistanceKm = useNearbyStore((s) => s.maxDistanceKm);
-  const enableNearby = useNearbyStore((s) => s.enable);
-  const disableNearby = useNearbyStore((s) => s.disable);
-  const setNearbyLoading = useNearbyStore((s) => s.setLoading);
-  const setNearbyDenied = useNearbyStore((s) => s.setDenied);
+  // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
+  const [locationState, setLocationState] = useState({
+    provinceId: null,
+    cityId: null,
+    latitude: null,
+    longitude: null,
+    gpsEnabled: false,
+    gpsLoading: false,
+    locationType: 'all',
+  });
+
+  useEffect(() => {
+    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
+      setLocationState({
+        provinceId: state.provinceId,
+        cityId: state.cityId,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled,
+        gpsLoading: state.gpsLoading,
+        locationType: state.locationType,
+      });
+    });
+
+    const initialState = useGlobalLocationStore.getState();
+    setLocationState({
+      provinceId: initialState.provinceId,
+      cityId: initialState.cityId,
+      latitude: initialState.latitude,
+      longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled,
+      gpsLoading: initialState.gpsLoading,
+      locationType: initialState.locationType,
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const getLocationParams = useCallback(() => {
+    return useGlobalLocationStore.getState().getLocationParams();
+  }, []);
 
   // ─── State‌ها ───
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,13 +94,9 @@ export default function HomePage() {
   const [filters, setFilters] = useState({});
   const [reviewVisible, setReviewVisible] = useState(false);
   const [currentReviewAppointment, setCurrentReviewAppointment] = useState(null);
-
-  // ✅ State‌های داده از API
   const [ads, setAds] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [modelRequests, setModelRequests] = useState([]);
   const [lineRentals, setLineRentals] = useState([]);
-  const [doneAppointments, setDoneAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // ═══════ دریافت داده‌ها از API ═══════
@@ -83,52 +104,42 @@ export default function HomePage() {
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
-        const [adsRes, catRes, modelRes, lineRes] = await Promise.allSettled([
-          exploreService.getPosts({ page_size: 6 }),
-          categoriesService.getBusinessCategories(),
-          adsService.getModelRequests(
-            nearbyEnabled && userLocation
-              ? { lat: userLocation.latitude, lng: userLocation.longitude, page_size: 6 }
-              : { page_size: 6 }
-          ),
-          adsService.getLineRentals(
-            nearbyEnabled && userLocation
-              ? { lat: userLocation.latitude, lng: userLocation.longitude, page_size: 6 }
-              : { page_size: 6 }
-          ),
+        const locationParams = getLocationParams();
+        // ✅ تغییر: استفاده از getBanners به جای getPosts
+        const [bannersRes, catRes, lineRes] = await Promise.allSettled([
+          adsService.getBanners(),
+          categoriesService.getServiceCategories({ ...locationParams }),
+          adsService.getLineRentals({ page_size: 6, ...locationParams }),
         ]);
 
-        if (adsRes.status === 'fulfilled') {
-          const posts = adsRes.value.data || [];
-          // تبدیل پست‌های ویترین به فرمت اسلایدر تبلیغاتی
+        if (bannersRes.status === 'fulfilled') {
+          const banners = bannersRes.value.data || [];
           setAds(
-            posts.map((p, i) => ({
-              id: p.id || i,
-              title: p.caption || p.businessName || 'بیو کلاب',
-              subtitle: p.businessName || '',
-              imageUrl: p.gallery?.[0] || p.images?.[0] || '',
-              businessId: p.businessId || p.business_id,
-              badge: p.discount > 0 ? `${p.discount}%` : null,
+            banners.map((b, i) => ({
+              id: b.id || i,
+              title: b.title || 'بیو کلاب',
+              subtitle: b.description || '',
+              imageUrl: b.imageUrl || b.image_url || '',
+              businessId: b.businessId || b.business_id,
+              businessSlug: b.businessSlug || b.business_slug,
+              badge: b.badge || null,
+              customUrl: b.customUrl || b.custom_url, // ✅ برای لینک‌های دلخواه
             }))
           );
         }
-
         if (catRes.status === 'fulfilled') {
           const cats = catRes.value.data || [];
           setCategories(
             cats.map((c) => ({
               id: String(c.id),
               name: c.name || c.title,
-              icon: c.icon || 'face',
+              icon: c.iconName || c.icon_name || 'default',
+              gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
+              gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
               count: c.count || 0,
             }))
           );
         }
-
-        if (modelRes.status === 'fulfilled') {
-          setModelRequests(modelRes.value.data || []);
-        }
-
         if (lineRes.status === 'fulfilled') {
           setLineRentals(lineRes.value.data || []);
         }
@@ -138,110 +149,129 @@ export default function HomePage() {
         setIsLoading(false);
       }
     };
-
     fetchAllData();
-  }, [nearbyEnabled, userLocation]);
+  }, [
+    locationState.provinceId,
+    locationState.cityId,
+    locationState.latitude,
+    locationState.longitude,
+    locationState.gpsEnabled,
+    locationState.locationType,
+    getLocationParams,
+  ]);
 
-  // ═══════ دریافت نوبت‌های گذشته برای نظردهی ═══════
+  // ═══════ بررسی خودکار نوبت‌های آماده نظردهی (اصلاح شده) ═══════
+  const pendingCheckDone = useRef(false);
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || pendingCheckDone.current) return;
 
-    const fetchDoneAppointments = async () => {
+    const checkPendingReviews = async () => {
       try {
-        const result = await appointmentsService.getMyAppointments('past');
-        const appointments = result.data || [];
-        // فقط نوبت‌های انجام‌شده که هنوز نظر ندارند
-        const done = appointments.filter((a) => a.status === 'done');
-        setDoneAppointments(done);
+        const result = await reviewsService.getPendingReviews();
+        const pending = result.data || [];
+
+        if (pending.length > 0) {
+          const { dismissedAppointments, reviewedBusinessIds } = useReviewStore.getState();
+
+          // ✅ پیدا کردن اولین نوبتی که:
+          // 1. قبلاً بسته (dismiss) نشده باشد
+          // 2. کسب‌وکار آن قبلاً نظر داده نشده باشد
+          const reviewableApt = pending.find((apt) => {
+            const bizId = apt.business_id || apt.businessId;
+            return !dismissedAppointments.includes(apt.id) && !reviewedBusinessIds.includes(bizId);
+          });
+
+          if (reviewableApt) {
+            const aptData = {
+              id: reviewableApt.id,
+              businessId: reviewableApt.business_id || reviewableApt.businessId,
+              businessName: reviewableApt.business_name || reviewableApt.businessName,
+              businessLogo: reviewableApt.business_logo || reviewableApt.businessLogo,
+              serviceName: reviewableApt.service_name || reviewableApt.serviceName,
+              date: reviewableApt.date_key || reviewableApt.dateKey,
+              time: reviewableApt.time_slot || reviewableApt.timeSlot,
+            };
+
+            // ✅ اضافه کردن به استور تا موقع ثبت نظر، businessId در دسترس باشد
+            addPendingReview(aptData);
+
+            setCurrentReviewAppointment(aptData);
+            setReviewVisible(true);
+          }
+        }
+        pendingCheckDone.current = true;
       } catch (error) {
-        console.error('Failed to fetch done appointments:', error);
+        console.error('Failed to check pending reviews:', error);
       }
     };
 
-    fetchDoneAppointments();
-  }, [isAuthenticated]);
+    checkPendingReviews();
+  }, [isAuthenticated, addPendingReview]);
 
-  // ─── افزودن نوبت‌های انجام‌شده به pendingReviews ───
-  const pendingReviewsInitialized = useRef(false);
-  useEffect(() => {
-    if (pendingReviewsInitialized.current || doneAppointments.length === 0) return;
-    pendingReviewsInitialized.current = true;
-    doneAppointments.forEach((apt) => {
-      addPendingReview({
-        id: apt.id,
-        businessName: apt.business_name || apt.businessName,
-        businessLogo: apt.business_logo || apt.businessLogo,
-        serviceName: apt.service_name || apt.serviceName,
-        date: apt.date_key || apt.dateKey,
-        time: apt.time_slot || apt.timeSlot,
-      });
-    });
-  }, [doneAppointments, addPendingReview]);
-
-  // ═══════ Nearby Toggle Handler ═══════
+  // ═══════ ✅ تغییر: NearbyToggle با استفاده از getState ═══════
   const handleNearbyToggle = useCallback(async () => {
-    if (nearbyEnabled) {
-      disableNearby();
-      showToast('نمایش نزدیک‌ترین‌ها غیرفعال شد', 'info');
+    const { gpsEnabled, disableGps, enableGps, handleGpsError, setGpsLoading } =
+      useGlobalLocationStore.getState();
+
+    if (gpsEnabled) {
+      disableGps();
+      showToast('فیلتر موقعیت مکانی غیرفعال شد', 'info');
       return;
     }
 
-    if (nearbyDenied) {
-      showToast('دسترسی به موقعیت مکانی رد شده است. از تنظیمات گوشی اجازه دهید.', 'error');
-      return;
-    }
-
-    setNearbyLoading(true);
+    setGpsLoading(true);
     try {
-      const location = await getCurrentLocation();
-      enableNearby(location);
-      showToast('نمایش نزدیک‌ترین‌ها فعال شد', 'success');
+      const loc = await getCurrentLocation({ showSettingsPrompt: true });
+      enableGps(loc.latitude, loc.longitude);
+      showToast('موقعیت مکانی شما فعال شد', 'success');
     } catch (err) {
-      setNearbyLoading(false);
-      if (err.code === 1) {
-        setNearbyDenied(true);
-        showToast('دسترسی به موقعیت مکانی رد شد. از تنظیمات اجازه دهید.', 'error');
-      } else if (err.code === 2) {
-        showToast('موقعیت مکانی در دسترس نیست. GPS را روشن کنید.', 'warning');
-      } else if (err.code === 3) {
-        showToast('دریافت موقعیت طول کشید. دوباره تلاش کنید.', 'warning');
-      } else {
-        showToast('خطا در دریافت موقعیت مکانی', 'error');
+      handleGpsError();
+      
+      // ═══ GPS خاموش است ═══
+      if (err.code === 2 || err.gpsDisabled) {
+        showToast('لطفاً GPS گوشی را روشن کنید و دوباره تلاش کنید', 'warning');
+      } 
+      // ═══ دسترسی رد شده ═══
+      else if (err.code === 1) {
+        if (err.needsSettings) {
+          const shouldOpen = window.confirm(
+            'دسترسی به موقعیت رد شده است.\n\n' +
+            'برای فعال‌سازی، باید از تنظیمات گوشی اجازه دهید.\n\n' +
+            'آیا می‌خواهید به تنظیمات بروید؟'
+          );
+          if (shouldOpen) {
+            const { openAppSettings } = await import('@/utils/geo-utils');
+            await openAppSettings();
+          }
+        } else {
+          showToast('دسترسی به موقعیت رد شد', 'error');
+        }
+      } 
+      // ═══ Timeout ═══
+      else if (err.code === 3) {
+        showToast('دریافت موقعیت زمان‌بر شد. دوباره تلاش کنید.', 'warning');
       }
+      // ═══ سایر خطاها ═══
+      else {
+        showToast('خطا در دریافت موقعیت', 'error');
+      }
+    } finally {
+      setGpsLoading(false);
     }
-  }, [
-    nearbyEnabled,
-    nearbyDenied,
-    showToast,
-    enableNearby,
-    disableNearby,
-    setNearbyLoading,
-    setNearbyDenied,
-  ]);
+  }, [showToast]);
 
-  // ═══════ فیلتر مدلینگ بر اساس فاصله ═══════
-  const filteredModelRequests = useMemo(() => {
-    if (!nearbyEnabled || !userLocation) return modelRequests;
-    return modelRequests.filter((req) => {
-      const lat = req.latitude || req.lat;
-      const lng = req.longitude || req.lng;
-      if (!lat || !lng) return false;
-      const dist = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
-      return dist <= maxDistanceKm;
-    });
-  }, [nearbyEnabled, userLocation, modelRequests, maxDistanceKm]);
-
-  // ═══════ فیلتر اجاره لاین بر اساس فاصله ═══════
+  // ═══════ ✅ تغییر: فیلتر اجاره لاین بر اساس locationState ═══════
   const filteredLineRentals = useMemo(() => {
-    if (!nearbyEnabled || !userLocation) return lineRentals;
+    if (!locationState.gpsEnabled || !locationState.latitude || !locationState.longitude)
+      return lineRentals;
     return lineRentals.filter((ad) => {
       const lat = ad.latitude || ad.lat;
       const lng = ad.longitude || ad.lng;
       if (!lat || !lng) return false;
-      const dist = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
-      return dist <= maxDistanceKm;
+      const dist = calculateDistance(locationState.latitude, locationState.longitude, lat, lng);
+      return dist <= 10;
     });
-  }, [nearbyEnabled, userLocation, lineRentals, maxDistanceKm]);
+  }, [locationState.gpsEnabled, locationState.latitude, locationState.longitude, lineRentals]);
 
   // ═══════ hasActiveFilter ═══════
   const hasActiveFilter = useMemo(
@@ -254,36 +284,37 @@ export default function HomePage() {
     () => setTheme(isDark ? 'light' : 'dark'),
     [isDark, setTheme]
   );
-
   const handleAdPress = useCallback(
     (ad) => {
-      if (ad.businessId) router.push(`/business/${ad.businessId}`);
+      if (ad.businessSlug) {
+        router.push(`/business?slug=${ad.businessSlug}`);
+      } else if (ad.customUrl) {
+        // باز کردن لینک دلخواه (مثلاً لینک ثبت نام یا کمپین خاص)
+        window.open(ad.customUrl, '_blank');
+      }
     },
     [router]
   );
-
   const handleCategorySelect = useCallback(
     (item) => {
       setSelectedCategory(item.id);
-      router.push(`/category/${item.id}`);
+      router.push(`/category?id=${item.id}`);
     },
     [router]
   );
-
-  const handleModelRequestPress = useCallback(
-    (request) => router.push(`/model-requests/${request.id}`),
-    [router]
-  );
-
   const handleLineRentalPress = useCallback(
-    (ad) => router.push(`/line-rentals/${ad.id}`),
+    (ad) => router.push(`/line-rentals/detail?id=${ad.id}`),
     [router]
   );
-
   const handleReviewClose = useCallback(() => {
+    if (currentReviewAppointment) {
+      // ✅ وقتی کاربر مدال را می‌بندد، این نوبت خاص dismiss می‌شود
+      // اما اگر نوبت جدیدی از همین کسب‌وکار بگیرد، چون ID جدید است، دوباره مدال نمایش داده می‌شود
+      useReviewStore.getState().dismissPendingReview(currentReviewAppointment.id);
+    }
     setReviewVisible(false);
     setCurrentReviewAppointment(null);
-  }, []);
+  }, [currentReviewAppointment]);
 
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
   const handleClearAllFilters = useCallback(() => setFilters({}), []);
@@ -353,12 +384,11 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* ─── 📍 دکمه نزدیک‌ترین‌ها ─── */}
+        {/* ─── 📍 دکمه نزدیک‌ترین‌ها ═══ */}
         <section>
           <NearbyToggle
-            nearbyEnabled={nearbyEnabled}
-            nearbyLoading={nearbyLoading}
-            maxDistanceKm={maxDistanceKm}
+            nearbyEnabled={locationState.gpsEnabled}
+            nearbyLoading={locationState.gpsLoading}
             onToggle={handleNearbyToggle}
           />
         </section>
@@ -379,83 +409,27 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* ─── ۳. فرصت‌های مدلینگ ─── */}
-        <section>
-          <SectionHeader
-            icon={<FiUser size={18} />}
-            iconColor="#E91E63"
-            title="فرصت‌های مدلینگ"
-            subtitle="با تخفیف ویژه مدل شوید و نمونه‌کار بسازید"
-            rightElement={
-              <SeeAllButton
-                onPress={() => router.push('/model-requests')}
-                count={filteredModelRequests.length}
-              />
-            }
-          />
-          {filteredModelRequests.length > 0 ? (
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-              {filteredModelRequests.map((request) => (
-                <ModelRequestCard
-                  key={request.id}
-                  request={request}
-                  onPress={handleModelRequestPress}
+        {/* ─── ۳. فرصت‌های همکاری / اجاره لاین ─── */}
+        {filteredLineRentals.length > 0 && (
+          <section>
+            <SectionHeader
+              icon={<span style={{ fontSize: 18 }}>🏢</span>}
+              iconColor="#667eea"
+              title="فرصت‌های همکاری"
+              rightElement={
+                <SeeAllButton
+                  onPress={() => router.push('/line-rentals')}
+                  count={filteredLineRentals.length}
                 />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center py-8 gap-2">
-              <span className="text-3xl">📍</span>
-              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                فرصت مدلینگی در این فاصله پیدا نشد
-              </p>
-              <button
-                onClick={disableNearby}
-                className="text-xs font-[Vazir-Bold] underline"
-                style={{ color: colors.primary }}
-              >
-                نمایش همه
-              </button>
-            </div>
-          )}
-        </section>
-
-        {/* ─── ۴. فرصت‌های همکاری / اجاره لاین ─── */}
-        <section>
-          <SectionHeader
-            icon={<FiAward size={18} />}
-            iconColor="#667eea"
-            title="فرصت‌های همکاری"
-            subtitle="با اجاره لاین، کسب‌وکار خود را گسترش دهید"
-            rightElement={
-              <SeeAllButton
-                onPress={() => router.push('/line-rentals')}
-                count={filteredLineRentals.length}
-              />
-            }
-          />
-          {filteredLineRentals.length > 0 ? (
+              }
+            />
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-              {filteredLineRentals.map((ad) => (
-                <LineRentalCard key={ad.id} ad={ad} onPress={handleLineRentalPress} />
+              {filteredLineRentals.map((rental) => (
+                <LineRentalCard key={rental.id} rental={rental} onPress={handleLineRentalPress} />
               ))}
             </div>
-          ) : (
-            <div className="flex flex-col items-center py-8 gap-2">
-              <span className="text-3xl">📍</span>
-              <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                فرصت همکاری در این فاصله پیدا نشد
-              </p>
-              <button
-                onClick={disableNearby}
-                className="text-xs font-[Vazir-Bold] underline"
-                style={{ color: colors.primary }}
-              >
-                نمایش همه
-              </button>
-            </div>
-          )}
-        </section>
+          </section>
+        )}
       </div>
 
       {/* ═══════════ Bottom Tab Bar ═══════════ */}

@@ -1,13 +1,4 @@
 // src/stores/useBusinessStore.js
-/**
- * 🏪 Store کسب‌وکار — فاز ۵
- *
- * ✅ تغییرات فاز ۲:
- * - مهاجرت هوشمند: داده‌های هاردکد پاک می‌شوند ولی
- *   بلافاصله بعد از مهاجرت، بازیابی خودکار از بک‌اند
- * - کاهش ریست کامل — فقط ساختار ریست می‌شود و سپس از بک‌اند بازیابی
- * - کامپوننت‌ها باید با داده‌های خالی هم کار کنند (تا زمانی که بک‌اند جواب دهد)
- */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { businessesService } from '@/api';
@@ -18,25 +9,21 @@ import { createTeamSlice } from './business/slices/teamSlice';
 import { createPortfoliosSlice } from './business/slices/portfoliosSlice';
 import { createSchedulesSlice } from './business/slices/schedulesSlice';
 
-// ✅ FIX فاز ۲: فلگ برای اطلاع‌رسانی مهاجرت
-let migrationOccurred = false;
-
 export const useBusinessStore = create(
   persist(
     (set, get) => ({
-      // ─── State اصلی (خالی در شروع) ───
       businessData: INITIAL_BUSINESS_DATA,
       gallery: [],
       _version: STORAGE_VERSION,
 
-      // ─── Slice‌ها ───
+      businessStatus: null, // 'pending' | 'approved' | 'rejected' | null
+
       ...createServicesSlice(set, get),
       ...createAppointmentsSlice(set),
       ...createTeamSlice(set),
       ...createPortfoliosSlice(set),
       ...createSchedulesSlice(set, get),
 
-      // ─── اطلاعات پایه ───
       updateBusinessInfo: (updates) =>
         set((state) => ({
           businessData: { ...state.businessData, ...updates },
@@ -45,11 +32,11 @@ export const useBusinessStore = create(
       deleteBusiness: () => {
         set((state) => ({
           businessData: { ...state.businessData, isActive: false },
+          businessStatus: null,
         }));
         return true;
       },
 
-      // ─── Selectors ───
       getActiveServices: () => get().businessData.services.filter((s) => s.isActive !== false),
 
       resetToDefaults: () => {
@@ -57,30 +44,35 @@ export const useBusinessStore = create(
           businessData: INITIAL_BUSINESS_DATA,
           gallery: [],
           _version: STORAGE_VERSION,
+          businessStatus: null,
         });
       },
 
-      // ═══════════════════════════════════════════
-      //    API Sync — Businesses
-      // ═══════════════════════════════════════════
+      clearForLogout: () => {
+        set({
+          businessData: INITIAL_BUSINESS_DATA,
+          gallery: [],
+          _version: STORAGE_VERSION,
+          businessStatus: null,
+        });
+      },
+
       fetchBusinessDetail: async () => {
         try {
           const response = await businessesService.getBusinessDetail();
           const b = response.data;
-
           set((state) => ({
             businessData: {
               ...state.businessData,
               id: b.id,
               name: b.name || '',
-              category: b.category?.name || '',
-              categoryId: b.category?.id || null,
+              category: b.categoryName || b.category?.name || '',
+              categoryId: b.categoryId || b.category?.id || null,
               address: b.address || '',
-              city: b.city?.name || '',
-              cityId: b.city?.id || null,
-              provinceId: b.province?.id || null,
+              city: b.cityName || b.city?.name || '',
+              cityId: b.cityId || b.city?.id || null,
+              provinceId: b.provinceId || b.province?.id || null,
               phone: b.phone || '',
-              // ✅ فاز ۳: خوانش camelCase
               workingHours: b.workingHours || '',
               about: b.about || '',
               rating: b.rating || 0,
@@ -92,52 +84,84 @@ export const useBusinessStore = create(
               ownerName: b.ownerName || '',
               verifiedName: b.verifiedName || '',
               nationalId: b.nationalId || '',
-              bankInfo: {
-                isRegistered: b.bankInfoRegistered || false,
-                isVerified: b.bankInfoVerified || false,
-              },
+              isNationalIdVerified: Boolean(b.isNationalIdVerified),
               bookingSlug: b.bookingSlug || '',
-              isActive: b.status === 'approved',
-              status: b.status || null,
               latitude: b.latitude || null,
               longitude: b.longitude || null,
-              services: b.services || [],
+              isActive: b.status === 'approved',
+              status: b.status || null,
+              isSuspended: b.isSuspended ?? false,      
+              suspensionReason: b.suspensionReason ?? '', 
+              services: (b.services || []).map((s) => ({
+                id: s.id,
+                name: s.name,
+                typeId: s.subService?.typeId || s.typeId || '',
+                typeName: s.subService?.name || s.typeName || '',
+                originalPrice: s.originalPrice ?? 0,
+                discountPercent: s.discountPercent ?? 0,
+                finalPrice: s.finalPrice ?? s.originalPrice ?? 0,
+                duration: s.duration || 60,
+                hasDeposit: s.hasDeposit ?? false,
+                depositAmount: s.depositAmount || 0,
+                renewalDays: s.renewalDays || 0,
+                isActive: s.isActive !== false,
+                description: s.description || '',
+              })),
               team: b.team || [],
-              appointments: b.appointments || [],
-              portfolios: b.portfolios || [],
+              bankInfo: {
+                isRegistered: Boolean(b.bankInfoRegistered ?? b.is_registered),
+                isVerified: Boolean(b.bankInfoVerified ?? b.is_verified),
+                bankName: b.bankName || b.bank_name || '',
+                bankId: b.bankId || b.bank_id || '',
+                sheba: b.bankSheba || b.sheba || '',
+                cardNumber: b.bankCardNumber || b.cardNumber || '',
+                ownerName: b.bankOwnerName || b.ownerName || b.owner_name || '',
+                accountNumber: b.bankAccountNumber || b.accountNumber || b.account_number || '',
+                nationalId: b.bankNationalId || b.nationalId || b.national_id || '',
+              },
             },
             gallery: b.gallery || [],
+            // ✅ FIX: وضعیت بیزینس هم آپدیت شود
+            businessStatus: b.status || state.businessStatus,
           }));
-
           return response.data;
         } catch (error) {
+          const isNoBusiness =
+            error?.code === 'NOT_FOUND' ||
+            error?.status === 404 ||
+            (typeof error?.message === 'string' &&
+              error.message.includes('کسب‌وکاری ثبت نکرده‌اید'));
+          if (isNoBusiness) {
+            set({
+              businessData: INITIAL_BUSINESS_DATA,
+              gallery: [],
+              businessStatus: null,
+            });
+            return null;
+          }
+          // ✅ FIX: اگر خطا غیر از "بیزینس ندارید" بود، استور را ریست نکن
+          // فقط ارور را لاگ کن تا داده‌های قبلی حفظ شوند
           console.error('fetchBusinessDetail failed:', error);
           throw error;
-        }
-      },
-
-      /**
-       * ✅ FIX فاز ۲: بازیابی خودکار پس از مهاجرت
-       * وقتی مهاجرت اتفاق می‌افتد، داده‌های محلی پاک می‌شوند.
-       * این تابع باید بعد از مهاجرت و هنگام اولین بارگذاری اپ
-       * صدا زده شود تا داده‌ها از بک‌اند بازیابی شوند.
-       */
-      autoRecoverFromMigration: async () => {
-        if (!migrationOccurred) return;
-        migrationOccurred = false;
-        try {
-          await get().fetchBusinessDetail();
-        } catch (error) {
-          // در صورت عدم دسترسی به بک‌اند، داده‌ها خالی می‌مانند
-          // و هنگام اتصال بعدی، از بک‌اند پر می‌شوند
-          console.warn('Auto-recovery failed:', error);
         }
       },
 
       fetchBusinessStatus: async () => {
         try {
           const response = await businessesService.getBusinessStatus();
-          return response.data;
+          const data = response.data;
+          
+          if (data?.hasBusiness) {
+            set((state) => ({
+              businessStatus: data.status || 'pending',
+              businessData: {
+                ...state.businessData,
+                isSuspended: data.isSuspended ?? false,          
+                suspensionReason: data.suspensionReason ?? '',       
+              },
+            }));
+          }
+          return data;
         } catch (error) {
           console.error('fetchBusinessStatus failed:', error);
           throw error;
@@ -148,21 +172,27 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.createBusiness(formData);
           const b = response.data;
-
           set((state) => ({
             businessData: {
               ...state.businessData,
               id: b.id,
               name: b.name || '',
-              category: b.category?.name || '',
+              category: b.categoryName || b.category?.name || '',
               address: b.address || '',
-              // ✅ فاز ۳
               bookingSlug: b.bookingSlug || '',
               isActive: b.status === 'approved',
-              status: b.status || null,
+              status: b.status || 'pending',
+              ownerName: b.ownerName || '',
+              verifiedName: b.verifiedName || '',
+              nationalId: b.nationalId || '',
+              isNationalIdVerified: Boolean(b.isNationalIdVerified),
+              phone: b.phone || '',
+              latitude: b.latitude || null,
+              longitude: b.longitude || null,
             },
+            // ✅ FIX: وضعیت بیزینس بلافاصله ست شود
+            businessStatus: b.status || 'pending',
           }));
-
           return response.data;
         } catch (error) {
           console.error('createBusinessApi failed:', error);
@@ -174,19 +204,16 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.updateBusiness(data);
           const b = response.data;
-
           set((state) => ({
             businessData: {
               ...state.businessData,
               name: b.name || state.businessData.name,
               address: b.address || state.businessData.address,
               phone: b.phone || state.businessData.phone,
-              // ✅ فاز ۳
               workingHours: b.workingHours || state.businessData.workingHours,
               about: b.about || state.businessData.about,
             },
           }));
-
           return response.data;
         } catch (error) {
           console.error('updateBusinessApi failed:', error);
@@ -194,31 +221,68 @@ export const useBusinessStore = create(
         }
       },
 
+      // ═══════════════════════════════════════════════
+      //   ۱. اصلاح fetchBankInfo (برای پر کردن صحیح مودال)
+      // ═══════════════════════════════════════════════
       fetchBankInfo: async () => {
         try {
           const response = await businessesService.getBankInfo();
-          return response.data;
+          const data = response.data;
+          set((state) => ({
+            businessData: {
+              ...state.businessData,
+              bankInfo: {
+                isRegistered: Boolean(data.bankInfoRegistered ?? data.is_registered ?? true),
+                isVerified: Boolean(data.bankInfoVerified ?? data.is_verified),
+                // ✅ پشتیبانی از هر دو حالت camelCase و snake_case
+                bankName: data.bankName || data.bank_name || '',
+                bankId: data.bankId || data.bank_id || '',
+                sheba: data.bankSheba || data.sheba || '',
+                cardNumber: data.bankCardNumber || data.cardNumber || '',
+                ownerName: data.bankOwnerName || data.ownerName || data.owner_name || '',
+                accountNumber:
+                  data.bankAccountNumber || data.accountNumber || data.account_number || '',
+                nationalId: data.bankNationalId || data.nationalId || data.national_id || '',
+              },
+            },
+          }));
+          return data;
         } catch (error) {
           console.error('fetchBankInfo failed:', error);
           throw error;
         }
       },
 
+      // ═══════════════════════════════════════════════
+      //   ۲. اصلاح updateBankInfoApi (برای ارسال صحیح به بک‌اند)
+      // ═══════════════════════════════════════════════
       updateBankInfoApi: async (bankData) => {
         try {
+          // bankData از مودال می‌آید و کلیدهای snake_case دارد (مثل owner_name, bank_name)
           const response = await businessesService.updateBankInfo({
-            bank_owner_name: bankData.ownerName,
-            bank_national_id: bankData.nationalId,
-            bank_name: bankData.bankName,
-            bank_id: bankData.bankId,
-            bank_sheba: bankData.sheba,
-            bank_card_number: bankData.cardNumber,
-            bank_account_number: bankData.accountNumber,
+            owner_name: bankData.owner_name || bankData.ownerName || '',
+            national_id: bankData.national_id || bankData.nationalId || '',
+            bankName: bankData.bank_name || bankData.bankName || '',
+            bank_id: bankData.bank_id || bankData.bankId || '',
+            sheba: bankData.sheba || '',
+            card_number: bankData.card_number || bankData.cardNumber || '',
+            account_number: bankData.account_number || bankData.accountNumber || '',
           });
+
           set((state) => ({
             businessData: {
               ...state.businessData,
-              bankInfo: { isRegistered: true, isVerified: false },
+              bankInfo: {
+                isRegistered: true,
+                isVerified: false,
+                bankName: bankData.bank_name || bankData.bankName || '',
+                bankId: bankData.bank_id || bankData.bankId || '',
+                sheba: bankData.sheba || '',
+                cardNumber: bankData.card_number || bankData.cardNumber || '',
+                ownerName: bankData.owner_name || bankData.ownerName || '',
+                accountNumber: bankData.account_number || bankData.accountNumber || '',
+                nationalId: bankData.national_id || bankData.nationalId || '',
+              },
             },
           }));
           return response.data;
@@ -233,6 +297,7 @@ export const useBusinessStore = create(
           await businessesService.deleteBusiness();
           set((state) => ({
             businessData: { ...state.businessData, isActive: false },
+            businessStatus: null,
           }));
         } catch (error) {
           console.error('deleteBusinessApi failed:', error);
@@ -240,9 +305,6 @@ export const useBusinessStore = create(
         }
       },
 
-      // ═══════════════════════════════════════════
-      //    API Sync — Gallery
-      // ═══════════════════════════════════════════
       fetchGallery: async () => {
         try {
           const response = await businessesService.getGallery();
@@ -303,32 +365,19 @@ export const useBusinessStore = create(
           ? localStorage
           : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
+      // ✅ FIX: businessStatus هم persist شود
       partialize: (state) => ({
         businessData: state.businessData,
         gallery: state.gallery,
+        businessStatus: state.businessStatus,
         _version: STORAGE_VERSION,
       }),
-      /**
-       * ✅ FIX فاز ۲: مهاجرت هوشمندانه
-       *
-       * قبلاً: هر نسخه < 5 → ریست کامل داده‌ها
-       * حالا: فقط داده‌های هاردکد پاک می‌شوند و بلافاصله
-       *       بازیابی خودکار از بک‌اند انجام می‌شود.
-       *       کاربر فقط در اولین بارگذاری پس از آپدیت
-       *       ممکن است یک بار صفحه را خالی ببیند،
-       *       و سپس داده‌ها از بک‌اند پر می‌شوند.
-       */
       migrate: (persistedState, version) => {
         if (version < STORAGE_VERSION) {
-          console.log(
-            `[BusinessStore] Migration from v${version} to v${STORAGE_VERSION}. ` +
-              'Hardcoded data cleared. Auto-recovery from backend will occur on next fetch.'
-          );
-          // ✅ FIX فاز ۲: فلگ مهاجرت را فعال کن
-          migrationOccurred = true;
           return {
             businessData: INITIAL_BUSINESS_DATA,
             gallery: [],
+            businessStatus: null,
             _version: STORAGE_VERSION,
           };
         }
@@ -338,9 +387,7 @@ export const useBusinessStore = create(
   )
 );
 
-// ═══════════════════════════════════════════════════════
-//    Selector‌های اختصاصی
-// ═══════════════════════════════════════════════════════
+// ─── Selectors ───
 export const useBusinessName = () => useBusinessStore((s) => s.businessData?.name);
 export const useBusinessServices = () => useBusinessStore((s) => s.businessData?.services || []);
 export const useBusinessAppointments = () =>
@@ -351,5 +398,9 @@ export const useBusinessGallery = () => useBusinessStore((s) => s.gallery);
 export const useBusinessIsActive = () => useBusinessStore((s) => s.businessData?.isActive);
 export const useBusinessBankInfo = () => useBusinessStore((s) => s.businessData?.bankInfo);
 export const useBusinessBookingSlug = () => useBusinessStore((s) => s.businessData?.bookingSlug);
+
+export const useHasAnyBusiness = () =>
+  useBusinessStore((s) => Boolean(s.businessData?.id) || Boolean(s.businessStatus));
+
 export const useBusinessHasData = () =>
   useBusinessStore((s) => Boolean(s.businessData?.id && s.businessData?.name));

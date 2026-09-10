@@ -1,11 +1,11 @@
 // src/app/create-business/page.jsx
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiShield } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -16,25 +16,26 @@ import TermsAndConditionsStep from '@/components/createbusiness/TermsAndConditio
 import BasicInfoStep from '@/components/createbusiness/BasicInfoStep';
 import NationalIdVerificationStep from '@/components/createbusiness/NationalIdVerificationStep';
 import SuccessModal from '@/components/common/SuccessModal';
-import { businessesService } from '@/api';
 
 export default function CreateBusinessPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
+
+  // ✅ FIX: به جای businessesService.createBusiness، از اکشن استور استفاده کن
+  const createBusinessApi = useBusinessStore((s) => s.createBusinessApi);
+  const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
+
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
-
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [isStepValid, setIsStepValid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
   const needsNationalId = !user?.isNationalIdVerified;
   const totalSteps = needsNationalId ? 2 : 1;
-
   const [formData, setFormData] = useState({
     name: '',
     categoryId: null,
@@ -105,13 +106,22 @@ export default function CreateBusinessPage() {
     return true;
   };
 
-  // ✅ حذف USE_MOCK — فقط API
   const handleFinalSubmit = async (fd) => {
     if (!validateForm()) return;
-
     setSubmitting(true);
     try {
-      await businessesService.createBusiness(fd);
+      // ✅ FIX: از اکشن استور استفاده کن که هم بیزینس را می‌سازد
+      // و هم استور را بلافاصله آپدیت می‌کند
+      await createBusinessApi(fd);
+
+      // تلاش برای دریافت جزئیات کامل (اختیاری — اگر خطا بدهد مشکلی نیست)
+      try {
+        await fetchBusinessDetail();
+      } catch {
+        // اگر fetchBusinessDetail خطا داد، استور از قبل آپدیت شده
+        // پس مشکلی نیست
+      }
+
       setSubmitting(false);
       setSuccessModalVisible(true);
     } catch (error) {
@@ -123,6 +133,7 @@ export default function CreateBusinessPage() {
 
   const handleSuccessClose = () => {
     setSuccessModalVisible(false);
+    // ✅ FIX: ریدایرکت به مدیریت کسب‌وکار
     router.push('/manage');
   };
 
@@ -138,7 +149,6 @@ export default function CreateBusinessPage() {
         />
       );
     }
-
     if (needsNationalId && currentStep === 1) {
       return (
         <NationalIdVerificationStep
@@ -146,13 +156,15 @@ export default function CreateBusinessPage() {
           onUpdate={updateForm}
           registeredPhone={user?.phone || ''}
           onVerified={() => {
-            updateUser({ isNationalIdVerified: true, verifiedName: formData.verifiedName });
+            updateUser({
+              isNationalIdVerified: true,
+              verifiedName: formData.verifiedName,
+            });
             setCurrentStep(2);
           }}
         />
       );
     }
-
     return (
       <BasicInfoStep
         formData={formData}
@@ -179,12 +191,9 @@ export default function CreateBusinessPage() {
     <ScreenWrapper padding={0}>
       <div className="flex flex-col h-screen" style={{ backgroundColor: colors.background }}>
         <Header title="ثبت کسب‌وکار جدید" onBackPress={() => router.back()} />
-
         {termsAccepted && <StepProgress currentStep={currentStep} totalSteps={totalSteps} />}
-
         <div className="flex-1 overflow-y-auto">{renderCurrentStep()}</div>
       </div>
-
       <SuccessModal
         visible={successModalVisible}
         onClose={handleSuccessClose}

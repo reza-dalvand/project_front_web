@@ -49,7 +49,7 @@ function VerifyOtpPageContent() {
         if (needsProfileCompletion) {
           router.replace('/profile/edit?welcome=1');
         } else {
-          router.replace(redirectUrl);
+          router.replace(redirectUrl === '/' ? '/' : redirectUrl);
         }
       }, 1500);
     },

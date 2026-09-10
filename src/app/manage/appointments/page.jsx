@@ -71,8 +71,8 @@ export default function AllAppointmentsPage() {
   }, []);
 
   const confirmVerify = useCallback(
-    (aptId) => {
-      handleVerify(aptId);
+    (aptId, code) => {
+      handleVerify(aptId, code);
       setVerifyVisible(false);
       setVerifyTarget(null);
     },

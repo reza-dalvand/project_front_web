@@ -1,4 +1,3 @@
-// src/components/providers/index.jsx
 'use client';
 import { useEffect } from 'react';
 import ThemeProvider from './ThemeProvider';
@@ -10,9 +9,10 @@ import OfflineBanner from '@/components/common/OfflineBanner';
 import { useNetworkStore } from '@/stores/useNetworkStore';
 import { useMaintenanceStore } from '@/stores/useMaintenanceStore';
 import { useAppVersionStore } from '@/stores/useAppVersionStore';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useBusinessStore } from '@/stores/useBusinessStore';
 import CapacitorSplashManager from './CapacitorSplashManager';
 
-// ✅ Lazy load مدال‌های غیربحرانی
 import dynamic from 'next/dynamic';
 const UpdateModal = dynamic(() => import('@/components/common/UpdateModal'), {
   ssr: false,
@@ -23,7 +23,6 @@ const MaintenanceModal = dynamic(() => import('@/components/common/MaintenanceMo
   loading: () => null,
 });
 
-// ─── کامپوننت init storeها ───
 function StoreInitializers() {
   const initNetwork = useNetworkStore((s) => s.init);
   const checkMaintenance = useMaintenanceStore((s) => s.checkMaintenance);
@@ -43,24 +42,37 @@ function StoreInitializers() {
       cleanupVersion?.();
     };
   }, []);
-
   return null;
 }
 
-function LoadingFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-app">
-      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
+function BusinessInitializer() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchBusinessDetail().catch((err) => {
+        const isNoBusiness =
+          err?.code === 'NOT_FOUND' ||
+          err?.status === 404 ||
+          (typeof err?.message === 'string' && err.message.includes('کسب‌وکاری ثبت نکرده‌اید'));
+        if (!isNoBusiness) {
+          console.warn('Business fetch failed:', err);
+        }
+      });
+    }
+  }, [isAuthenticated, fetchBusinessDetail]);
+
+  return null;
 }
 
 export default function Providers({ children }) {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <CapacitorSplashManager /> {/* ✅ اینجا اضافه شود */}
+        <CapacitorSplashManager />
         <StoreInitializers />
+        <BusinessInitializer />
         <ToastProvider />
         <OfflineBanner />
         <BackButtonHandler>

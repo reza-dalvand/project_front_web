@@ -1,28 +1,26 @@
-// src/app/line-rentals/[id]/LineRentalDetailClient.jsx
+// src/app/model-requests/[id]/ModelRequestDetailClient.jsx
 'use client';
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FiPhone } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
-import CollabBadge from '@/components/common/CollabBadge';
+import CostTypeBadge from '@/components/common/CostTypeBadge';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import LineRentalHero from '@/components/lineRentals/detail/LineRentalHero';
-import LineRentalPriceCard from '@/components/lineRentals/detail/LineRentalPriceCard';
-import LineRentalDatesCard from '@/components/lineRentals/detail/LineRentalDatesCard';
+import ModelRequestHero from '@/components/modelRequests/detail/ModelRequestHero';
+import ModelRequestDatesCard from '@/components/modelRequests/detail/ModelRequestDatesCard';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
 
-export default function LineRentalDetailPage() {
-  const params = useParams();
+export default function ModelRequestDetailPage({ requestId }) {
   const router = useRouter();
   const { colors } = useTheme();
   const { showToast } = useToast();
-  const [rental, setRental] = useState(null);
+  const [request, setRequest] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // ═══ دریافت جزئیات از API ═══
@@ -30,21 +28,21 @@ export default function LineRentalDetailPage() {
     const fetchDetail = async () => {
       setIsLoading(true);
       try {
-        const result = await adsService.getLineRentalDetail(params.id);
-        setRental(result.data);
+        const result = await adsService.getModelRequestDetail(requestId);
+        setRequest(result.data);
       } catch (error) {
-        console.error('Failed to fetch line rental detail:', error);
+        console.error('Failed to fetch model request detail:', error);
         showToast('خطا در بارگذاری جزئیات', 'error');
       } finally {
         setIsLoading(false);
       }
     };
     fetchDetail();
-  }, [params.id, showToast]);
+  }, [requestId, showToast]);
 
   const handleCall = () => {
-    if (rental?.contactPhone) {
-      const phone = cleanPhone(rental.contactPhone);
+    if (request?.contact_phone || request?.contactPhone) {
+      const phone = cleanPhone(request.contact_phone || request.contactPhone);
       window.location.href = `tel:${phone}`;
     } else {
       showToast('شماره تماسی ثبت نشده است', 'error');
@@ -52,14 +50,13 @@ export default function LineRentalDetailPage() {
   };
 
   const handleShare = async () => {
-    const shareMessage = `🏢 ${rental?.title || ''}
-🏪 ${rental?.businessName || ''}
+    const shareMessage = `👤 ${request?.title || ''}
+🏪 ${request?.business_name || request?.businessName || ''}
 🔗 ${typeof window !== 'undefined' ? window.location.href : ''}`;
-
     if (navigator.share) {
       try {
         await navigator.share({
-          title: rental?.title || 'آگهی لاین',
+          title: request?.title || 'فرصت مدلینگ',
           text: shareMessage,
           url: typeof window !== 'undefined' ? window.location.href : undefined,
         });
@@ -70,9 +67,9 @@ export default function LineRentalDetailPage() {
     }
     try {
       await navigator.clipboard.writeText(shareMessage);
-      showToast('✓ لینک کپی شد', 'success');
+      showToast('لینک کپی شد', 'success');
     } catch {
-      showToast('امکان کپی کردن لینک وجود ندارد', 'error');
+      showToast('امکان کپی وجود ندارد', 'error');
     }
   };
 
@@ -86,67 +83,38 @@ export default function LineRentalDetailPage() {
     );
   }
 
-  if (!rental) {
+  if (!request) {
     return (
       <ScreenWrapper>
         <div className="flex flex-col items-center py-20 gap-3">
           <span className="text-4xl">🔍</span>
           <p className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-            آگهی یافت نشد
+            درخواست یافت نشد
           </p>
         </div>
       </ScreenWrapper>
     );
   }
 
-  // ✅ فاز ۳: فقط خوانش camelCase
-  const collabType = rental.collabType;
-  const businessName = rental.businessName;
-  const description = rental.description || '';
-  const contactPhone = rental.contactPhone;
-  const createdAt = rental.createdJalali || '';
-  const expiresAt = rental.expiresJalali || '';
-  const serviceTypeName = rental.serviceCategoryName || '';
-  const subServiceName = rental.subServiceName || '';
-  const percentSalon = rental.percentSalon;
-  const percentPartner = rental.percentPartner;
-  const fixedAmount = rental.fixedAmount;
-  const fixedDeposit = rental.fixedDeposit;
-  const hourlyRate = rental.hourlyRate;
-
-  const getPriceDisplay = () => {
-    if (collabType === 'percent') {
-      return `${toPersianDigit(percentSalon || 0)}-${toPersianDigit(percentPartner || 0)}٪`;
-    }
-    if (collabType === 'fixed') {
-      let text = `${toPersianDigit((fixedAmount || 0).toLocaleString('en-US'))} تومان`;
-      if (fixedDeposit > 0) {
-        text += ` + ${toPersianDigit(fixedDeposit.toLocaleString('en-US'))} رهن`;
-      }
-      return text;
-    }
-    if (collabType === 'hourly') {
-      return `${toPersianDigit((hourlyRate || 0).toLocaleString('en-US'))} / ساعت`;
-    }
-    return '';
-  };
-
-  const priceInfo = {
-    percentSalon,
-    percentPartner,
-    fixedAmount,
-    fixedDeposit,
-    hourlyRate,
-    priceDisplay: getPriceDisplay(),
-  };
+  const costType = request.costType;
+  const discount = request.discount || 0;
+  const isUrgent = request.isUrgent;
+  const businessName = request.businessName;
+  const serviceName = request.serviceName;
+  const city = request.city || '';
+  const description = request.description || '';
+  const contactPhone = request.contactPhone;
+  const createdAt = request.createdJalali || '';
+  const expiresAt = request.expiresJalali || '';
 
   return (
     <ScreenWrapper scrollable padding={0}>
       {/* هدر گرادیانی */}
-      <LineRentalHero
-        serviceTypeName={serviceTypeName}
-        collabType={collabType}
-        priceDisplay={getPriceDisplay()}
+      <ModelRequestHero
+        serviceName={serviceName}
+        costType={costType}
+        discount={discount}
+        isUrgent={isUrgent}
         onBack={() => router.back()}
         onShare={handleShare}
       />
@@ -156,34 +124,46 @@ export default function LineRentalDetailPage() {
         {/* عنوان و اطلاعات */}
         <div className="space-y-3">
           <h1 className="text-lg font-[Vazir-Bold] leading-7" style={{ color: colors.textMain }}>
-            {rental.title}
+            {request.title}
           </h1>
-
           <div className="flex items-center gap-2 flex-wrap">
-            <CollabBadge type={collabType} priceDisplay={getPriceDisplay()} variant="default" />
+            <CostTypeBadge type={costType} variant="default" />
           </div>
-
-          {businessName && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {businessName && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs">🏪</span>
+                <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
+                  {businessName}
+                </span>
+              </div>
+            )}
+            {city && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs">📍</span>
+                <span className="text-xs" style={{ color: colors.textSecondary }}>
+                  {city}
+                </span>
+              </div>
+            )}
+            {serviceName && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs">💆‍♀️</span>
+                <span className="text-xs" style={{ color: colors.textSecondary }}>
+                  {serviceName}
+                </span>
+              </div>
+            )}
+          </div>
+          {discount > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-xs">🏪</span>
-              <span className="text-xs font-[Vazir-Bold]" style={{ color: colors.primary }}>
-                {businessName}
-              </span>
-            </div>
-          )}
-
-          {subServiceName && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs">💆‍♀️</span>
-              <span className="text-xs" style={{ color: colors.textSecondary }}>
-                {subServiceName}
+              <span className="text-xs">🏷️</span>
+              <span className="text-xs font-[Vazir-Bold]" style={{ color: '#E53935' }}>
+                {toPersianDigit(discount)}٪ تخفیف مدل‌ها
               </span>
             </div>
           )}
         </div>
-
-        {/* قیمت */}
-        <LineRentalPriceCard collabType={collabType} priceInfo={priceInfo} />
 
         {/* توضیحات */}
         <Card variant="default" padding={14} radius={14}>
@@ -191,6 +171,9 @@ export default function LineRentalDetailPage() {
             {description || 'توضیحاتی برای این آگهی ثبت نشده است.'}
           </p>
         </Card>
+
+        {/* تاریخ‌ها */}
+        <ModelRequestDatesCard createdAt={createdAt} expiresAt={expiresAt} />
 
         {/* دکمه تماس */}
         {contactPhone && (
@@ -205,9 +188,6 @@ export default function LineRentalDetailPage() {
             style={{ backgroundColor: '#4CAF50' }}
           />
         )}
-
-        {/* تاریخ‌ها */}
-        <LineRentalDatesCard createdAt={createdAt} expiresAt={expiresAt} />
       </div>
     </ScreenWrapper>
   );
