@@ -1,4 +1,5 @@
 // src/config/env.js
+import { Capacitor } from '@capacitor/core';
 
 const ENV = {
   development: {
@@ -31,11 +32,53 @@ const getNodeEnv = () => {
 const env = getNodeEnv();
 const config = ENV[env] || ENV.development;
 
-// ─── تشخیص پلتفرم برای اندروید/امولاتور ───
+/**
+ * 🎯 تشخیص پلتفرم و انتخاب URL مناسب
+ *
+ * ✅ Native App (Android/iOS) در development:
+ *    - اولویت 1: NEXT_PUBLIC_LOCAL_NETWORK_IP (برای تست روی گوشی)
+ *    - اولویت 2: NEXT_PUBLIC_API_BASE_URL
+ *    - اولویت 3: config.API_BASE_URL
+ *
+ * ✅ Native App در production:
+ *    - همیشه از production URL استفاده می‌کند
+ *
+ * ✅ Web App:
+ *    - از environment variables استفاده می‌کند
+ */
 const getPlatformApiUrl = (defaultUrl) => {
   if (typeof window === 'undefined') return defaultUrl;
 
-  // اگر در محیط اندروید/امولاتور هستیم، آدرس را به‌صورت پویا تنظیم کن
+  const isNative = Capacitor.isNativePlatform();
+
+  if (isNative) {
+    // ✅ اگر در production هستیم، از production URL استفاده کن
+    if (env === 'production') {
+      return ENV.production.API_BASE_URL;
+    }
+
+    // ✅ در development، اولویت با NEXT_PUBLIC_LOCAL_NETWORK_IP
+    // این متغیر برای تست روی گوشی موبایل است
+    const localIp =
+      typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_LOCAL_NETWORK_IP;
+
+    if (localIp) {
+      return `http://${localIp}:8000/api/v1`;
+    }
+
+    // ✅ در غیر این صورت، از env variable معمولی
+    const apiUrl =
+      typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_BASE_URL;
+
+    if (apiUrl) {
+      return apiUrl;
+    }
+
+    // ✅ در نهایت، از config object
+    return config.API_BASE_URL;
+  }
+
+  // Emulator (Android)
   const isAndroidEmulator =
     typeof window !== 'undefined' && window.location?.hostname === '10.0.2.2';
 
@@ -43,23 +86,53 @@ const getPlatformApiUrl = (defaultUrl) => {
     return defaultUrl.replace('127.0.0.1', '10.0.2.2');
   }
 
-  // اگر در دستگاه واقعی هستیم و در حال توسعه هستیم، از آی‌پی شبکه استفاده کن
-  // این را می‌توانید بر اساس نیاز خود تنظیم کنید
+  return defaultUrl;
+};
+
+const getPlatformMediaUrl = (defaultUrl) => {
+  if (typeof window === 'undefined') return defaultUrl;
+
+  const isNative = Capacitor.isNativePlatform();
+
+  if (isNative) {
+    if (env === 'production') {
+      return ENV.production.MEDIA_BASE_URL;
+    }
+
+    const localIp =
+      typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_LOCAL_NETWORK_IP;
+
+    if (localIp) {
+      return `http://${localIp}:8000`;
+    }
+
+    const mediaUrl =
+      typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MEDIA_BASE_URL;
+
+    if (mediaUrl) {
+      return mediaUrl;
+    }
+
+    return config.MEDIA_BASE_URL;
+  }
+
   return defaultUrl;
 };
 
 const finalConfig = {
-  API_BASE_URL:
+  API_BASE_URL: getPlatformApiUrl(
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_BASE_URL) ||
-    getPlatformApiUrl(config.API_BASE_URL),
+      config.API_BASE_URL
+  ),
   SITE_DOMAIN:
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SITE_DOMAIN) || config.SITE_DOMAIN,
   ARVAN_CDN_URL:
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ARVAN_CDN_URL) ||
     config.ARVAN_CDN_URL,
-  MEDIA_BASE_URL:
+  MEDIA_BASE_URL: getPlatformMediaUrl(
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MEDIA_BASE_URL) ||
-    config.MEDIA_BASE_URL,
+      config.MEDIA_BASE_URL
+  ),
   NODE_ENV: env,
 };
 
