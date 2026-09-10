@@ -1,7 +1,11 @@
 # ═══════════════════════════════════════════════════════════
 #   Deploy Pipeline - Production (فقط روی push به main)
 # ═══════════════════════════════════════════════════════════
-
+permissions:
+  contents: read
+  pull-requests: write    # برای coverage comment
+  actions: read           # برای download artifact
+  
 name: Deploy to Production
 
 on:

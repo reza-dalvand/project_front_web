@@ -85,8 +85,6 @@ jobs:
       - name: Run ESLint
         run: yarn lint
 
-      - name: Type Check (if TypeScript)
-        run: yarn type-check || echo "No type-check script found, skipping"
         continue-on-error: true
 
   # ─── Job 3: Tests ───
@@ -226,7 +224,3 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Analyze bundle
-        # توجه: برای تحلیل واقعی نیاز به نصب @next/bundle-analyzer و تنظیم آن در next.config.js دارید
-        run: yarn analyze || echo "Bundle analysis not configured or failed"
-        continue-on-error: true
