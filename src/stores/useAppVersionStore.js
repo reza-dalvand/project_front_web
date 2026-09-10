@@ -66,8 +66,27 @@ export const useAppVersionStore = create(
             return;
           }
 
+          // ✅ فاز جدید: بررسی پلتفرم و تنظیمات ادمین
+          const isNative = Capacitor.isNativePlatform();
+          
+          // در وب اصلاً مدال آپدیت نشان نده (وب خودش آپدیت می‌شود)
+          if (!isNative) {
+            set({ updateInfo: null, checking: false });
+            return;
+          }
+
           // بررسی آپدیت اجباری
           const isForce = compareMin < 0 || config.isForceUpdate === true;
+
+          // ✅ فاز جدید: بررسی تنظیمات ادمین برای اندروید
+          if (isForce && !config.androidForceUpdateEnabled) {
+            set({ updateInfo: null, checking: false });
+            return;
+          }
+          if (!isForce && !config.androidOptionalUpdateEnabled) {
+            set({ updateInfo: null, checking: false });
+            return;
+          }
 
           // اگر آپدیت اختیاری است و کاربر قبلاً رد کرده
           if (!isForce) {
