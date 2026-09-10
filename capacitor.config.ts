@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.zibano.app',
-  appName: 'زیبانو',
+  appName: 'Beau Club',
   webDir: 'out',
   backgroundColor: '#F5F0EC',
   server: {
