@@ -221,16 +221,38 @@ export default function HomePage() {
 
     setGpsLoading(true);
     try {
-      const loc = await getCurrentLocation();
+      const loc = await getCurrentLocation({ showSettingsPrompt: true });
       enableGps(loc.latitude, loc.longitude);
       showToast('موقعیت مکانی شما فعال شد', 'success');
     } catch (err) {
       handleGpsError();
-      if (err.code === 1) {
-        showToast('دسترسی به موقعیت رد شد. از تنظیمات اجازه دهید.', 'error');
-      } else if (err.code === 2) {
-        showToast('GPS در دسترس نیست. روشن کنید.', 'warning');
-      } else {
+      
+      // ═══ GPS خاموش است ═══
+      if (err.code === 2 || err.gpsDisabled) {
+        showToast('لطفاً GPS گوشی را روشن کنید و دوباره تلاش کنید', 'warning');
+      } 
+      // ═══ دسترسی رد شده ═══
+      else if (err.code === 1) {
+        if (err.needsSettings) {
+          const shouldOpen = window.confirm(
+            'دسترسی به موقعیت رد شده است.\n\n' +
+            'برای فعال‌سازی، باید از تنظیمات گوشی اجازه دهید.\n\n' +
+            'آیا می‌خواهید به تنظیمات بروید؟'
+          );
+          if (shouldOpen) {
+            const { openAppSettings } = await import('@/utils/geo-utils');
+            await openAppSettings();
+          }
+        } else {
+          showToast('دسترسی به موقعیت رد شد', 'error');
+        }
+      } 
+      // ═══ Timeout ═══
+      else if (err.code === 3) {
+        showToast('دریافت موقعیت زمان‌بر شد. دوباره تلاش کنید.', 'warning');
+      }
+      // ═══ سایر خطاها ═══
+      else {
         showToast('خطا در دریافت موقعیت', 'error');
       }
     } finally {

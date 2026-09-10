@@ -61,12 +61,20 @@ export default function NearbyPage() {
     setLocationLoading(true);
     setLocationError(null);
     try {
-      const loc = await getCurrentLocation();
+      const loc = await getCurrentLocation({ showSettingsPrompt: true });
       cachedLocation = loc;
       cachedLocationTimestamp = Date.now();
       setUserLocation(loc);
     } catch (err) {
-      setLocationError(getLocationErrorMessage(err));
+      cachedLocation = null;
+      cachedLocationTimestamp = 0;
+      setLocationError(err);
+      
+      // GPS خاموش — پیام ملایم‌تر
+      if (err.code === 2 || err.gpsDisabled) {
+        // فقط log کن، toast نشان نده (چون کاربر از Nearby page آمده)
+        console.log('GPS is disabled');
+      }
     } finally {
       setLocationLoading(false);
     }
