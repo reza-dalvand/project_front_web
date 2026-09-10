@@ -90,6 +90,8 @@ export const useBusinessStore = create(
               longitude: b.longitude || null,
               isActive: b.status === 'approved',
               status: b.status || null,
+              isSuspended: b.isSuspended ?? false,      
+              suspensionReason: b.suspensionReason ?? '', 
               services: (b.services || []).map((s) => ({
                 id: s.id,
                 name: s.name,
@@ -148,9 +150,16 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.getBusinessStatus();
           const data = response.data;
-          // ✅ FIX: اگر بیزینس وجود دارد، status را در استور ذخیره کن
+          
           if (data?.hasBusiness) {
-            set({ businessStatus: data.status || 'pending' });
+            set((state) => ({
+              businessStatus: data.status || 'pending',
+              businessData: {
+                ...state.businessData,
+                isSuspended: data.isSuspended ?? false,          
+                suspensionReason: data.suspensionReason ?? '',       
+              },
+            }));
           }
           return data;
         } catch (error) {
