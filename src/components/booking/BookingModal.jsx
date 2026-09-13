@@ -453,7 +453,7 @@ export default function BookingModal({
                     انجام تخلف توسط این واحد، امکان‌پذیر است.
                   </p>
                   <a
-                    href="https://beauclub.ir/rules/cancellation"
+                    href="https://app.beauclub.ir/rules/cancellation"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[12px] font-[Vazir-Bold] underline mt-1.5 inline-block"
