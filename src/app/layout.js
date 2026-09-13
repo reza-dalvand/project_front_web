@@ -52,76 +52,40 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://picsum.photos" />
         <link rel="preconnect" href="https://i.pravatar.cc" />
-        <Script
-          id="theme-script"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  const storage = localStorage.getItem('beau-theme-storage');
-                  if (storage) {
-                    const parsed = JSON.parse(storage);
-                    const theme = parsed.state?.theme || 'system';
-                    let resolved = theme;
-                    if (theme === 'system') {
-                      resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                    }
-                    if (resolved === 'dark') {
-                      document.documentElement.classList.add('dark');
-                    }
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`
+            (function() {
+              try {
+                const storage = localStorage.getItem('beau-theme-storage');
+                if (storage) {
+                  const parsed = JSON.parse(storage);
+                  const theme = parsed.state?.theme || 'system';
+                  let resolved = theme;
+                  if (theme === 'system') {
+                    resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                   }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
-        {process.env.NODE_ENV === 'production' && (
-          <Script
-            id="sw-register"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                if ('serviceWorker' in navigator) {
-                  window.addEventListener('load', function() {
-                    navigator.serviceWorker.register('/sw.js');
-                  });
+                  if (resolved === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  }
                 }
-              `,
-            }}
-          />
+              } catch (e) {}
+            })();
+          `}
+        </Script>
+
+        {process.env.NODE_ENV === 'production' && (
+          <Script id="sw-register" strategy="afterInteractive">
+            {`
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `}
+          </Script>
         )}
       </head>
       <body suppressHydrationWarning>
-        {/* ✅ اسپلش اسکرین وب (PWA) - نمایش تصویر اسپلش */}
-        <div
-          id="web-splash-screen"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: 99999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            backgroundColor: '#F5F0EC',
-            transition: 'opacity 0.6s ease-out',
-          }}
-        >
-          <img
-            src="/spalsh.png"
-            alt="بیو کلاب - رزرو آنلاین خدمات زیبایی و سلامت"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-          />
-        </div>
-
         <SplashScreenHider />
         <SuspensionModal />
         <Providers>{children}</Providers>
