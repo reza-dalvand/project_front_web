@@ -1,10 +1,11 @@
-// src/components/manageBusiness/services/edit/ServicePricingSection.jsx
 'use client';
-import { FiDollarSign } from 'react-icons/fi';
+import { useState } from 'react';
+import { FiDollarSign, FiInfo } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
 import Input from '@/components/common/Input';
 import SectionHeader from '@/components/common/SectionHeader';
+import PriceGuideModal from '@/components/common/PriceGuideModal';
 import { toPersianDigit, formatPriceInput } from '@/utils/numberUtils';
 
 export default function ServicePricingSection({
@@ -16,11 +17,24 @@ export default function ServicePricingSection({
   onDiscountChange,
 }) {
   const { colors } = useTheme();
+  const [showPriceGuide, setShowPriceGuide] = useState(false);
 
   return (
     <div className="space-y-3">
       <SectionHeader icon={<FiDollarSign size={18} />} iconColor="#43A047" title="قیمت‌گذاری" />
       <Card variant="elevated" padding={16} radius={18}>
+        
+        {/* ✅ دکمه نمایش راهنمای قیمت‌گذاری و کمیسیون */}
+        <button
+          type="button"
+          onClick={() => setShowPriceGuide(true)}
+          className="flex items-center gap-1.5 text-xs font-[Vazir-Bold] mb-4 px-3 py-2 rounded-xl transition-colors active:opacity-70"
+          style={{ color: '#FF9800', backgroundColor: '#FF980015' }}
+        >
+          <FiInfo size={14} />
+          راهنمای کمیسیون و قیمت‌گذاری
+        </button>
+
         <Input
           label="قیمت اصلی (تومان) *"
           placeholder="مثال: ۷۵۰,۰۰۰"
@@ -35,6 +49,7 @@ export default function ServicePricingSection({
           onChangeText={onDiscountChange}
           error={errors.discountPercent}
         />
+        
         {/* پیش‌نمایش قیمت */}
         {parseInt(originalPrice.replace(/[^0-9]/g, '') || '0') > 0 && (
           <div
@@ -70,6 +85,13 @@ export default function ServicePricingSection({
           </div>
         )}
       </Card>
+
+      {/* ✅ مدال راهنمای قیمت‌گذاری */}
+      <PriceGuideModal
+        visible={showPriceGuide}
+        onClose={() => setShowPriceGuide(false)}
+        currentPrice={finalPrice}
+      />
     </div>
   );
 }
