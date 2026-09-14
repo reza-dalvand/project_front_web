@@ -15,12 +15,10 @@ export default function HomeFilterModal({ visible, onClose }) {
   const { provinces } = useProvinces();
   const { provinceId, cityId, setLocation } = useGlobalLocationStore();
 
-  // ✅ خواندن وضعیت GPS از استور گلوبال
   const gpsEnabled = useGlobalLocationStore((s) => s.gpsEnabled);
 
   const { cities } = useCities(provinceId);
 
-  // ─── State محلی برای فرم ───
   const [localProvince, setLocalProvince] = useState(provinceId);
   const [localCity, setLocalCity] = useState(cityId);
 
@@ -31,13 +29,11 @@ export default function HomeFilterModal({ visible, onClose }) {
     }
   }, [visible, provinceId, cityId]);
 
-  // ─── اعمال فیلتر ───
   const handleApply = () => {
     setLocation(localProvince, localCity);
     onClose();
   };
 
-  // ─── پاک کردن فیلتر ───
   const handleClear = () => {
     setLocalProvince(null);
     setLocalCity(null);
@@ -47,27 +43,27 @@ export default function HomeFilterModal({ visible, onClose }) {
 
   return (
     <BottomSheet visible={visible} onClose={onClose} title="فیلتر موقعیت مکانی" snapPoint={0.55}>
-      <div className="space-y-5 pb-4">
+      <div className="space-y-4 sm:space-y-5 md:space-y-6 pb-4 md:pb-6">
         {/* ═══ پیام هشدار وقتی GPS فعال است ═══ */}
         {gpsEnabled && (
           <div
-            className="flex items-start gap-3 p-4 rounded-2xl border"
+            className="flex items-start gap-2.5 sm:gap-3 md:gap-4 p-3.5 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl border"
             style={{
               backgroundColor: '#2196F308',
               borderColor: '#2196F330',
             }}
           >
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: '#2196F315' }}
             >
-              <FiNavigation size={20} color="#2196F3" />
+              <FiNavigation size={18} className="sm:w-5 sm:h-5" color="#2196F3" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-[Vazir-Bold] mb-1" style={{ color: '#2196F3' }}>
+              <p className="text-[13px] sm:text-sm md:text-[15px] font-[Vazir-Bold] mb-0.5 sm:mb-1" style={{ color: '#2196F3' }}>
                 فیلتر موقعیت مکانی فعال است
               </p>
-              <p className="text-xs font-[Vazir] leading-5" style={{ color: colors.textSecondary }}>
+              <p className="text-[11px] sm:text-xs md:text-[13px] font-[Vazir] leading-5 md:leading-6" style={{ color: colors.textSecondary }}>
                 تا وقتی این فیلتر فعاله نمیشه استان و شهر رو انتخاب کرد
               </p>
             </div>
@@ -99,7 +95,7 @@ export default function HomeFilterModal({ visible, onClose }) {
         </div>
 
         {/* ═══ دکمه‌ها ═══ */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 md:gap-4">
           <Button
             title="حذف فیلتر"
             onPress={handleClear}

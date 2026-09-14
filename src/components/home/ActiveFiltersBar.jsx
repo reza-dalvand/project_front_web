@@ -70,38 +70,41 @@ export default function ActiveFiltersBar({ filters, onChange, onClearAll }) {
 
   return (
     <div
-      className="py-2.5 border-b overflow-x-auto scrollbar-hide"
+      className="py-2 sm:py-2.5 md:py-3 border-b overflow-x-auto scrollbar-hide md:overflow-x-visible"
       style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}
     >
-      <div className="flex gap-2 px-5 items-center whitespace-nowrap">
-        {chips.map((chip) => (
-          <span
-            key={chip.id}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[16px] border-[1.5px] text-[12px] font-[Vazir-Medium]"
+      {/* ✅ کانتینر مرکزی */}
+      <div className="max-w-6xl mx-auto">
+        <div className="flex gap-2 md:gap-2.5 px-5 md:px-6 lg:px-8 items-center whitespace-nowrap md:whitespace-normal md:flex-wrap">
+          {chips.map((chip) => (
+            <span
+              key={chip.id}
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 md:py-2 rounded-[14px] sm:rounded-[16px] md:rounded-[18px] border-[1.5px] text-[11px] sm:text-[12px] md:text-[13px] font-[Vazir-Medium]"
+              style={{
+                backgroundColor: colors.primary + '15',
+                borderColor: colors.primary + '40',
+                color: colors.primary,
+              }}
+            >
+              {chip.icon}
+              {chip.label}
+              <button onClick={chip.onRemove} className="ml-0.5 hover:opacity-70">
+                <FiX size={14} />
+              </button>
+            </span>
+          ))}
+          <button
+            onClick={onClearAll}
+            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 md:py-2 rounded-[14px] sm:rounded-[16px] md:rounded-[18px] text-[11px] sm:text-[12px] md:text-[13px] font-[Vazir-Bold]"
             style={{
-              backgroundColor: colors.primary + '15',
-              borderColor: colors.primary + '40',
-              color: colors.primary,
+              backgroundColor: '#E5737315',
+              color: '#E57373',
             }}
           >
-            {chip.icon}
-            {chip.label}
-            <button onClick={chip.onRemove} className="ml-0.5 hover:opacity-70">
-              <FiX size={14} />
-            </button>
-          </span>
-        ))}
-        <button
-          onClick={onClearAll}
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[16px] text-[12px] font-[Vazir-Bold]"
-          style={{
-            backgroundColor: '#E5737315',
-            color: '#E57373',
-          }}
-        >
-          <FiX size={14} />
-          حذف همه
-        </button>
+            <FiX size={14} />
+            حذف همه
+          </button>
+        </div>
       </div>
     </div>
   );

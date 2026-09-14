@@ -32,7 +32,6 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
   }, [emblaApi]);
 
   // ✅ FIX (فاز ۴): Auto-play فقط وقتی visible است
-  // جلوگیری از مصرف CPU در تب‌های غیرفعال
   useEffect(() => {
     if (!emblaApi || ads.length <= 1 || !isInView) return;
     const interval = setInterval(() => emblaApi.scrollNext(), autoPlayInterval);
@@ -43,31 +42,31 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
 
   return (
     <div className="relative" ref={sliderRef}>
-      <div className="overflow-hidden rounded-3xl" ref={emblaRef}>
+      <div className="overflow-hidden rounded-2xl sm:rounded-3xl md:rounded-[28px] lg:rounded-[32px]" ref={emblaRef}>
         <div className="flex">
           {ads.map((ad) => (
             <div
               key={ad.id}
-              className="flex-[0_0_100%] min-w-0 relative h-[220px] cursor-pointer group"
+              className="flex-[0_0_100%] min-w-0 relative h-[200px] sm:h-[220px] md:h-[280px] lg:h-[340px] xl:h-[380px] cursor-pointer group"
               onClick={() => onPress?.(ad)}
             >
               <Image
                 src={ad.imageUrl}
                 alt={ad.title}
                 fill
-                className="object-cover rounded-3xl"
-                sizes="(max-width: 768px) 100vw, 768px"
+                className="object-cover rounded-2xl sm:rounded-3xl md:rounded-[28px] lg:rounded-[32px]"
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 768px, 1024px"
               />
               <div
-                className="absolute bottom-0 left-0 right-0 h-[62%] rounded-b-3xl pointer-events-none"
+                className="absolute bottom-0 left-0 right-0 h-[55%] sm:h-[58%] md:h-[60%] rounded-b-2xl sm:rounded-b-3xl md:rounded-b-[28px] lg:rounded-b-[32px] pointer-events-none"
                 style={{ backgroundColor: 'rgba(0,0,0,0.30)' }}
               />
-              <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col gap-2">
-                <h3 className="text-[18px] font-[Vazir-Bold] text-white leading-6 line-clamp-2 drop-shadow-lg">
+              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 md:p-6 lg:p-8 flex flex-col gap-1.5 sm:gap-2 md:gap-3">
+                <h3 className="text-[16px] sm:text-[18px] md:text-xl lg:text-2xl font-[Vazir-Bold] text-white leading-6 md:leading-7 lg:leading-8 line-clamp-2 drop-shadow-lg">
                   {ad.title}
                 </h3>
                 {ad.subtitle && (
-                  <p className="text-[13px] font-[Vazir] text-white/92 line-clamp-1">
+                  <p className="text-[12px] sm:text-[13px] md:text-sm lg:text-base font-[Vazir] text-white/92 line-clamp-1">
                     {ad.subtitle}
                   </p>
                 )}
@@ -76,30 +75,31 @@ export default function AdSlider({ ads = [], onPress, autoPlayInterval = 4000 })
                     e.stopPropagation();
                     onPress?.(ad);
                   }}
-                  className="flex items-center gap-1.5 self-start bg-[#43A047] px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-shadow"
+                  className="flex items-center gap-1.5 sm:gap-2 self-start bg-[#43A047] px-3.5 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl md:rounded-2xl shadow-md hover:shadow-lg transition-shadow"
                 >
-                  <FiCalendar size={14} color="#fff" />
-                  <span className="text-[13px] font-[Vazir-Bold] text-white">رزرو نوبت</span>
+                  <FiCalendar size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" color="#fff" />
+                  <span className="text-[12px] sm:text-[13px] md:text-sm font-[Vazir-Bold] text-white">رزرو نوبت</span>
                 </button>
               </div>
               {ad.badge && (
-                <div className="absolute top-3 right-3 bg-[#E53935] px-2.5 py-1 rounded-lg shadow-md">
-                  <span className="text-[11px] font-[Vazir-Bold] text-white">{ad.badge}</span>
+                <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-[#E53935] px-2 sm:px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl shadow-md">
+                  <span className="text-[10px] sm:text-[11px] md:text-xs font-[Vazir-Bold] text-white">{ad.badge}</span>
                 </div>
               )}
             </div>
           ))}
         </div>
       </div>
-      <div className="flex items-center justify-center gap-1.5 mt-4">
+      {/* ═══ Dots ═══ */}
+      <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-3 sm:mt-4 md:mt-5">
         {ads.map((_, i) => (
           <button
             key={i}
             onClick={() => emblaApi?.scrollTo(i)}
-            className="h-2 rounded-full transition-all duration-300"
+            className="h-1.5 sm:h-2 md:h-2.5 rounded-full transition-all duration-300"
             style={{
               backgroundColor: i === activeIndex ? colors.primary : colors.border,
-              width: i === activeIndex ? '24px' : '8px',
+              width: i === activeIndex ? '20px' : '7px',
             }}
           />
         ))}
