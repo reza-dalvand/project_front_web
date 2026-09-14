@@ -14,10 +14,7 @@ import {
   FiSun,
 } from 'react-icons/fi';
 
-// ═══ نگاشت آیکون بر اساس مقادیر بک‌اند ═══
-// مقادیر باید دقیقاً با icon_name در ServiceCategory بک‌اند مطابقت داشته باشند
 const ICON_MAP = {
-  // مقادیر اصلی بک‌اند
   nail: FiEdit3,
   skin: FiHeart,
   skin_face: FiHeart,
@@ -33,7 +30,6 @@ const ICON_MAP = {
   skincare: FiDroplet,
   keratin: FiSun,
   facial: FiDroplet,
-  // مقادیر قدیمی (سازگاری)
   face: FiFeather,
   brush: FiEdit3,
   'flash-on': FiZap,
@@ -42,12 +38,10 @@ const ICON_MAP = {
   'auto-awesome': FiStar,
   visibility: FiEye,
   'self-improvement': FiDroplet,
-  // پیش‌فرض
   other: FiMoreHorizontal,
   default: FiStar,
 };
 
-// ═══ نگاشت رنگ بر اساس آیکون ═══
 const COLOR_MAP = {
   nail: '#7B1FA2',
   skin: '#C2185B',
@@ -77,12 +71,12 @@ export default function CategoryGrid({ categories = [], onSelect, selectedId }) 
   if (!categories || categories.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-4 gap-3 px-3">
+    /* ✅ استفاده از کلاس responsive-grid-3-4-5 */
+    <div className="responsive-grid-3-4-5 px-1 sm:px-2">
       {categories.map((item) => {
         const isSelected = item.id === selectedId;
         const hasCount = (item.count || 0) > 0;
 
-        // دریافت آیکون و رنگ
         const iconKey = (item.icon || 'default').toLowerCase().replace(/\s+/g, '_');
         const IconComponent = ICON_MAP[iconKey] || ICON_MAP.default;
         const iconColor = COLOR_MAP[iconKey] || COLOR_MAP.default;
@@ -93,7 +87,7 @@ export default function CategoryGrid({ categories = [], onSelect, selectedId }) 
           <div key={item.id} className="flex flex-col items-center relative">
             <button
               onClick={() => onSelect?.(item)}
-              className="w-full aspect-square rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
+              className="w-full aspect-square rounded-xl sm:rounded-2xl border-2 flex flex-col items-center justify-center gap-1.5 sm:gap-2 transition-all hover:scale-105 active:scale-95"
               style={{
                 backgroundColor: isSelected
                   ? `linear-gradient(135deg, ${gradientStart}, ${gradientEnd})`
@@ -106,13 +100,14 @@ export default function CategoryGrid({ categories = [], onSelect, selectedId }) 
             >
               {/* آیکون */}
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl flex items-center justify-center"
                 style={{
                   backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : `${iconColor}15`,
                 }}
               >
                 <IconComponent
-                  size={20}
+                  size={16}
+                  className="sm:w-5 sm:h-5 lg:w-6 lg:h-6"
                   style={{
                     color: isSelected ? '#fff' : iconColor,
                   }}
@@ -120,7 +115,7 @@ export default function CategoryGrid({ categories = [], onSelect, selectedId }) 
               </div>
               {/* نام */}
               <span
-                className="text-[11px] font-[Vazir-Medium] text-center line-clamp-1 px-1 w-full"
+                className="text-[10px] sm:text-[11px] lg:text-xs font-[Vazir-Medium] text-center line-clamp-1 px-1 w-full"
                 style={{
                   color: isSelected ? '#fff' : colors.textMain,
                 }}
@@ -131,13 +126,13 @@ export default function CategoryGrid({ categories = [], onSelect, selectedId }) 
             {/* Badge تعداد */}
             {hasCount && (
               <div
-                className="absolute -top-2 -left-2 min-w-[20px] h-5 rounded-full flex items-center justify-center px-1.5 border-2"
+                className="absolute -top-1.5 -left-1.5 sm:-top-2 sm:-left-2 min-w-[18px] sm:min-w-[20px] h-4 sm:h-5 rounded-full flex items-center justify-center px-1 sm:px-1.5 border-2"
                 style={{
                   backgroundColor: '#E53935',
                   borderColor: colors.background,
                 }}
               >
-                <span className="text-[10px] font-[Vazir-Bold] text-white">
+                <span className="text-[9px] sm:text-[10px] font-[Vazir-Bold] text-white">
                   {toPersianDigit(item.count > 99 ? '99+' : item.count)}
                 </span>
               </div>

@@ -18,135 +18,60 @@ import { useBusinessStore } from '@/stores/useBusinessStore';
 
 export default function BottomTabBar() {
   const { colors } = useTheme();
-
   const pathname = usePathname();
   const router = useRouter();
-
   const { isAuthenticated } = useAuth();
 
-  // بررسی وجود کسب‌وکار
   const businessData = useBusinessStore((s) => s.businessData);
   const businessStatus = useBusinessStore((s) => s.businessStatus);
-
-  // فقط وجود id یا status برای تشخیص داشتن کسب‌وکار کافی است
   const hasBusiness = Boolean(businessData?.id) || Boolean(businessStatus);
 
   const tabs = isAuthenticated
     ? [
-        {
-          id: 'home',
-          icon: FiHome,
-          label: 'خانه',
-          path: '/',
-        },
-
-        {
-          id: 'explore',
-          icon: FiSearch,
-          label: 'ویترین',
-          path: '/explore',
-        },
-
+        { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
+        { id: 'explore', icon: FiSearch, label: 'ویترین', path: '/explore' },
         hasBusiness
-          ? {
-              id: 'manage',
-              icon: FiBriefcase,
-              label: 'مدیریت',
-              path: '/manage',
-            }
-          : {
-              id: 'create',
-              icon: FiPlusSquare,
-              label: 'ثبت آگهی',
-              path: '/create-business',
-            },
-
-        {
-          id: 'model-requests',
-          icon: FiStar,
-          label: 'آگهی مدل',
-          path: '/model-requests',
-        },
-
-        {
-          id: 'profile',
-          icon: FiUser,
-          label: 'پروفایل',
-          path: '/profile',
-        },
+          ? { id: 'manage', icon: FiBriefcase, label: 'مدیریت', path: '/manage' }
+          : { id: 'create', icon: FiPlusSquare, label: 'ثبت آگهی', path: '/create-business' },
+        { id: 'model-requests', icon: FiStar, label: 'آگهی مدل', path: '/model-requests' },
+        { id: 'profile', icon: FiUser, label: 'پروفایل', path: '/profile' },
       ]
     : [
-        {
-          id: 'home',
-          icon: FiHome,
-          label: 'خانه',
-          path: '/',
-        },
-
-        {
-          id: 'explore',
-          icon: FiSearch,
-          label: 'ویترین',
-          path: '/explore',
-        },
-
-        {
-          id: 'model-requests',
-          icon: FiStar,
-          label: 'درخواست مدل',
-          path: '/model-requests',
-        },
-
-        {
-          id: 'login',
-          icon: FiLogIn,
-          label: 'ورود و ثبت‌نام',
-          isAuthAction: true,
-        },
+        { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
+        { id: 'explore', icon: FiSearch, label: 'ویترین', path: '/explore' },
+        { id: 'model-requests', icon: FiStar, label: 'درخواست مدل', path: '/model-requests' },
+        { id: 'login', icon: FiLogIn, label: 'ورود و ثبت‌نام', isAuthAction: true },
       ];
 
   const isActive = (tab) => {
-    // تب ورود هیچ‌وقت active نمی‌شود
     if (tab.isAuthAction) return false;
-
-    // صفحه اصلی
-    if (tab.path === '/') {
-      return pathname === '/';
-    }
-
-    // سایر مسیرها
+    if (tab.path === '/') return pathname === '/';
     return pathname === tab.path || pathname?.startsWith(`${tab.path}/`);
   };
 
   const handleTabPress = (tab) => {
-    // ورود و ثبت‌نام
     if (tab.isAuthAction) {
       router.push('/auth/login');
       return;
     }
-
-    // اگر همین صفحه فعال است، کاری انجام نده
     if (isActive(tab)) return;
-
     router.push(tab.path);
   };
 
   return (
     <>
-      {/* فضای خالی برای جلوگیری از پوشانده شدن محتوای صفحه */}
+      {/* فضای خالی */}
       <div
-        className="h-24"
-        style={{
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        }}
+        className="h-24 md:h-28"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       />
 
       {/* Bottom Tab Bar */}
       <div
         className="
           fixed
-          left-4
-          right-4
+          left-4 right-4
+          md:left-1/2 md:right-auto md:-translate-x-1/2 md:max-w-lg md:w-[calc(100%-2rem)]
           h-16
           rounded-2xl
           flex
@@ -172,21 +97,11 @@ export default function BottomTabBar() {
               key={tab.id}
               onClick={() => handleTabPress(tab)}
               className="
-                flex
-                flex-col
-                items-center
-                gap-0.5
-                py-1
-                px-3
-                relative
-                transition-all
-                duration-200
-                hover:scale-105
-                active:scale-95
+                flex flex-col items-center gap-0.5 py-1 px-3 relative
+                transition-all duration-200 hover:scale-105 active:scale-95
               "
               type="button"
             >
-              {/* Icon */}
               <div className="relative">
                 <Icon
                   size={24}
@@ -197,15 +112,8 @@ export default function BottomTabBar() {
                 />
               </div>
 
-              {/* Label */}
               <span
-                className="
-                  text-[10px]
-                  transition-colors
-                  duration-200
-                  text-center
-                  leading-tight
-                "
+                className="text-[10px] transition-colors duration-200 text-center leading-tight"
                 style={{
                   color: active ? colors.primary : colors.textSecondary,
                   fontFamily: active ? 'Vazir-Bold' : 'Vazir-Medium',
@@ -214,21 +122,10 @@ export default function BottomTabBar() {
                 {tab.label}
               </span>
 
-              {/* Active Indicator */}
               {active && (
                 <div
-                  className="
-                    absolute
-                    -top-1
-                    left-1/2
-                    -translate-x-1/2
-                    w-8
-                    h-1
-                    rounded-full
-                  "
-                  style={{
-                    backgroundColor: colors.primary,
-                  }}
+                  className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full"
+                  style={{ backgroundColor: colors.primary }}
                 />
               )}
             </button>

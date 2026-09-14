@@ -44,7 +44,6 @@ export default function HomePage() {
   const { addPendingReview } = useReviewStore();
   const isDark = resolvedTheme === 'dark';
 
-  // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
   const [locationState, setLocationState] = useState({
     provinceId: null,
     cityId: null,
@@ -86,7 +85,6 @@ export default function HomePage() {
     return useGlobalLocationStore.getState().getLocationParams();
   }, []);
 
-  // ─── State‌ها ───
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [notificationVisible, setNotificationVisible] = useState(false);
@@ -99,13 +97,11 @@ export default function HomePage() {
   const [lineRentals, setLineRentals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ═══════ دریافت داده‌ها از API ═══════
   useEffect(() => {
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
         const locationParams = getLocationParams();
-        // ✅ تغییر: استفاده از getBanners به جای getPosts
         const [bannersRes, catRes, lineRes] = await Promise.allSettled([
           adsService.getBanners(),
           categoriesService.getServiceCategories({ ...locationParams }),
@@ -123,7 +119,7 @@ export default function HomePage() {
               businessId: b.businessId || b.business_id,
               businessSlug: b.businessSlug || b.business_slug,
               badge: b.badge || null,
-              customUrl: b.customUrl || b.custom_url, // ✅ برای لینک‌های دلخواه
+              customUrl: b.customUrl || b.custom_url,
             }))
           );
         }
@@ -160,7 +156,6 @@ export default function HomePage() {
     getLocationParams,
   ]);
 
-  // ═══════ بررسی خودکار نوبت‌های آماده نظردهی (اصلاح شده) ═══════
   const pendingCheckDone = useRef(false);
   useEffect(() => {
     if (!isAuthenticated || pendingCheckDone.current) return;
@@ -173,9 +168,6 @@ export default function HomePage() {
         if (pending.length > 0) {
           const { dismissedAppointments, reviewedBusinessIds } = useReviewStore.getState();
 
-          // ✅ پیدا کردن اولین نوبتی که:
-          // 1. قبلاً بسته (dismiss) نشده باشد
-          // 2. کسب‌وکار آن قبلاً نظر داده نشده باشد
           const reviewableApt = pending.find((apt) => {
             const bizId = apt.business_id || apt.businessId;
             return !dismissedAppointments.includes(apt.id) && !reviewedBusinessIds.includes(bizId);
@@ -192,9 +184,7 @@ export default function HomePage() {
               time: reviewableApt.time_slot || reviewableApt.timeSlot,
             };
 
-            // ✅ اضافه کردن به استور تا موقع ثبت نظر، businessId در دسترس باشد
             addPendingReview(aptData);
-
             setCurrentReviewAppointment(aptData);
             setReviewVisible(true);
           }
@@ -208,7 +198,6 @@ export default function HomePage() {
     checkPendingReviews();
   }, [isAuthenticated, addPendingReview]);
 
-  // ═══════ ✅ تغییر: NearbyToggle با استفاده از getState ═══════
   const handleNearbyToggle = useCallback(async () => {
     const { gpsEnabled, disableGps, enableGps, handleGpsError, setGpsLoading } =
       useGlobalLocationStore.getState();
@@ -227,12 +216,9 @@ export default function HomePage() {
     } catch (err) {
       handleGpsError();
       
-      // ═══ GPS خاموش است ═══
       if (err.code === 2 || err.gpsDisabled) {
         showToast('لطفاً GPS گوشی را روشن کنید و دوباره تلاش کنید', 'warning');
-      } 
-      // ═══ دسترسی رد شده ═══
-      else if (err.code === 1) {
+      } else if (err.code === 1) {
         if (err.needsSettings) {
           const shouldOpen = window.confirm(
             'دسترسی به موقعیت رد شده است.\n\n' +
@@ -246,13 +232,9 @@ export default function HomePage() {
         } else {
           showToast('دسترسی به موقعیت رد شد', 'error');
         }
-      } 
-      // ═══ Timeout ═══
-      else if (err.code === 3) {
+      } else if (err.code === 3) {
         showToast('دریافت موقعیت زمان‌بر شد. دوباره تلاش کنید.', 'warning');
-      }
-      // ═══ سایر خطاها ═══
-      else {
+      } else {
         showToast('خطا در دریافت موقعیت', 'error');
       }
     } finally {
@@ -260,7 +242,6 @@ export default function HomePage() {
     }
   }, [showToast]);
 
-  // ═══════ ✅ تغییر: فیلتر اجاره لاین بر اساس locationState ═══════
   const filteredLineRentals = useMemo(() => {
     if (!locationState.gpsEnabled || !locationState.latitude || !locationState.longitude)
       return lineRentals;
@@ -273,13 +254,11 @@ export default function HomePage() {
     });
   }, [locationState.gpsEnabled, locationState.latitude, locationState.longitude, lineRentals]);
 
-  // ═══════ hasActiveFilter ═══════
   const hasActiveFilter = useMemo(
     () => Object.values(filters).some((v) => v && v !== 'all' && v !== 'recommended'),
     [filters]
   );
 
-  // ─── Handlers ───
   const handleThemeToggle = useCallback(
     () => setTheme(isDark ? 'light' : 'dark'),
     [isDark, setTheme]
@@ -289,7 +268,6 @@ export default function HomePage() {
       if (ad.businessSlug) {
         router.push(`/business?slug=${ad.businessSlug}`);
       } else if (ad.customUrl) {
-        // باز کردن لینک دلخواه (مثلاً لینک ثبت نام یا کمپین خاص)
         window.open(ad.customUrl, '_blank');
       }
     },
@@ -308,8 +286,6 @@ export default function HomePage() {
   );
   const handleReviewClose = useCallback(() => {
     if (currentReviewAppointment) {
-      // ✅ وقتی کاربر مدال را می‌بندد، این نوبت خاص dismiss می‌شود
-      // اما اگر نوبت جدیدی از همین کسب‌وکار بگیرد، چون ID جدید است، دوباره مدال نمایش داده می‌شود
       useReviewStore.getState().dismissPendingReview(currentReviewAppointment.id);
     }
     setReviewVisible(false);
@@ -319,7 +295,6 @@ export default function HomePage() {
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
   const handleClearAllFilters = useCallback(() => setFilters({}), []);
 
-  // ═══════ Loading State ═══════
   if (isLoading) {
     return (
       <div
@@ -333,103 +308,113 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen pb-28" style={{ backgroundColor: colors.background }}>
-      {/* ═══════════ هدر ═══════════ */}
-      <HomeHeader
-        userName={user?.name}
-        userAvatar={user?.avatar}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onSearchSubmit={() => {
-          if (searchQuery.trim()) {
-            router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-          }
-        }}
-        onSearchClick={() => router.push('/search')}
-        onFilterPress={() => setFilterVisible(true)}
-        hasActiveFilter={hasActiveFilter}
-        isDark={isDark}
-        onThemeToggle={handleThemeToggle}
-        onNotificationPress={() => {
-          if (isAuthenticated) {
-            setNotificationVisible(true);
-          } else {
-            requireAuth(() => setNotificationVisible(true));
-          }
-        }}
-        notificationCount={3}
-      />
+      {/* ═══════════ ✅ Container ریپانسیو ═══════════ */}
+      <div className="app-container">
+        {/* ═══════════ هدر ═══════════ */}
+        <HomeHeader
+          userName={user?.name}
+          userAvatar={user?.avatar}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onSearchSubmit={() => {
+            if (searchQuery.trim()) {
+              router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+            }
+          }}
+          onSearchClick={() => router.push('/search')}
+          onFilterPress={() => setFilterVisible(true)}
+          hasActiveFilter={hasActiveFilter}
+          isDark={isDark}
+          onThemeToggle={handleThemeToggle}
+          onNotificationPress={() => {
+            if (isAuthenticated) {
+              setNotificationVisible(true);
+            } else {
+              requireAuth(() => setNotificationVisible(true));
+            }
+          }}
+          notificationCount={3}
+        />
 
-      {/* ═══════════ نوار فیلترهای فعال ═══════════ */}
-      <ActiveFiltersBar
-        filters={filters}
-        onChange={handleFilterChange}
-        onClearAll={handleClearAllFilters}
-      />
-
-      {/* ═══════════ بنر دعوت به ثبت‌نام ═══════════ */}
-      {!isAuthenticated && <RegisterBanner onLogin={() => requireAuth()} />}
-
-      {/* ═══════════ محتوای اصلی ═══════════ */}
-      <div className="px-5 pt-4 flex flex-col gap-6">
-        {/* ─── ۱. اسلایدر تبلیغات ─── */}
-        {ads.length > 0 && (
-          <section>
-            <SectionHeader
-              icon={<FiStar size={18} />}
-              iconColor={colors.primary}
-              title="پیشنهادات ویژه"
-              rightElement={<SeeAllButton onPress={() => router.push('/ads')} count={ads.length} />}
-            />
-            <AdSlider ads={ads} onPress={handleAdPress} />
-          </section>
-        )}
-
-        {/* ─── 📍 دکمه نزدیک‌ترین‌ها ═══ */}
-        <section>
-          <NearbyToggle
-            nearbyEnabled={locationState.gpsEnabled}
-            nearbyLoading={locationState.gpsLoading}
-            onToggle={handleNearbyToggle}
+        {/* ═══════════ نوار فیلترهای فعال ═══════════ */}
+        <div className="content-padding">
+          <ActiveFiltersBar
+            filters={filters}
+            onChange={handleFilterChange}
+            onClearAll={handleClearAllFilters}
           />
-        </section>
+        </div>
 
-        {/* ─── ۲. دسته‌بندی خدمات ─── */}
-        {categories.length > 0 && (
-          <section>
-            <SectionHeader
-              icon={<FiGrid size={18} />}
-              iconColor="#FF9800"
-              title="دسته‌بندی خدمات"
-            />
-            <CategoryGrid
-              categories={categories}
-              selectedId={selectedCategory}
-              onSelect={handleCategorySelect}
-            />
-          </section>
+        {/* ═══════════ بنر دعوت به ثبت‌نام ═══════════ */}
+        {!isAuthenticated && (
+          <div className="content-padding">
+            <RegisterBanner onLogin={() => requireAuth()} />
+          </div>
         )}
 
-        {/* ─── ۳. فرصت‌های همکاری / اجاره لاین ─── */}
-        {filteredLineRentals.length > 0 && (
+        {/* ═══════════ محتوای اصلی ═══════════ */}
+        <div className="content-padding pt-4 flex flex-col gap-6">
+          {/* ─── ۱. اسلایدر تبلیغات ─── */}
+          {ads.length > 0 && (
+            <section>
+              <SectionHeader
+                icon={<FiStar size={18} />}
+                iconColor={colors.primary}
+                title="پیشنهادات ویژه"
+                rightElement={<SeeAllButton onPress={() => router.push('/ads')} count={ads.length} />}
+              />
+              <AdSlider ads={ads} onPress={handleAdPress} />
+            </section>
+          )}
+
+          {/* ─── 📍 دکمه نزدیک‌ترین‌ها ═══ */}
           <section>
-            <SectionHeader
-              icon={<span style={{ fontSize: 18 }}>🏢</span>}
-              iconColor="#667eea"
-              title="فرصت‌های همکاری"
-              rightElement={
-                <SeeAllButton
-                  onPress={() => router.push('/line-rentals')}
-                  count={filteredLineRentals.length}
-                />
-              }
+            <NearbyToggle
+              nearbyEnabled={locationState.gpsEnabled}
+              nearbyLoading={locationState.gpsLoading}
+              onToggle={handleNearbyToggle}
             />
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-              {filteredLineRentals.map((rental) => (
-                <LineRentalCard key={rental.id} rental={rental} onPress={handleLineRentalPress} />
-              ))}
-            </div>
           </section>
-        )}
+
+          {/* ─── ۲. دسته‌بندی خدمات ─── */}
+          {categories.length > 0 && (
+            <section>
+              <SectionHeader
+                icon={<FiGrid size={18} />}
+                iconColor="#FF9800"
+                title="دسته‌بندی خدمات"
+              />
+              <CategoryGrid
+                categories={categories}
+                selectedId={selectedCategory}
+                onSelect={handleCategorySelect}
+              />
+            </section>
+          )}
+
+          {/* ─── ۳. فرصت‌های همکاری / اجاره لاین ─── */}
+          {filteredLineRentals.length > 0 && (
+            <section>
+              <SectionHeader
+                icon={<span style={{ fontSize: 18 }}>🏢</span>}
+                iconColor="#667eea"
+                title="فرصت‌های همکاری"
+                rightElement={
+                  <SeeAllButton
+                    onPress={() => router.push('/line-rentals')}
+                    count={filteredLineRentals.length}
+                  />
+                }
+              />
+              {/* ✅ استفاده از کلاس responsive-scroll */}
+              <div className="responsive-scroll pb-2 -mx-1 px-1">
+                {filteredLineRentals.map((rental) => (
+                  <LineRentalCard key={rental.id} rental={rental} onPress={handleLineRentalPress} />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
       </div>
 
       {/* ═══════════ Bottom Tab Bar ═══════════ */}

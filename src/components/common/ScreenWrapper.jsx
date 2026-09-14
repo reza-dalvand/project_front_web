@@ -4,12 +4,7 @@
  * کامپوننت ScreenWrapper
  *
  * کانتینر اصلی صفحات اپلیکیشن — مدیریت ارتفاع و اسکرول
- *
- * @param {React.ReactNode} children - محتوای داخلی
- * @param {boolean} scrollable - true: اسکرول در سطح window | false: اسکرول توسط فرزندان
- * @param {number} padding - پدینگ داخلی به پیکسل (0 = بدون پدینگ)
- * @param {string} className - کلاس‌های اضافی برای کانتینر
- * @param {string} contentClassName - کلاس‌های محتوای داخلی (فقط scrollable=true)
+ * در دسکتاپ محتوا را در یک کانتینر مرکزی (max-w-6xl) محدود می‌کند.
  */
 export default function ScreenWrapper({
   children,
@@ -21,24 +16,25 @@ export default function ScreenWrapper({
   const paddingStyle = padding > 0 ? { padding: `${padding}px` } : undefined;
 
   // ─── حالت اسکرول‌پذیر ───
-  // کل صفحه از طریق window/body اسکرول می‌شود
   if (scrollable) {
     return (
       <div className={`min-h-screen min-h-dvh bg-[var(--bg)] ${className}`} style={paddingStyle}>
-        {contentClassName ? <div className={contentClassName}>{children}</div> : children}
+        <div className={`max-w-6xl mx-auto w-full ${contentClassName}`}>
+          {children}
+        </div>
       </div>
     );
   }
 
   // ─── حالت ثابت (بدون اسکرول صفحه) ───
-  // ارتفاع دقیق viewport — فرزندان باید خودشان اسکرول را مدیریت کنند
-  // الگوی رایج: <div className="flex-1 overflow-y-auto pb-32">
   return (
     <div
       className={`h-screen h-dvh flex flex-col overflow-hidden bg-[var(--bg)] ${className}`}
       style={paddingStyle}
     >
-      {children}
+      <div className="flex-1 flex flex-col max-w-6xl mx-auto w-full overflow-hidden">
+        {children}
+      </div>
     </div>
   );
 }
