@@ -26,7 +26,7 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
 
   function calculateCurrentFee(price) {
     let fee = 0;
-    if (price < 250000) fee = 7000;
+    if (price < 250000) fee = 9000;
     else if (price <= 500000)
       fee = Math.round(price * 0.03); // ✅ اصلاح: ۴٪
     else fee = Math.round(price * 0.04); // ✅ اصلاح: ۵٪

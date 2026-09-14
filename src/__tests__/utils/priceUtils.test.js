@@ -14,10 +14,10 @@ import {
 
 describe('price-utils', () => {
   describe('calculateAppFee', () => {
-    it('زیر ۲۵۰ هزار تومان، کمیسیون ثابت ۷۰۰۰ است', () => {
-      expect(calculateAppFee(100000)).toBe(7000);
-      expect(calculateAppFee(200000)).toBe(7000);
-      expect(calculateAppFee(249999)).toBe(7000);
+    it('زیر ۲۵۰ هزار تومان، کمیسیون ثابت ۹۰۰۰ است', () => {
+      expect(calculateAppFee(100000)).toBe(9000);
+      expect(calculateAppFee(200000)).toBe(9000);
+      expect(calculateAppFee(249999)).toBe(9000);
     });
 
     it('از ۲۵۰ هزار تا ۵۰۰ هزار، ۳ درصد است', () => {

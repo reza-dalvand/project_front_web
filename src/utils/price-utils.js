@@ -38,7 +38,7 @@ export const calculateAppFee = (basePrice) => {
   let fee = 0;
 
   if (basePrice < 250000) {
-    fee = 7000;
+    fee = 10000;
   } else if (basePrice <= 500000) {
     // ✅ ۳ درصد
     fee = Math.round(basePrice * 0.03);
@@ -57,7 +57,7 @@ export const APP_FEE_TIERS = [
   {
     min: 0,
     max: 250000,
-    fee: 7000,
+    fee: 9000,
     type: 'fixed',
     label: 'ثابت',
     description: '۷ هزار تومان',
