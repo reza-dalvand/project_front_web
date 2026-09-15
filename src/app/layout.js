@@ -19,6 +19,7 @@ export const metadata = {
   },
   other: {
     'apple-touch-icon': '/icons/icon-192.png',
+    'enamad': '56933459',
   },
 };
 
