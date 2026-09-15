@@ -127,7 +127,7 @@ jobs:
     needs: test-and-build
     environment:
       name: production
-      url: https://beauclub.ir
+      url: https://app.beauclub.ir
     steps:
       - name: Download deployment artifact
         uses: actions/download-artifact@v4
@@ -209,7 +209,7 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -e
-            SITE_URL="${{ secrets.PRODUCTION_URL || 'https://beauclub.ir' }}"
+            SITE_URL="${{ secrets.PRODUCTION_URL || 'https://app.beauclub.ir' }}"
             for i in $(seq 1 5); do
               HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SITE_URL}" --max-time 10 || echo "000")
               if [ "$HTTP_CODE" = "200" ]; then exit 0; fi

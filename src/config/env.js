@@ -16,7 +16,7 @@ const ENV = {
   },
   production: {
     API_BASE_URL: 'https://api.beauclub.ir/api/v1',
-    SITE_DOMAIN: 'https://beauclub.ir',
+    SITE_DOMAIN: 'https://app.beauclub.ir',
     ARVAN_CDN_URL: 'https://cdn.beauclub.ir',
     MEDIA_BASE_URL: 'https://api.beauclub.ir',
   },

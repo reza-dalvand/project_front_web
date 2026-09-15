@@ -3,32 +3,11 @@ import { useState, useEffect } from 'react';
 import { FiX, FiCheckCircle, FiAlertCircle, FiInfo, FiAlertTriangle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 
-// ✅ رنگ‌های solid و پررنگ برای هر نوع
 const TYPE_CONFIG = {
-  success: {
-    icon: FiCheckCircle,
-    bg: '#43A047',
-    border: '#388E3C',
-    textColor: '#ffffff',
-  },
-  error: {
-    icon: FiAlertCircle,
-    bg: '#E53935',
-    border: '#C62828',
-    textColor: '#ffffff',
-  },
-  warning: {
-    icon: FiAlertTriangle,
-    bg: '#FF9800',
-    border: '#F57C00',
-    textColor: '#ffffff',
-  },
-  info: {
-    icon: FiInfo,
-    bg: '#2196F3',
-    border: '#1976D2',
-    textColor: '#ffffff',
-  },
+  success: { icon: FiCheckCircle, bg: '#43A047', border: '#388E3C', textColor: '#ffffff' },
+  error: { icon: FiAlertCircle, bg: '#E53935', border: '#C62828', textColor: '#ffffff' },
+  warning: { icon: FiAlertTriangle, bg: '#FF9800', border: '#F57C00', textColor: '#ffffff' },
+  info: { icon: FiInfo, bg: '#2196F3', border: '#1976D2', textColor: '#ffffff' },
 };
 
 export default function Toast({ visible, message, type = 'info', position = 'bottom', onHide }) {
@@ -37,7 +16,6 @@ export default function Toast({ visible, message, type = 'info', position = 'bot
 
   useEffect(() => {
     if (visible) {
-      // ✅ کوچک‌ترین تأخیر برای انیمیشن ورود
       const timer = setTimeout(() => setShow(true), 10);
       return () => clearTimeout(timer);
     } else {
@@ -54,9 +32,10 @@ export default function Toast({ visible, message, type = 'info', position = 'bot
   return (
     <div
       className={`fixed left-4 right-4 ${positionClass} z-[99999]
-flex items-center gap-3 px-4 py-3.5 rounded-2xl shadow-xl
-transition-all duration-300 ease-out
-${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+        md:left-1/2 md:right-auto md:-translate-x-1/2 md:max-w-md md:w-[calc(100%-2rem)]
+        flex items-center gap-3 px-4 py-3.5 rounded-2xl shadow-xl
+        transition-all duration-300 ease-out
+        ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
       style={{
         backgroundColor: config.bg,
         border: `1px solid ${config.border}`,

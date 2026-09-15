@@ -48,5 +48,5 @@ export default function BackButtonHandler({ children }) {
     };
   }, []);
 
-  return <>{children}</>;
+  return <>{children}</>; 
 }

@@ -1,3 +1,4 @@
+// src/components/providers/AuthProvider.jsx
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -6,15 +7,8 @@ import { App as CapApp } from '@capacitor/app';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useTokenStore } from '@/stores/useTokenStore';
 import { authService } from '@/api';
+import { isTokenExpiringSoon } from '@/utils/jwt-utils'; // ✅ اضافه شد
 
-/**
- * AuthProvider — مدیریت Session Persistence
- *
- * مسئولیت‌ها:
- * ۱. Rehydration از storage در startup
- * ۲. Refresh token هنگام بازگشت کاربر به اپ (visibilitychange / appStateChange)
- * ۳. جلوگیری از logout خودکار
- */
 export default function AuthProvider({ children }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const lastRefreshRef = useRef(0);
@@ -26,18 +20,20 @@ export default function AuthProvider({ children }) {
     const handleRefresh = async () => {
       const now = Date.now();
       if (now - lastRefreshRef.current < MIN_REFRESH_INTERVAL) {
-        return; // جلوگیری از refresh مکرر
+        return;
       }
 
-      const { refreshToken } = useTokenStore.getState();
-      if (!refreshToken) return;
+      const { accessToken, refreshToken } = useTokenStore.getState();
+      
+      // ✅ FIX: فقط زمانی refresh کن که توکن به زودی منقضی می‌شود
+      if (!refreshToken || !isTokenExpiringSoon(accessToken)) {
+        return;
+      }
 
       lastRefreshRef.current = now;
 
       try {
         const result = await authService.refreshToken(refreshToken);
-
-        // ✅ FIX: Defensive programming — بررسی ساختار response
         const data = result?.data;
         if (!data || !data.access) {
           console.warn('Invalid refresh response structure:', result);
@@ -51,7 +47,8 @@ export default function AuthProvider({ children }) {
 
         console.log('✅ Token refreshed successfully');
       } catch (error) {
-        console.warn('Activity-based refresh failed:', error?.message || error);
+        // ✅ فقط لاگ warning، نه error
+        console.warn('Activity-based refresh skipped:', error?.message || error);
       }
     };
 

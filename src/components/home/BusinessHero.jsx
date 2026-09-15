@@ -49,7 +49,7 @@ export default function BusinessHero({
   const coverImage = coverUrl || gallery[0] || FALLBACK_COVER;
 
   // لینک رزرو اختصاصی
-  const bookingLink = `https://beauclub.ir/book/${businessId || 'biz_1'}`;
+  const bookingLink = `https://app.beauclub.ir/book/${businessId || 'biz_1'}`;
 
   // ═══════ هندلر اشتراک‌گذاری ═══════
   const handleShare = async () => {

@@ -21,7 +21,7 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.arvanstorage.ir' },
       // ✅ Production: BeauClub Domains
       { protocol: 'https', hostname: 'api.beauclub.ir' },
-      { protocol: 'https', hostname: 'beauclub.ir' },
+      { protocol: 'https', hostname: 'app.beauclub.ir' },
       { protocol: 'https', hostname: 'cdn.beauclub.ir' },
       { protocol: 'https', hostname: '*.beauclub.ir' },
     ],

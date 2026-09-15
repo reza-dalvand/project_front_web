@@ -6,7 +6,7 @@ import { FiX } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore, useAuthModal } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
-import { useAuthFlow } from '@/hooks/useAuthFlow'; // ✅ جدید
+import { useAuthFlow } from '@/hooks/useAuthFlow';
 import { validatePhone, cleanPhone } from '@/utils/phoneUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { authService } from '@/api';
@@ -29,7 +29,6 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const [lastName, setLastName] = useState('');
   const [profileError, setProfileError] = useState('');
 
-  // ═══════ استفاده از hook مشترک ═══════
   const {
     otp,
     setOtp,
@@ -57,7 +56,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
       setFirstName('');
       setLastName('');
       setProfileError('');
-      reset(); // ✅ ریست state‌های hook
+      reset();
     }
   }, [showAuthModal, reset]);
 
@@ -92,7 +91,7 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
     try {
       await authService.sendOTP(cleanPhone(phone));
       setStage('otp');
-      reset(); // ریست تایمر و OTP
+      reset();
     } catch (err) {
       setError(err.message || 'خطا در ارسال کد تایید');
     }
@@ -140,12 +139,27 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const isBottomSheet = variant === 'bottomsheet';
 
   const containerClass = isBottomSheet
-    ? 'fixed inset-0 z-[9999] flex items-end md:items-center justify-center'
-    : 'fixed inset-0 z-[9999] flex items-center justify-center p-4';
+    ? 'fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4'
+    : 'fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 md:p-6';
 
   const panelClass = isBottomSheet
-    ? 'relative w-full max-w-md rounded-t-3xl md:rounded-3xl overflow-hidden flex flex-col h-[96dvh] md:h-auto md:max-h-[92dvh]'
-    : 'relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[96dvh] md:h-auto md:max-h-[92dvh]';
+    ? [
+        'relative w-full overflow-hidden flex flex-col',
+        // Mobile: full-width bottom sheet
+        'rounded-t-3xl h-[100dvh] sm:h-[96dvh]',
+        // sm+: centered modal
+        'sm:max-w-md sm:rounded-3xl sm:h-auto sm:max-h-[92dvh]',
+        // lg+: slightly wider on large screens
+        'lg:max-w-lg',
+      ].join(' ')
+    : [
+        'relative w-full overflow-hidden shadow-2xl flex flex-col',
+        // Mobile: near-full screen
+        'rounded-3xl h-[96dvh] max-w-[100vw]',
+        // sm+: constrained modal
+        'sm:max-w-md sm:h-auto sm:max-h-[92dvh]',
+        'lg:max-w-lg',
+      ].join(' ');
 
   const getTitle = () => {
     if (stage === 'info') return 'ورود / ثبت‌نام';
@@ -229,31 +243,39 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle - فقط موبایل (<sm) و فقط bottomsheet */}
         {isBottomSheet && (
-          <div className="flex justify-center pt-3 pb-1 md:hidden">
-            <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
+          <div className="flex justify-center pt-3 pb-1 sm:hidden">
+            <div
+              className="w-10 h-1 rounded-full"
+              style={{ backgroundColor: colors.border }}
+            />
           </div>
         )}
 
-        {/* هدر */}
+        {/* هدر - ریسپانسیو */}
         <div
-          className="flex items-center justify-between px-5 py-4 border-b"
+          className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b"
           style={{ borderColor: colors.border }}
         >
-          <h2 className="text-base font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+          <h2
+            className="text-sm sm:text-base font-[Vazir-Bold]"
+            style={{ color: colors.textMain }}
+          >
             {getTitle()}
           </h2>
           <button
             onClick={cancelAuthModal}
-            className="w-9 h-9 rounded-full flex items-center justify-center"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
             style={{ backgroundColor: colors.background }}
           >
             <FiX size={18} style={{ color: colors.textMain }} />
           </button>
         </div>
 
+        {/* محتوا - ریسپانسیو با safe area */}
         <div
-          className="p-5 overflow-y-auto flex-1 overscroll-contain"
+          className="p-4 sm:p-5 overflow-y-auto flex-1 overscroll-contain"
           style={{
             paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
             WebkitOverflowScrolling: 'touch',

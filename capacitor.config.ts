@@ -1,20 +1,21 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.beauclub.app',
+  appId: 'ir.beauclub.app',
   appName: 'BU Club',
   webDir: 'out',
   backgroundColor: '#F5F0EC',
   server: {
     androidScheme: 'https',
     cleartext: true,
+    url: 'https://app.beauclub.ir',
   },
   android: {
     allowMixedContent: true,
   },
   plugins: {
   SplashScreen: {
-    launchShowDuration: 0,      // ✅ نیتیو فوراً مخفی می‌شود؛ اسپلش وب جایگزین است
+    launchShowDuration: 0,      //نیتیو فوراً مخفی می‌شود؛ اسپلش وب جایگزین است
     launchAutoHide: true,
     launchFadeOutDuration: 0,
     backgroundColor: '#F6E8E4',

@@ -1,14 +1,11 @@
 'use client';
 
-/**
- * کامپوننت کارت مشترک
- */
 export default function Card({
   children,
   onPress,
   variant = 'default',
-  padding = 16,
-  radius = 16,
+  padding = null,
+  radius = null,
   className = '',
   style = {},
 }) {
@@ -20,22 +17,28 @@ export default function Card({
 
   const Component = onPress ? 'button' : 'div';
 
+  // Responsive defaults — اگر prop داده نشده
+  const resolvedPadding = padding ?? 'p-3 sm:p-4 lg:p-5';
+  const resolvedRadius = radius ?? 'rounded-xl sm:rounded-2xl';
+
   return (
     <Component
       onClick={onPress}
       className={`
         overflow-hidden
         ${variantClasses[variant]}
+        ${typeof resolvedPadding === 'string' ? resolvedPadding : ''}
+        ${typeof resolvedRadius === 'string' ? resolvedRadius : ''}
         ${
           onPress
-            ? 'cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]'
+            ? 'cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] w-full text-right'
             : ''
         }
         ${className}
       `}
       style={{
-        padding: `${padding}px`,
-        borderRadius: `${radius}px`,
+        ...(typeof resolvedPadding === 'number' ? { padding: `${resolvedPadding}px` } : {}),
+        ...(typeof resolvedRadius === 'number' ? { borderRadius: `${resolvedRadius}px` } : {}),
         ...style,
       }}
     >
