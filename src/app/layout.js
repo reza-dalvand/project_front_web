@@ -2,7 +2,7 @@
 import './globals.css';
 import Providers from '@/components/providers';
 import Script from 'next/script';
-import SplashScreenHider from '@/components/providers/SplashScreenHider'; // ✅ اضافه شد
+import SplashScreenHider from '@/components/providers/SplashScreenHider'; 
 import SuspensionModal from '@/components/common/SuspensionModal';
 
 export const metadata = {

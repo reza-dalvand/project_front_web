@@ -146,6 +146,20 @@ export default function ManagePortfolioPage() {
           </span>
         </div>
 
+                <button
+          onClick={openAddForm}
+          className="w-full flex items-center justify-center gap-2 py-3 mb-4 rounded-xl border-2 border-dashed transition-all"
+          style={{
+            borderColor: colors.primary + '50',
+            backgroundColor: colors.primary + '05',
+          }}
+        >
+          <FiImage size={20} style={{ color: colors.primary }} />
+          <span className="text-sm font-[Vazir-Bold]" style={{ color: colors.primary }}>
+            افزودن نمونه‌کار جدید
+          </span>
+        </button>
+
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div
