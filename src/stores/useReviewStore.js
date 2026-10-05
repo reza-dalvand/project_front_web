@@ -208,9 +208,21 @@ export const useReviewStore = create(
           ? localStorage
           : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
+      // ═══════════════════════════════════════════════════════════════
+      // ✅ FIX امنیت: حذف تاریخ و زمان نوبت‌ها از localStorage
+      // ═══════════════════════════════════════════════════════════════
       partialize: (state) => ({
         reviews: state.reviews,
-        pendingReviews: state.pendingReviews,
+        pendingReviews: state.pendingReviews.map(p => ({
+          appointmentId: p.appointmentId,
+          businessId: p.businessId,
+          businessName: p.businessName,
+          businessLogo: p.businessLogo,
+          serviceName: p.serviceName,
+          employeeName: p.employeeName,
+          addedAt: p.addedAt,
+          // ❌ حذف: date, time (اطلاعات زمانی حساس)
+        })),
         dismissedAppointments: state.dismissedAppointments,
         reviewedBusinessIds: state.reviewedBusinessIds,
       }),

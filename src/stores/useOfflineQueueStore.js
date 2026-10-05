@@ -40,6 +40,23 @@ export const useOfflineQueueStore = create(
 
       // ─── Actions ───
       enqueue: (request) => {
+        // ═══════════════════════════════════════════════════════════════
+        // ✅ FIX امنیت: جلوگیری از queue کردن درخواست‌های حساس
+        // ═══════════════════════════════════════════════════════════════
+        const sensitiveUrls = [
+          '/auth/otp/',
+          '/payments/',
+          '/businesses/bank-info/',
+          '/accounts/profile/',
+          '/accounts/auth/',
+        ];
+        
+        const isSensitive = sensitiveUrls.some(url => request.url.includes(url));
+        if (isSensitive) {
+          console.warn('⚠️ Sensitive request not queued for offline:', request.url);
+          return; // اصلاً در صف نگذار
+        }
+
         set((state) => {
           const newItem = {
             id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

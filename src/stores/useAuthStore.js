@@ -298,9 +298,18 @@ export const useAuthStore = create(
     {
       name: 'beau-auth-storage',
       storage: createJSONStorage(getStorage),
+      // ═══════════════════════════════════════════════════════════════
+      // ✅ FIX امنیت: حذف اطلاعات حساس از localStorage
+      // ═══════════════════════════════════════════════════════════════
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
-        user: state.user,
+        user: state.user ? {
+          id: state.user.id,
+          name: state.user.name,
+          avatar: state.user.avatar,
+          isVerified: state.user.isVerified,
+          // ❌ حذف فیلدهای حساس: phone, firstName, lastName, verifiedName, dateJoined, phoneDisplay
+        } : null,
         needsProfileCompletion: state.needsProfileCompletion,
         isSuspended: state.isSuspended,
         suspensionReason: state.suspensionReason,
@@ -308,7 +317,6 @@ export const useAuthStore = create(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.setHydrated();
-          // ✅ شروع periodic refresh پس از rehydration اگر کاربر لاگین است
           if (state.isAuthenticated) {
             startPeriodicRefresh();
           }

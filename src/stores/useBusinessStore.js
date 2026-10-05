@@ -121,7 +121,6 @@ export const useBusinessStore = create(
               },
             },
             gallery: b.gallery || [],
-            // ✅ FIX: وضعیت بیزینس هم آپدیت شود
             businessStatus: b.status || state.businessStatus,
           }));
           return response.data;
@@ -139,8 +138,6 @@ export const useBusinessStore = create(
             });
             return null;
           }
-          // ✅ FIX: اگر خطا غیر از "بیزینس ندارید" بود، استور را ریست نکن
-          // فقط ارور را لاگ کن تا داده‌های قبلی حفظ شوند
           console.error('fetchBusinessDetail failed:', error);
           throw error;
         }
@@ -190,7 +187,6 @@ export const useBusinessStore = create(
               latitude: b.latitude || null,
               longitude: b.longitude || null,
             },
-            // ✅ FIX: وضعیت بیزینس بلافاصله ست شود
             businessStatus: b.status || 'pending',
           }));
           return response.data;
@@ -221,9 +217,6 @@ export const useBusinessStore = create(
         }
       },
 
-      // ═══════════════════════════════════════════════
-      //   ۱. اصلاح fetchBankInfo (برای پر کردن صحیح مودال)
-      // ═══════════════════════════════════════════════
       fetchBankInfo: async () => {
         try {
           const response = await businessesService.getBankInfo();
@@ -234,7 +227,6 @@ export const useBusinessStore = create(
               bankInfo: {
                 isRegistered: Boolean(data.bankInfoRegistered ?? data.is_registered ?? true),
                 isVerified: Boolean(data.bankInfoVerified ?? data.is_verified),
-                // ✅ پشتیبانی از هر دو حالت camelCase و snake_case
                 bankName: data.bankName || data.bank_name || '',
                 bankId: data.bankId || data.bank_id || '',
                 sheba: data.bankSheba || data.sheba || '',
@@ -253,12 +245,8 @@ export const useBusinessStore = create(
         }
       },
 
-      // ═══════════════════════════════════════════════
-      //   ۲. اصلاح updateBankInfoApi (برای ارسال صحیح به بک‌اند)
-      // ═══════════════════════════════════════════════
       updateBankInfoApi: async (bankData) => {
         try {
-          // bankData از مودال می‌آید و کلیدهای snake_case دارد (مثل owner_name, bank_name)
           const response = await businessesService.updateBankInfo({
             owner_name: bankData.owner_name || bankData.ownerName || '',
             national_id: bankData.national_id || bankData.nationalId || '',
@@ -365,9 +353,23 @@ export const useBusinessStore = create(
           ? localStorage
           : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
-      // ✅ FIX: businessStatus هم persist شود
+      // ═══════════════════════════════════════════════════════════════
+      // ✅ FIX امنیت: حذف فیلدهای حساس از localStorage
+      // ═══════════════════════════════════════════════════════════════
       partialize: (state) => ({
-        businessData: state.businessData,
+        businessData: {
+          ...state.businessData,
+          // ❌ حذف فیلدهای حساس از persist
+          nationalId: undefined,
+          verifiedName: undefined,
+          ownerName: undefined,
+          bankInfo: {
+            // ✅ فقط وضعیت، نه اطلاعات واقعی بانکی
+            isRegistered: state.businessData?.bankInfo?.isRegistered ?? false,
+            isVerified: state.businessData?.bankInfo?.isVerified ?? false,
+            // ❌ حذف: bankName, bankId, sheba, cardNumber, ownerName, accountNumber, nationalId
+          },
+        },
         gallery: state.gallery,
         businessStatus: state.businessStatus,
         _version: STORAGE_VERSION,

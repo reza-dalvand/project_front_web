@@ -20,11 +20,10 @@ export default function ImageUploader({
   const { colors } = useTheme();
   const [localPreview, setLocalPreview] = useState(value);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [validationError, setValidationError] = useState(null);
 
-  // ✅ FIX فاز ۳: ذخیره آخرین objectURL برای جلوگیری از نشت حافظه
   const objectUrlRef = useRef(null);
 
-  // ✅ FIX فاز ۳: پاکسازی در unmount
   useEffect(() => {
     return () => {
       if (objectUrlRef.current) {
@@ -39,11 +38,12 @@ export default function ImageUploader({
       const file = acceptedFiles[0];
       if (!file) return;
 
+      setValidationError(null);
       setIsCompressing(true);
+      
       try {
         const compressed = await compressImage(file, variant);
 
-        // ✅ FIX فاز ۳: پاکسازی قبلی قبل از ایجاد جدید
         if (objectUrlRef.current) {
           URL.revokeObjectURL(objectUrlRef.current);
           objectUrlRef.current = null;
@@ -55,6 +55,7 @@ export default function ImageUploader({
         onChange?.(compressed);
       } catch (err) {
         console.error('Image compression failed:', err);
+        setValidationError(err.message || 'خطا در پردازش تصویر');
       } finally {
         setIsCompressing(false);
       }
@@ -67,16 +68,28 @@ export default function ImageUploader({
     accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
     maxFiles: 1,
     maxSize: UPLOAD_CONFIG.MAX_INPUT_SIZE_MB * 1024 * 1024,
+    onDropRejected: (fileRejections) => {
+      const rejection = fileRejections[0];
+      if (rejection?.errors?.[0]?.code === 'file-too-large') {
+        setValidationError(
+          `حجم فایل نباید بیشتر از ${UPLOAD_CONFIG.MAX_INPUT_SIZE_MB} مگابایت باشد`
+        );
+      } else if (rejection?.errors?.[0]?.code === 'file-invalid-type') {
+        setValidationError('فرمت فایل معتبر نیست. فقط JPEG، PNG و WebP مجاز است.');
+      } else {
+        setValidationError('خطا در انتخاب فایل');
+      }
+    },
   });
 
   const handleRemove = (e) => {
     e.stopPropagation();
-    // ✅ FIX فاز ۳: پاکسازی هنگام حذف دستی
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
     }
     setLocalPreview(null);
+    setValidationError(null);
     onChange?.(null);
   };
 
@@ -86,6 +99,8 @@ export default function ImageUploader({
     square: { width: '100%', height: '250px' },
   };
   const styleDim = dimensions[variant] || dimensions.cover;
+
+  const displayError = error || validationError;
 
   return (
     <div className="w-full">
@@ -106,7 +121,7 @@ export default function ImageUploader({
         style={{
           width: styleDim.width,
           height: styleDim.height,
-          borderColor: error
+          borderColor: displayError
             ? '#E53935'
             : localPreview
               ? colors.primary
@@ -178,9 +193,9 @@ export default function ImageUploader({
           </div>
         )}
       </div>
-      {error && (
+      {displayError && (
         <p className="text-xs mt-2 text-right font-[Vazir]" style={{ color: '#E53935' }}>
-          {error}
+          {displayError}
         </p>
       )}
     </div>
