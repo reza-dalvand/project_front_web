@@ -1,4 +1,3 @@
-// src/components/common/AuthModal.jsx
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -145,18 +144,13 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
   const panelClass = isBottomSheet
     ? [
         'relative w-full overflow-hidden flex flex-col',
-        // Mobile: full-width bottom sheet
         'rounded-t-3xl h-[100dvh] sm:h-[96dvh]',
-        // sm+: centered modal
         'sm:max-w-md sm:rounded-3xl sm:h-auto sm:max-h-[92dvh]',
-        // lg+: slightly wider on large screens
         'lg:max-w-lg',
       ].join(' ')
     : [
         'relative w-full overflow-hidden shadow-2xl flex flex-col',
-        // Mobile: near-full screen
         'rounded-3xl h-[96dvh] max-w-[100vw]',
-        // sm+: constrained modal
         'sm:max-w-md sm:h-auto sm:max-h-[92dvh]',
         'lg:max-w-lg',
       ].join(' ');
@@ -243,7 +237,6 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle - فقط موبایل (<sm) و فقط bottomsheet */}
         {isBottomSheet && (
           <div className="flex justify-center pt-3 pb-1 sm:hidden">
             <div
@@ -253,7 +246,6 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
           </div>
         )}
 
-        {/* هدر - ریسپانسیو */}
         <div
           className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b"
           style={{ borderColor: colors.border }}
@@ -273,7 +265,6 @@ export default function AuthModal({ variant = 'bottomsheet' }) {
           </button>
         </div>
 
-        {/* محتوا - ریسپانسیو با safe area */}
         <div
           className="p-4 sm:p-5 overflow-y-auto flex-1 overscroll-contain"
           style={{

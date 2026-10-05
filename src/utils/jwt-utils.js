@@ -1,46 +1,100 @@
-// src/utils/jwt-utils.js
 /**
  * ابزارهای JWT
  * decode، بررسی انقضا، و مدیریت توکن‌ها
  *
  * ✅ سازگار با مرورگر، SSR (Next.js) و Edge Runtime
  * ✅ FIX فاز ۱: استفاده از ترتیب بررسی بهتر و سازگاری کامل
+ * ✅ FIX F-13: اضافه شدن توابع رمزنگاری ساده برای ذخیره‌سازی امن‌تر
  */
+
+// ═══════════════════════════════════════════════
+//    کلید رمزنگاری ساده (XOR Obfuscation)
+// ═══════════════════════════════════════════════
+// ⚠️ این رمزنگاری قوی نیست، فقط سطح دسترسی را بالاتر می‌برد
+// برای امنیت واقعی باید از httpOnly cookie استفاده شود
+const STORAGE_KEY = typeof window !== 'undefined' 
+  ? (window.navigator?.userAgent?.slice(0, 16) || 'beau-secure-key-16') 
+  : 'beau-secure-key-16';
 
 /**
- * ✅ FIX فاز ۱: تبدیل Base64url به Base64 و سپس به رشته
- * سازگار با: مرورگر، محیط‌های غیر-مرورگر، و محیط‌های بدون Buffer
- *
- * @param {string} base64url
- * @returns {string}
+ * ✅ FIX F-13: رمزنگاری ساده با XOR
+ * @param {string} text - متن اصلی
+ * @returns {string} متن رمزنگاری شده (base64)
  */
+export const encryptToken = (text) => {
+  if (!text) return '';
+  try {
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+      result += String.fromCharCode(
+        text.charCodeAt(i) ^ STORAGE_KEY.charCodeAt(i % STORAGE_KEY.length)
+      );
+    }
+    // تبدیل به base64
+    if (typeof btoa === 'function') {
+      return btoa(unescape(encodeURIComponent(result)));
+    }
+    if (typeof Buffer !== 'undefined') {
+      return Buffer.from(result, 'binary').toString('base64');
+    }
+    return text; // fallback
+  } catch {
+    return text;
+  }
+};
+
+/**
+ * ✅ FIX F-13: رمزگشایی
+ * @param {string} encrypted - متن رمزنگاری شده
+ * @returns {string} متن اصلی
+ */
+export const decryptToken = (encrypted) => {
+  if (!encrypted) return '';
+  try {
+    let decoded;
+    if (typeof atob === 'function') {
+      decoded = decodeURIComponent(escape(atob(encrypted)));
+    } else if (typeof Buffer !== 'undefined') {
+      decoded = Buffer.from(encrypted, 'base64').toString('binary');
+    } else {
+      return encrypted;
+    }
+    
+    let result = '';
+    for (let i = 0; i < decoded.length; i++) {
+      result += String.fromCharCode(
+        decoded.charCodeAt(i) ^ STORAGE_KEY.charCodeAt(i % STORAGE_KEY.length)
+      );
+    }
+    return result;
+  } catch {
+    return encrypted;
+  }
+};
+
+// ═══════════════════════════════════════════════
+//    Base64 URL Decode
+// ═══════════════════════════════════════════════
 const base64UrlDecode = (base64url) => {
-  // تبدیل Base64url به Base64
   const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
 
-  // ✅ FIX فاز ۱: ترتیب بررسی بهتر
-  // ۱. ابتدا بررسی مرورگر (سریع‌ترین روش)
   if (typeof window !== 'undefined') {
     if (typeof window.atob === 'function') {
       return window.atob(base64);
     }
-    // برخی مرورگرهای قدیمی atob ندارند
     if (typeof atob === 'function') {
       return atob(base64);
     }
   }
 
-  // ۲. بررسی محیط‌های غیر-مرورگر (Node, Cloudflare Workers, etc.)
   if (typeof Buffer !== 'undefined') {
     return Buffer.from(base64, 'base64').toString('binary');
   }
 
-  // ۳. بررسی محیط‌های جدید با globalThis
   if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
     return globalThis.atob(base64);
   }
 
-  // ۴. Fallback: decode دستی Base64 (سازگار با همه محیط‌ها)
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
   let str = base64.replace(/=+$/, '');
   let output = '';
@@ -67,13 +121,9 @@ const base64UrlDecode = (base64url) => {
   return output;
 };
 
-/**
- * Decode کردن JWT بدون کتابخانه
- * سازگار با مرورگر و محیط‌های غیر-مرورگر
- *
- * @param {string} token
- * @returns {object|null} payload
- */
+// ═══════════════════════════════════════════════
+//    JWT Decode
+// ═══════════════════════════════════════════════
 export const decodeJWT = (token) => {
   if (!token) return null;
   try {
@@ -83,8 +133,6 @@ export const decodeJWT = (token) => {
     const payload = parts[1];
     const decoded = base64UrlDecode(payload);
 
-    // تبدیل به رشته قابل خواندن
-    // استفاده از decodeURIComponent برای پشتیبانی از کاراکترهای یونیکد (فارسی)
     const jsonStr = decodeURIComponent(
       decoded
         .split('')
@@ -98,23 +146,15 @@ export const decodeJWT = (token) => {
   }
 };
 
-/**
- * بررسی اینکه توکن منقضی شده یا نه
- * @param {string} token
- * @returns {boolean} true = منقضی شده
- */
+// ═══════════════════════════════════════════════
+//    Token Status Checks
+// ═══════════════════════════════════════════════
 export const isTokenExpired = (token) => {
   const payload = decodeJWT(token);
   if (!payload || !payload.exp) return true;
-  // exp به ثانیه است، Date.now() به میلی‌ثانیه
   return Date.now() >= payload.exp * 1000;
 };
 
-/**
- * زمان باقی‌مانده تا انقضای توکن (میلی‌ثانیه)
- * @param {string} token
- * @returns {number} میلی‌ثانیه باقی‌مانده (0 اگر منقضی)
- */
 export const getTokenRemainingTime = (token) => {
   const payload = decodeJWT(token);
   if (!payload || !payload.exp) return 0;
@@ -122,22 +162,22 @@ export const getTokenRemainingTime = (token) => {
   return Math.max(0, remaining);
 };
 
-/**
- * استخراج user_id از توکن
- * @param {string} token
- * @returns {number|null}
- */
 export const getUserIdFromToken = (token) => {
   const payload = decodeJWT(token);
   return payload?.user_id || null;
 };
 
-/**
- * بررسی اینکه توکن به زودی منقضی می‌شود (کمتر از ۵ دقیقه)
- * @param {string} token
- * @returns {boolean}
- */
 export const isTokenExpiringSoon = (token) => {
   const remaining = getTokenRemainingTime(token);
   return remaining > 0 && remaining < 5 * 60 * 1000; // ۵ دقیقه
+};
+
+// ═══════════════════════════════════════════════
+//    ✅ FIX F-15: Session Status Types
+// ═══════════════════════════════════════════════
+export const SESSION_STATUS = {
+  ACTIVE: 'active',
+  SUSPENDED: 'suspended',
+  EXPIRED: 'expired',
+  ERROR: 'error',
 };
