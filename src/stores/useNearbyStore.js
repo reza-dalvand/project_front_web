@@ -1,4 +1,8 @@
 // src/stores/useNearbyStore.js
+/**
+ * Store موقعیت مکانی نزدیک
+ * ⚠️ این استور persist نمی‌شود (فقط حافظه runtime)
+ */
 import { create } from 'zustand';
 
 export const useNearbyStore = create((set) => ({
@@ -16,4 +20,17 @@ export const useNearbyStore = create((set) => ({
   setLoading: (loading) => set({ loading }),
 
   setDenied: (denied) => set({ denied, loading: false }),
+
+  // ═══════════════════════════════════════════════════════
+  // ✅ F-06 Fix: ریست کامل هنگام لاگه‌اوت
+  // ═══════════════════════════════════════════════════════
+  // ⚠️ این استور persist نیست، پس فقط state را ریست می‌کنیم
+  reset: () => {
+    set({
+      enabled: false,
+      userLocation: null,
+      loading: false,
+      denied: false,
+    });
+  },
 }));

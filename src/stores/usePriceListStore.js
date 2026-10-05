@@ -75,9 +75,6 @@ const buildServicesFromBusiness = () => {
     }));
 };
 
-/**
- * ✅ نگاشت پاسخ بک‌اند به فرمت فرانت (عمومی)
- */
 const mapPublicPriceListFromApi = (data, businessId) => ({
   businessId,
   themeId: data.theme || 'classic',
@@ -124,9 +121,6 @@ export const usePriceListStore = create(
       isLoading: false,
       error: null,
 
-      /**
-       * ✅ دریافت لیست قیمت عمومی (برای مشتری)
-       */
       fetchPublicPriceList: async (businessId) => {
         set({ isLoading: true, error: null });
         try {
@@ -144,9 +138,6 @@ export const usePriceListStore = create(
         }
       },
 
-      /**
-       * دریافت لیست قیمت کسب‌وکار خودم (مالک)
-       */
       fetchPriceList: async (businessId) => {
         set({ isLoading: true, error: null });
         try {
@@ -163,7 +154,7 @@ export const usePriceListStore = create(
           const fallbackList = {
             businessId,
             themeId: 'classic',
-            isPublished: services.length > 0, // ✅ FIX: اگر سرویس هست، منتشرشده فرض کن
+            isPublished: services.length > 0,
             services,
           };
           set((s) => ({
@@ -226,6 +217,20 @@ export const usePriceListStore = create(
         const list = get().lists[businessId];
         const themeId = list?.themeId || 'classic';
         return PRICE_LIST_THEMES.find((t) => t.id === themeId) || PRICE_LIST_THEMES[0];
+      },
+
+      // ═══════════════════════════════════════════════════════
+      // ✅ F-06 Fix: پاک‌سازی کامل هنگام لاگه‌اوت
+      // ═══════════════════════════════════════════════════════
+      clearForLogout: () => {
+        set({
+          lists: {},
+          isLoading: false,
+          error: null,
+        });
+        try {
+          usePriceListStore.persist.clearStorage();
+        } catch {}
       },
     }),
     {

@@ -155,36 +155,77 @@ export const useAuthStore = create(
         startPeriodicRefresh();
       },
 
+      // src/stores/useAuthStore.js
+
       logout: async (allDevices = false) => {
-        // ✅ توقف periodic refresh قبل از خروج
+        // ─── ۱. توقف تایمرهای فعال ───
         stopPeriodicRefresh();
 
+        // ─── ۲. فراخوانی API خروج (best-effort) ───
         const refreshToken = useTokenStore.getState().getRefreshToken();
         try {
           if (refreshToken) {
             await authService.logout(refreshToken, allDevices);
           }
         } catch {
-          // آفلاین یا خطای شبکه — فقط state پاک شود
-        }
-        useTokenStore.getState().clearTokens();
-
-        // پاک کردن استور کسب‌وکار
-        try {
-          const { useBusinessStore } = await import('./useBusinessStore');
-          useBusinessStore.getState().clearForLogout();
-        } catch {
-          // ignore
+          // آفلاین یا خطای شبکه — ادامه می‌دهیم
         }
 
-        // پاک کردن استور پرداخت
-        try {
-          const { usePaymentStore } = await import('./usePaymentStore');
-          usePaymentStore.getState().clearPaymentState();
-        } catch {
-          // ignore
+        // ─── ۳. پاک‌سازی متمرکز تمام استورهای حساس به کاربر ───
+        const userSensitiveStores = [
+          { name: 'useTokenStore', method: 'clearTokens' },
+          { name: 'useBusinessStore', method: 'clearForLogout' },
+          { name: 'usePaymentStore', method: 'clearPaymentState' },
+          { name: 'useFavoriteStore', method: 'clearForLogout' },
+          { name: 'useReviewStore', method: 'clearForLogout' },
+          { name: 'useNotificationStore', method: 'clearNotifications' },
+          { name: 'useOfflineQueueStore', method: 'clearQueue' },
+          { name: 'useApiCacheStore', method: 'clearAll' },
+          { name: 'usePriceListStore', method: 'clearForLogout' },
+          { name: 'useNearbyStore', method: 'reset' },
+        ];
+
+        for (const { name, method } of userSensitiveStores) {
+          try {
+            // import داینامیک برای جلوگیری از circular dependency
+            const storeModule = await import(`./${name}.js`);
+            const store = storeModule[name];
+            
+            if (store && typeof store.getState === 'function') {
+              const state = store.getState();
+              if (typeof state[method] === 'function') {
+                await state[method]();
+              }
+            }
+          } catch (err) {
+            // استور وجود ندارد یا خطا داد — نادیده بگیر
+            console.warn(`Failed to clear ${name}:`, err?.message);
+          }
         }
 
+        // ─── ۴. پاک‌سازی مستقیم localStorage به عنوان fallback ───
+        // برای اطمینان از اینکه حتی اگر persist middleware کار نکرد، داده‌ها پاک شوند
+        if (typeof window !== 'undefined') {
+          const storageKeys = [
+            'beau-token-storage',
+            'beau-auth-storage',
+            'beau-business-storage',
+            'beau-payment-storage',
+            'beau-favorite-storage',
+            'beau-review-storage',
+            'beau-notification-storage',
+            'beau-offline-queue-storage',
+            'beau-api-cache-storage',
+            'beau-pricelist-storage',
+          ];
+          storageKeys.forEach((key) => {
+            try {
+              window.localStorage.removeItem(key);
+            } catch {}
+          });
+        }
+
+        // ─── ۵. ریست state احراز هویت ───
         set({
           isAuthenticated: false,
           user: null,
@@ -194,6 +235,16 @@ export const useAuthStore = create(
           isSuspended: false,
           suspensionReason: '',
         });
+
+        // ─── ۶. پاک‌سازی کوکی‌های احتمالی (برای Capacitor و وب) ───
+        if (typeof document !== 'undefined') {
+          document.cookie.split(';').forEach((c) => {
+            try {
+              const name = c.trim().split('=')[0];
+              document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            } catch {}
+          });
+        }
       },
 
       updateUser: (updates) =>

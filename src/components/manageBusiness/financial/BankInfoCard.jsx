@@ -26,7 +26,7 @@ export default function BankInfoCard({
       </div>
 
       {/* بنر هشدار - فقط وقتی حساب تایید نشده */}
-      {(!bankInfo.isRegistered || !bankInfo.isVerified) && hasActiveAppointments && (
+      {(!bankInfo?.isRegistered || !bankInfo?.isVerified) && hasActiveAppointments && (
         <Card
           variant="default"
           padding={12}
