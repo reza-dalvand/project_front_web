@@ -3,6 +3,8 @@
  *
  * ✅ FIX: اضافه کردن Periodic Refresh هر ۵۰ دقیقه
  * ✅ FIX: حذف logout تکراری
+ * ✅ FIX F-14: رفع Race Condition با centralized refresh
+ * ✅ FIX F-15: اضافه شدن session status check
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -11,7 +13,7 @@ import { Preferences } from '@capacitor/preferences';
 import { authService } from '@/api';
 import { useTokenStore } from './useTokenStore';
 import { isTokenExpired, isTokenExpiringSoon } from '@/utils/jwt-utils';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 // ═══════════════════════════════════════════════
 //    Custom Storage برای Capacitor
@@ -52,6 +54,48 @@ const getStorage = () => {
 };
 
 // ═══════════════════════════════════════════════
+//    ✅ FIX F-14: Centralized Refresh Promise
+// ═══════════════════════════════════════════════
+let refreshPromise = null;
+
+/**
+ * رفرش توکن مرکزی — فقط یک رفرش همزمان اجرا می‌شود
+ */
+const centralizedRefresh = async () => {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const { refreshToken } = useTokenStore.getState();
+      
+      if (!refreshToken) {
+        throw new Error('No refresh token');
+      }
+
+      const result = await authService.refreshToken(refreshToken);
+      const data = result?.data;
+
+      if (!data || !data.access) {
+        throw new Error('Invalid refresh response');
+      }
+
+      useTokenStore.getState().setTokens({
+        access: data.access,
+        refresh: data.refresh || refreshToken,
+      });
+
+      return data.access;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+};
+
+// ═══════════════════════════════════════════════
 //    Periodic Refresh Timer
 // ═══════════════════════════════════════════════
 let refreshTimer = null;
@@ -69,15 +113,10 @@ const startPeriodicRefresh = () => {
         return;
       }
 
-      // اگر access token به زودی منقضی می‌شود، refresh کن
+      // ✅ FIX F-14: استفاده از centralized refresh
       if (accessToken && isTokenExpiringSoon(accessToken)) {
         try {
-          const result = await authService.refreshToken(refreshToken);
-          const data = result.data;
-          useTokenStore.getState().setTokens({
-            access: data.access,
-            refresh: data.refresh || refreshToken,
-          });
+          await centralizedRefresh();
         } catch (error) {
           console.warn('Periodic refresh failed:', error);
           stopPeriodicRefresh();
@@ -109,6 +148,9 @@ export const useAuthStore = create(
       isSuspended: false,
       suspensionReason: '',
       _hydrated: false,
+
+      // ✅ FIX F-15: آخرین زمان بررسی وضعیت
+      lastSessionCheck: 0,
 
       setHydrated: () => set({ _hydrated: true }),
 
@@ -150,41 +192,78 @@ export const useAuthStore = create(
           needsProfileCompletion: options.needsProfileCompletion ?? false,
           isSuspended: options.isSuspended ?? false,
           suspensionReason: options.suspensionReason ?? '',
+          lastSessionCheck: Date.now(),
         });
 
         startPeriodicRefresh();
       },
 
       logout: async (allDevices = false) => {
-        // ✅ توقف periodic refresh قبل از خروج
+        // ─── ۱. توقف تایمرهای فعال ───
         stopPeriodicRefresh();
 
+        // ─── ۲. فراخوانی API خروج (best-effort) ───
         const refreshToken = useTokenStore.getState().getRefreshToken();
         try {
           if (refreshToken) {
             await authService.logout(refreshToken, allDevices);
           }
         } catch {
-          // آفلاین یا خطای شبکه — فقط state پاک شود
-        }
-        useTokenStore.getState().clearTokens();
-
-        // پاک کردن استور کسب‌وکار
-        try {
-          const { useBusinessStore } = await import('./useBusinessStore');
-          useBusinessStore.getState().clearForLogout();
-        } catch {
-          // ignore
+          // آفلاین یا خطای شبکه — ادامه می‌دهیم
         }
 
-        // پاک کردن استور پرداخت
-        try {
-          const { usePaymentStore } = await import('./usePaymentStore');
-          usePaymentStore.getState().clearPaymentState();
-        } catch {
-          // ignore
+        // ─── ۳. پاک‌سازی متمرکز تمام استورهای حساس به کاربر ───
+        const userSensitiveStores = [
+          { name: 'useTokenStore', method: 'clearTokens' },
+          { name: 'useBusinessStore', method: 'clearForLogout' },
+          { name: 'usePaymentStore', method: 'clearPaymentState' },
+          { name: 'useFavoriteStore', method: 'clearForLogout' },
+          { name: 'useReviewStore', method: 'clearForLogout' },
+          { name: 'useNotificationStore', method: 'clearNotifications' },
+          { name: 'useOfflineQueueStore', method: 'clearQueue' },
+          { name: 'useApiCacheStore', method: 'clearAll' },
+          { name: 'usePriceListStore', method: 'clearForLogout' },
+          { name: 'useNearbyStore', method: 'reset' },
+        ];
+
+        for (const { name, method } of userSensitiveStores) {
+          try {
+            const storeModule = await import(`./${name}.js`);
+            const store = storeModule[name];
+            
+            if (store && typeof store.getState === 'function') {
+              const state = store.getState();
+              if (typeof state[method] === 'function') {
+                await state[method]();
+              }
+            }
+          } catch (err) {
+            console.warn(`Failed to clear ${name}:`, err?.message);
+          }
         }
 
+        // ─── ۴. پاک‌سازی مستقیم localStorage به عنوان fallback ───
+        if (typeof window !== 'undefined') {
+          const storageKeys = [
+            'beau-token-storage',
+            'beau-auth-storage',
+            'beau-business-storage',
+            'beau-payment-storage',
+            'beau-favorite-storage',
+            'beau-review-storage',
+            'beau-notification-storage',
+            'beau-offline-queue-storage',
+            'beau-api-cache-storage',
+            'beau-pricelist-storage',
+          ];
+          storageKeys.forEach((key) => {
+            try {
+              window.localStorage.removeItem(key);
+            } catch {}
+          });
+        }
+
+        // ─── ۵. ریست state احراز هویت ───
         set({
           isAuthenticated: false,
           user: null,
@@ -193,7 +272,18 @@ export const useAuthStore = create(
           needsProfileCompletion: false,
           isSuspended: false,
           suspensionReason: '',
+          lastSessionCheck: 0,
         });
+
+        // ─── ۶. پاک‌سازی کوکی‌های احتمالی ───
+        if (typeof document !== 'undefined') {
+          document.cookie.split(';').forEach((c) => {
+            try {
+              const name = c.trim().split('=')[0];
+              document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            } catch {}
+          });
+        }
       },
 
       updateUser: (updates) =>
@@ -205,6 +295,15 @@ export const useAuthStore = create(
         set({ needsProfileCompletion: false });
       },
 
+      // ✅ FIX F-15: تنظیم وضعیت تعلیق
+      setSuspensionStatus: (isSuspended, reason = '') => {
+        set({
+          isSuspended,
+          suspensionReason: reason,
+        });
+      },
+
+      // ✅ FIX F-14: استفاده از centralized refresh
       checkSession: async () => {
         const { accessToken, refreshToken } = useTokenStore.getState();
 
@@ -214,17 +313,14 @@ export const useAuthStore = create(
         }
 
         if (accessToken && !isTokenExpired(accessToken)) {
+          set({ lastSessionCheck: Date.now() });
           return true;
         }
 
         if (refreshToken) {
           try {
-            const result = await authService.refreshToken(refreshToken);
-            const data = result.data;
-            useTokenStore.getState().setTokens({
-              access: data.access,
-              refresh: data.refresh || refreshToken,
-            });
+            await centralizedRefresh();
+            set({ lastSessionCheck: Date.now() });
             return true;
           } catch {
             useTokenStore.getState().clearTokens();
@@ -236,7 +332,32 @@ export const useAuthStore = create(
         return false;
       },
 
-      // ✅ متد جدید برای شروع manual refresh timer
+      // ✅ FIX F-15: بررسی وضعیت session از سرور
+      checkSessionStatus: async () => {
+        const { isAuthenticated } = get();
+        if (!isAuthenticated) return;
+
+        try {
+          const result = await authService.getSessionStatus();
+          const data = result?.data;
+
+          if (data) {
+            set({
+              isSuspended: data.isSuspended ?? false,
+              suspensionReason: data.suspensionReason ?? '',
+              lastSessionCheck: Date.now(),
+            });
+
+            // اگر کاربر دیگر وجود ندارد یا غیرفعال شده
+            if (data.isDeactivated) {
+              get().logout();
+            }
+          }
+        } catch (error) {
+          console.warn('Session status check failed:', error?.message);
+        }
+      },
+
       startRefreshTimer: () => {
         const { isAuthenticated } = get();
         if (isAuthenticated) {
@@ -249,7 +370,12 @@ export const useAuthStore = create(
       storage: createJSONStorage(getStorage),
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
-        user: state.user,
+        user: state.user ? {
+          id: state.user.id,
+          name: state.user.name,
+          avatar: state.user.avatar,
+          isVerified: state.user.isVerified,
+        } : null,
         needsProfileCompletion: state.needsProfileCompletion,
         isSuspended: state.isSuspended,
         suspensionReason: state.suspensionReason,
@@ -257,7 +383,6 @@ export const useAuthStore = create(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.setHydrated();
-          // ✅ شروع periodic refresh پس از rehydration اگر کاربر لاگین است
           if (state.isAuthenticated) {
             startPeriodicRefresh();
           }

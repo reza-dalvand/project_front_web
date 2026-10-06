@@ -1,4 +1,3 @@
-// src/app/auth/verify-otp/page.jsx
 'use client';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -6,7 +5,7 @@ import { FiMessageSquare, FiEdit, FiRefreshCw, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
-import { useAuthFlow } from '@/hooks/useAuthFlow'; // ✅ جدید
+import { useAuthFlow } from '@/hooks/useAuthFlow'; 
 import { Button } from '@/components/common';
 import OTPInput from '@/components/common/OTPInput';
 import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';

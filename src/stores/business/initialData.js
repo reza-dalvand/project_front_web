@@ -1,26 +1,16 @@
 // src/stores/business/initialData.js
 /**
  * 📦 داده‌های اولیه کسب‌وکار
- *
- * ✅ فاز ۵: تمام داده‌های هاردکد حذف شدند.
- * State اولیه کاملاً خالی است و فقط از API پر می‌شود.
- *
- * ⚠️ توجه: اگر کاربر لاگین نباشد یا کسب‌وکاری نداشته باشد،
- * تمام فیلدها null/خالی خواهند بود. کامپوننت‌ها باید
- * حالت خالی را به درستی مدیریت کنند.
+ * ✅ State اولیه کاملاً خالی — فقط از API پر می‌شود
  */
 
-export const STORAGE_VERSION = 5; // ✅ افزایش نسخه به دلیل حذف داده‌های هاردکد
+export const STORAGE_VERSION = 5;
 
-/**
- * ساختار خالی اولیه کسب‌وکار
- * هیچ داده‌ی پیش‌فرضی وجود ندارد — همه چیز از API می‌آید
- */
 export const INITIAL_BUSINESS_DATA = {
   // ─── شناسه و وضعیت ───
   id: null,
   isActive: false,
-  status: null, // 'pending' | 'approved' | 'rejected'
+  status: null,
 
   // ─── اطلاعات پایه ───
   name: '',
@@ -54,7 +44,6 @@ export const INITIAL_BUSINESS_DATA = {
   bankInfo: {
     isRegistered: false,
     isVerified: false,
-    // ✅ فیلدهای جدید برای نگهداری اطلاعات کامل
     bankName: '',
     bankId: '',
     sheba: '',
@@ -71,7 +60,15 @@ export const INITIAL_BUSINESS_DATA = {
   latitude: null,
   longitude: null,
 
-  // ─── داده‌های رابطه‌ای (همیشه از API پر می‌شوند) ───
+  // ─── ✅ FIX باگ ۱۳: فیلدهای تعلیق ───
+  isSuspended: false,
+  suspensionReason: '',
+
+  // ─── آمار لینک رزرو ───
+  bookingLinkClicks: 0,
+  bookingLinkBookings: 0,
+
+  // ─── داده‌های رابطه‌ای ───
   services: [],
   team: [],
   schedules: {},

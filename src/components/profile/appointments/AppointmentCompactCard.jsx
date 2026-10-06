@@ -8,9 +8,11 @@ const STATUS_CONFIG = {
   confirmed: { label: 'تأیید شده', color: '#43A047' },
   done: { label: 'انجام شده', color: '#4CAF50' },
   cancelled: { label: 'لغو شده', color: '#E53935' },
+  cancelled_by_salon: { label: 'لغو توسط سالن', color: '#E53935' },
+  cancelled_by_customer: { label: 'لغو توسط شما', color: '#FF9800' },
 };
 
-// ═══ ایموجی بر اساس نام خدمت (هم‌الگو با سایر کارت‌های پروژه) ═══
+// ═══ ایموجی بر اساس نام خدمت ═══
 const getServiceEmoji = (serviceName = '') => {
   if (serviceName.includes('ناخن')) return '💅';
   if (serviceName.includes('میکاپ') || serviceName.includes('گریم')) return '💄';
@@ -29,12 +31,31 @@ const getServiceEmoji = (serviceName = '') => {
 };
 
 /**
- * کارت فشرده نوبت
- * فقط: آیکن خدمت + نام سالن + تاریخ + ساعت + وضعیت + کد تایید کوچک
+ * ✅ FIX باگ ۷: کارت فشرده نوبت
+ * - پشتیبانی از هر دو فرمت snake_case و camelCase
+ * - مدیریت صحیح onCopyCode
  */
 export default function AppointmentCompactCard({ appointment, onPress, onCopyCode, copiedCode }) {
   const { colors } = useTheme();
-  const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.reserved;
+
+  // ✅ FIX: پشتیبانی از هر دو فرمت
+  const statusKey = appointment.status || 'reserved';
+  const status = STATUS_CONFIG[statusKey] || STATUS_CONFIG.reserved;
+  const serviceName = appointment.serviceName || appointment.service_name || '';
+  const businessName = appointment.businessName || appointment.business_name || '';
+  const date = appointment.date || '';
+  const time = appointment.time || appointment.timeSlot || appointment.time_slot || '';
+  const verificationCode = appointment.verificationCode || appointment.verification_code || null;
+  const isUpcoming = appointment.isUpcoming ?? appointment.is_upcoming ?? false;
+
+  const showCode =
+    isUpcoming &&
+    statusKey !== 'cancelled' &&
+    statusKey !== 'cancelled_by_salon' &&
+    statusKey !== 'cancelled_by_customer' &&
+    verificationCode &&
+    verificationCode !== '0000';
+
   return (
     <div
       className="rounded-2xl border overflow-hidden transition-all hover:shadow-sm"
@@ -45,13 +66,13 @@ export default function AppointmentCompactCard({ appointment, onPress, onCopyCod
         onClick={() => onPress?.(appointment)}
         className="w-full flex items-center gap-3 p-3.5 text-right active:bg-black/[0.02]"
       >
-        {/* ✅ آیکن مرتبط با نوبت (به جای تصویر لوگو) */}
+        {/* ✅ آیکن مرتبط با نوبت */}
         <div className="relative flex-shrink-0">
           <div
             className="w-[46px] h-[46px] rounded-xl flex items-center justify-center text-2xl"
             style={{ backgroundColor: colors.primary + '15' }}
           >
-            {getServiceEmoji(appointment.serviceName || appointment.service_name || '')}
+            {getServiceEmoji(serviceName)}
           </div>
           {/* نقطه وضعیت */}
           <div
@@ -62,19 +83,19 @@ export default function AppointmentCompactCard({ appointment, onPress, onCopyCod
         {/* اطلاعات */}
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <span className="text-sm font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
-            {appointment.businessName}
+            {businessName}
           </span>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
               <FiCalendar size={12} style={{ color: colors.textSecondary }} />
               <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
-                {appointment.date}
+                {date}
               </span>
             </div>
             <div className="flex items-center gap-1">
               <FiClock size={12} style={{ color: colors.textSecondary }} />
               <span className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
-                {appointment.time}
+                {time}
               </span>
             </div>
           </div>
@@ -89,23 +110,22 @@ export default function AppointmentCompactCard({ appointment, onPress, onCopyCod
         </span>
       </button>
       {/* ═══ کد تایید کوچک - فقط نوبت‌های آینده ═══ */}
-      {appointment.isUpcoming &&
-        appointment.status !== 'cancelled' &&
-        appointment.verificationCode && 
-        appointment.verificationCode !== '0000' && (
-          <div
-            className="flex items-center gap-2.5 px-3.5 py-2.5 border-t"
-            style={{ borderColor: colors.border, backgroundColor: colors.background }}
+      {showCode && (
+        <div
+          className="flex items-center gap-2.5 px-3.5 py-2.5 border-t"
+          style={{ borderColor: colors.border, backgroundColor: colors.background }}
+        >
+          <span
+            className="text-[10px] font-[Vazir] flex-shrink-0"
+            style={{ color: colors.textSecondary }}
           >
-            <span
-              className="text-[10px] font-[Vazir] flex-shrink-0"
-              style={{ color: colors.textSecondary }}
-            >
-              کد تایید انجام خدمت:
-            </span>
-            {/* ارقام کد */}
-            <div className="flex items-center gap-1" dir="ltr">
-              {appointment.verificationCode.split('').map((digit, idx) => (
+            کد تایید انجام خدمت:
+          </span>
+          {/* ارقام کد */}
+          <div className="flex items-center gap-1" dir="ltr">
+            {String(verificationCode)
+              .split('')
+              .map((digit, idx) => (
                 <span
                   key={idx}
                   className="w-[22px] h-[26px] rounded-md border flex items-center justify-center
@@ -119,29 +139,29 @@ export default function AppointmentCompactCard({ appointment, onPress, onCopyCod
                   {digit}
                 </span>
               ))}
-            </div>
-            <div className="flex-1" />
-            {/* دکمه کپی */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onCopyCode?.(appointment.verificationCode);
-              }}
-              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all
-                hover:scale-110 active:scale-95"
-              style={{
-                backgroundColor:
-                  copiedCode === appointment.verificationCode ? '#4CAF5020' : colors.primary + '15',
-              }}
-            >
-              {copiedCode === appointment.verificationCode ? (
-                <FiCheck size={13} color="#4CAF50" />
-              ) : (
-                <FiCopy size={13} style={{ color: colors.primary }} />
-              )}
-            </button>
           </div>
-        )}
+          <div className="flex-1" />
+          {/* دکمه کپی */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCopyCode?.(verificationCode);
+            }}
+            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all
+              hover:scale-110 active:scale-95"
+            style={{
+              backgroundColor:
+                copiedCode === verificationCode ? '#4CAF5020' : colors.primary + '15',
+            }}
+          >
+            {copiedCode === verificationCode ? (
+              <FiCheck size={13} color="#4CAF50" />
+            ) : (
+              <FiCopy size={13} style={{ color: colors.primary }} />
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

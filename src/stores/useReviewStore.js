@@ -1,3 +1,4 @@
+// src/stores/useReviewStore.js
 /**
  * Store نظردهی — هماهنگ با بک‌اند
  * منطق جدید: فقط یکبار نظر برای هر کسب‌وکار
@@ -21,19 +22,17 @@ export const useReviewStore = create(
     (set, get) => ({
       reviews: [],
       pendingReviews: [],
-      dismissedAppointments: [], // ✅ persisted — برای جلوگیری از نمایش مجدد مدال بسته‌شده
-      reviewedBusinessIds: [], // ✅ persisted — کسب‌وکارهایی که کاربر نظر داده
+      dismissedAppointments: [],
+      reviewedBusinessIds: [],
       isLoading: false,
       error: null,
 
       addPendingReview: (appointment) =>
         set((state) => {
-          // اگر قبلاً برای این کسب‌وکار نظر داده، اضافه نکن
           const bizId = appointment.businessId || appointment.business_id;
           if (bizId && state.reviewedBusinessIds.includes(bizId)) {
             return state;
           }
-          // اگر قبلاً dismiss شده، اضافه نکن
           if (state.dismissedAppointments.includes(appointment.id)) {
             return state;
           }
@@ -77,7 +76,6 @@ export const useReviewStore = create(
             tag_votes: reviewData.tag_votes || [],
           });
 
-          // پیدا کردن businessId از pendingReviews
           const pending = get().pendingReviews.find((p) => p.appointmentId === appointmentId);
           const businessId = pending?.businessId;
 
@@ -92,9 +90,7 @@ export const useReviewStore = create(
           set((state) => ({
             reviews: [...state.reviews, newReview],
             pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
-            // ✅ از dismissed هم حذف شود (دیگر مهم نیست چون نظر ثبت شد)
             dismissedAppointments: state.dismissedAppointments.filter((id) => id !== appointmentId),
-            // ✅ این کسب‌وکار را به لیست نظر داده‌شده‌ها اضافه کن
             reviewedBusinessIds:
               businessId && !state.reviewedBusinessIds.includes(businessId)
                 ? [...state.reviewedBusinessIds, businessId]
@@ -113,8 +109,6 @@ export const useReviewStore = create(
       dismissPendingReview: (appointmentId) =>
         set((state) => ({
           pendingReviews: state.pendingReviews.filter((p) => p.appointmentId !== appointmentId),
-          // ✅ فقط این appointment را dismiss کن
-          // اگر نوبت جدیدی از همان کسب‌وکار بیاید، appointmentId جدید است و dismiss نیست
           dismissedAppointments: [...state.dismissedAppointments, appointmentId],
         })),
 
@@ -151,14 +145,12 @@ export const useReviewStore = create(
         }
       },
 
-      // ✅ جدید: دریافت نوبت‌های آماده نظردهی از API
       fetchPendingReviews: async () => {
         try {
           const result = await reviewsService.getPendingReviews();
           const appointments = result.data || [];
           const { dismissedAppointments, pendingReviews, reviewedBusinessIds } = get();
 
-          // فقط آن‌هایی که dismiss نشده‌اند، هنوز در pending نیستند، و برای کسب‌وکارشان نظر نداده
           const newAppointments = appointments.filter((apt) => {
             const bizId = apt.business_id || apt.businessId;
             return (
@@ -191,6 +183,23 @@ export const useReviewStore = create(
           return [];
         }
       },
+
+      // ═══════════════════════════════════════════════════════
+      // ✅ F-06 Fix: پاک‌سازی کامل هنگام لاگه‌اوت
+      // ═══════════════════════════════════════════════════════
+      clearForLogout: () => {
+        set({
+          reviews: [],
+          pendingReviews: [],
+          dismissedAppointments: [],
+          reviewedBusinessIds: [],
+          isLoading: false,
+          error: null,
+        });
+        try {
+          useReviewStore.persist.clearStorage();
+        } catch {}
+      },
     }),
     {
       name: 'beau-review-storage',
@@ -199,9 +208,21 @@ export const useReviewStore = create(
           ? localStorage
           : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
+      // ═══════════════════════════════════════════════════════════════
+      // ✅ FIX امنیت: حذف تاریخ و زمان نوبت‌ها از localStorage
+      // ═══════════════════════════════════════════════════════════════
       partialize: (state) => ({
         reviews: state.reviews,
-        pendingReviews: state.pendingReviews,
+        pendingReviews: state.pendingReviews.map(p => ({
+          appointmentId: p.appointmentId,
+          businessId: p.businessId,
+          businessName: p.businessName,
+          businessLogo: p.businessLogo,
+          serviceName: p.serviceName,
+          employeeName: p.employeeName,
+          addedAt: p.addedAt,
+          // ❌ حذف: date, time (اطلاعات زمانی حساس)
+        })),
         dismissedAppointments: state.dismissedAppointments,
         reviewedBusinessIds: state.reviewedBusinessIds,
       }),

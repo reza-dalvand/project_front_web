@@ -1,3 +1,4 @@
+// src/components/profile/appointments/AppointmentDetailModal.jsx
 'use client';
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -20,9 +21,11 @@ const STATUS_CONFIG = {
   confirmed: { label: 'تأیید شده', color: '#43A047', bg: '#43A04718' },
   done: { label: 'انجام شده', color: '#4CAF50', bg: '#4CAF5018' },
   cancelled: { label: 'لغو شده', color: '#E53935', bg: '#E5393518' },
+  cancelled_by_salon: { label: 'لغو توسط سالن', color: '#E53935', bg: '#E5393518' },
+  cancelled_by_customer: { label: 'لغو توسط شما', color: '#FF9800', bg: '#FF980018' },
 };
 
-// ═══ ایموجی بر اساس نام خدمت (هم‌الگو با AppointmentCompactCard) ═══
+// ═══ ایموجی بر اساس نام خدمت ═══
 const getServiceEmoji = (serviceName = '') => {
   if (serviceName.includes('ناخن')) return '💅';
   if (serviceName.includes('میکاپ') || serviceName.includes('گریم')) return '💄';
@@ -40,10 +43,6 @@ const getServiceEmoji = (serviceName = '') => {
   return '💆‍♀️';
 };
 
-/**
- * مدال جزئیات نوبت
- * نمایش جزئیات کامل + دکمه لغو (در صورت > 12 ساعت)
- */
 export default function AppointmentDetailModal({ visible, appointment, onClose }) {
   const { colors } = useTheme();
   const instanceId = useRef('appointment-detail-modal');
@@ -66,6 +65,12 @@ export default function AppointmentDetailModal({ visible, appointment, onClose }
   if (!visible || !appointment) return null;
 
   const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.reserved;
+  const customerName = appointment.customerName || appointment.customer_name || 'مشتری';
+  const serviceName = appointment.serviceName || appointment.service_name || '';
+  const businessName = appointment.businessName || appointment.business_name || '';
+  const totalPrice = appointment.totalPrice || appointment.total_price || 0;
+  const depositPaid = appointment.depositPaid || appointment.deposit_paid || 0;
+  const cancellationReason = appointment.cancellationReason || appointment.cancellation_reason || '';
 
   const content = (
     <div
@@ -91,19 +96,18 @@ export default function AppointmentDetailModal({ visible, appointment, onClose }
           className="flex items-center gap-3 px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
         >
-          {/* ✅ آیکن مرتبط با نوبت (به جای تصویر لوگو) */}
           <div
             className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
             style={{ backgroundColor: colors.primary + '15' }}
           >
-            {getServiceEmoji(appointment.serviceName || appointment.service_name || '')}
+            {getServiceEmoji(serviceName)}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
-              {appointment.businessName}
+              {businessName}
             </h3>
             <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-              {appointment.serviceName}
+              {serviceName}
             </p>
           </div>
           <button
@@ -125,11 +129,48 @@ export default function AppointmentDetailModal({ visible, appointment, onClose }
               {status.label}
             </span>
           </div>
+
+          {/* دلیل لغو */}
+          {cancellationReason && (
+            <div
+              className="flex items-start gap-2 p-3 rounded-xl border"
+              style={{ backgroundColor: '#E5393508', borderColor: '#E5393530' }}
+            >
+              <FiAlertTriangle size={14} color="#E53935" className="flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[11px] font-[Vazir-Bold] mb-0.5" style={{ color: '#E53935' }}>
+                  دلیل لغو:
+                </p>
+                <p className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
+                  {cancellationReason}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* جزئیات */}
           <div
             className="rounded-2xl border p-4 space-y-3.5"
             style={{ borderColor: colors.border, backgroundColor: colors.background }}
           >
+            {/* ✅ FIX باگ ۶: نمایش نام مشتری */}
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: '#9C27B015' }}
+              >
+                <FiUser size={16} color="#9C27B0" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[11px] font-[Vazir]" style={{ color: colors.textSecondary }}>
+                  نام مشتری
+                </p>
+                <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                  {customerName}
+                </p>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -165,14 +206,6 @@ export default function AppointmentDetailModal({ visible, appointment, onClose }
             <div className="flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: '#9C27B015' }}
-              >
-                <FiUser size={16} color="#9C27B0" />
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: '#FF980015' }}
               >
                 <FiDollarSign size={16} color="#FF9800" />
@@ -182,11 +215,11 @@ export default function AppointmentDetailModal({ visible, appointment, onClose }
                   مبلغ کل خدمت
                 </p>
                 <p className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-                  {formatPrice(appointment.totalPrice)}
+                  {formatPrice(totalPrice)}
                 </p>
               </div>
             </div>
-            {appointment.depositPaid > 0 && (
+            {depositPaid > 0 && (
               <div className="flex items-center gap-3">
                 <div
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -199,7 +232,7 @@ export default function AppointmentDetailModal({ visible, appointment, onClose }
                     بیعانه پرداخت شده
                   </p>
                   <p className="text-sm font-[Vazir-Bold]" style={{ color: '#4CAF50' }}>
-                    {formatPrice(appointment.depositPaid)}
+                    {formatPrice(depositPaid)}
                   </p>
                 </div>
               </div>

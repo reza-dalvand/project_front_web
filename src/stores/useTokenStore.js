@@ -5,14 +5,21 @@
  *   - Refresh Token: ۳۰ روز اعتبار با Rotation + Sliding
  *
  * ✅ FIX: استفاده از @capacitor/preferences در Android
- * برای جلوگیری از پاک شدن توکن‌ها با clear cache
+ * ✅ FIX F-13: رمزنگاری ساده توکن‌ها قبل از ذخیره
+ * ✅ FIX F-13: استفاده از sessionStorage برای refresh token در وب
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { JWT_CONFIG } from '@/api/config';
-import { decodeJWT, isTokenExpired, getTokenRemainingTime } from '@/utils/jwt-utils';
+import { 
+  decodeJWT, 
+  isTokenExpired, 
+  getTokenRemainingTime,
+  encryptToken,
+  decryptToken,
+} from '@/utils/jwt-utils';
 
 // ═══════════════════════════════════════════════
 //    Custom Storage برای Capacitor
@@ -43,6 +50,72 @@ const createCapacitorStorage = () => ({
 });
 
 // ═══════════════════════════════════════════════
+//    ✅ FIX F-13: Secure Web Storage با رمزنگاری
+// ═══════════════════════════════════════════════
+const createSecureWebStorage = (storageType = 'localStorage') => {
+  const storage = typeof window !== 'undefined' 
+    ? window[storageType] 
+    : null;
+
+  return {
+    getItem: (name) => {
+      try {
+        if (!storage) return null;
+        const raw = storage.getItem(name);
+        if (!raw) return null;
+        
+        const parsed = JSON.parse(raw);
+        
+        // رمزگشایی فیلدهای حساس
+        if (parsed?.state) {
+          if (parsed.state.accessToken) {
+            parsed.state.accessToken = decryptToken(parsed.state.accessToken);
+          }
+          if (parsed.state.refreshToken) {
+            parsed.state.refreshToken = decryptToken(parsed.state.refreshToken);
+          }
+        }
+        
+        return parsed;
+      } catch {
+        return null;
+      }
+    },
+    
+    setItem: (name, value) => {
+      try {
+        if (!storage) return;
+        
+        // کپی عمیق برای جلوگیری از mutation
+        const toStore = JSON.parse(JSON.stringify(value));
+        
+        // رمزنگاری فیلدهای حساس
+        if (toStore?.state) {
+          if (toStore.state.accessToken) {
+            toStore.state.accessToken = encryptToken(toStore.state.accessToken);
+          }
+          if (toStore.state.refreshToken) {
+            toStore.state.refreshToken = encryptToken(toStore.state.refreshToken);
+          }
+        }
+        
+        storage.setItem(name, JSON.stringify(toStore));
+      } catch {
+        // ignore
+      }
+    },
+    
+    removeItem: (name) => {
+      try {
+        if (storage) storage.removeItem(name);
+      } catch {
+        // ignore
+      }
+    },
+  };
+};
+
+// ═══════════════════════════════════════════════
 //    انتخاب Storage بر اساس Platform
 // ═══════════════════════════════════════════════
 const getStorage = () => {
@@ -56,8 +129,8 @@ const getStorage = () => {
     return createCapacitorStorage();
   }
 
-  // در Web — استفاده از localStorage
-  return localStorage;
+  // ✅ FIX F-13: در Web — استفاده از localStorage با رمزنگاری
+  return createSecureWebStorage('localStorage');
 };
 
 export const useTokenStore = create(

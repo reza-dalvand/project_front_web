@@ -20,7 +20,6 @@ export const useFavoriteStore = create(
         try {
           const result = await favoritesService.getFavorites();
           set({
-            // ✅ فاز ۳: فقط فیلدهای camelCase (بعد از نرمال‌ساز)
             favoriteBusinesses: (result.data.businesses || []).map((b) => ({
               id: b.business,
               name: b.businessName,
@@ -36,8 +35,8 @@ export const useFavoriteStore = create(
               businessName: p.businessName || '',
               businessLogo: p.businessLogo || null,
               businessBookingSlug: p.businessBookingSlug || null,
-              images: p.images || [], // ✅ آرایه کامل تصاویر
-              image: p.image || (p.images && p.images[0]) || null, // برای backward compatibility
+              images: p.images || [],
+              image: p.image || (p.images && p.images[0]) || null,
             })),
             isLoading: false,
           });
@@ -47,12 +46,10 @@ export const useFavoriteStore = create(
         }
       },
 
-      // ✅ حذف USE_MOCK — فقط API
       toggleBusinessFavorite: async (businessId, businessData = null) => {
         const { favoriteBusinesses } = get();
         const isFavorited = favoriteBusinesses.some((b) => b.id === businessId);
 
-        // Optimistic update
         if (isFavorited) {
           set({
             favoriteBusinesses: favoriteBusinesses.filter((b) => b.id !== businessId),
@@ -68,18 +65,15 @@ export const useFavoriteStore = create(
           return !isFavorited;
         } catch (error) {
           console.error('toggleBusinessFavorite failed:', error);
-          // Rollback
           set({ favoriteBusinesses });
           throw error;
         }
       },
 
-      // ✅ حذف USE_MOCK — فقط API
       togglePostFavorite: async (postId, postData = null) => {
         const { favoritePosts } = get();
         const isFavorited = favoritePosts.some((p) => p.id === postId);
 
-        // Optimistic update
         if (isFavorited) {
           set({
             favoritePosts: favoritePosts.filter((p) => p.id !== postId),
@@ -129,6 +123,21 @@ export const useFavoriteStore = create(
           favoriteBusinesses: [],
           favoritePosts: [],
         });
+      },
+
+      // ═══════════════════════════════════════════════════════
+      // ✅ F-06 Fix: پاک‌سازی کامل هنگام لاگه‌اوت
+      // ═══════════════════════════════════════════════════════
+      clearForLogout: () => {
+        set({
+          favoriteBusinesses: [],
+          favoritePosts: [],
+          isLoading: false,
+          error: null,
+        });
+        try {
+          useFavoriteStore.persist.clearStorage();
+        } catch {}
       },
     }),
     {
