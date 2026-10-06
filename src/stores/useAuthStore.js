@@ -13,6 +13,7 @@ import { Preferences } from '@capacitor/preferences';
 import { authService } from '@/api';
 import { useTokenStore } from './useTokenStore';
 import { isTokenExpired, isTokenExpiringSoon } from '@/utils/jwt-utils';
+import { usePathname, useRouter } from 'next/navigation';
 
 // ═══════════════════════════════════════════════
 //    Custom Storage برای Capacitor
