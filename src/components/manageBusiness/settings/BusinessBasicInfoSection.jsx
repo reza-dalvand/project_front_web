@@ -3,7 +3,6 @@
 import { FiBriefcase, FiPhone, FiClock } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
-import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import SectionHeader from '@/components/common/SectionHeader';
 import { useBusinessCategories } from '@/hooks/useCategoryOptions';
@@ -22,8 +21,10 @@ export default function BusinessBasicInfoSection({
   onAboutChange,
 }) {
   const { colors } = useTheme();
-  // ✅ دریافت دسته‌بندی‌ها از بک‌اند
   const { categories: businessCategories } = useBusinessCategories();
+
+  // ✅ FIX باگ ۹: تبدیل categoryId به string برای تطابق با options
+  const normalizedCategoryId = categoryId != null ? String(categoryId) : null;
 
   return (
     <div className="space-y-3">
@@ -57,24 +58,26 @@ export default function BusinessBasicInfoSection({
           {errors.name && <p className="text-xs text-[#E53935] mt-1.5">{errors.name}</p>}
         </div>
 
-        {/* نوع کسب‌وکار — ✅ از بک‌اند */}
-        <Dropdown
-          label="نوع کسب‌وکار *"
-          placeholder="انتخاب کنید"
-          value={categoryId}
-          options={businessCategories}
-          onSelect={onCategoryChange}
-        />
-        {errors.categoryId && (
-          <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
-            <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
-              {errors.categoryId}
-            </span>
-          </div>
-        )}
+        {/* نوع کسب‌وکار — ✅ FIX: تطابق ID */}
+        <div className="mt-3">
+          <Dropdown
+            label="نوع کسب‌وکار *"
+            placeholder="انتخاب کنید"
+            value={normalizedCategoryId}
+            options={businessCategories}
+            onSelect={(val) => onCategoryChange(val)}
+          />
+          {errors.categoryId && (
+            <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
+              <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
+                {errors.categoryId}
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* شماره تماس */}
-        <div>
+        <div className="mt-3">
           <label
             className="block text-sm font-[Vazir-Medium] mb-2"
             style={{ color: colors.textMain }}
@@ -103,7 +106,7 @@ export default function BusinessBasicInfoSection({
         </div>
 
         {/* ساعات کاری */}
-        <div>
+        <div className="mt-3">
           <label
             className="block text-sm font-[Vazir-Medium] mb-2"
             style={{ color: colors.textMain }}
@@ -132,7 +135,7 @@ export default function BusinessBasicInfoSection({
         </div>
 
         {/* درباره کسب‌وکار */}
-        <div>
+        <div className="mt-3">
           <label
             className="block text-sm font-[Vazir-Medium] mb-2"
             style={{ color: colors.textMain }}

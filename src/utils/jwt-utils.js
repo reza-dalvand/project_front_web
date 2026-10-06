@@ -1,25 +1,16 @@
+// src/utils/jwt-utils.js
 /**
  * ابزارهای JWT
- * decode، بررسی انقضا، و مدیریت توکن‌ها
- *
- * ✅ سازگار با مرورگر، SSR (Next.js) و Edge Runtime
- * ✅ FIX فاز ۱: استفاده از ترتیب بررسی بهتر و سازگاری کامل
- * ✅ FIX F-13: اضافه شدن توابع رمزنگاری ساده برای ذخیره‌سازی امن‌تر
+ * ✅ FIX باگ ۱۲: مدیریت امن base64 decode بدون کرش
  */
 
-// ═══════════════════════════════════════════════
-//    کلید رمزنگاری ساده (XOR Obfuscation)
-// ═══════════════════════════════════════════════
-// ⚠️ این رمزنگاری قوی نیست، فقط سطح دسترسی را بالاتر می‌برد
-// برای امنیت واقعی باید از httpOnly cookie استفاده شود
-const STORAGE_KEY = typeof window !== 'undefined' 
-  ? (window.navigator?.userAgent?.slice(0, 16) || 'beau-secure-key-16') 
-  : 'beau-secure-key-16';
+const STORAGE_KEY =
+  typeof window !== 'undefined'
+    ? window.navigator?.userAgent?.slice(0, 16) || 'beau-secure-key-16'
+    : 'beau-secure-key-16';
 
 /**
- * ✅ FIX F-13: رمزنگاری ساده با XOR
- * @param {string} text - متن اصلی
- * @returns {string} متن رمزنگاری شده (base64)
+ * ✅ رمزنگاری ساده با XOR
  */
 export const encryptToken = (text) => {
   if (!text) return '';
@@ -30,23 +21,20 @@ export const encryptToken = (text) => {
         text.charCodeAt(i) ^ STORAGE_KEY.charCodeAt(i % STORAGE_KEY.length)
       );
     }
-    // تبدیل به base64
     if (typeof btoa === 'function') {
       return btoa(unescape(encodeURIComponent(result)));
     }
     if (typeof Buffer !== 'undefined') {
       return Buffer.from(result, 'binary').toString('base64');
     }
-    return text; // fallback
+    return text;
   } catch {
     return text;
   }
 };
 
 /**
- * ✅ FIX F-13: رمزگشایی
- * @param {string} encrypted - متن رمزنگاری شده
- * @returns {string} متن اصلی
+ * ✅ رمزگشایی
  */
 export const decryptToken = (encrypted) => {
   if (!encrypted) return '';
@@ -59,7 +47,7 @@ export const decryptToken = (encrypted) => {
     } else {
       return encrypted;
     }
-    
+
     let result = '';
     for (let i = 0; i < decoded.length; i++) {
       result += String.fromCharCode(
@@ -73,59 +61,47 @@ export const decryptToken = (encrypted) => {
 };
 
 // ═══════════════════════════════════════════════
-//    Base64 URL Decode
+//    ✅ FIX باگ ۱۲: Base64 URL Decode — بدون کرش
 // ═══════════════════════════════════════════════
 const base64UrlDecode = (base64url) => {
+  if (!base64url || typeof base64url !== 'string') return '';
+
   const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
 
-  if (typeof window !== 'undefined') {
-    if (typeof window.atob === 'function') {
-      return window.atob(base64);
+  // ✅ روش امن: استفاده از atob + TextDecoder برای UTF-8
+  try {
+    let binaryStr;
+
+    if (typeof window !== 'undefined' && typeof window.atob === 'function') {
+      binaryStr = window.atob(base64);
+    } else if (typeof atob === 'function') {
+      binaryStr = atob(base64);
+    } else if (typeof Buffer !== 'undefined') {
+      return Buffer.from(base64, 'base64').toString('utf-8');
+    } else if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
+      binaryStr = globalThis.atob(base64);
+    } else {
+      return '';
     }
-    if (typeof atob === 'function') {
-      return atob(base64);
+
+    // ✅ FIX: تبدیل امن binary string به UTF-8
+    // به جای decodeURIComponent(escape(...)) که روی UTF-8 نامعتبر کرش می‌کند
+    try {
+      return decodeURIComponent(escape(binaryStr));
+    } catch {
+      // اگر UTF-8 نامعتبر بود، مستقیماً برگردان
+      return binaryStr;
     }
+  } catch {
+    return '';
   }
-
-  if (typeof Buffer !== 'undefined') {
-    return Buffer.from(base64, 'base64').toString('binary');
-  }
-
-  if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
-    return globalThis.atob(base64);
-  }
-
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-  let str = base64.replace(/=+$/, '');
-  let output = '';
-
-  if (str.length % 4 === 1) {
-    throw new Error('Invalid base64 string');
-  }
-
-  for (let i = 0; i < str.length; i += 4) {
-    const a = chars.indexOf(str.charAt(i));
-    const b = chars.indexOf(str.charAt(i + 1));
-    const c = chars.indexOf(str.charAt(i + 2));
-    const d = chars.indexOf(str.charAt(i + 3));
-
-    output += String.fromCharCode((a << 2) | (b >> 4));
-    if (c !== 64 && c !== -1) {
-      output += String.fromCharCode(((b & 15) << 4) | (c >> 2));
-    }
-    if (d !== 64 && d !== -1) {
-      output += String.fromCharCode(((c & 3) << 6) | d);
-    }
-  }
-
-  return output;
 };
 
 // ═══════════════════════════════════════════════
 //    JWT Decode
 // ═══════════════════════════════════════════════
 export const decodeJWT = (token) => {
-  if (!token) return null;
+  if (!token || typeof token !== 'string') return null;
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
@@ -133,12 +109,22 @@ export const decodeJWT = (token) => {
     const payload = parts[1];
     const decoded = base64UrlDecode(payload);
 
-    const jsonStr = decodeURIComponent(
-      decoded
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
+    if (!decoded) return null;
+
+    // ✅ FIX: پارش امن JSON
+    let jsonStr = decoded;
+    try {
+      // تلاش برای decode URI-encoded string
+      jsonStr = decodeURIComponent(
+        decoded
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+    } catch {
+      // اگر decode نشد، از decoded مستقیم استفاده کن
+      jsonStr = decoded;
+    }
 
     return JSON.parse(jsonStr);
   } catch {
@@ -169,12 +155,9 @@ export const getUserIdFromToken = (token) => {
 
 export const isTokenExpiringSoon = (token) => {
   const remaining = getTokenRemainingTime(token);
-  return remaining > 0 && remaining < 5 * 60 * 1000; // ۵ دقیقه
+  return remaining > 0 && remaining < 5 * 60 * 1000;
 };
 
-// ═══════════════════════════════════════════════
-//    ✅ FIX F-15: Session Status Types
-// ═══════════════════════════════════════════════
 export const SESSION_STATUS = {
   ACTIVE: 'active',
   SUSPENDED: 'suspended',

@@ -11,7 +11,7 @@ import Header from '@/components/common/Header';
 import ModelRequestForm from '@/components/manageBusiness/modelRequest/ModelRequestForm';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
-// ═══════════ کامپوننت داخلی با useSearchParams ═══════════
+
 function CreateModelRequestPageContent() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -27,10 +27,8 @@ function CreateModelRequestPageContent() {
 
   const services = businessData?.services || [];
 
-  // ═══ در حالت ویرایش، دریافت داده‌های موجود ═══
   useEffect(() => {
     if (!requestId) return;
-
     const fetchExisting = async () => {
       setIsLoadingExisting(true);
       try {
@@ -43,50 +41,38 @@ function CreateModelRequestPageContent() {
         setIsLoadingExisting(false);
       }
     };
-
     fetchExisting();
   }, [requestId, showToast]);
 
-  // ═══ ذخیره ═══
   const handleSave = async (formData) => {
     try {
+      // ✅ FIX باگ ۱۱: یکپارچه‌سازی Payload
+      const payload = {
+        service: formData.serviceId || formData.categoryId,
+        title: formData.title,
+        description: formData.description,
+        cost_type: formData.costType,
+        discount: formData.discount || 0,
+        is_urgent: formData.isUrgent || false,
+        contact_phone: formData.contactPhone,
+      };
+
       if (isEditMode) {
-        // ✅ حالت ویرایش → آپدیت با requestId
-        await adsService.updateModelRequest(requestId, {
-          service: formData.serviceId,
-          title: formData.title,
-          description: formData.description,
-          cost_type: formData.costType,
-          discount: formData.discount || 0,
-          is_urgent: formData.isUrgent || false,
-          contact_phone: formData.contactPhone,
-        });
+        await adsService.updateModelRequest(requestId, payload);
         showToast('درخواست مدل با موفقیت ویرایش شد', 'success');
       } else {
-        console.log('Updating model request with ID:', requestId, 'and data:', formData);
-
-        // ✅ حالت ایجاد → ساخت جدید
-        await adsService.createModelRequest({
-          service: formData.categoryId,
-          title: formData.title,
-          description: formData.description,
-          cost_type: formData.costType,
-          discount: formData.discount || 0,
-          is_urgent: formData.isUrgent || false,
-          contact_phone: formData.contactPhone,
-        });
+        await adsService.createModelRequest(payload);
         showToast('درخواست مدل با موفقیت ایجاد شد', 'success');
       }
       setTimeout(() => router.push('/manage/model-requests'), 1200);
     } catch (error) {
       console.error('Failed to save model request:', error);
-      showToast(error.message || 'خطا در ذخیره درخواست', 'error');
+      const msg = error?.details?.non_field_errors?.[0] || error?.message || 'خطا در ذخیره درخواست';
+      showToast(msg, 'error');
     }
   };
 
-  const handleClose = () => {
-    router.push('/manage/model-requests');
-  };
+  const handleClose = () => router.push('/manage/model-requests');
 
   if (!isAuthenticated) {
     return (
@@ -104,7 +90,6 @@ function CreateModelRequestPageContent() {
         title={isEditMode ? 'ویرایش درخواست مدل' : 'ایجاد درخواست مدل'}
         onBackPress={() => router.back()}
       />
-
       <div className="flex-1 overflow-y-auto">
         {isLoadingExisting ? (
           <div className="flex items-center justify-center py-20">
@@ -124,7 +109,6 @@ function CreateModelRequestPageContent() {
   );
 }
 
-// ═══════════ کامپوننت اصلی با Suspense ═══════════
 export default function CreateModelRequestPage() {
   return (
     <Suspense

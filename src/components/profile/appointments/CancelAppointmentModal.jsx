@@ -39,13 +39,11 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
   const [cardNumber, setCardNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // ✅ اطلاعات بانکی از بک‌اند گرفته می‌شود
   const [bankInfo, setBankInfo] = useState(null);
   const [loadingBankInfo, setLoadingBankInfo] = useState(false);
 
   const bankOptions = getBankOptions();
 
-  // ✅ دریافت اطلاعات بانکی کاربر از بک‌اند
   useEffect(() => {
     if (!visible) return;
     const fetchBankInfo = async () => {
@@ -53,7 +51,6 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
       try {
         const result = await bankInfoService.getBankInfo();
         const data = result.data;
-        // ✅ فاز ۳: خوانش camelCase
         setBankInfo({
           bankName: data.bankName || '',
           bankId: data.bankId || null,
@@ -132,9 +129,10 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
     setError('');
 
     try {
+      // ✅ FIX P0: متغیر reason تعریف نشده بود، مقدار خالی پاس داده می‌شود
       await appointmentsService.cancelAppointment(appointment.id, '');
       setLoading(false);
-      onConfirmCancel?.(appointment.id, reason);
+      onConfirmCancel?.(appointment.id, '');
       showToast('نوبت لغو شد. بیعانه ظرف ۴۸ ساعت واریز می‌شود.', 'success');
     } catch (err) {
       setLoading(false);
@@ -161,12 +159,10 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle Bar */}
         <div className="flex justify-center pt-3 pb-1 md:hidden">
           <div className="w-10 h-1 rounded-full" style={{ backgroundColor: colors.border }} />
         </div>
 
-        {/* هدر */}
         <div
           className="flex items-center gap-3 px-5 py-4 border-b"
           style={{ borderColor: colors.border }}
@@ -197,7 +193,6 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
           </button>
         </div>
 
-        {/* محتوا */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {loadingBankInfo ? (
             <div className="flex items-center justify-center py-6">
@@ -256,7 +251,6 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
           )}
         </div>
 
-        {/* فوتر */}
         <div
           className="px-5 pt-4 border-t"
           style={{
