@@ -57,4 +57,23 @@ export const authService = {
     });
     return response;
   },
+
+
+    /**
+   * 📱 دریافت لیست دستگاه‌های فعال کاربر
+   * GET /accounts/devices/
+   */
+  getDevices: async () => {
+    const response = await apiClient.get('/accounts/devices/');
+    return response;
+  },
+
+  /**
+   * ❌ خروج از یک دستگاه خاص (Revoke)
+   * POST /accounts/devices/{id}/revoke/
+   */
+  revokeDevice: async (deviceId) => {
+    const response = await apiClient.post(`/accounts/devices/${deviceId}/revoke/`);
+    return response;
+  },
 };

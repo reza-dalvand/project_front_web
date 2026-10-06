@@ -3,6 +3,20 @@ import { useAuthStore, useAuthModalStore } from '@/stores/useAuthStore';
 import { useTokenStore } from '@/stores/useTokenStore';
 import { act } from '@testing-library/react';
 
+
+// ✅ FIX: Mock کردن authService برای جلوگیری از درخواست واقعی HTTP و خطای ECONNREFUSED
+jest.mock('@/api/services/auth.service', () => ({
+  authService: {
+    logout: jest.fn().mockResolvedValue({ data: { success: true } }),
+    sendOTP: jest.fn().mockResolvedValue({ data: { success: true, data: { expires_in: 300, resend_after: 60 } } }),
+    verifyOTP: jest.fn().mockResolvedValue({ data: { success: true, data: { access_token: 'mock', refresh_token: 'mock', user: {} } } }),
+    refreshToken: jest.fn().mockResolvedValue({ data: { access: 'new_access', refresh: 'new_refresh' } }),
+    getDevices: jest.fn().mockResolvedValue({ data: { success: true, data: [] } }),
+    getSessionStatus: jest.fn().mockResolvedValue({ data: { success: true } }),
+  },
+}));
+
+
 // ✅ Helper مشترک
 const createTestUser = (phone = '09123456789', firstName = 'مریم', lastName = 'حسینی') => ({
   id: 1,
