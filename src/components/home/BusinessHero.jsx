@@ -7,6 +7,7 @@ import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
 import { toPersianDigit } from '@/utils/numberUtils';
+import env from '@/config/env';
 
 // ✅ fallback ثابت — نه random! هر بار یک تصویر ثابت نمایش می‌دهد
 const FALLBACK_COVER = '/images/placeholder-cover.jpg';
@@ -17,20 +18,18 @@ const DEFAULT_RATING = 5.0;
 
 /**
  * 🏪 BusinessHero - هدر تصویری صفحه جزئیات کسب‌وکار
- *
- * ✅ فاز ۵: لوگو و کاور مستقیماً از API خوانده می‌شوند
  */
 export default function BusinessHero({
   gallery = [],
   coverUrl,
   logo,
   businessId,
+  bookingSlug, // ✅ prop جدید برای لینک امن
   businessName,
   onBackPress,
   isFavorite = false,
   onFavoritePress,
   ownerPhoto,
-  // ✅ prop های جدید برای نمایش امتیاز
   rating = 0,
   reviewsCount = 0,
 }) {
@@ -39,20 +38,22 @@ export default function BusinessHero({
   const { showToast } = useToast();
   const [showShareToast, setShowShareToast] = useState(false);
 
-  // ✅ محاسبه امتیاز نمایشی
-  // قبل از ۳ رای: ۵.۰ (پیش‌فرض)
-  // بعد از ۳ رای: میانگین واقعی
   const displayRating =
     reviewsCount < MIN_REVIEWS_THRESHOLD ? DEFAULT_RATING : parseFloat(rating || 0);
 
-  // ✅ اولویت: coverUrl از API → gallery[0] → fallback ثابت
   const coverImage = coverUrl || gallery[0] || FALLBACK_COVER;
 
-  // لینک رزرو اختصاصی
-  const bookingLink = `https://app.beauclub.ir/book/${businessId || 'biz_1'}`;
+  // ✅ FIX: لینک رزرو اختصاصی بدون fallback جعلی
+  const slug = bookingSlug || businessId;
+  const bookingLink = slug ? `${env.SITE_DOMAIN}/business?slug=${slug}` : null;
 
   // ═══════ هندلر اشتراک‌گذاری ═══════
   const handleShare = async () => {
+    if (!bookingLink) {
+      showToast('لینک رزرو هنوز برای این کسب‌وکار ایجاد نشده است', 'warning');
+      return;
+    }
+
     const shareMessage = `🌸 ${businessName || 'سالن زیبایی'}
 📱 با این لینک می‌توانید مستقیماً از من نوبت بگیرید:
 ${bookingLink}
@@ -116,7 +117,6 @@ ${bookingLink}
 
   return (
     <div className="relative w-full h-[320px] bg-black overflow-hidden">
-      {/* ═══════ تصویر کاور از API ═══════ */}
       <div className="relative w-full h-full">
         <Image
           src={coverImage}
@@ -128,19 +128,15 @@ ${bookingLink}
         />
       </div>
 
-      {/* ═══════ گرادیان پایین ═══════ */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
         style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
       />
 
-      {/* ═══════ دکمه‌های بالا ═══════ */}
       <div className="absolute top-4 left-4 right-4 flex items-center gap-3 z-10">
         <button
           onClick={onBackPress}
-          className="w-11 h-11 rounded-full flex items-center justify-center
-            border border-white/15 backdrop-blur-sm
-            transition-all hover:scale-110 active:scale-95"
+          className="w-11 h-11 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-sm transition-all hover:scale-110 active:scale-95"
           style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
           aria-label="بازگشت"
         >
@@ -151,9 +147,7 @@ ${bookingLink}
 
         <button
           onClick={handleShare}
-          className="w-11 h-11 rounded-full flex items-center justify-center
-            border border-white/15 backdrop-blur-sm
-            transition-all hover:scale-110 active:scale-95"
+          className="w-11 h-11 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-sm transition-all hover:scale-110 active:scale-95"
           style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
           aria-label="اشتراک‌گذاری"
         >
@@ -162,9 +156,7 @@ ${bookingLink}
 
         <button
           onClick={handleFavorite}
-          className="w-11 h-11 rounded-full flex items-center justify-center
-            border border-white/15 backdrop-blur-sm
-            transition-all hover:scale-110 active:scale-95"
+          className="w-11 h-11 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-sm transition-all hover:scale-110 active:scale-95"
           style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
           aria-label={isFavorite ? 'حذف از ذخیره‌ها' : 'افزودن به ذخیره‌ها'}
         >
@@ -176,7 +168,6 @@ ${bookingLink}
         </button>
       </div>
 
-      {/* ═══════ باکس امتیاز (پایین سمت چپ) ═══════ */}
       <div className="absolute bottom-4 left-4 z-10">
         <div
           className="flex flex-col items-center px-3 py-2 rounded-2xl border backdrop-blur-sm"
@@ -204,12 +195,9 @@ ${bookingLink}
         </div>
       </div>
 
-      {/* ═══════ Toast کپی شدن لینک ═══════ */}
       {showShareToast && (
         <div
-          className="absolute top-20 left-1/2 -translate-x-1/2
-            px-4 py-2.5 rounded-xl shadow-lg z-20
-            animate-in fade-in slide-in-from-top-4 duration-300"
+          className="absolute top-20 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-xl shadow-lg z-20 animate-in fade-in slide-in-from-top-4 duration-300"
           style={{ backgroundColor: '#4CAF50' }}
           dir="rtl"
         >

@@ -21,7 +21,13 @@ export default function InviteFriendsPage() {
   const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
 
-  const referralCode = 'BU-' + (user?.phone?.slice(-4) || '0000');
+  // ✅ FIX: استفاده از کد معرف امن از بک‌اند به جای ۴ رقم آخر شماره
+  const referralCode =
+    user?.referral_code ||
+    user?.referralCode ||
+    user?.invite_code ||
+    (user?.id ? `BU-${user.id}` : 'BU-USER');
+
   const referralLink = `https://beauclub.ir/invite/${referralCode}`;
 
   const handleCopy = async () => {
@@ -52,7 +58,6 @@ export default function InviteFriendsPage() {
         // کاربر لغو کرده
       }
     }
-    // Fallback: کپی در کلیپ‌بورد
     try {
       await navigator.clipboard.writeText(message);
       showToast('متن دعوت کپی شد', 'success');
@@ -62,18 +67,9 @@ export default function InviteFriendsPage() {
   };
 
   const steps = [
-    {
-      icon: FiShare2,
-      text: 'کد معرف یا لینک دعوت را با دوستانتان به اشتراک بگذارید',
-    },
-    {
-      icon: FiUserPlus,
-      text: 'دوست شما با کد شما در بیو کلاب ثبت‌نام می‌کند',
-    },
-    {
-      icon: FiAward,
-      text: 'همراه با دوستانتان از خدمات بیو کلاب لذت ببرید',
-    },
+    { icon: FiShare2, text: 'کد معرف یا لینک دعوت را با دوستانتان به اشتراک بگذارید' },
+    { icon: FiUserPlus, text: 'دوست شما با کد شما در بیو کلاب ثبت‌نام می‌کند' },
+    { icon: FiAward, text: 'همراه با دوستانتان از خدمات بیو کلاب لذت ببرید' },
   ];
 
   if (!isAuthenticated) {
@@ -90,7 +86,6 @@ export default function InviteFriendsPage() {
     <ScreenWrapper padding={0}>
       <Header title="دعوت از دوستان" onBackPress={() => router.back()} />
       <div className="flex-1 overflow-y-auto px-5 pt-8 pb-10 space-y-6">
-        {/* Hero */}
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-[100px] h-[100px] rounded-full flex items-center justify-center"
@@ -108,7 +103,6 @@ export default function InviteFriendsPage() {
           </div>
         </div>
 
-        {/* کد معرف */}
         <Card variant="elevated" padding={20} radius={20}>
           <div className="flex flex-col items-center gap-4">
             <span className="text-sm font-[Vazir]" style={{ color: colors.textSecondary }}>
@@ -116,10 +110,7 @@ export default function InviteFriendsPage() {
             </span>
             <div
               className="w-full flex items-center justify-between py-3.5 px-4 rounded-2xl border-2 border-dashed"
-              style={{
-                backgroundColor: colors.background,
-                borderColor: colors.primary + '40',
-              }}
+              style={{ backgroundColor: colors.background, borderColor: colors.primary + '40' }}
             >
               <span
                 className="text-xl font-[Vazir-Bold] tracking-wider flex-1"
@@ -135,16 +126,12 @@ export default function InviteFriendsPage() {
                 {copied ? <FiCheck size={16} color="#fff" /> : <FiCopy size={16} color="#fff" />}
               </button>
             </div>
-            <span
-              className="text-xs font-[Vazir] text-center"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-xs font-[Vazir] text-center" style={{ color: colors.textSecondary }}>
               {copied ? '✓ کد معرف کپی شد' : 'این کد را با دوستانتان به اشتراک بگذارید'}
             </span>
           </div>
         </Card>
 
-        {/* لینک دعوت */}
         <Card variant="elevated" padding={16} radius={16}>
           <div className="flex items-center gap-3">
             <div
@@ -167,7 +154,6 @@ export default function InviteFriendsPage() {
           </div>
         </Card>
 
-        {/* مراحل دعوت */}
         <div>
           <h3 className="text-base font-[Vazir-Bold] mb-4" style={{ color: colors.textMain }}>
             چگونه دعوت کنم؟
@@ -183,10 +169,7 @@ export default function InviteFriendsPage() {
                   >
                     <StepIcon size={16} color="#fff" />
                   </div>
-                  <span
-                    className="text-sm font-[Vazir] leading-5 flex-1"
-                    style={{ color: colors.textMain }}
-                  >
+                  <span className="text-sm font-[Vazir] leading-5 flex-1" style={{ color: colors.textMain }}>
                     {step.text}
                   </span>
                 </div>
@@ -195,7 +178,6 @@ export default function InviteFriendsPage() {
           </div>
         </div>
 
-        {/* دکمه اشتراک‌گذاری */}
         <Button
           title="اشتراک‌گذاری با دوستان"
           onPress={handleShare}
