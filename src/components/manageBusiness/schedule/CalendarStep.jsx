@@ -1,6 +1,6 @@
 // src/components/manageBusiness/schedule/CalendarStep.jsx
 'use client';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import CalendarHeader from './CalendarHeader';
@@ -16,16 +16,27 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
     return toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
   }, []);
 
-  // هنگام mount یا تغییر existingDates، اگر selectedDates خالی است، پر شود
+  // ✅ FIX: استفاده از useRef برای جلوگیری از stale closure و باگ آپدیت نشدن selectedDates
+  // قبلاً به دلیل نبود selectedDates در dependency array، مقدار آن همیشه [] (مقدار اولیه) باقی می‌ماند
+  // و با هر تغییر رفرنس existingDates، انتخاب‌های کاربر پاک می‌شد.
+  const prevExistingDatesRef = useRef(existingDates);
+
   useEffect(() => {
-    if (
-      existingDates &&
-      existingDates.length > 0 &&
-      (!selectedDates || selectedDates.length === 0)
-    ) {
-      onDatesChange([...existingDates]);
+    // فقط زمانی سینک کن که existingDates واقعاً تغییر کرده باشد (رفرنس جدید از سمت والد)
+    if (prevExistingDatesRef.current !== existingDates) {
+      prevExistingDatesRef.current = existingDates;
+      
+      // سینک اولیه فقط در صورتی انجام می‌شود که selectedDates خالی باشد
+      // این یعنی اگر کاربر خودش datesها را Clear کند، دیگر با existingDates جایگزین نمی‌شود
+      if (
+        existingDates &&
+        existingDates.length > 0 &&
+        (!selectedDates || selectedDates.length === 0)
+      ) {
+        onDatesChange([...existingDates]);
+      }
     }
-  }, [existingDates]);
+  }, [existingDates, selectedDates, onDatesChange]);
 
   const [viewMonth, setViewMonth] = useState(() => {
     if (existingDates && existingDates.length > 0) {

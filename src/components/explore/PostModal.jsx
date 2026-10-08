@@ -68,6 +68,8 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
 
   const gallery = useMemo(() => {
     if (!post) return [];
+
+    // ✅ فقط از images استفاده کن
     const imagesList = [];
     if (Array.isArray(post.images)) {
       for (const img of post.images) {

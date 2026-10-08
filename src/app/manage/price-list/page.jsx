@@ -37,9 +37,12 @@ export default function ManagePriceListPage() {
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
   const businessData = useBusinessStore((s) => s.businessData);
-  const businessId = businessData?.id || 'biz_1';
+  const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
+  
+  // ✅ FIX: حذف مقدار پیش‌فرض 'biz_1' و استفاده از شناسه واقعی
+  const businessId = businessData?.id;
 
-  const list = usePriceListStore((s) => s.lists[businessId]);
+  const list = usePriceListStore((s) => (businessId ? s.lists[businessId] : undefined));
   const isLoading = usePriceListStore((s) => s.isLoading);
   const fetchPriceList = usePriceListStore((s) => s.fetchPriceList);
   const ensureList = usePriceListStore((s) => s.ensureList);
@@ -48,15 +51,26 @@ export default function ManagePriceListPage() {
 
   // ═══════ بارگذاری اولیه ═══════
   useEffect(() => {
-    fetchPriceList(businessId);
+    if (!businessId && isAuthenticated) {
+      fetchBusinessDetail();
+    }
+  }, [businessId, isAuthenticated, fetchBusinessDetail]);
+
+  useEffect(() => {
+    if (businessId) {
+      fetchPriceList(businessId);
+    }
   }, [businessId, fetchPriceList]);
 
   useEffect(() => {
-    ensureList(businessId);
+    if (businessId) {
+      ensureList(businessId);
+    }
   }, [businessId, ensureList]);
 
   // ═══════ Handlerها ═══════
   const handleTogglePublish = () => {
+    if (!businessId) return;
     const next = togglePublish(businessId);
     showToast(
       next
@@ -67,17 +81,18 @@ export default function ManagePriceListPage() {
   };
 
   const handleThemeChange = (themeId) => {
+    if (!businessId) return;
     setTheme(businessId, themeId);
     showToast('تم ظاهری تغییر کرد', 'success');
   };
 
   const settings = list || { themeId: 'classic', isPublished: false, services: [] };
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !businessId) {
     return (
       <ScreenWrapper>
         <div className="flex items-center justify-center min-h-screen">
-          <p style={{ color: colors.textMain }}>در حال بارگذاری...</p>
+          <LoadingSpinner label="در حال بارگذاری اطلاعات کسب‌وکار..." />
         </div>
       </ScreenWrapper>
     );

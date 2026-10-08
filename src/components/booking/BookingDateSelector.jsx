@@ -1,6 +1,6 @@
 // src/components/booking/BookingDateSelector.jsx
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FiChevronRight, FiChevronLeft, FiCheck } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
@@ -34,6 +34,20 @@ export default function BookingDateSelector({
   }, [availableDates, today]);
 
   const [currentView, setCurrentView] = useState(initialMonth);
+
+  // ✅ FIX: همگام‌سازی currentView با تغییر availableDates
+  // وقتی خدمت تغییر می‌کند و availableDates جدید می‌آید،
+  // تقویم باید به ماهِ اولین تاریخ موجود پرش کند.
+  useEffect(() => {
+    if (availableDates && availableDates.length > 0) {
+      const first = availableDates[0];
+      setCurrentView((prev) => {
+        // فقط در صورتی آپدیت کن که ماه یا سال متفاوت باشد
+        if (prev.jy === first.jy && prev.jm === first.jm) return prev;
+        return { jy: first.jy, jm: first.jm };
+      });
+    }
+  }, [availableDates]);
 
   const goToPrev = () => {
     setCurrentView((prev) =>

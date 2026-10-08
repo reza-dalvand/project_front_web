@@ -117,6 +117,7 @@ export default function LineRentalPage() {
           if (detailsMsg) errorMsg = detailsMsg;
         }
         showToast(errorMsg, 'error');
+        throw error;
       }
     },
     [editingAd, showToast]
