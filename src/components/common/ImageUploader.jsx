@@ -6,6 +6,7 @@ import { FiCamera, FiEdit, FiX, FiUpload } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { UPLOAD_CONFIG } from '@/api/config';
 import { compressImage } from '@/utils/image-compression';
+import { revokePreviewUrl } from '@/utils/image-utils'; // ✅ Import تابع کمکی
 import Image from 'next/image';
 
 export default function ImageUploader({
@@ -18,16 +19,37 @@ export default function ImageUploader({
   error,
 }) {
   const { colors } = useTheme();
-  const [localPreview, setLocalPreview] = useState(value);
+  const [localPreview, setLocalPreview] = useState(value || null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [validationError, setValidationError] = useState(null);
 
   const objectUrlRef = useRef(null);
 
+  // ✅ FIX 1: همگام‌سازی با تغییرات پراپ value از بیرون (مثلاً ریست شدن فرم)
+  useEffect(() => {
+    if (value !== localPreview) {
+      // اگر preview قبلی یک blob URL ساخته شده توسط این کامپوننت بود، آن را آزاد کن
+      if (objectUrlRef.current) {
+        revokePreviewUrl(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+      
+      // اگر value جدید یک فایل بود، برایش blob URL بساز
+      if (value instanceof File) {
+        const url = URL.createObjectURL(value);
+        objectUrlRef.current = url;
+        setLocalPreview(url);
+      } else {
+        setLocalPreview(value || null);
+      }
+    }
+  }, [value]);
+
+  // ✅ FIX 2: پاک‌سازی حافظه هنگام Unmount شدن کامپوننت
   useEffect(() => {
     return () => {
       if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
+        revokePreviewUrl(objectUrlRef.current);
         objectUrlRef.current = null;
       }
     };
@@ -44,8 +66,9 @@ export default function ImageUploader({
       try {
         const compressed = await compressImage(file, variant);
 
+        // آزاد کردن blob URL قبلی قبل از ساخت جدید
         if (objectUrlRef.current) {
-          URL.revokeObjectURL(objectUrlRef.current);
+          revokePreviewUrl(objectUrlRef.current);
           objectUrlRef.current = null;
         }
 
@@ -85,7 +108,7 @@ export default function ImageUploader({
   const handleRemove = (e) => {
     e.stopPropagation();
     if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
+      revokePreviewUrl(objectUrlRef.current);
       objectUrlRef.current = null;
     }
     setLocalPreview(null);

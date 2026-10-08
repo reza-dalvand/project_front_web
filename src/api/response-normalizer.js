@@ -254,12 +254,14 @@ export class ApiError extends Error {
   }
 }
 
+
 // ═══════════════════════════════════════════════
 //    ۵. نرمال‌سازی خطای Axios
 // ═══════════════════════════════════════════════
 
 /**
  * تبدیل خطای Axios به ApiError
+ * ✅ FIX 7.2: استخراج پیام‌های کاربرپسندتر از خطاهای DRF و Validation
  *
  * @param {object} axiosError
  * @returns {ApiError}
@@ -277,7 +279,7 @@ export const normalizeErrorResponse = (axiosError) => {
   const { status, data } = axiosError.response;
   const apiError = data?.error;
 
-  // فرمت استاندارد خطای بک‌اند
+  // فرمت استاندارد خطای بک‌اند (Custom API Wrapper)
   if (apiError) {
     return new ApiError({
       code: apiError.code || 'ERROR',
@@ -286,12 +288,69 @@ export const normalizeErrorResponse = (axiosError) => {
     });
   }
 
-  // فرمت خطای DRF (ValidationError)
-  if (status === 400 && data) {
+  // ✅ FIX 7.2: اگر پیام خاص و فارسی از طرف بک‌اند در detail یا message آمده بود استفاده کن
+  // این کار از نمایش پیام‌های خام و انگلیسی DRF (مثل "Not found." یا "Invalid token.") جلوگیری می‌کند
+  const customMessage = data?.detail || data?.message;
+  const hasPersian = customMessage && /[\u0600-\u06FF]/.test(String(customMessage));
+
+  if (hasPersian) {
+    return new ApiError({
+      code: `HTTP_${status}`,
+      message: String(customMessage),
+      details: data,
+    });
+  }
+
+  // ✅ FIX 7.2: فرمت خطای DRF (ValidationError)
+  if (status === 400 && data && typeof data === 'object' && !Array.isArray(data)) {
+    // اگر non_field_errors وجود دارد، معمولاً پیام اصلی همان است
+    if (Array.isArray(data.non_field_errors)) {
+      return new ApiError({
+        code: 'VALIDATION_ERROR',
+        message: data.non_field_errors.join('\n'),
+        details: data,
+      });
+    }
+
+    // نگاشت فیلدهای رایج به فارسی برای نمایش بهتر
+    const FIELD_LABELS = {
+      phone: 'شماره موبایل',
+      password: 'رمز عبور',
+      email: 'ایمیل',
+      first_name: 'نام',
+      last_name: 'نام خانوادگی',
+      name: 'نام',
+      national_id: 'کد ملی',
+      username: 'نام کاربری',
+      code: 'کد تایید',
+      otp: 'کد تایید',
+      amount: 'مبلغ',
+      sheba: 'شماره شبا',
+      card_number: 'شماره کارت',
+      bank_name: 'نام بانک',
+      owner_name: 'نام صاحب حساب',
+      title: 'عنوان',
+      description: 'توضیحات',
+      category: 'دسته‌بندی',
+      service: 'خدمت',
+      address: 'آدرس',
+    };
+
     const messages = Object.entries(data)
+      .filter(([field]) => field !== 'non_field_errors')
       .map(([field, errors]) => {
         const errorText = Array.isArray(errors) ? errors.join('، ') : String(errors);
-        return `${field}: ${errorText}`;
+        const label = FIELD_LABELS[field] || field;
+        
+        // تلاش برای ترجمه پیام‌های خام DRF (در صورتی که بک‌اند فارسی نکرده باشد)
+        const cleanText = errorText
+          .replace(/This field/gi, 'این فیلد')
+          .replace(/is required/gi, 'الزامی است')
+          .replace(/may not be null/gi, 'نمی‌تواند خالی باشد')
+          .replace(/Ensure this value is greater than or equal to/gi, 'مقدار باید حداقل')
+          .replace(/Ensure this value is less than or equal to/gi, 'مقدار باید حداکثر');
+          
+        return `${label}: ${cleanText}`;
       })
       .join('\n');
 
@@ -302,7 +361,7 @@ export const normalizeErrorResponse = (axiosError) => {
     });
   }
 
-  // خطاهای HTTP عمومی
+  // خطاهای HTTP عمومی (Fallback برای پیام‌های انگلیسی DRF)
   const httpErrorMessages = {
     400: 'درخواست نامعتبر',
     401: 'لطفاً وارد حساب کاربری خود شوید',
