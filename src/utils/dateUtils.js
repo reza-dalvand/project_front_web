@@ -2,6 +2,7 @@
 // ✅ الگوریتم خالص تبدیل تاریخ — بدون وابستگی خارجی
 // ✅ FIX فاز ۱: رفع باگ‌های کبیسه و ترتیب توابع
 // ✅ FIX فاز ۳: کش برای تبدیل‌های تکراری (رفع افت عملکرد در لیست‌ها)
+// ✅ FIX باگ ۵.۲: رفع مشکل timeToMinutes با جداکننده‌های غیر انگلیسی (مثل ؛ یا /)
 // حجم: ~2.5KB | بدون کتابخانه
 
 // ═══════════════════════════════════════════════════════
@@ -235,19 +236,39 @@ export const getFirstDayOfWeekJalaali = (jy, jm) => {
 
 /**
  * تبدیل ساعت "HH:MM" به دقیقه
+ * ✅ FIX باگ ۵.۲: پشتیبانی از جداکننده‌های فارسی/عربی و فرمت‌های بدون جداکننده
  * @param {string} timeStr
  * @returns {number}
  */
 export const timeToMinutes = (timeStr) => {
   if (!timeStr || typeof timeStr !== 'string') return 0;
+  
+  // تبدیل اعداد فارسی/عربی به انگلیسی
   const english = timeStr
     .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-  const parts = english.split(':');
-  if (parts.length !== 2) return 0;
-  const hours = parseInt(parts[0], 10) || 0;
-  const minutes = parseInt(parts[1], 10) || 0;
-  return hours * 60 + minutes;
+    
+  // ✅ FIX: استفاده از regex برای جدا کردن اعداد
+  // به جای split(':') که فقط با : انگلیسی کار می‌کند
+  // این روش هر کاراکتر غیر عددی (مثل :، ؛، /، -، فاصله و ...) را به عنوان جداکننده در نظر می‌گیرد
+  const parts = english.split(/\D+/).filter(Boolean);
+  
+  if (parts.length >= 2) {
+    const hours = parseInt(parts[0], 10) || 0;
+    const minutes = parseInt(parts[1], 10) || 0;
+    return hours * 60 + minutes;
+  }
+  
+  // Fallback: اگر جداکننده‌ای وجود نداشت و فقط اعداد بود (مثل "0930" یا "930")
+  const digits = english.replace(/\D/g, '');
+  if (digits.length === 4) {
+    return parseInt(digits.slice(0, 2), 10) * 60 + parseInt(digits.slice(2), 10);
+  }
+  if (digits.length === 3) {
+    return parseInt(digits[0], 10) * 60 + parseInt(digits.slice(1), 10);
+  }
+  
+  return 0;
 };
 
 /**

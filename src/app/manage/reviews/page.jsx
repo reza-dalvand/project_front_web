@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiStar, FiMessageSquare, FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useToast } from '@/hooks/useToast';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
@@ -25,9 +26,12 @@ const FILTER_OPTIONS = [
 
 export default function ReviewsPage() {
   const { colors } = useTheme();
-  const router = useRouter(); // ✅ اضافه شد
+  const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
+
+  // ✅ businessId واقعی از store گرفته می‌شود
+  const { businessData, isLoading: isBusinessLoading } = useBusinessStore();
 
   const [activeFilter, setActiveFilter] = useState('all');
   const [reviews, setReviews] = useState([]);
@@ -35,10 +39,15 @@ export default function ReviewsPage() {
 
   // ─── دریافت نظرات از API ───
   useEffect(() => {
+    // ✅ Guard: اگر businessId هنوز لود نشده، صبر کن
+    const businessId = businessData?.id;
+    if (!businessId) return;
+
     const fetchReviews = async () => {
       setIsLoading(true);
       try {
-        const result = await reviewsService.getBusinessReviews(1);
+        // ✅ businessId واقعی به جای هاردکد 1
+        const result = await reviewsService.getBusinessReviews(businessId);
         setReviews(result.data?.reviews || []);
       } catch (error) {
         console.error('Failed to fetch reviews:', error);
@@ -48,7 +57,7 @@ export default function ReviewsPage() {
       }
     };
     fetchReviews();
-  }, [showToast]);
+  }, [showToast, businessData?.id]); // ✅ businessId به dependency اضافه شد
 
   // فیلتر نظرات
   const filteredReviews = useMemo(() => {
@@ -73,9 +82,23 @@ export default function ReviewsPage() {
     );
   }
 
+  // ✅ حالت لودینگ داده‌های کسب‌وکار
+  if (isBusinessLoading) {
+    return (
+      <ScreenWrapper>
+        <Header title="نظرات و امتیازات" onBackPress={() => router.back()} />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div
+            className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin"
+            style={{ color: colors.primary }}
+          />
+        </div>
+      </ScreenWrapper>
+    );
+  }
+
   return (
     <ScreenWrapper padding={0}>
-      {/* ✅ اصلاح شد: router.back() به جای router که undefined بود */}
       <Header title="نظرات و امتیازات" onBackPress={() => router.back()} />
 
       <div className="p-4 pb-32 space-y-4">

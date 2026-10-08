@@ -13,6 +13,7 @@ import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
 import { toPersianDigit } from '@/utils/numberUtils';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { getFullImageUrl } from '@/utils/image-utils';
 
 export default function PortfolioDetailModal({
   visible,

@@ -169,7 +169,7 @@ export default function BookingModal({
       releaseScrollLock(instanceId.current);
     };
     // ✅ FIX ۱: dependencies کامل
-  }, [visible, businessId, serviceId, needsNameStep]);
+  }, [visible, businessId, serviceId, needsNameStep, resetNameState, prefillNameFromUser]);
 
   // ═══════ Escape Key ═══════
   useEffect(() => {

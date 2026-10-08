@@ -31,6 +31,38 @@ export const getImageUrl = (path) => {
 };
 
 /**
+ * ساخت URL کامل تصویر از مسیر نسبی (مناسب پورتفولیو و گالری)
+ *
+ * تفاوت با getImageUrl:
+ * - اگه مسیر خالی باشه → null
+ * - اگه از قبل URL کامل باشه → همون رو برمی‌گردونه
+ * - اگه مسیر نسبی باشه → با CDN یا MEDIA_BASE_URL ترکیب می‌کنه
+ *
+ * @param {string} path - مسیر نسبی تصویر از بک‌اند
+ * @returns {string|null} - URL کامل یا null
+ */
+export const getFullImageUrl = (path) => {
+  if (!path) return null;
+
+  // اگه از قبل URL کامل است
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  // اگه Arvan CDN تنظیم شده
+  if (env.ARVAN_CDN_URL) {
+    return `${env.ARVAN_CDN_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+  }
+
+  // در غیر این صورت از MEDIA_BASE_URL
+  if (env.MEDIA_BASE_URL) {
+    return `${env.MEDIA_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+  }
+
+  return path;
+};
+
+/**
  * ساخت URL برای آپلود (آواتار، تصاویر کسب‌وکار و...)
  * @param {string} path
  * @returns {string}

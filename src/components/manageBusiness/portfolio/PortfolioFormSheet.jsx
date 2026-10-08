@@ -123,8 +123,8 @@ export default function PortfolioFormSheet({
     return Object.keys(newErrors).length === 0;
   };
 
-  // ═══ بخش handleSave را جایگزین کنید ═══
-  const handleSave = () => {
+  // ═══ ✅ FIX: مدیریت async/await برای ریست کردن تضمینی saving ═══
+  const handleSave = async () => {
     if (!validate()) return;
     setSaving(true);
 
@@ -143,7 +143,16 @@ export default function PortfolioFormSheet({
       });
     }
 
-    onSave(formData, editingPortfolio?.id);
+    try {
+      // چون onSave در والد یک تابع async است، آن را await می‌کنیم
+      await onSave(formData, editingPortfolio?.id);
+    } catch (error) {
+      // خطا در والد مدیریت و Toast نشان داده می‌شود
+      console.error('Save portfolio failed in sheet:', error);
+    } finally {
+      // ✅ تضمین ریست شدن state saving حتی در صورت بروز خطای شبکه یا سرور
+      setSaving(false);
+    }
   };
 
   // ─── Cleanup previews ───

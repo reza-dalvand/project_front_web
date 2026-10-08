@@ -128,14 +128,6 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
   const gallery = useMemo(() => {
     if (!post) return [];
 
-    const extractUrl = (img) => {
-      if (typeof img === 'string' && img.length > 0) return img;
-      if (img && typeof img === 'object') {
-        return img.imageUrl || img.image_url || img.image || img.url || null;
-      }
-      return null;
-    };
-
     // ✅ فقط از images استفاده کن
     const imagesList = [];
     if (Array.isArray(post.images)) {

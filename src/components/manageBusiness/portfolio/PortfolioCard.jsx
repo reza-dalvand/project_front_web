@@ -5,6 +5,7 @@ import { FiEdit2, FiTrash2, FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { useMemo } from 'react';
+import { getFullImageUrl } from '@/utils/image-utils';
 
 export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, priority }) {
   const { colors } = useTheme();

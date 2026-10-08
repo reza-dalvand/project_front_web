@@ -32,6 +32,9 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
   const [fixedAmount, setFixedAmount] = useState('');
   const [fixedDeposit, setFixedDeposit] = useState('');
   const [hourlyRate, setHourlyRate] = useState('');
+  
+  // ✅ اضافه شدن state برای مدیریت لودینگ دکمه ذخیره
+  const [saving, setSaving] = useState(false);
 
   // ✅ دریافت دسته‌بندی خدمات از بک‌اند
   const { categories: serviceCategories } = useServiceCategories();
@@ -70,6 +73,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
         setHourlyRate('');
       }
       setErrors({});
+      setSaving(false); // ✅ ریست کردن لودینگ هنگام باز شدن مودال
     }
   }, [visible, editingAd]);
 
@@ -127,7 +131,8 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  // ✅ تبدیل به async و مدیریت صحیح Promise
+  const handleSave = async () => {
     if (!validate()) return;
     const collab = COLLAB_TYPES.find((c) => c.id === collabType);
     const svc = availableSubServices.find((s) => s.id === subServiceId);
@@ -152,21 +157,33 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
       priceData = { hourlyRate: parseNumber(hourlyRate) };
       priceDisplay = `${toPersianDigit(priceData.hourlyRate.toLocaleString('en-US'))} / ساعت`;
     }
-    onSave({
-      id: editingAd?.id || `lr_${Date.now()}`,
-      title: title.trim(),
-      categoryId,
-      subServiceId,
-      subServiceLabel: svc?.label || '',
-      collabType,
-      collabLabel: collab?.label,
-      ...priceData,
-      priceDisplay,
-      description: description.trim(),
-      contactPhone,
-      status: 'active',
-    });
-    onClose();
+    
+    setSaving(true);
+    try {
+      // ✅ انتظار برای پایان عملیات ذخیره‌سازی در والد
+      await onSave({
+        id: editingAd?.id || `lr_${Date.now()}`,
+        title: title.trim(),
+        categoryId,
+        subServiceId,
+        subServiceLabel: svc?.label || '',
+        collabType,
+        collabLabel: collab?.label,
+        ...priceData,
+        priceDisplay,
+        description: description.trim(),
+        contactPhone,
+        status: 'active',
+      });
+      
+      // ✅ فقط در صورت موفقیت‌آمیز بودن (عدم پرتاب خطا)، فرم بسته می‌شود
+      onClose();
+    } catch (error) {
+      // در صورت بروز خطا، فرم باز می‌ماند تا کاربر بتواند دوباره تلاش کند
+      console.error('Save failed:', error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -250,6 +267,8 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
         <Button
           title={isEditMode ? 'ذخیره تغییرات' : 'ثبت آگهی رایگان'}
           onPress={handleSave}
+          loading={saving}
+          disabled={saving}
           variant="primary"
           size="lg"
           fullWidth

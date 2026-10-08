@@ -11,6 +11,7 @@ import Header from '@/components/common/Header';
 import ModelRequestForm from '@/components/manageBusiness/modelRequest/ModelRequestForm';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
+
 // ═══════════ کامپوننت داخلی با useSearchParams ═══════════
 function CreateModelRequestPageContent() {
   const { colors } = useTheme();
@@ -49,38 +50,44 @@ function CreateModelRequestPageContent() {
 
   // ═══ ذخیره ═══
   const handleSave = async (formData) => {
+    // ✅ FIX: بررسی اعتبار serviceId قبل از ارسال به بک‌اند
+    if (!formData.serviceId) {
+      showToast('لطفاً خدمت موردنظر را انتخاب کنید', 'error');
+      return;
+    }
+
+    // ✅ ساخت payload مشترک برای هر دو حالت (ایجاد و ویرایش)
+    // تا از ناهماهنگی فیلدها جلوگیری شود
+    const payload = {
+      service: formData.serviceId,          // ✅ Service ID (نه Category ID)
+      title: formData.title,
+      description: formData.description,
+      cost_type: formData.costType,
+      discount: formData.discount || 0,
+      is_urgent: formData.isUrgent || false,
+      contact_phone: formData.contactPhone,
+    };
+
     try {
       if (isEditMode) {
         // ✅ حالت ویرایش → آپدیت با requestId
-        await adsService.updateModelRequest(requestId, {
-          service: formData.serviceId,
-          title: formData.title,
-          description: formData.description,
-          cost_type: formData.costType,
-          discount: formData.discount || 0,
-          is_urgent: formData.isUrgent || false,
-          contact_phone: formData.contactPhone,
-        });
+        await adsService.updateModelRequest(requestId, payload);
         showToast('درخواست مدل با موفقیت ویرایش شد', 'success');
       } else {
-        console.log('Updating model request with ID:', requestId, 'and data:', formData);
-
         // ✅ حالت ایجاد → ساخت جدید
-        await adsService.createModelRequest({
-          service: formData.categoryId,
-          title: formData.title,
-          description: formData.description,
-          cost_type: formData.costType,
-          discount: formData.discount || 0,
-          is_urgent: formData.isUrgent || false,
-          contact_phone: formData.contactPhone,
-        });
+        await adsService.createModelRequest(payload);
         showToast('درخواست مدل با موفقیت ایجاد شد', 'success');
       }
       setTimeout(() => router.push('/manage/model-requests'), 1200);
     } catch (error) {
       console.error('Failed to save model request:', error);
-      showToast(error.message || 'خطا در ذخیره درخواست', 'error');
+      // ✅ بهبود نمایش خطا: استخراج پیام دقیق خطای اعتبارسنجی بک‌اند
+      let errorMsg = error.message || 'خطا در ذخیره درخواست';
+      if (error.details && typeof error.details === 'object') {
+        const detailsMsg = Object.values(error.details).flat().join(' | ');
+        if (detailsMsg) errorMsg = detailsMsg;
+      }
+      showToast(errorMsg, 'error');
     }
   };
 
