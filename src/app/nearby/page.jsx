@@ -1,7 +1,7 @@
 // src/app/nearby/page.jsx
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiMapPin } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
