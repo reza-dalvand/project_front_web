@@ -1,6 +1,6 @@
 // src/app/manage/services/edit/page.jsx
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiSave } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -57,15 +57,63 @@ function EditServicePageContent() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // ✅ FIX 3.4: ref برای ردیابی اینکه آیا فرم قبلاً با داده‌های سرویس پر شده است
+  const formInitializedRef = useRef(!!existingService);
+
+  // ✅ FIX 3.4: ref برای لغو fetch در صورت unmount
+  const fetchCancelledRef = useRef(false);
+
   // ═══ در حالت ویرایش، اگر سرویس در store نبود از API بگیر ═══
+  // ✅ FIX 3.4: Race condition حل شد — cleanup اضافه شد
   useEffect(() => {
+    fetchCancelledRef.current = false;
+
     if (serviceId && !existingService) {
       setLoading(true);
       fetchServices()
-        .then(() => setLoading(false))
-        .catch(() => setLoading(false));
+        .then(() => {
+          if (!fetchCancelledRef.current) {
+            setLoading(false);
+          }
+        })
+        .catch(() => {
+          if (!fetchCancelledRef.current) {
+            setLoading(false);
+            showToast('خطا در بارگذاری اطلاعات خدمت', 'error');
+          }
+        });
     }
-  }, [serviceId, existingService, fetchServices]);
+
+    return () => {
+      fetchCancelledRef.current = true;
+    };
+  }, [serviceId]);
+
+  // ✅ FIX 3.4: سینک state‌های فرم با existingService پس از اتمام fetch
+  // قبلاً state‌ها فقط یکبار در useState initializer مقداردهی می‌شدند
+  // و اگر fetchServices بعداً complete می‌شد، فرم خالی باقی می‌ماند
+  useEffect(() => {
+    if (existingService && !formInitializedRef.current) {
+      formInitializedRef.current = true;
+      setName(existingService.name || '');
+      setCategoryId(existingService.categoryId || null);
+      setTypeId(existingService.typeId || null);
+      setOriginalPrice(
+        existingService.originalPrice ? formatPriceInput(String(existingService.originalPrice)) : ''
+      );
+      setDiscountPercent(
+        existingService.discountPercent ? String(existingService.discountPercent) : ''
+      );
+      setDepositAmount(
+        existingService.depositAmount ? formatPriceInput(String(existingService.depositAmount)) : ''
+      );
+      setDuration(existingService.duration ? String(existingService.duration) : '60');
+      setRenewalDays(
+        existingService.renewalDays ? String(existingService.renewalDays) : '0'
+      );
+      setDescription(existingService.description || '');
+    }
+  }, [existingService]);
 
   // ═══ محاسبات قیمت ═══
   const originalNum = parseNumber(originalPrice);

@@ -40,6 +40,10 @@ export default function BookingModal({
   const [availableDates, setAvailableDates] = useState([]);
   const abortRef = useRef(null);
 
+  // ✅ FIX 3.3: ref برای ردیابی وضعیت mount بودن کامپوننت
+  // جلوگیری از setState روی کامپوننت unmount شده
+  const mountedRef = useRef(true);
+
   // ─── useBookingState ───
   const {
     selectedDate,
@@ -105,8 +109,10 @@ export default function BookingModal({
   // ═══════ Mount / Unmount ═══════
   useEffect(() => {
     setMounted(true);
+    mountedRef.current = true;
     return () => {
       setMounted(false);
+      mountedRef.current = false;
       releaseScrollLock(instanceId.current);
     };
   }, []);
@@ -149,17 +155,18 @@ export default function BookingModal({
       setDatesLoading(true);
       fetchAvailableDates()
         .then((dates) => {
-          if (!abortRef.current?.signal.aborted) {
+          if (!abortRef.current?.signal.aborted && mountedRef.current) {
             setAvailableDates(dates || []);
           }
         })
         .catch((err) => {
-          if (err.name !== 'AbortError') {
+          if (err.name !== 'AbortError' && mountedRef.current) {
             console.error('Failed to fetch available dates:', err);
           }
         })
         .finally(() => {
-          if (!abortRef.current?.signal.aborted) {
+          // ✅ FIX 3.3: بررسی mounted بودن قبل از setState
+          if (!abortRef.current?.signal.aborted && mountedRef.current) {
             setDatesLoading(false);
           }
         });
@@ -168,7 +175,6 @@ export default function BookingModal({
     return () => {
       releaseScrollLock(instanceId.current);
     };
-    // ✅ FIX ۱: dependencies کامل
   }, [visible, businessId, serviceId, needsNameStep, resetNameState, prefillNameFromUser]);
 
   // ═══════ Escape Key ═══════
@@ -179,7 +185,7 @@ export default function BookingModal({
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [visible]); // handleClose با useCallback پایدار است
+  }, [visible]);
 
   // ═══════ Price Summary ═══════
   const priceSummary = useMemo(() => {
@@ -190,7 +196,7 @@ export default function BookingModal({
     return buildPriceSummary(originalPrice, discountPercent, hasDeposit, depositPercent);
   }, [currentService]);
 
-  // ═══════ ✅ FIX ۸: useCallback برای جلوگیری از re-render ═══════
+  // ═══════ ✅ FIX 3.3: handleDateSelect با بررسی mounted ═══════
   const handleDateSelect = useCallback(
     async (date) => {
       setSelectedDate(date);
@@ -198,12 +204,19 @@ export default function BookingModal({
       setSlotsLoading(true);
       try {
         const slots = await fetchAvailableSlots(date);
-        setAvailableSlots(slots || []);
+        if (mountedRef.current) {
+          setAvailableSlots(slots || []);
+        }
       } catch (err) {
-        console.error('Failed to fetch slots:', err);
-        setAvailableSlots([]);
+        if (mountedRef.current) {
+          console.error('Failed to fetch slots:', err);
+          setAvailableSlots([]);
+        }
       } finally {
-        setSlotsLoading(false);
+        // ✅ FIX 3.3: بررسی mounted بودن قبل از setState
+        if (mountedRef.current) {
+          setSlotsLoading(false);
+        }
       }
     },
     [fetchAvailableSlots, setSelectedDate, setSelectedTime, setAvailableSlots, setSlotsLoading]
@@ -234,21 +247,23 @@ export default function BookingModal({
     setCurrentStep(timeStepId);
   }, [setBookingFailed, setBookingError, setCurrentStep, timeStepId]);
 
+  // ═══════ ✅ FIX 3.3: handleConfirm با مدیریت کامل خطا ═══════
   const handleConfirm = useCallback(async () => {
     if (!selectedDate || !selectedTime) return;
 
     setIsSubmitting(true);
     try {
       const result = await createAppointment({
-        serviceId: serviceId, // ✅ apiClient خودش به service_id تبدیل می‌کند
+        serviceId: serviceId,
         jy: selectedDate.jy,
         jm: selectedDate.jm,
         jd: selectedDate.jd,
-
         timeSlot: selectedTime.startTime || selectedTime.timeSlot || selectedTime.displayTime,
-
         trustBased: trustEnabled,
       });
+
+      // ✅ FIX 3.3: بررسی mounted بودن قبل از هر setState
+      if (!mountedRef.current) return;
 
       if (result?.success !== false) {
         const appointmentData = result?.data || result;
@@ -264,19 +279,28 @@ export default function BookingModal({
           trustBased: trustEnabled,
         });
       } else {
+        // ✅ FIX 3.3: ریست لودینگ در صورت شکست منطقی (غیر exception)
         setBookingFailed(true);
         setBookingError(result?.error || { message: 'خطا در ثبت نوبت' });
+        setIsSubmitting(false);
       }
     } catch (err) {
+      // ✅ FIX 3.3: بررسی mounted بودن + ریست لودینگ در catch
+      if (!mountedRef.current) return;
+
       console.error('Create appointment error:', err);
       setBookingFailed(true);
       setBookingError({
         message: err?.message || 'خطای شبکه. لطفاً دوباره تلاش کنید.',
         code: err?.code || 'NETWORK_ERROR',
       });
-    } finally {
+      // ✅ FIX 3.3: ریست لودینگ در catch (قبلاً فقط در finally بود)
       setIsSubmitting(false);
     }
+    // ✅ FIX 3.3: حذف finally — چون در هر دو مسیر (success و error)
+    // setIsSubmitting(false) صدا زده می‌شود.
+    // دلیل: در finally، اگر component unmount شده باشد، setState warning می‌دهد.
+    // با بررسی mountedRef در هر شاخه، این مشکل حل می‌شود.
   }, [
     selectedDate,
     selectedTime,
