@@ -1,3 +1,4 @@
+// src/components/manageBusiness/portfolio/PortfolioCard.jsx
 'use client';
 
 import Image from 'next/image';
@@ -12,19 +13,17 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, pr
   const imageCount = portfolio.images?.length || 1;
 
   const coverSrc = useMemo(() => {
-    // ✅ اولویت ۱: اولین تصویر گالری (sort_order=0)
     if (portfolio.images && portfolio.images.length > 0) {
       const firstImg = portfolio.images[0];
       if (typeof firstImg === 'string') return firstImg;
       return firstImg.imageUrl || firstImg.image_url || firstImg.image || null;
     }
 
-    // ✅ Fallback برای backward compatibility (داده‌های قدیمی)
     if (portfolio.coverImageUrl) return portfolio.coverImageUrl;
     if (portfolio.coverImage && typeof portfolio.coverImage === 'string') {
       return portfolio.coverImage.startsWith('http')
         ? portfolio.coverImage
-        : getFullImageUrl(portfolio.coverImage);
+        : getImageUrl(portfolio.coverImage); // ✅ FIX P0
     }
 
     return null;
@@ -37,7 +36,6 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, pr
       style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
       onClick={() => onPress?.(portfolio)}
     >
-      {/* تصویر */}
       <div className="relative w-full aspect-square">
         {coverSrc ? (
           <Image
@@ -53,7 +51,6 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, pr
             <FiImage size={24} className="text-gray-400" />
           </div>
         )}
-        {/* Badge تعداد تصاویر */}
         {imageCount > 1 && (
           <div
             className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-lg"
@@ -65,7 +62,6 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, pr
             </span>
           </div>
         )}
-        {/* عنوان روی تصویر */}
         {portfolio.title && (
           <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2 bg-black/40">
             <p className="text-xs font-[Vazir-Bold] text-white line-clamp-1">{portfolio.title}</p>
@@ -73,7 +69,6 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, pr
         )}
       </div>
 
-      {/* اطلاعات و دکمه‌ها */}
       <div className="p-2.5 flex items-center justify-between gap-2">
         <span
           className="text-[11px] font-[Vazir-Medium] truncate flex-1"

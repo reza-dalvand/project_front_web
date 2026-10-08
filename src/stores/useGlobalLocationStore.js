@@ -166,20 +166,22 @@ export const useGlobalLocationStore = create(
         return '🌐 همه مناطق';
       },
     }),
-    {
+  {
       name: 'beau-global-location-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage
           : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
+      // ═══════════════════════════════════════════════════════════════
+      // ✅ FIX امنیت: حذف مختصات GPS دقیق از localStorage
+      // ═══════════════════════════════════════════════════════════════
       partialize: (state) => ({
         locationType: state.locationType,
         provinceId: state.provinceId,
         cityId: state.cityId,
-        latitude: state.latitude,
-        longitude: state.longitude,
         gpsEnabled: state.gpsEnabled,
+        // ❌ حذف: latitude, longitude
       }),
     }
   )

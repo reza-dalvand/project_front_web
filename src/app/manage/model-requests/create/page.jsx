@@ -28,10 +28,8 @@ function CreateModelRequestPageContent() {
 
   const services = businessData?.services || [];
 
-  // ═══ در حالت ویرایش، دریافت داده‌های موجود ═══
   useEffect(() => {
     if (!requestId) return;
-
     const fetchExisting = async () => {
       setIsLoadingExisting(true);
       try {
@@ -44,11 +42,9 @@ function CreateModelRequestPageContent() {
         setIsLoadingExisting(false);
       }
     };
-
     fetchExisting();
   }, [requestId, showToast]);
 
-  // ═══ ذخیره ═══
   const handleSave = async (formData) => {
     // ✅ FIX: بررسی اعتبار serviceId قبل از ارسال به بک‌اند
     if (!formData.serviceId) {
@@ -69,6 +65,17 @@ function CreateModelRequestPageContent() {
     };
 
     try {
+      // ✅ FIX باگ ۱۱: یکپارچه‌سازی Payload
+      const payload = {
+        service: formData.serviceId || formData.categoryId,
+        title: formData.title,
+        description: formData.description,
+        cost_type: formData.costType,
+        discount: formData.discount || 0,
+        is_urgent: formData.isUrgent || false,
+        contact_phone: formData.contactPhone,
+      };
+
       if (isEditMode) {
         // ✅ حالت ویرایش → آپدیت با requestId
         await adsService.updateModelRequest(requestId, payload);
@@ -91,9 +98,7 @@ function CreateModelRequestPageContent() {
     }
   };
 
-  const handleClose = () => {
-    router.push('/manage/model-requests');
-  };
+  const handleClose = () => router.push('/manage/model-requests');
 
   if (!isAuthenticated) {
     return (
@@ -111,7 +116,6 @@ function CreateModelRequestPageContent() {
         title={isEditMode ? 'ویرایش درخواست مدل' : 'ایجاد درخواست مدل'}
         onBackPress={() => router.back()}
       />
-
       <div className="flex-1 overflow-y-auto">
         {isLoadingExisting ? (
           <div className="flex items-center justify-center py-20">
@@ -131,7 +135,6 @@ function CreateModelRequestPageContent() {
   );
 }
 
-// ═══════════ کامپوننت اصلی با Suspense ═══════════
 export default function CreateModelRequestPage() {
   return (
     <Suspense

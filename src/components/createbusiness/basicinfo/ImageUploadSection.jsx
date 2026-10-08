@@ -1,6 +1,7 @@
 // src/components/createbusiness/basicinfo/ImageUploadSection.jsx
 'use client';
-import { FiCamera, FiCheckCircle } from 'react-icons/fi';
+// ✅ FIX P0: آیکون FiAlertCircle به imports اضافه شد
+import { FiCamera, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import ImageUploader from '@/components/common/ImageUploader';
 
@@ -38,7 +39,6 @@ export default function ImageUploadSection({
 
   return (
     <div className="space-y-3">
-      {/* هدر بخش */}
       <div className="flex items-center gap-2.5">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -51,7 +51,6 @@ export default function ImageUploadSection({
         </span>
       </div>
 
-      {/* تصویر کاور */}
       <div
         className="rounded-2xl border p-4"
         style={{
@@ -72,7 +71,6 @@ export default function ImageUploadSection({
         <FieldError message={errors.coverUrl} />
       </div>
 
-      {/* تصویر صاحب کسب‌وکار */}
       <div
         className="rounded-2xl border p-4"
         style={{

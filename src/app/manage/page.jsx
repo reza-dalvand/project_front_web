@@ -1,3 +1,4 @@
+// src/app/manage/page.jsx
 'use client';
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -18,6 +19,13 @@ export default function ManageBusinessPage() {
   const businessData = useBusinessStore((s) => s.businessData);
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
 
+  // ✅ FIX باگ ۱۳: خواندن isSuspended از auth store (اولویت) و business store (fallback)
+  const authIsSuspended = useAuthStore((s) => s.isSuspended);
+  const authSuspensionReason = useAuthStore((s) => s.suspensionReason);
+
+  const isSuspended = authIsSuspended || (businessData?.isSuspended ?? false);
+  const suspensionReason = authSuspensionReason || businessData?.suspensionReason || '';
+
   const stats = useMemo(() => {
     const appointments = businessData?.appointments || [];
     const activeAppointments = appointments.filter(
@@ -29,11 +37,6 @@ export default function ManageBusinessPage() {
     return { activeAppointments };
   }, [businessData]);
 
-  // ✅ NEW: بررسی وضعیت تعلیق
-  const isSuspended = businessData?.isSuspended ?? false;
-  const suspensionReason = businessData?.suspensionReason ?? '';
-
-  // ✅ NEW: دکمه‌های تماس با پشتیبانی
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
       `سلام، کسب‌وکار من تعلیق شده است.\nدلیل: ${suspensionReason}\nلطفاً راهنمایی کنید.`
@@ -57,7 +60,7 @@ export default function ManageBusinessPage() {
 
   return (
     <ScreenWrapper scrollable padding={0}>
-      {/* ✅ NEW: بنر هشدار تعلیق */}
+      {/* بنر هشدار تعلیق */}
       {isSuspended && (
         <div
           className="mx-5 mt-5 mb-3 p-4 rounded-2xl shadow-md"
@@ -74,30 +77,20 @@ export default function ManageBusinessPage() {
               <FiAlertTriangle size={24} color="white" />
             </div>
             <div className="flex-1">
-              <h3
-                className="text-base font-[Vazir-Bold] mb-1"
-                style={{ color: '#E65100' }}
-              >
+              <h3 className="text-base font-[Vazir-Bold] mb-1" style={{ color: '#E65100' }}>
                 کسب‌وکار شما تعلیق شده است
               </h3>
               {suspensionReason && (
-                <p
-                  className="text-sm mb-2 font-[Vazir]"
-                  style={{ color: '#BF360C' }}
-                >
+                <p className="text-sm mb-2 font-[Vazir]" style={{ color: '#BF360C' }}>
                   <strong>دلیل:</strong> {suspensionReason}
                 </p>
               )}
-              <p
-                className="text-xs font-[Vazir]"
-                style={{ color: '#E65100' }}
-              >
+              <p className="text-xs font-[Vazir]" style={{ color: '#E65100' }}>
                 لطفاً برای رفع تعلیق با پشتیبانی در ارتباط باشید.
               </p>
             </div>
           </div>
 
-          {/* دکمه‌های تماس */}
           <div className="flex gap-2 mt-3">
             <button
               onClick={handleWhatsApp}
@@ -119,19 +112,12 @@ export default function ManageBusinessPage() {
         </div>
       )}
 
-      {/* هدر گرادیانی */}
       <ManageHeader />
-
-      {/* لیست ترتیبی نوبت‌های امروز */}
       <AppointmentsList />
-
-      {/* دسترسی سریع */}
       <QuickAccessGrid
         onNavigate={(route) => router.push(route)}
         badge={stats.activeAppointments}
       />
-
-      {/* فاصله پایین */}
       <div className="h-32" />
     </ScreenWrapper>
   );

@@ -81,7 +81,6 @@ export default function GalleryManager() {
         const compressed = await compressImage(file, 'gallery');
         setIsCompressing(false);
         setIsUploading(true);
-        // ✅ فقط آپلود واقعی — هیچ تأخیر ماک وجود ندارد
         await uploadGalleryImageApi(compressed, gallery.length);
         showToast('تصویر با موفقیت به گالری اضافه شد', 'success');
       } catch (error) {

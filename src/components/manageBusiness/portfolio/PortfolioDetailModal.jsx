@@ -1,3 +1,4 @@
+// src/components/manageBusiness/portfolio/PortfolioDetailModal.jsx
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import {
@@ -32,7 +33,6 @@ export default function PortfolioDetailModal({
   }, [portfolio, visible]);
 
   const images = useMemo(() => {
-    // ✅ اولویت ۱: تصاویر گالری
     if (portfolio?.images && portfolio.images.length > 0) {
       return portfolio.images
         .map((img) => {
@@ -42,7 +42,6 @@ export default function PortfolioDetailModal({
         .filter(Boolean);
     }
 
-    // ✅ Fallback برای backward compatibility
     if (portfolio?.coverImageUrl) {
       return [portfolio.coverImageUrl];
     }
@@ -51,7 +50,7 @@ export default function PortfolioDetailModal({
         if (portfolio.coverImage.startsWith('http')) {
           return [portfolio.coverImage];
         }
-        return [getFullImageUrl(portfolio.coverImage)];
+        return [getImageUrl(portfolio.coverImage)]; // ✅ FIX P0
       }
       return [portfolio.coverImage];
     }
@@ -92,7 +91,6 @@ export default function PortfolioDetailModal({
         style={{ backgroundColor: colors.background, border: `1px solid ${colors.border}` }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ═══════ هدر ═══════ */}
         <div
           className="flex items-center justify-between px-4 py-3 border-b"
           style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
@@ -131,7 +129,6 @@ export default function PortfolioDetailModal({
           </div>
         </div>
 
-        {/* ═══════ گالری تصاویر ═══════ */}
         <div className="relative w-full aspect-square bg-black">
           {images.length > 0 && (
             <img
@@ -141,7 +138,6 @@ export default function PortfolioDetailModal({
             />
           )}
 
-          {/* فلش قبلی */}
           {images.length > 1 && currentIndex > 0 && (
             <button
               onClick={goToPrev}
@@ -155,7 +151,6 @@ export default function PortfolioDetailModal({
             </button>
           )}
 
-          {/* فلش بعدی */}
           {images.length > 1 && currentIndex < images.length - 1 && (
             <button
               onClick={goToNext}
@@ -169,7 +164,6 @@ export default function PortfolioDetailModal({
             </button>
           )}
 
-          {/* شمارنده تصاویر */}
           {images.length > 1 && (
             <div
               className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
@@ -183,7 +177,6 @@ export default function PortfolioDetailModal({
           )}
         </div>
 
-        {/* ═══════ Indicator Dots ═══════ */}
         {images.length > 1 && (
           <div
             className="flex items-center justify-center gap-1.5 py-3"
@@ -206,9 +199,7 @@ export default function PortfolioDetailModal({
           </div>
         )}
 
-        {/* ═══════ محتوای اسکرولی ═══════ */}
         <div className="flex-1 overflow-y-auto min-w-0 overflow-x-hidden p-4 space-y-4">
-          {/* عنوان و دسته‌بندی */}
           <div
             className="p-4 rounded-2xl border"
             style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
@@ -231,7 +222,6 @@ export default function PortfolioDetailModal({
               {portfolio.title || 'نمونه‌کار'}
             </p>
 
-            {/* خدمت مرتبط - ساختار سلسله‌مراتبی */}
             {(portfolio.categoryLabel || portfolio.subServiceLabel || serviceName) && (
               <div className="flex items-center gap-1.5 mt-3 flex-wrap">
                 {portfolio.categoryLabel && (
@@ -259,7 +249,6 @@ export default function PortfolioDetailModal({
                     </span>
                   </div>
                 )}
-                {/* Fallback برای داده‌های قدیمی */}
                 {!portfolio.categoryLabel && serviceName && (
                   <div
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
@@ -278,7 +267,6 @@ export default function PortfolioDetailModal({
             )}
           </div>
 
-          {/* توضیحات */}
           <div
             className="p-4 rounded-2xl border"
             style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
@@ -308,7 +296,6 @@ export default function PortfolioDetailModal({
             )}
           </div>
 
-          {/* راهنما */}
           <div
             className="flex items-center gap-2.5 p-3 rounded-xl border"
             style={{ backgroundColor: colors.primary + '08', borderColor: colors.primary + '25' }}
@@ -323,7 +310,6 @@ export default function PortfolioDetailModal({
           </div>
         </div>
 
-        {/* ═══════ فوتر ═══════ */}
         <div className="px-4 py-3 border-t" style={{ borderColor: colors.border }}>
           <div className="flex gap-3">
             <Button
@@ -340,7 +326,7 @@ export default function PortfolioDetailModal({
             />
             <Button
               title="حذف"
-              onPress={handleDeleteRequest} // ✅ تغییر
+              onPress={handleDeleteRequest}
               variant="primary"
               size="lg"
               className="flex-1"

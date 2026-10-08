@@ -1,4 +1,3 @@
-// src/hooks/useAuthFlow.js
 /**
  * 🔐 useAuthFlow — Hook مشترک جریان احراز هویت OTP
  *
@@ -7,7 +6,7 @@
  *   - src/components/common/AuthModal.jsx
  *
  * ✅ FIX: استفاده از camelCase به جای snake_case
- *   چون response-normalizer همه کلیدها را به camelCase تبدیل می‌کند
+ * ✅ FIX F-16: استفاده از timestamp سرور به جای countdown سمت کلاینت
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -28,19 +27,34 @@ export const useAuthFlow = (options = {}) => {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [timer, setTimer] = useState(RESEND_SECONDS);
+  
+  // ✅ FIX F-16: استفاده از timestamp مطلق به جای countdown
+  const [resendAvailableAt, setResendAvailableAt] = useState(null); // timestamp ms
+  const [timer, setTimer] = useState(0); // seconds remaining
   const [canResend, setCanResend] = useState(false);
 
-  // ─── تایمر ارسال مجدد ───
+  // ─── ✅ FIX F-16: تایمر بر اساس timestamp سرور ───
   useEffect(() => {
-    if (!enabled) return;
-    if (timer <= 0) {
+    if (!enabled || !resendAvailableAt) {
       setCanResend(true);
       return;
     }
-    const interval = setInterval(() => setTimer((t) => t - 1), 1000);
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.ceil((resendAvailableAt - now) / 1000));
+      
+      setTimer(remaining);
+      setCanResend(remaining <= 0);
+    };
+
+    // اولین محاسبه
+    updateTimer();
+
+    // آپدیت هر ثانیه
+    const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [timer, enabled]);
+  }, [resendAvailableAt, enabled]);
 
   // ─── تایید کد OTP ───
   const verifyOtp = useCallback(
@@ -63,12 +77,6 @@ export const useAuthFlow = (options = {}) => {
 
         const data = result.data;
 
-        // ✅ FIX: استفاده از camelCase (response-normalizer کلیدها را تبدیل کرده)
-        //   access_token → accessToken
-        //   refresh_token → refreshToken
-        //   is_suspended → isSuspended
-        //   suspension_reason → suspensionReason
-        //   needs_profile_completion → needsProfileCompletion
         login(
           data.user,
           {
@@ -86,9 +94,9 @@ export const useAuthFlow = (options = {}) => {
 
         if (onVerifySuccess) {
           onVerifySuccess({
-            isNewUser: data.isNewUser, // ✅ FIX
-            needsProfileCompletion: data.needsProfileCompletion, // ✅ FIX
-            isSuspended: data.isSuspended ?? false, // ✅ FIX
+            isNewUser: data.isNewUser,
+            needsProfileCompletion: data.needsProfileCompletion,
+            isSuspended: data.isSuspended ?? false,
           });
         }
 
@@ -106,13 +114,24 @@ export const useAuthFlow = (options = {}) => {
   // ─── ارسال مجدد کد OTP ───
   const resendOtp = useCallback(async (phone) => {
     try {
-      await authService.sendOTP(phone);
-      setTimer(RESEND_SECONDS);
-      setCanResend(false);
+      const result = await authService.sendOTP(phone);
+      const data = result?.data;
+      
+      // ✅ FIX F-16: استفاده از timestamp سرور
+      const resendAfter = data?.resendAfter || data?.resend_after || RESEND_SECONDS;
+      const availableAt = Date.now() + (resendAfter * 1000);
+      
+      setResendAvailableAt(availableAt);
       setOtp(Array(OTP_LENGTH).fill(''));
       setError('');
-      return { success: true };
+      return { success: true, resendAvailableAt: availableAt };
     } catch (err) {
+      // ✅ FIX F-16: اگر سرور remaining_seconds برگرداند
+      if (err?.details?.remainingSeconds) {
+        const availableAt = Date.now() + (err.details.remainingSeconds * 1000);
+        setResendAvailableAt(availableAt);
+      }
+      
       const errorMsg = err.message || 'خطا در ارسال مجدد';
       setError(errorMsg);
       return { success: false, error: errorMsg };
@@ -165,8 +184,8 @@ export const useAuthFlow = (options = {}) => {
     setOtp(Array(OTP_LENGTH).fill(''));
     setLoading(false);
     setError('');
-    setTimer(RESEND_SECONDS);
-    setCanResend(false);
+    // ✅ FIX F-16: تنظیم resendAvailableAt بر اساس زمان فعلی
+    setResendAvailableAt(Date.now() + (RESEND_SECONDS * 1000));
   }, []);
 
   // ─── فرمت زمان برای نمایش ───
@@ -191,5 +210,7 @@ export const useAuthFlow = (options = {}) => {
     saveProfile,
     reset,
     formatTimer,
+    // ✅ FIX F-16: expose برای کامپوننت‌ها
+    resendAvailableAt,
   };
 };
