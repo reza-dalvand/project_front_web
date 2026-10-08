@@ -16,27 +16,36 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
     return toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
   }, []);
 
-  // ✅ FIX: استفاده از useRef برای جلوگیری از stale closure و باگ آپدیت نشدن selectedDates
-  // قبلاً به دلیل نبود selectedDates در dependency array، مقدار آن همیشه [] (مقدار اولیه) باقی می‌ماند
-  // و با هر تغییر رفرنس existingDates، انتخاب‌های کاربر پاک می‌شد.
+  // ✅ FIX 3.1: استفاده از useRef برای نگهداری آخرین مقدار selectedDates
+  // این کار از stale closure در توابع toggleDay و selectAllMonth جلوگیری می‌کند
+  const selectedDatesRef = useRef(selectedDates);
+  selectedDatesRef.current = selectedDates;
+
+  // ✅ FIX 3.1: استفاده از useRef برای onDatesChange تا تغییر رفرنس والد
+  // باعث اجرای مجدد useEffect و پاک شدن انتخاب‌ها نشود
+  const onDatesChangeRef = useRef(onDatesChange);
+  onDatesChangeRef.current = onDatesChange;
+
   const prevExistingDatesRef = useRef(existingDates);
 
   useEffect(() => {
     // فقط زمانی سینک کن که existingDates واقعاً تغییر کرده باشد (رفرنس جدید از سمت والد)
     if (prevExistingDatesRef.current !== existingDates) {
       prevExistingDatesRef.current = existingDates;
-      
+
       // سینک اولیه فقط در صورتی انجام می‌شود که selectedDates خالی باشد
-      // این یعنی اگر کاربر خودش datesها را Clear کند، دیگر با existingDates جایگزین نمی‌شود
       if (
         existingDates &&
         existingDates.length > 0 &&
-        (!selectedDates || selectedDates.length === 0)
+        (!selectedDatesRef.current || selectedDatesRef.current.length === 0)
       ) {
-        onDatesChange([...existingDates]);
+        onDatesChangeRef.current([...existingDates]);
       }
     }
-  }, [existingDates, selectedDates, onDatesChange]);
+    // ✅ FIX 3.1: فقط existingDates در dependency array باشد
+    // حذف selectedDates و onDatesChange از deps → جلوگیری از حلقه بی‌نهایت
+    // و جلوگیری از پاک شدن انتخاب‌های کاربر هنگام re-render والد
+  }, [existingDates]);
 
   const [viewMonth, setViewMonth] = useState(() => {
     if (existingDates && existingDates.length > 0) {
@@ -76,15 +85,19 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
     return val < todayVal;
   };
 
+  // ✅ FIX 3.1: استفاده از selectedDatesRef برای جلوگیری از stale closure
   const toggleDay = (day) => {
     const dateObj = { jy: viewMonth.jy, jm: viewMonth.jm, jd: day };
-    if (isSelected(day)) {
-      onDatesChange(selectedDates.filter((d) => !isSameDate(d, dateObj)));
+    const currentDates = selectedDatesRef.current;
+    const exists = currentDates.some((d) => isSameDate(d, dateObj));
+    if (exists) {
+      onDatesChange(currentDates.filter((d) => !isSameDate(d, dateObj)));
     } else {
-      onDatesChange([...selectedDates, dateObj]);
+      onDatesChange([...currentDates, dateObj]);
     }
   };
 
+  // ✅ FIX 3.1: استفاده از selectedDatesRef برای جلوگیری از stale closure
   const selectAllMonth = () => {
     const monthDates = [];
     for (let d = 1; d <= monthLength; d++) {
@@ -92,7 +105,7 @@ export default function CalendarStep({ selectedDates, onDatesChange, existingDat
         monthDates.push({ jy: viewMonth.jy, jm: viewMonth.jm, jd: d });
       }
     }
-    const combined = [...selectedDates];
+    const combined = [...selectedDatesRef.current];
     monthDates.forEach((md) => {
       if (!combined.some((d) => isSameDate(d, md))) {
         combined.push(md);

@@ -1,8 +1,54 @@
 // src/components/home/PortfolioGrid.jsx
 'use client';
+import React from 'react';
 import Image from 'next/image';
 import { FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+
+// ✅ FIX 2.6: استفاده از React.memo برای جلوگیری از رندر مجدد کارت‌ها
+const PortfolioCard = React.memo(function PortfolioCard({ portfolio, index, onPortfolioPress }) {
+  const { colors } = useTheme();
+  const imageCount = portfolio.images?.length || 1;
+
+  return (
+    <button
+      onClick={() => onPortfolioPress(portfolio, index)}
+      className="relative w-full aspect-square rounded-2xl overflow-hidden
+        shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
+      style={{ backgroundColor: '#eee' }}
+    >
+      <Image
+        src={portfolio.coverImage || portfolio.images?.[0]}
+        alt={portfolio.title || 'portfolio'}
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 50vw, 300px"
+        quality={80}
+        priority={index === 0} // ✅ FIX 2.1: فقط تصویر اول priority داشته باشد
+      />
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[50%]"
+        style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+      />
+      {imageCount > 1 && (
+        <div
+          className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-lg"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+        >
+          <span className="text-[10px] text-white">🖼️</span>
+          <span className="text-[10px] font-[Vazir-Bold] text-white">{imageCount}</span>
+        </div>
+      )}
+      {portfolio.title && (
+        <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2.5">
+          <p className="text-xs font-[Vazir-Bold] text-white leading-[17px] line-clamp-2">
+            {portfolio.title}
+          </p>
+        </div>
+      )}
+    </button>
+  );
+});
 
 export default function PortfolioGrid({ portfolios, onPortfolioPress }) {
   const { colors } = useTheme();
@@ -27,50 +73,14 @@ export default function PortfolioGrid({ portfolios, onPortfolioPress }) {
         گالری نمونه‌کارها
       </h2>
       <div className="grid grid-cols-2 gap-3">
-        {portfolios.map((portfolio, index) => {
-          const imageCount = portfolio.images?.length || 1;
-          return (
-            <button
-              key={portfolio.id || index}
-              onClick={() => onPortfolioPress(portfolio, index)}
-              className="relative w-full aspect-square rounded-2xl overflow-hidden
-                shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
-              style={{ backgroundColor: '#eee' }}
-            >
-              {/* ✅ FIX (فاز ۴): loading="lazy" + quality={80} */}
-              <Image
-                src={portfolio.coverImage || portfolio.images?.[0]}
-                alt={portfolio.title || 'portfolio'}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 50vw, 300px"
-                quality={80}
-                priority
-              />
-              <div
-                className="absolute bottom-0 left-0 right-0 h-[50%]"
-                style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
-              />
-              {imageCount > 1 && (
-                <div
-                  className="absolute top-2 right-2 flex items-center gap-1
-                    px-2 py-1 rounded-lg"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
-                >
-                  <span className="text-[10px] text-white">🖼️</span>
-                  <span className="text-[10px] font-[Vazir-Bold] text-white">{imageCount}</span>
-                </div>
-              )}
-              {portfolio.title && (
-                <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2.5">
-                  <p className="text-xs font-[Vazir-Bold] text-white leading-[17px] line-clamp-2">
-                    {portfolio.title}
-                  </p>
-                </div>
-              )}
-            </button>
-          );
-        })}
+        {portfolios.map((portfolio, index) => (
+          <PortfolioCard
+            key={portfolio.id || index}
+            portfolio={portfolio}
+            index={index}
+            onPortfolioPress={onPortfolioPress}
+          />
+        ))}
       </div>
     </div>
   );

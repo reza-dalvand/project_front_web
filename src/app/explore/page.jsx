@@ -1,3 +1,4 @@
+// src/app/explore/page.jsx
 'use client';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,6 +11,7 @@ import { PostGrid, ActiveFilterChips, FilterModal, PostModal } from '@/component
 import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 import { exploreService } from '@/api';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
+import { useShallow } from 'zustand/react/shallow'; // ✅ FIX 2.3
 
 const PAGE_SIZE = 21;
 
@@ -37,52 +39,22 @@ export default function ExplorePage() {
   const [activePost, setActivePost] = useState(null);
   const [filterVisible, setFilterVisible] = useState(false);
 
-  const [filters, setFilters] = useState({
-    mainCategory: 'all',
-    subCategory: 'all',
-    source: 'all',
-  });
-
+  const [filters, setFilters] = useState({ mainCategory: 'all', subCategory: 'all', source: 'all' });
   const isFetchingRef = useRef(false);
 
-  // ═══════ ✅ FIX: استفاده از subscribe برای اطمینان از re-render ═══════
-  const [locationState, setLocationState] = useState({
-    provinceId: null,
-    cityId: null,
-    latitude: null,
-    longitude: null,
-    gpsEnabled: false,
-    locationType: 'all',
-  });
+  // ✅ FIX 2.3: استفاده از useShallow برای جلوگیری از re-render اضافی و حذف نیاز به cleanup دستی
+  const locationState = useGlobalLocationStore(
+    useShallow((state) => ({
+      provinceId: state.provinceId,
+      cityId: state.cityId,
+      latitude: state.latitude,
+      longitude: state.longitude,
+      gpsEnabled: state.gpsEnabled,
+      locationType: state.locationType,
+    }))
+  );
 
-  useEffect(() => {
-    const unsubscribe = useGlobalLocationStore.subscribe((state) => {
-      setLocationState({
-        provinceId: state.provinceId,
-        cityId: state.cityId,
-        latitude: state.latitude,
-        longitude: state.longitude,
-        gpsEnabled: state.gpsEnabled,
-        locationType: state.locationType,
-      });
-    });
-
-    const initialState = useGlobalLocationStore.getState();
-    setLocationState({
-      provinceId: initialState.provinceId,
-      cityId: initialState.cityId,
-      latitude: initialState.latitude,
-      longitude: initialState.longitude,
-      gpsEnabled: initialState.gpsEnabled,
-      locationType: initialState.locationType,
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const getLocationParams = useCallback(() => {
-    return useGlobalLocationStore.getState().getLocationParams();
-  }, []);
+  const getLocationParams = useCallback(() => useGlobalLocationStore.getState().getLocationParams(), []);
 
   const fetchPortfolios = useCallback(
     async (pageNum = 1, append = false) => {
@@ -93,68 +65,39 @@ export default function ExplorePage() {
       else setIsLoadingMore(true);
 
       try {
-        const params = {
-          page: pageNum,
-          page_size: PAGE_SIZE,
-        };
+        const params = { page: pageNum, page_size: PAGE_SIZE };
+        if (filters.mainCategory !== 'all') params.category_id = filters.mainCategory;
 
-        if (filters.mainCategory !== 'all') {
-          params.category_id = filters.mainCategory;
-        }
-
-        // استفاده از getLocationParams برای دریافت پارامترهای مکان
         const locationParams = getLocationParams();
         Object.assign(params, locationParams);
 
         const result = await exploreService.getPortfolios(params);
 
         const mappedData = (result.data || []).map((portfolio) => ({
-          id: portfolio.id,
-          type: 'portfolio',
-          caption: portfolio.title || 'نمونه‌کار',
+          id: portfolio.id, type: 'portfolio', caption: portfolio.title || 'نمونه‌کار',
           description: portfolio.description || '',
-
-          // ✅ فقط از images استفاده کن
-          images: (portfolio.images || []).map(
-            (img) => img.image_url || img.imageUrl || img.image || img
-          ),
-
+          images: (portfolio.images || []).map((img) => img.image_url || img.imageUrl || img.image || img),
           businessId: portfolio.business || portfolio.businessId,
-          businessName:
-            portfolio.businessName || portfolio.business_name || portfolio.business?.name || '',
-          businessLogo:
-            portfolio.businessLogo || portfolio.business_logo || portfolio.business?.logo || null,
-          businessOwnerPhoto:
-            portfolio.businessOwnerPhoto || portfolio.business_owner_photo || null,
-          businessBookingSlug:
-            portfolio.businessBookingSlug || portfolio.business_booking_slug || '',
+          businessName: portfolio.businessName || portfolio.business_name || portfolio.business?.name || '',
+          businessLogo: portfolio.businessLogo || portfolio.business_logo || portfolio.business?.logo || null,
+          businessOwnerPhoto: portfolio.businessOwnerPhoto || portfolio.business_owner_photo || null,
+          businessBookingSlug: portfolio.businessBookingSlug || portfolio.business_booking_slug || '',
           mainCategory: portfolio.category || portfolio.categoryId || null,
-          mainCategoryName:
-            portfolio.categoryName || portfolio.category_name || portfolio.category?.name || '',
+          mainCategoryName: portfolio.categoryName || portfolio.category_name || portfolio.category?.name || '',
           subCategory: portfolio.subService || portfolio.sub_service || null,
-          subCategoryName:
-            portfolio.subServiceName ||
-            portfolio.sub_service_name ||
-            portfolio.sub_service?.name ||
-            '',
-          source: 'business',
-          createdAt: portfolio.createdAt || portfolio.created_at || '',
+          subCategoryName: portfolio.subServiceName || portfolio.sub_service_name || portfolio.sub_service?.name || '',
+          source: 'business', createdAt: portfolio.createdAt || portfolio.created_at || '',
         }));
 
         const shuffled = shuffleArray(mappedData);
-
-        if (append) {
-          setAllPosts((prev) => [...prev, ...shuffled]);
-        } else {
-          setAllPosts(shuffled);
-        }
+        if (append) setAllPosts((prev) => [...prev, ...shuffled]);
+        else setAllPosts(shuffled);
 
         const pagination = result.meta || result.pagination || {};
         const total = pagination.count || totalCount;
         setTotalCount(total);
 
-        const hasNext =
-          pagination.hasNext !== undefined ? pagination.hasNext : pageNum * PAGE_SIZE < total;
+        const hasNext = pagination.hasNext !== undefined ? pagination.hasNext : pageNum * PAGE_SIZE < total;
         setHasMore(hasNext);
         setPage(pageNum);
       } catch (error) {
@@ -166,16 +109,7 @@ export default function ExplorePage() {
         setIsLoadingMore(false);
       }
     },
-    [
-      filters.mainCategory,
-      locationState.provinceId,
-      locationState.cityId,
-      locationState.latitude,
-      locationState.longitude,
-      locationState.gpsEnabled,
-      locationState.locationType,
-      getLocationParams,
-    ]
+    [filters.mainCategory, locationState.provinceId, locationState.cityId, locationState.latitude, locationState.longitude, locationState.gpsEnabled, locationState.locationType, getLocationParams]
   );
 
   useEffect(() => {
@@ -187,19 +121,14 @@ export default function ExplorePage() {
   const filteredPosts = useMemo(() => {
     return allPosts.filter((post) => {
       if (filters.subCategory && filters.subCategory !== 'all') {
-        // اگر پست زیردسته ندارد یا زیردسته‌اش مطابقت ندارد، حذف کن
-        if (!post.subCategory || String(post.subCategory) !== String(filters.subCategory)) {
-          return false;
-        }
+        if (!post.subCategory || String(post.subCategory) !== String(filters.subCategory)) return false;
       }
       return true;
     });
   }, [allPosts, filters.subCategory]);
 
   const handleLoadMore = useCallback(() => {
-    if (!isLoadingMore && hasMore) {
-      fetchPortfolios(page + 1, true);
-    }
+    if (!isLoadingMore && hasMore) fetchPortfolios(page + 1, true);
   }, [page, isLoadingMore, hasMore, fetchPortfolios]);
 
   const handlePostPress = useCallback((post) => setActivePost(post), []);
@@ -207,18 +136,11 @@ export default function ExplorePage() {
   const handleFilterOpen = useCallback(() => setFilterVisible(true), []);
   const handleFilterClose = useCallback(() => setFilterVisible(false), []);
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
-  const handleClearFilters = useCallback(() => {
-    setFilters({ mainCategory: 'all', subCategory: 'all', source: 'all' });
-  }, []);
+  const handleClearFilters = useCallback(() => setFilters({ mainCategory: 'all', subCategory: 'all', source: 'all' }), []);
 
   const handleNavigateToBusiness = useCallback(
     (data) => {
-      const slug =
-        data?.businessBookingSlug ||
-        data?.business_booking_slug ||
-        data?.businessId ||
-        data?.business_id ||
-        data;
+      const slug = data?.businessBookingSlug || data?.business_booking_slug || data?.businessId || data?.business_id || data;
       if (slug) router.push(`/business?slug=${slug}`);
     },
     [router]
@@ -226,53 +148,27 @@ export default function ExplorePage() {
 
   return (
     <ScreenWrapper scrollable={false} padding={0}>
-      <div
-        className="px-5 pt-3.5 border-b"
-        style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}
-      >
+      <div className="px-5 pt-3.5 border-b" style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}>
         <SectionHeader
-          icon={<span className="text-lg">🖼️</span>}
-          title="ویترین"
-          subtitle="نمونه‌کار کسب‌وکارها"
-          centered
+          icon={<span className="text-lg">🖼️</span>} title="ویترین" subtitle="نمونه‌کار کسب‌وکارها" centered
           rightElement={
-            <button
-              onClick={handleFilterOpen}
-              className="w-10 h-10 rounded-xl border flex items-center justify-center"
-              style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
-            >
+            <button onClick={handleFilterOpen} className="w-10 h-10 rounded-xl border flex items-center justify-center" style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}>
               <FiFilter size={18} style={{ color: colors.textMain }} />
             </button>
           }
         />
       </div>
-
       <ActiveFilterChips filters={filters} onChange={handleFilterChange} />
-
       <div className="flex-1 overflow-y-auto px-2 pt-2">
         <PostGrid
-          posts={filteredPosts}
-          onPostPress={handlePostPress}
-          onClearFilters={handleClearFilters}
-          onLoadMore={handleLoadMore}
-          isLoading={isLoading}
-          isLoadingMore={isLoadingMore}
-          hasMore={hasMore}
-          totalLoaded={filteredPosts.length}
+          posts={filteredPosts} onPostPress={handlePostPress} onClearFilters={handleClearFilters}
+          onLoadMore={handleLoadMore} isLoading={isLoading} isLoadingMore={isLoadingMore}
+          hasMore={hasMore} totalLoaded={filteredPosts.length}
         />
       </div>
-
-      <FilterModal
-        visible={filterVisible}
-        onClose={handleFilterClose}
-        onApply={handleFilterChange}
-        currentFilters={filters}
-      />
-
+      <FilterModal visible={filterVisible} onClose={handleFilterClose} onApply={handleFilterChange} currentFilters={filters} />
       <PostModal
-        post={activePost}
-        visible={!!activePost}
-        onClose={handlePostClose}
+        post={activePost} visible={!!activePost} onClose={handlePostClose}
         onNavigateToProfile={() => handleNavigateToBusiness(activePost)}
         onBooking={() => handleNavigateToBusiness(activePost)}
       />

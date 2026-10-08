@@ -1,3 +1,4 @@
+// src/app/page.jsx
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -23,18 +24,14 @@ import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 import { adsService, categoriesService, exploreService, reviewsService } from '@/api';
 
 // ✅ Lazy Load
-const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), {
-  ssr: false,
-  loading: () => null,
-});
-const HomeFilterModal = dynamic(() => import('@/components/home/HomeFilterModal'), {
-  ssr: false,
-  loading: () => null,
-});
-const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), {
-  ssr: false,
-  loading: () => null,
-});
+const NotificationModal = dynamic(() => import('@/components/home/NotificationModal'), { ssr: false, loading: () => null });
+const HomeFilterModal = dynamic(() => import('@/components/home/HomeFilterModal'), { ssr: false, loading: () => null });
+const ReviewModal = dynamic(() => import('@/components/customer/ReviewModal'), { ssr: false, loading: () => null });
+
+// ✅ FIX 2.2: کش ماژول‌سطح برای جلوگیری از درخواست‌های تکراری
+let homeDataCache = null;
+let homeDataCacheTime = 0;
+const HOME_CACHE_TTL = 5 * 60 * 1000; // ۵ دقیقه
 
 export default function HomePage() {
   const router = useRouter();
@@ -45,45 +42,30 @@ export default function HomePage() {
   const isDark = resolvedTheme === 'dark';
 
   const [locationState, setLocationState] = useState({
-    provinceId: null,
-    cityId: null,
-    latitude: null,
-    longitude: null,
-    gpsEnabled: false,
-    gpsLoading: false,
-    locationType: 'all',
+    provinceId: null, cityId: null, latitude: null, longitude: null,
+    gpsEnabled: false, gpsLoading: false, locationType: 'all',
   });
 
   useEffect(() => {
     const unsubscribe = useGlobalLocationStore.subscribe((state) => {
       setLocationState({
-        provinceId: state.provinceId,
-        cityId: state.cityId,
-        latitude: state.latitude,
-        longitude: state.longitude,
-        gpsEnabled: state.gpsEnabled,
-        gpsLoading: state.gpsLoading,
+        provinceId: state.provinceId, cityId: state.cityId,
+        latitude: state.latitude, longitude: state.longitude,
+        gpsEnabled: state.gpsEnabled, gpsLoading: state.gpsLoading,
         locationType: state.locationType,
       });
     });
-
     const initialState = useGlobalLocationStore.getState();
     setLocationState({
-      provinceId: initialState.provinceId,
-      cityId: initialState.cityId,
-      latitude: initialState.latitude,
-      longitude: initialState.longitude,
-      gpsEnabled: initialState.gpsEnabled,
-      gpsLoading: initialState.gpsLoading,
+      provinceId: initialState.provinceId, cityId: initialState.cityId,
+      latitude: initialState.latitude, longitude: initialState.longitude,
+      gpsEnabled: initialState.gpsEnabled, gpsLoading: initialState.gpsLoading,
       locationType: initialState.locationType,
     });
-
     return () => unsubscribe();
   }, []);
 
-  const getLocationParams = useCallback(() => {
-    return useGlobalLocationStore.getState().getLocationParams();
-  }, []);
+  const getLocationParams = useCallback(() => useGlobalLocationStore.getState().getLocationParams(), []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -99,46 +81,61 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchAllData = async () => {
+      const locationParams = getLocationParams();
+      // ساخت کلید کش بر اساس پارامترهای مکان
+      const cacheKey = `${locationParams.provinceId}-${locationParams.cityId}-${locationParams.latitude}-${locationParams.longitude}`;
+
+      // ✅ FIX 2.2: بررسی اعتبار کش
+      if (
+        homeDataCache &&
+        homeDataCache.key === cacheKey &&
+        Date.now() - homeDataCacheTime < HOME_CACHE_TTL
+      ) {
+        setAds(homeDataCache.ads);
+        setCategories(homeDataCache.categories);
+        setLineRentals(homeDataCache.lineRentals);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       try {
-        const locationParams = getLocationParams();
         const [bannersRes, catRes, lineRes] = await Promise.allSettled([
           adsService.getBanners(),
           categoriesService.getServiceCategories({ ...locationParams }),
           adsService.getLineRentals({ page_size: 6, ...locationParams }),
         ]);
 
+        let newAds = [], newCategories = [], newLineRentals = [];
+
         if (bannersRes.status === 'fulfilled') {
           const banners = bannersRes.value.data || [];
-          setAds(
-            banners.map((b, i) => ({
-              id: b.id || i,
-              title: b.title || 'بیو کلاب',
-              subtitle: b.description || '',
-              imageUrl: b.imageUrl || b.image_url || '',
-              businessId: b.businessId || b.business_id,
-              businessSlug: b.businessSlug || b.business_slug,
-              badge: b.badge || null,
-              customUrl: b.customUrl || b.custom_url,
-            }))
-          );
+          newAds = banners.map((b, i) => ({
+            id: b.id || i, title: b.title || 'بیو کلاب', subtitle: b.description || '',
+            imageUrl: b.imageUrl || b.image_url || '', businessId: b.businessId || b.business_id,
+            businessSlug: b.businessSlug || b.business_slug, badge: b.badge || null,
+            customUrl: b.customUrl || b.custom_url,
+          }));
+          setAds(newAds);
         }
         if (catRes.status === 'fulfilled') {
           const cats = catRes.value.data || [];
-          setCategories(
-            cats.map((c) => ({
-              id: String(c.id),
-              name: c.name || c.title,
-              icon: c.iconName || c.icon_name || 'default',
-              gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
-              gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
-              count: c.count || 0,
-            }))
-          );
+          newCategories = cats.map((c) => ({
+            id: String(c.id), name: c.name || c.title, icon: c.iconName || c.icon_name || 'default',
+            gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
+            gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468', count: c.count || 0,
+          }));
+          setCategories(newCategories);
         }
         if (lineRes.status === 'fulfilled') {
-          setLineRentals(lineRes.value.data || []);
+          newLineRentals = lineRes.value.data || [];
+          setLineRentals(newLineRentals);
         }
+
+        // ذخیره در کش
+        homeDataCache = { key: cacheKey, ads: newAds, categories: newCategories, lineRentals: newLineRentals };
+        homeDataCacheTime = Date.now();
+
       } catch (error) {
         console.error('Failed to fetch home data:', error);
       } finally {
@@ -147,32 +144,24 @@ export default function HomePage() {
     };
     fetchAllData();
   }, [
-    locationState.provinceId,
-    locationState.cityId,
-    locationState.latitude,
-    locationState.longitude,
-    locationState.gpsEnabled,
-    locationState.locationType,
+    locationState.provinceId, locationState.cityId, locationState.latitude,
+    locationState.longitude, locationState.gpsEnabled, locationState.locationType,
     getLocationParams,
   ]);
 
   const pendingCheckDone = useRef(false);
   useEffect(() => {
     if (!isAuthenticated || pendingCheckDone.current) return;
-
     const checkPendingReviews = async () => {
       try {
         const result = await reviewsService.getPendingReviews();
         const pending = result.data || [];
-
         if (pending.length > 0) {
           const { dismissedAppointments, reviewedBusinessIds } = useReviewStore.getState();
-
           const reviewableApt = pending.find((apt) => {
             const bizId = apt.business_id || apt.businessId;
             return !dismissedAppointments.includes(apt.id) && !reviewedBusinessIds.includes(bizId);
           });
-
           if (reviewableApt) {
             const aptData = {
               id: reviewableApt.id,
@@ -183,7 +172,6 @@ export default function HomePage() {
               date: reviewableApt.date_key || reviewableApt.dateKey,
               time: reviewableApt.time_slot || reviewableApt.timeSlot,
             };
-
             addPendingReview(aptData);
             setCurrentReviewAppointment(aptData);
             setReviewVisible(true);
@@ -194,20 +182,16 @@ export default function HomePage() {
         console.error('Failed to check pending reviews:', error);
       }
     };
-
     checkPendingReviews();
   }, [isAuthenticated, addPendingReview]);
 
   const handleNearbyToggle = useCallback(async () => {
-    const { gpsEnabled, disableGps, enableGps, handleGpsError, setGpsLoading } =
-      useGlobalLocationStore.getState();
-
+    const { gpsEnabled, disableGps, enableGps, handleGpsError, setGpsLoading } = useGlobalLocationStore.getState();
     if (gpsEnabled) {
       disableGps();
       showToast('فیلتر موقعیت مکانی غیرفعال شد', 'info');
       return;
     }
-
     setGpsLoading(true);
     try {
       const loc = await getCurrentLocation({ showSettingsPrompt: true });
@@ -215,16 +199,11 @@ export default function HomePage() {
       showToast('موقعیت مکانی شما فعال شد', 'success');
     } catch (err) {
       handleGpsError();
-      
       if (err.code === 2 || err.gpsDisabled) {
         showToast('لطفاً GPS گوشی را روشن کنید و دوباره تلاش کنید', 'warning');
       } else if (err.code === 1) {
         if (err.needsSettings) {
-          const shouldOpen = window.confirm(
-            'دسترسی به موقعیت رد شده است.\n\n' +
-            'برای فعال‌سازی، باید از تنظیمات گوشی اجازه دهید.\n\n' +
-            'آیا می‌خواهید به تنظیمات بروید؟'
-          );
+          const shouldOpen = window.confirm('دسترسی به موقعیت رد شده است.\n\nبرای فعال‌سازی، باید از تنظیمات گوشی اجازه دهید.\n\nآیا می‌خواهید به تنظیمات بروید؟');
           if (shouldOpen) {
             const { openAppSettings } = await import('@/utils/geo-utils');
             await openAppSettings();
@@ -243,8 +222,7 @@ export default function HomePage() {
   }, [showToast]);
 
   const filteredLineRentals = useMemo(() => {
-    if (!locationState.gpsEnabled || !locationState.latitude || !locationState.longitude)
-      return lineRentals;
+    if (!locationState.gpsEnabled || !locationState.latitude || !locationState.longitude) return lineRentals;
     return lineRentals.filter((ad) => {
       const lat = ad.latitude || ad.lat;
       const lng = ad.longitude || ad.lng;
@@ -254,53 +232,28 @@ export default function HomePage() {
     });
   }, [locationState.gpsEnabled, locationState.latitude, locationState.longitude, lineRentals]);
 
-  const hasActiveFilter = useMemo(
-    () => Object.values(filters).some((v) => v && v !== 'all' && v !== 'recommended'),
-    [filters]
-  );
-
-  const handleThemeToggle = useCallback(
-    () => setTheme(isDark ? 'light' : 'dark'),
-    [isDark, setTheme]
-  );
-  const handleAdPress = useCallback(
-    (ad) => {
-      if (ad.businessSlug) {
-        router.push(`/business?slug=${ad.businessSlug}`);
-      } else if (ad.customUrl) {
-        window.open(ad.customUrl, '_blank');
-      }
-    },
-    [router]
-  );
-  const handleCategorySelect = useCallback(
-    (item) => {
-      setSelectedCategory(item.id);
-      router.push(`/category?id=${item.id}`);
-    },
-    [router]
-  );
-  const handleLineRentalPress = useCallback(
-    (ad) => router.push(`/line-rentals/detail?id=${ad.id}`),
-    [router]
-  );
+  const hasActiveFilter = useMemo(() => Object.values(filters).some((v) => v && v !== 'all' && v !== 'recommended'), [filters]);
+  const handleThemeToggle = useCallback(() => setTheme(isDark ? 'light' : 'dark'), [isDark, setTheme]);
+  const handleAdPress = useCallback((ad) => {
+    if (ad.businessSlug) router.push(`/business?slug=${ad.businessSlug}`);
+    else if (ad.customUrl) window.open(ad.customUrl, '_blank');
+  }, [router]);
+  const handleCategorySelect = useCallback((item) => {
+    setSelectedCategory(item.id);
+    router.push(`/category?id=${item.id}`);
+  }, [router]);
+  const handleLineRentalPress = useCallback((ad) => router.push(`/line-rentals/detail?id=${ad.id}`), [router]);
   const handleReviewClose = useCallback(() => {
-    if (currentReviewAppointment) {
-      useReviewStore.getState().dismissPendingReview(currentReviewAppointment.id);
-    }
+    if (currentReviewAppointment) useReviewStore.getState().dismissPendingReview(currentReviewAppointment.id);
     setReviewVisible(false);
     setCurrentReviewAppointment(null);
   }, [currentReviewAppointment]);
-
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
   const handleClearAllFilters = useCallback(() => setFilters({}), []);
 
   if (isLoading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: colors.background }}
-      >
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
         <LoadingSpinner label="در حال بارگذاری..." />
       </div>
     );
@@ -308,105 +261,47 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen pb-28" style={{ backgroundColor: colors.background }}>
-      {/* ═══════════ ✅ Container ریپانسیو ═══════════ */}
       <div className="app-container">
-        {/* ═══════════ هدر ═══════════ */}
         <HomeHeader
-          userName={user?.name}
-          userAvatar={user?.avatar}
-          searchQuery={searchQuery}
+          userName={user?.name} userAvatar={user?.avatar} searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onSearchSubmit={() => {
-            if (searchQuery.trim()) {
-              router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-            }
-          }}
+          onSearchSubmit={() => { if (searchQuery.trim()) router.push(`/search?q=${encodeURIComponent(searchQuery)}`); }}
           onSearchClick={() => router.push('/search')}
           onFilterPress={() => setFilterVisible(true)}
-          hasActiveFilter={hasActiveFilter}
-          isDark={isDark}
-          onThemeToggle={handleThemeToggle}
+          hasActiveFilter={hasActiveFilter} isDark={isDark} onThemeToggle={handleThemeToggle}
           onNotificationPress={() => {
-            if (isAuthenticated) {
-              setNotificationVisible(true);
-            } else {
-              requireAuth(() => setNotificationVisible(true));
-            }
+            if (isAuthenticated) setNotificationVisible(true);
+            else requireAuth(() => setNotificationVisible(true));
           }}
           notificationCount={3}
         />
-
-        {/* ═══════════ نوار فیلترهای فعال ═══════════ */}
         <div className="content-padding">
-          <ActiveFiltersBar
-            filters={filters}
-            onChange={handleFilterChange}
-            onClearAll={handleClearAllFilters}
-          />
+          <ActiveFiltersBar filters={filters} onChange={handleFilterChange} onClearAll={handleClearAllFilters} />
         </div>
-
-        {/* ═══════════ بنر دعوت به ثبت‌نام ═══════════ */}
         {!isAuthenticated && (
           <div className="content-padding">
             <RegisterBanner onLogin={() => requireAuth()} />
           </div>
         )}
-
-        {/* ═══════════ محتوای اصلی ═══════════ */}
         <div className="content-padding pt-4 flex flex-col gap-6">
-          {/* ─── ۱. اسلایدر تبلیغات ─── */}
           {ads.length > 0 && (
             <section>
-              <SectionHeader
-                icon={<FiStar size={18} />}
-                iconColor={colors.primary}
-                title="پیشنهادات ویژه"
-                rightElement={<SeeAllButton onPress={() => router.push('/ads')} count={ads.length} />}
-              />
+              <SectionHeader icon={<FiStar size={18} />} iconColor={colors.primary} title="پیشنهادات ویژه" rightElement={<SeeAllButton onPress={() => router.push('/ads')} count={ads.length} />} />
               <AdSlider ads={ads} onPress={handleAdPress} />
             </section>
           )}
-
-          {/* ─── 📍 دکمه نزدیک‌ترین‌ها ═══ */}
           <section>
-            <NearbyToggle
-              nearbyEnabled={locationState.gpsEnabled}
-              nearbyLoading={locationState.gpsLoading}
-              onToggle={handleNearbyToggle}
-            />
+            <NearbyToggle nearbyEnabled={locationState.gpsEnabled} nearbyLoading={locationState.gpsLoading} onToggle={handleNearbyToggle} />
           </section>
-
-          {/* ─── ۲. دسته‌بندی خدمات ─── */}
           {categories.length > 0 && (
             <section>
-              <SectionHeader
-                icon={<FiGrid size={18} />}
-                iconColor="#FF9800"
-                title="دسته‌بندی خدمات"
-              />
-              <CategoryGrid
-                categories={categories}
-                selectedId={selectedCategory}
-                onSelect={handleCategorySelect}
-              />
+              <SectionHeader icon={<FiGrid size={18} />} iconColor="#FF9800" title="دسته‌بندی خدمات" />
+              <CategoryGrid categories={categories} selectedId={selectedCategory} onSelect={handleCategorySelect} />
             </section>
           )}
-
-          {/* ─── ۳. فرصت‌های همکاری / اجاره لاین ─── */}
           {filteredLineRentals.length > 0 && (
             <section>
-              <SectionHeader
-                icon={<span style={{ fontSize: 18 }}>🏢</span>}
-                iconColor="#667eea"
-                title="فرصت‌های همکاری"
-                rightElement={
-                  <SeeAllButton
-                    onPress={() => router.push('/line-rentals')}
-                    count={filteredLineRentals.length}
-                  />
-                }
-              />
-              {/* ✅ استفاده از کلاس responsive-scroll */}
+              <SectionHeader icon={<span style={{ fontSize: 18 }}>🏢</span>} iconColor="#667eea" title="فرصت‌های همکاری" rightElement={<SeeAllButton onPress={() => router.push('/line-rentals')} count={filteredLineRentals.length} />} />
               <div className="responsive-scroll pb-2 -mx-1 px-1">
                 {filteredLineRentals.map((rental) => (
                   <LineRentalCard key={rental.id} rental={rental} onPress={handleLineRentalPress} />
@@ -416,26 +311,10 @@ export default function HomePage() {
           )}
         </div>
       </div>
-
-      {/* ═══════════ Bottom Tab Bar ═══════════ */}
       <BottomTabBar />
-
-      {/* ═══════════ مدال‌ها ═══════════ */}
-      <NotificationModal
-        visible={notificationVisible}
-        onClose={() => setNotificationVisible(false)}
-      />
-      <HomeFilterModal
-        visible={filterVisible}
-        onClose={() => setFilterVisible(false)}
-        onApply={setFilters}
-        currentFilters={filters}
-      />
-      <ReviewModal
-        visible={reviewVisible}
-        appointment={currentReviewAppointment}
-        onClose={handleReviewClose}
-      />
+      <NotificationModal visible={notificationVisible} onClose={() => setNotificationVisible(false)} />
+      <HomeFilterModal visible={filterVisible} onClose={() => setFilterVisible(false)} onApply={setFilters} currentFilters={filters} />
+      <ReviewModal visible={reviewVisible} appointment={currentReviewAppointment} onClose={handleReviewClose} />
     </div>
   );
 }

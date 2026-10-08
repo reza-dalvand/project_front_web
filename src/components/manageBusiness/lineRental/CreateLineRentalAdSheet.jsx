@@ -131,7 +131,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ تبدیل به async و مدیریت صحیح Promise
+  // ✅ FIX 3.5: مدیریت صحیح خطا — onClose فقط در صورت موفقیت کامل
   const handleSave = async () => {
     if (!validate()) return;
     const collab = COLLAB_TYPES.find((c) => c.id === collabType);
@@ -157,7 +157,7 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
       priceData = { hourlyRate: parseNumber(hourlyRate) };
       priceDisplay = `${toPersianDigit(priceData.hourlyRate.toLocaleString('en-US'))} / ساعت`;
     }
-    
+
     setSaving(true);
     try {
       // ✅ انتظار برای پایان عملیات ذخیره‌سازی در والد
@@ -175,15 +175,21 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
         contactPhone,
         status: 'active',
       });
-      
-      // ✅ فقط در صورت موفقیت‌آمیز بودن (عدم پرتاب خطا)، فرم بسته می‌شود
-      onClose();
     } catch (error) {
-      // در صورت بروز خطا، فرم باز می‌ماند تا کاربر بتواند دوباره تلاش کند
+      // ✅ FIX 3.5: در صورت بروز خطا، فرم باز می‌ماند تا کاربر بتواند دوباره تلاش کند
+      // onClose صدا زده نمی‌شود
       console.error('Save failed:', error);
-    } finally {
+      // ✅ FIX 3.5: ریست saving در catch (قبلاً فقط در finally بود که مشکل نداشت،
+      // ولی اگر onSave خطا می‌داد و onClose هم در try بود، ممکن بود saving=true بماند)
       setSaving(false);
+      return; // ✅ خروج زودهنگام — onClose اجرا نشود
     }
+
+    // ✅ FIX 3.5: onClose فقط بعد از موفقیت کامل (بدون خطا) اجرا می‌شود
+    // قبلاً onClose داخل try بود و اگر onClose خودش خطا می‌داد،
+    // catch اجرا می‌شد و کاربر فکر می‌کرد ذخیره ناموفق بوده
+    setSaving(false);
+    onClose();
   };
 
   return (
