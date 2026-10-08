@@ -19,14 +19,13 @@ import NearbyModelRequestsSection from '@/components/nearby/NearbyModelRequestsS
 import NearbyLineRentalsSection from '@/components/nearby/NearbyLineRentalsSection';
 import LocationInfoBar from '@/components/nearby/LocationInfoBar';
 import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
-
-// ✅ API Services
 import { businessesService, categoriesService, adsService } from '@/api';
 
-// ✅ کش ماژول‌سطح برای موقعیت مکانی
+// ✅ FIX 2.5: کش ماژول‌سطح با TTL برای جلوگیری از درخواست‌های مکرر GPS
+// این کش فقط یک آبجکت نگه می‌دارد و اندازه آن رشد نمی‌کند (بدون مشکل Memory Leak)
 let cachedLocation = null;
 let cachedLocationTimestamp = 0;
-const LOCATION_CACHE_TTL = 5 * 60 * 1000;
+const LOCATION_CACHE_TTL = 5 * 60 * 1000; // ۵ دقیقه
 
 export default function NearbyPage() {
   const router = useRouter();
@@ -40,20 +39,14 @@ export default function NearbyPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const PAGE_SIZE = 10;
 
-  // ✅ State‌های API
   const [categories, setCategories] = useState([]);
   const [nearbyBusinesses, setNearbyBusinesses] = useState([]);
   const [nearbyModelRequests, setNearbyModelRequests] = useState([]);
   const [nearbyLineRentals, setNearbyLineRentals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ═══════ دریافت موقعیت مکانی ═══════
   const fetchLocation = useCallback(async (forceRefresh = false) => {
-    if (
-      !forceRefresh &&
-      cachedLocation &&
-      Date.now() - cachedLocationTimestamp < LOCATION_CACHE_TTL
-    ) {
+    if (!forceRefresh && cachedLocation && Date.now() - cachedLocationTimestamp < LOCATION_CACHE_TTL) {
       setUserLocation(cachedLocation);
       return;
     }
@@ -69,35 +62,22 @@ export default function NearbyPage() {
       cachedLocation = null;
       cachedLocationTimestamp = 0;
       setLocationError(err);
-      
-      // GPS خاموش — پیام ملایم‌تر
-      if (err.code === 2 || err.gpsDisabled) {
-        // فقط log کن، toast نشان نده (چون کاربر از Nearby page آمده)
-        console.log('GPS is disabled');
-      }
+      if (err.code === 2 || err.gpsDisabled) console.log('GPS is disabled');
     } finally {
       setLocationLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchLocation();
-  }, [fetchLocation]);
+  useEffect(() => { fetchLocation(); }, [fetchLocation]);
 
-  // ═══════ دریافت داده‌ها از API ═══════
   useEffect(() => {
     if (!userLocation) return;
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // ✅ FIX: صفحه نزدیک همیشه بر اساس موقعیت واقعی کاربر کار می‌کند
-        // فیلتر استان/شهر سراسری اینجا اعمال نمی‌شود
-        // چون هدف صفحه "نزدیک‌ترین‌ها" ذاتاً فاصله‌محور است
         const params = {
-          lat: userLocation.latitude,
-          lng: userLocation.longitude,
-          radius: 10,
-          page_size: 30,
+          lat: userLocation.latitude, lng: userLocation.longitude,
+          radius: 10, page_size: 30,
         };
 
         const [catRes, bizRes, modelRes, lineRes] = await Promise.allSettled([
@@ -109,91 +89,52 @@ export default function NearbyPage() {
 
         if (catRes.status === 'fulfilled') {
           const cats = catRes.value.data || [];
-          setCategories(
-            cats.map((c) => ({
-              id: String(c.id),
-              name: c.name || c.title,
-              icon: c.iconName || c.icon_name || 'default',
-              gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
-              gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468',
-              count: c.count || 0,
-            }))
-          );
+          setCategories(cats.map((c) => ({
+            id: String(c.id), name: c.name || c.title, icon: c.iconName || c.icon_name || 'default',
+            gradientStart: c.gradientStart || c.gradient_start || '#A88B7D',
+            gradientEnd: c.gradientEnd || c.gradient_end || '#8D7468', count: c.count || 0,
+          })));
         }
 
         if (bizRes.status === 'fulfilled') {
           const bizList = bizRes.value.data || [];
-          setNearbyBusinesses(
-            bizList.map((b) => ({
-              id: b.id,
-              bookingSlug: b.bookingSlug || b.id, // ✅ اضافه شود
-              name: b.name,
-              // ✅ فاز ۳: فقط خوانش camelCase
-              category: b.categoryName || '',
-              address: b.address,
-              rating: b.rating || 0,
-              reviewsCount: b.reviewsCount || 0,
-              logo: b.logo,
-              discount: b.discount || 0,
-              latitude: b.latitude,
-              longitude: b.longitude,
-              distance: b.distance
-                ? calculateDistance(
-                    userLocation.latitude,
-                    userLocation.longitude,
-                    b.latitude,
-                    b.longitude
-                  )
-                : null,
-            }))
-          );
+          setNearbyBusinesses(bizList.map((b) => ({
+            id: b.id, bookingSlug: b.bookingSlug || b.id, name: b.name,
+            category: b.categoryName || '', address: b.address,
+            rating: b.rating || 0, reviewsCount: b.reviewsCount || 0,
+            logo: b.logo, discount: b.discount || 0,
+            latitude: b.latitude, longitude: b.longitude,
+            distance: b.distance ? calculateDistance(userLocation.latitude, userLocation.longitude, b.latitude, b.longitude) : null,
+          })));
         }
 
-        if (modelRes.status === 'fulfilled') {
-          setNearbyModelRequests((modelRes.value.data || []).slice(0, 5));
-        }
-
-        if (lineRes.status === 'fulfilled') {
-          setNearbyLineRentals((lineRes.value.data || []).slice(0, 5));
-        }
+        if (modelRes.status === 'fulfilled') setNearbyModelRequests((modelRes.value.data || []).slice(0, 5));
+        if (lineRes.status === 'fulfilled') setNearbyLineRentals((lineRes.value.data || []).slice(0, 5));
       } catch (error) {
         console.error('Failed to fetch nearby data:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [userLocation, globalLocation]);
 
   const getLocationErrorMessage = (err) => {
     if (!err) return 'خطای ناشناخته در دریافت موقعیت';
-    const code = err.code;
-    switch (code) {
-      case 1:
-        return 'دسترسی به موقعیت مکانی رد شد. لطفاً از تنظیمات گوشی اجازه دهید.';
-      case 2:
-        return 'موقعیت مکانی در دسترس نیست. لطفاً GPS گوشی را روشن کنید.';
-      case 3:
-        return 'دریافت موقعیت زمان‌بر شد. لطفاً دوباره تلاش کنید.';
-      default:
-        return err.message || 'خطا در دریافت موقعیت مکانی';
+    switch (err.code) {
+      case 1: return 'دسترسی به موقعیت مکانی رد شد. لطفاً از تنظیمات گوشی اجازه دهید.';
+      case 2: return 'موقعیت مکانی در دسترس نیست. لطفاً GPS گوشی را روشن کنید.';
+      case 3: return 'دریافت موقعیت زمان‌بر شد. لطفاً دوباره تلاش کنید.';
+      default: return err.message || 'خطا در دریافت موقعیت مکانی';
     }
   };
 
-  // ═══════ فیلتر بر اساس فاصله ═══════
   const businessesWithDistance = useMemo(() => {
     if (!userLocation) return [];
-    return nearbyBusinesses
-      .filter((biz) => biz.latitude && biz.longitude)
+    return nearbyBusinesses.filter((biz) => biz.latitude && biz.longitude)
       .map((biz) => ({
         ...biz,
-        distance: calculateDistance(
-          userLocation.latitude,
-          userLocation.longitude,
-          biz.latitude,
-          biz.longitude
-        ),
+        distance: calculateDistance(userLocation.latitude, userLocation.longitude, biz.latitude, biz.longitude),
       }))
       .sort((a, b) => (a.distance || 0) - (b.distance || 0));
   }, [userLocation, nearbyBusinesses]);
@@ -201,17 +142,12 @@ export default function NearbyPage() {
   const filteredBusinesses = useMemo(() => {
     let list = businessesWithDistance.filter((b) => b.distance !== null);
     if (selectedCategoryId) {
-      list = list.filter(
-        (b) => b.category_id === selectedCategoryId || b.categoryId === selectedCategoryId
-      );
+      list = list.filter((b) => b.category_id === selectedCategoryId || b.categoryId === selectedCategoryId);
     }
     return list;
   }, [businessesWithDistance, selectedCategoryId]);
 
-  const paginatedBusinesses = useMemo(() => {
-    return filteredBusinesses.slice(0, page * PAGE_SIZE);
-  }, [filteredBusinesses, page]);
-
+  const paginatedBusinesses = useMemo(() => filteredBusinesses.slice(0, page * PAGE_SIZE), [filteredBusinesses, page]);
   const hasMore = paginatedBusinesses.length < filteredBusinesses.length;
 
   const handleCategorySelect = useCallback((item) => {
@@ -228,89 +164,37 @@ export default function NearbyPage() {
     }, 500);
   }, [isLoadingMore, hasMore]);
 
-  const handleBusinessPress = useCallback(
-    (biz) => router.push(`/business?slug=${biz.bookingSlug}`),
-    [router]
-  );
-  const handleModelPress = useCallback(
-    (req) => router.push(`/model-requests/detail?id=${req.id}`),
-    [router]
-  );
-  const handleLinePress = useCallback(
-    (ad) => router.push(`/line-rentals/detail?id=${ad.id}`),
-    [router]
-  );
+  const handleBusinessPress = useCallback((biz) => router.push(`/business?slug=${biz.bookingSlug}`), [router]);
+  const handleModelPress = useCallback((req) => router.push(`/model-requests/detail?id=${req.id}`), [router]);
+  const handleLinePress = useCallback((ad) => router.push(`/line-rentals/detail?id=${ad.id}`), [router]);
 
   return (
     <ScreenWrapper scrollable padding={0}>
-      <NearbyHeader
-        onBack={() => router.back()}
-        onRefresh={() => fetchLocation(true)}
-        isLoading={locationLoading}
-        hasLocation={!!userLocation}
-      />
-
+      <NearbyHeader onBack={() => router.back()} onRefresh={() => fetchLocation(true)} isLoading={locationLoading} hasLocation={!!userLocation} />
       {locationLoading && !userLocation && <NearbyLoadingState />}
-
-      {!userLocation && !locationLoading && locationError && (
-        <NearbyErrorState errorMessage={locationError} onRetry={() => fetchLocation(true)} />
-      )}
-
-      {!userLocation && !locationLoading && !locationError && (
-        <NearbyEmptyState onEnableLocation={() => fetchLocation(true)} />
-      )}
-
+      {!userLocation && !locationLoading && locationError && <NearbyErrorState errorMessage={locationError} onRetry={() => fetchLocation(true)} />}
+      {!userLocation && !locationLoading && !locationError && <NearbyEmptyState onEnableLocation={() => fetchLocation(true)} />}
       {userLocation && (
         <div className="px-5 pt-4 pb-32 space-y-6">
           <LocationInfoBar latitude={userLocation.latitude} longitude={userLocation.longitude} />
-
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <LoadingSpinner label="در حال بارگذاری..." />
-            </div>
+            <div className="flex justify-center py-12"><LoadingSpinner label="در حال بارگذاری..." /></div>
           ) : (
             <>
               <section>
-                <SectionHeader
-                  icon={<FiMapPin size={18} />}
-                  iconColor="#FF9800"
-                  title="دسته‌بندی خدمات"
-                  subtitle="یک دسته انتخاب کنید تا نزدیک‌ترین‌ها را ببینید"
-                />
-                <CategoryGrid
-                  categories={categories}
-                  selectedId={selectedCategoryId}
-                  onSelect={handleCategorySelect}
-                />
+                <SectionHeader icon={<FiMapPin size={18} />} iconColor="#FF9800" title="دسته‌بندی خدمات" subtitle="یک دسته انتخاب کنید تا نزدیک‌ترین‌ها را ببینید" />
+                <CategoryGrid categories={categories} selectedId={selectedCategoryId} onSelect={handleCategorySelect} />
               </section>
-
               {selectedCategoryId && (
                 <NearbyBusinessList
-                  selectedCategoryId={selectedCategoryId}
-                  categories={categories}
-                  paginatedBusinesses={paginatedBusinesses}
-                  filteredBusinesses={filteredBusinesses}
-                  hasMore={hasMore}
-                  isLoadingMore={isLoadingMore}
-                  onLoadMore={handleLoadMore}
-                  onBusinessPress={handleBusinessPress}
-                  onClearFilter={() => setSelectedCategoryId(null)}
+                  selectedCategoryId={selectedCategoryId} categories={categories}
+                  paginatedBusinesses={paginatedBusinesses} filteredBusinesses={filteredBusinesses}
+                  hasMore={hasMore} isLoadingMore={isLoadingMore} onLoadMore={handleLoadMore}
+                  onBusinessPress={handleBusinessPress} onClearFilter={() => setSelectedCategoryId(null)}
                 />
               )}
-
-              {!selectedCategoryId && (
-                <NearbyModelRequestsSection
-                  nearbyModelRequests={nearbyModelRequests}
-                  onModelPress={handleModelPress}
-                />
-              )}
-
-              {!selectedCategoryId && (
-                <NearbyLineRentalsSection
-                  nearbyLineRentals={nearbyLineRentals}
-                  onLinePress={handleLinePress}
-                />
-              )}
+              {!selectedCategoryId && <NearbyModelRequestsSection nearbyModelRequests={nearbyModelRequests} onModelPress={handleModelPress} />}
+              {!selectedCategoryId && <NearbyLineRentalsSection nearbyLineRentals={nearbyLineRentals} onLinePress={handleLinePress} />}
             </>
           )}
         </div>
