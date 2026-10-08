@@ -70,19 +70,24 @@ export default function AllAppointmentsPage() {
     setVerifyVisible(true);
   }, []);
 
+  // ✅ FIX LOG-06: اضافه کردن await و بررسی نتیجه قبل از بستن مدال
   const confirmVerify = useCallback(
-    (aptId, code) => {
-      handleVerify(aptId, code);
-      setVerifyVisible(false);
-      setVerifyTarget(null);
+    async (aptId, code) => {
+      const success = await handleVerify(aptId, code);
+      if (success) {
+        setVerifyVisible(false);
+        setVerifyTarget(null);
+      }
     },
     [handleVerify]
   );
 
   const handleTrust = useCallback(
-    (apt) => {
-      handleTrustConfirm(apt.id);
-      setDetailVisible(false);
+    async (apt) => {
+      const success = await handleTrustConfirm(apt.id);
+      if (success) {
+        setDetailVisible(false);
+      }
     },
     [handleTrustConfirm]
   );
@@ -94,10 +99,12 @@ export default function AllAppointmentsPage() {
   }, []);
 
   const confirmCancel = useCallback(
-    (aptId, reason) => {
-      handleCancel(aptId, reason);
-      setCancelVisible(false);
-      setCancelTarget(null);
+    async (aptId, reason) => {
+      const success = await handleCancel(aptId, reason);
+      if (success) {
+        setCancelVisible(false);
+        setCancelTarget(null);
+      }
     },
     [handleCancel]
   );

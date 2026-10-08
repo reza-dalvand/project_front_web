@@ -3,7 +3,58 @@
 // ✅ FIX فاز ۱: رفع باگ‌های کبیسه و ترتیب توابع
 // ✅ FIX فاز ۳: کش برای تبدیل‌های تکراری (رفع افت عملکرد در لیست‌ها)
 // ✅ FIX باگ ۵.۲: رفع مشکل timeToMinutes با جداکننده‌های غیر انگلیسی (مثل ؛ یا /)
+// ✅ FIX COMP-01: اعتبارسنجی ورودی‌ها برای جلوگیری از NaN خاموش
 // حجم: ~2.5KB | بدون کتابخانه
+
+// ═══════════════════════════════════════════════════════
+//    ✅ COMP-01 FIX: توابع کمکی اعتبارسنجی
+// ═══════════════════════════════════════════════════════
+
+/**
+ * بررسی معتبر بودن عدد (نه undefined، null، NaN، یا Infinity)
+ */
+const isValidNumber = (val) =>
+  typeof val === 'number' && !isNaN(val) && isFinite(val);
+
+/**
+ * اعتبارسنجی ورودی‌های تاریخ جلالی
+ * @throws {Error} اگر ورودی‌ها نامعتبر باشند
+ */
+const validateJalaaliInputs = (jy, jm, jd, fnName = 'Jalaali') => {
+  if (!isValidNumber(jy) || !isValidNumber(jm) || !isValidNumber(jd)) {
+    throw new Error(
+      `${fnName}: ورودی‌های نامعتبر — jy=${jy}, jm=${jm}, jd=${jd}. ` +
+        `تمام مقادیر باید عدد معتبر باشند.`
+    );
+  }
+  // بررسی محدوده ماه
+  if (jm < 1 || jm > 12) {
+    throw new Error(`${fnName}: ماه باید بین ۱ تا ۱۲ باشد. jm=${jm}`);
+  }
+  // بررسی محدوده روز
+  if (jd < 1 || jd > 31) {
+    throw new Error(`${fnName}: روز باید بین ۱ تا ۳۱ باشد. jd=${jd}`);
+  }
+};
+
+/**
+ * اعتبارسنجی ورودی‌های تاریخ میلادی
+ * @throws {Error} اگر ورودی‌ها نامعتبر باشند
+ */
+const validateGregorianInputs = (year, month, day, fnName = 'Gregorian') => {
+  if (!isValidNumber(year) || !isValidNumber(month) || !isValidNumber(day)) {
+    throw new Error(
+      `${fnName}: ورودی‌های نامعتبر — year=${year}, month=${month}, day=${day}. ` +
+        `تمام مقادیر باید عدد معتبر باشند.`
+    );
+  }
+  if (month < 1 || month > 12) {
+    throw new Error(`${fnName}: ماه باید بین ۱ تا ۱۲ باشد. month=${month}`);
+  }
+  if (day < 1 || day > 31) {
+    throw new Error(`${fnName}: روز باید بین ۱ تا ۳۱ باشد. day=${day}`);
+  }
+};
 
 // ═══════════════════════════════════════════════════════
 //    الگوریتم تبدیل میلادی ↔ جلالی
@@ -41,6 +92,8 @@ const jalCal = (jy) => {
 };
 
 const gregorianToJDN = (year, month, day) => {
+  // ✅ COMP-01 FIX: اعتبارسنجی ورودی‌ها
+  validateGregorianInputs(year, month, day, 'gregorianToJDN');
   const a = Math.floor((14 - month) / 12);
   const y = year + 4800 - a;
   const m = month + 12 * a - 3;
@@ -56,6 +109,10 @@ const gregorianToJDN = (year, month, day) => {
 };
 
 const jdnToGregorian = (jdn) => {
+  // ✅ COMP-01 FIX: اعتبارسنجی ورودی JDN
+  if (!isValidNumber(jdn)) {
+    throw new Error(`jdnToGregorian: JDN نامعتبر — ${jdn}. باید عدد معتبر باشد.`);
+  }
   const a = jdn + 32044;
   const b = Math.floor((4 * a + 3) / 146097);
   const c = a - Math.floor((146097 * b) / 4);
@@ -69,6 +126,8 @@ const jdnToGregorian = (jdn) => {
 };
 
 const jalaaliToJDN = (jy, jm, jd) => {
+  // ✅ COMP-01 FIX: اعتبارسنجی ورودی‌ها قبل از محاسبه
+  validateJalaaliInputs(jy, jm, jd, 'jalaaliToJDN');
   const gy = jy + 621;
   const r = jalCal(jy);
   const jdn =
@@ -77,6 +136,10 @@ const jalaaliToJDN = (jy, jm, jd) => {
 };
 
 const jdnToJalaali = (jdn) => {
+  // ✅ COMP-01 FIX: اعتبارسنجی ورودی JDN
+  if (!isValidNumber(jdn)) {
+    throw new Error(`jdnToJalaali: JDN نامعتبر — ${jdn}. باید عدد معتبر باشد.`);
+  }
   const gy = jdnToGregorian(jdn).year;
   let jy = gy - 621;
   const r = jalCal(jy);
@@ -133,18 +196,11 @@ export const PERSIAN_WEEKDAYS = [
 // ═══════════════════════════════════════════════════════
 //    ✅ FIX فاز ۳: کش ساده برای تبدیل‌های تکراری
 // ═══════════════════════════════════════════════════════
-// در لیست‌های طولانی (مثل لیست نوبت‌ها) تاریخ‌ها تکرار می‌شوند.
-// کش از محاسبات مجدد جلوگیری می‌کند.
 
 const CACHE_MAX_SIZE = 1000;
 const _toJalaaliCache = new Map();
 const _toGregorianCache = new Map();
 
-/**
- * ✅ FIX فاز ۳: پاکسازی نیمی از کش هنگام پر شدن
- * استراتژی ساده FIFO — در عمل تاریخ‌های قدیمی دیگر
- * در لیست‌های فعال استفاده نمی‌شوند
- */
 const pruneCache = (cache) => {
   if (cache.size < CACHE_MAX_SIZE) return;
   const keysToDelete = Array.from(cache.keys()).slice(0, CACHE_MAX_SIZE / 2);
@@ -153,12 +209,16 @@ const pruneCache = (cache) => {
 
 /**
  * تبدیل میلادی به جلالی
+ * ✅ COMP-01 FIX: اعتبارسنجی ورودی‌ها
  * @param {number} year - سال میلادی
  * @param {number} month - ماه میلادی (1-12)
  * @param {number} day - روز میلادی
  * @returns {{ jy: number, jm: number, jd: number }}
+ * @throws {Error} اگر ورودی‌ها نامعتبر باشند
  */
 export const toJalaali = (year, month, day) => {
+  // ✅ COMP-01 FIX: اعتبارسنجی قبل از هر چیز
+  validateGregorianInputs(year, month, day, 'toJalaali');
   const key = `${year}-${month}-${day}`;
   if (_toJalaaliCache.has(key)) {
     return _toJalaaliCache.get(key);
@@ -172,12 +232,16 @@ export const toJalaali = (year, month, day) => {
 
 /**
  * تبدیل جلالی به میلادی
+ * ✅ COMP-01 FIX: اعتبارسنجی ورودی‌ها
  * @param {number} jy - سال جلالی
  * @param {number} jm - ماه جلالی (1-12)
  * @param {number} jd - روز جلالی
  * @returns {{ year: number, month: number, day: number }}
+ * @throws {Error} اگر ورودی‌ها نامعتبر باشند
  */
 export const toGregorian = (jy, jm, jd) => {
+  // ✅ COMP-01 FIX: اعتبارسنجی قبل از هر چیز
+  validateJalaaliInputs(jy, jm, jd, 'toGregorian');
   const key = `${jy}-${jm}-${jd}`;
   if (_toGregorianCache.has(key)) {
     return _toGregorianCache.get(key);
@@ -196,7 +260,13 @@ export const toGregorian = (jy, jm, jd) => {
  */
 export const formatJalaaliDate = (date) => {
   if (!date) return '';
-  return `${date.jd} ${PERSIAN_MONTHS[date.jm - 1]} ${date.jy}`;
+  // ✅ COMP-01 FIX: بررسی شکل آبجکت
+  if (!isValidNumber(date.jy) || !isValidNumber(date.jm) || !isValidNumber(date.jd)) {
+    return '';
+  }
+  const monthIndex = date.jm - 1;
+  if (monthIndex < 0 || monthIndex >= PERSIAN_MONTHS.length) return '';
+  return `${date.jd} ${PERSIAN_MONTHS[monthIndex]} ${date.jy}`;
 };
 
 /**
@@ -215,6 +285,10 @@ export const todayJalaali = () => {
  * @returns {number}
  */
 export const jalaaliMonthLength = (jy, jm) => {
+  // ✅ COMP-01 FIX: اعتبارسنجی
+  if (!isValidNumber(jy) || !isValidNumber(jm) || jm < 1 || jm > 12) {
+    throw new Error(`jalaaliMonthLength: ورودی نامعتبر — jy=${jy}, jm=${jm}`);
+  }
   if (jm <= 6) return 31;
   if (jm <= 11) return 30;
   const r = jalCal(jy);
@@ -228,6 +302,10 @@ export const jalaaliMonthLength = (jy, jm) => {
  * @returns {number} 0=شنبه ... 6=جمعه
  */
 export const getFirstDayOfWeekJalaali = (jy, jm) => {
+  // ✅ COMP-01 FIX: اعتبارسنجی
+  if (!isValidNumber(jy) || !isValidNumber(jm) || jm < 1 || jm > 12) {
+    throw new Error(`getFirstDayOfWeekJalaali: ورودی نامعتبر — jy=${jy}, jm=${jm}`);
+  }
   const g = toGregorian(jy, jm, 1);
   const d = new Date(g.year, g.month - 1, g.day);
   const dayOfWeek = d.getDay();
@@ -242,24 +320,22 @@ export const getFirstDayOfWeekJalaali = (jy, jm) => {
  */
 export const timeToMinutes = (timeStr) => {
   if (!timeStr || typeof timeStr !== 'string') return 0;
-  
+
   // تبدیل اعداد فارسی/عربی به انگلیسی
   const english = timeStr
     .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-    
+
   // ✅ FIX: استفاده از regex برای جدا کردن اعداد
-  // به جای split(':') که فقط با : انگلیسی کار می‌کند
-  // این روش هر کاراکتر غیر عددی (مثل :، ؛، /، -، فاصله و ...) را به عنوان جداکننده در نظر می‌گیرد
   const parts = english.split(/\D+/).filter(Boolean);
-  
+
   if (parts.length >= 2) {
     const hours = parseInt(parts[0], 10) || 0;
     const minutes = parseInt(parts[1], 10) || 0;
     return hours * 60 + minutes;
   }
-  
-  // Fallback: اگر جداکننده‌ای وجود نداشت و فقط اعداد بود (مثل "0930" یا "930")
+
+  // Fallback: اگر جداکننده‌ای وجود نداشت
   const digits = english.replace(/\D/g, '');
   if (digits.length === 4) {
     return parseInt(digits.slice(0, 2), 10) * 60 + parseInt(digits.slice(2), 10);
@@ -267,7 +343,7 @@ export const timeToMinutes = (timeStr) => {
   if (digits.length === 3) {
     return parseInt(digits[0], 10) * 60 + parseInt(digits.slice(1), 10);
   }
-  
+
   return 0;
 };
 
@@ -289,18 +365,48 @@ export const minutesToTime = (totalMinutes) => {
 //    توابع کمکی مقایسه و فیلتر
 // ═══════════════════════════════════════════════════════
 
-export const jalaaliToNumber = ({ jy, jm, jd }) => jy * 10000 + jm * 100 + jd;
+/**
+ * تبدیل آبجکت تاریخ جلالی به عدد قابل مقایسه
+ * ✅ COMP-01 FIX: محافظت در برابر ورودی نامعتبر
+ */
+export const jalaaliToNumber = ({ jy, jm, jd }) => {
+  if (!isValidNumber(jy) || !isValidNumber(jm) || !isValidNumber(jd)) {
+    return 0; // مقدار پیش‌فرض امن برای فیلتر/مرتب‌سازی
+  }
+  return jy * 10000 + jm * 100 + jd;
+};
 
+/**
+ * تبدیل آبجکت تاریخ جلالی به Date میلادی
+ * ✅ COMP-01 FIX: محافظت در برابر ورودی نامعتبر
+ */
 export const jalaaliToDate = (date) => {
   if (!date) return new Date(0);
-  const g = toGregorian(date.jy, date.jm, date.jd);
-  return new Date(g.year, g.month - 1, g.day);
+  if (!isValidNumber(date.jy) || !isValidNumber(date.jm) || !isValidNumber(date.jd)) {
+    return new Date(0);
+  }
+  try {
+    const g = toGregorian(date.jy, date.jm, date.jd);
+    return new Date(g.year, g.month - 1, g.day);
+  } catch {
+    return new Date(0);
+  }
 };
 
 export const isSameJalaaliDay = (d1, d2) =>
   Boolean(d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd);
 
+/**
+ * کم کردن ماه از تاریخ جلالی
+ * ✅ COMP-01 FIX: اعتبارسنجی ورودی
+ */
 export const subtractJalaaliMonths = (date, months) => {
+  if (!date || !isValidNumber(date.jy) || !isValidNumber(date.jm) || !isValidNumber(date.jd)) {
+    throw new Error('subtractJalaaliMonths: ورودی تاریخ نامعتبر است');
+  }
+  if (!isValidNumber(months)) {
+    throw new Error('subtractJalaaliMonths: تعداد ماه باید عدد معتبر باشد');
+  }
   let jy = date.jy;
   let jm = date.jm - months;
   let jd = date.jd;
@@ -335,7 +441,7 @@ export const formatDateIntl = (date, options = {}) => {
  * @returns {string} - "1405/04/22"
  */
 export const toJalaaliKey = (jy, jm, jd) => {
-  if (!jy || !jm || !jd) return '';
+  if (!isValidNumber(jy) || !isValidNumber(jm) || !isValidNumber(jd)) return '';
   return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 };
 
@@ -345,8 +451,11 @@ export const toJalaaliKey = (jy, jm, jd) => {
  * @returns {{ jy: number, jm: number, jd: number }}
  */
 export const fromJalaaliKey = (dateKey) => {
-  if (!dateKey) return { jy: 0, jm: 0, jd: 0 };
+  if (!dateKey || typeof dateKey !== 'string') return { jy: 0, jm: 0, jd: 0 };
   const parts = dateKey.split('/').map(Number);
   if (parts.length !== 3) return { jy: 0, jm: 0, jd: 0 };
+  if (!isValidNumber(parts[0]) || !isValidNumber(parts[1]) || !isValidNumber(parts[2])) {
+    return { jy: 0, jm: 0, jd: 0 };
+  }
   return { jy: parts[0], jm: parts[1], jd: parts[2] };
 };

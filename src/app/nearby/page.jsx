@@ -1,7 +1,7 @@
 // src/app/nearby/page.jsx
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiMapPin } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -19,6 +19,7 @@ import NearbyModelRequestsSection from '@/components/nearby/NearbyModelRequestsS
 import NearbyLineRentalsSection from '@/components/nearby/NearbyLineRentalsSection';
 import LocationInfoBar from '@/components/nearby/LocationInfoBar';
 import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
+import { useAuth } from '@/stores/useAuthStore';
 import { businessesService, categoriesService, adsService } from '@/api';
 
 // ✅ FIX 2.5: کش ماژول‌سطح با TTL برای جلوگیری از درخواست‌های مکرر GPS
@@ -30,6 +31,7 @@ const LOCATION_CACHE_TTL = 5 * 60 * 1000; // ۵ دقیقه
 export default function NearbyPage() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { user } = useAuth();
   const globalLocation = useGlobalLocationStore((s) => s.getLocationParams);
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
@@ -44,6 +46,17 @@ export default function NearbyPage() {
   const [nearbyModelRequests, setNearbyModelRequests] = useState([]);
   const [nearbyLineRentals, setNearbyLineRentals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ PERF-02: پاکسازی کش هنگام لاگ‌اوت یا تغییر کاربر
+  const previousUserId = useRef(user?.id);
+  useEffect(() => {
+    const currentUserId = user?.id;
+    if (previousUserId.current !== currentUserId) {
+      cachedLocation = null;
+      cachedLocationTimestamp = 0;
+      previousUserId.current = currentUserId;
+    }
+  }, [user?.id]);
 
   const fetchLocation = useCallback(async (forceRefresh = false) => {
     if (!forceRefresh && cachedLocation && Date.now() - cachedLocationTimestamp < LOCATION_CACHE_TTL) {

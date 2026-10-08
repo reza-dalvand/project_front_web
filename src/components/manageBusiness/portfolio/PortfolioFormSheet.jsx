@@ -29,18 +29,21 @@ export default function PortfolioFormSheet({
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState(null);
   const [subServiceId, setSubServiceId] = useState(null);
-  const [images, setImages] = useState([]); // ✅ فایل‌های واقعی
-  const [imagePreviews, setImagePreviews] = useState([]); // برای پیش‌نمایش
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
   const fileInputRef = useRef(null);
+  
+  // ✅ FIX MEM-01: استفاده از Ref برای جلوگیری از Stale Closure در cleanup
+  const blobUrlsRef = useRef([]);
 
   // ─── دسته‌بندی‌ها از بک‌اند ───
   const { categories: serviceCategories } = useServiceCategories();
   const { subServices: availableSubServices } = useSubServices(categoryId);
 
-  // ─── پر کردن فرم در حالت ویرایش ───
+  // ─── مدیریت وضعیت فرم و پاک‌سازی حافظه ───
   useEffect(() => {
     if (visible) {
       if (editingPortfolio) {
@@ -48,8 +51,6 @@ export default function PortfolioFormSheet({
         setDescription(editingPortfolio.description || '');
         setCategoryId(editingPortfolio.categoryId || editingPortfolio.category?.id || null);
         setSubServiceId(editingPortfolio.subServiceId || editingPortfolio.sub_service?.id || null);
-        // ✅ در حالت ویرایش، تصاویر قبلی نگه داشته می‌شوند
-        // کاربر فقط در صورت نیاز تصاویر جدید آپلود می‌کند
         setImages([]);
         setImagePreviews([]);
       } else {
@@ -62,6 +63,12 @@ export default function PortfolioFormSheet({
       }
       setErrors({});
       setSaving(false);
+    } else {
+      // ✅ FIX MEM-01: وقتی شیت بسته می‌شود، بلافاصله حافظه را آزاد کن
+      blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      blobUrlsRef.current = [];
+      setImagePreviews([]);
+      setImages([]);
     }
   }, [visible, editingPortfolio]);
 
@@ -75,9 +82,9 @@ export default function PortfolioFormSheet({
 
     if (filesToAdd.length === 0) return;
 
-    // اعتبارسنجی نوع و حجم
     const validFiles = [];
-    const previews = [];
+    const newPreviews = [];
+    
     for (const file of filesToAdd) {
       if (!file.type.startsWith('image/')) {
         setErrors((prev) => ({ ...prev, images: 'فقط فایل تصویری مجاز است' }));
@@ -88,20 +95,27 @@ export default function PortfolioFormSheet({
         return;
       }
       validFiles.push(file);
-      previews.push(URL.createObjectURL(file));
+      
+      const url = URL.createObjectURL(file);
+      blobUrlsRef.current.push(url); // ✅ ثبت در Ref
+      newPreviews.push(url);
     }
 
     setImages((prev) => [...prev, ...validFiles]);
-    setImagePreviews((prev) => [...prev, ...previews]);
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
     setErrors((prev) => ({ ...prev, images: '' }));
 
-    // ریست اینپوت تا بشود دوباره همان فایل را انتخاب کرد
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // ─── حذف تصویر ───
   const removeImage = (index) => {
-    URL.revokeObjectURL(imagePreviews[index]);
+    const urlToRemove = imagePreviews[index];
+    if (urlToRemove) {
+      URL.revokeObjectURL(urlToRemove);
+      // ✅ حذف از Ref
+      blobUrlsRef.current = blobUrlsRef.current.filter((u) => u !== urlToRemove);
+    }
     setImages((prev) => prev.filter((_, i) => i !== index));
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
@@ -114,7 +128,6 @@ export default function PortfolioFormSheet({
     if (!categoryId) newErrors.categoryId = 'دسته‌بندی را انتخاب کنید';
     if (!subServiceId) newErrors.subServiceId = 'نوع خدمت را انتخاب کنید';
 
-    // ✅ در حالت ویرایش، اگر تصویر جدید آپلود نشده، تصاویر قبلی حفظ می‌شوند
     if (!isEditMode && images.length === 0) {
       newErrors.images = 'حداقل یک تصویر آپلود کنید';
     }
@@ -123,7 +136,6 @@ export default function PortfolioFormSheet({
     return Object.keys(newErrors).length === 0;
   };
 
-  // ═══ ✅ FIX: مدیریت async/await برای ریست کردن تضمینی saving ═══
   const handleSave = async () => {
     if (!validate()) return;
     setSaving(true);
@@ -132,11 +144,9 @@ export default function PortfolioFormSheet({
     formData.append('title', title.trim());
     formData.append('description', description.trim());
 
-    // ✅ فقط مقادیر معتبر اضافه شوند
     if (categoryId) formData.append('category', String(categoryId));
     if (subServiceId) formData.append('sub_service', String(subServiceId));
 
-    // ✅ فقط تصاویر گالری — دیگر cover_image ارسال نمی‌شود
     if (images.length > 0) {
       images.forEach((file) => {
         formData.append('images', file);
@@ -144,21 +154,19 @@ export default function PortfolioFormSheet({
     }
 
     try {
-      // چون onSave در والد یک تابع async است، آن را await می‌کنیم
       await onSave(formData, editingPortfolio?.id);
     } catch (error) {
-      // خطا در والد مدیریت و Toast نشان داده می‌شود
       console.error('Save portfolio failed in sheet:', error);
     } finally {
-      // ✅ تضمین ریست شدن state saving حتی در صورت بروز خطای شبکه یا سرور
       setSaving(false);
     }
   };
 
-  // ─── Cleanup previews ───
+  // ✅ FIX MEM-01: Cleanup تضمینی هنگام Unmount شدن کامپوننت
   useEffect(() => {
     return () => {
-      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+      blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      blobUrlsRef.current = [];
     };
   }, []);
 
@@ -194,12 +202,11 @@ export default function PortfolioFormSheet({
             </span>
           </label>
 
-          {/* پیش‌نمایش تصاویر */}
           {imagePreviews.length > 0 && (
             <div className="flex flex-wrap gap-3 mb-3">
               {imagePreviews.map((preview, index) => (
                 <div
-                  key={index}
+                  key={preview}
                   className="relative w-24 h-24 rounded-xl overflow-hidden border"
                   style={{ borderColor: colors.border }}
                 >
@@ -227,7 +234,6 @@ export default function PortfolioFormSheet({
             </div>
           )}
 
-          {/* دکمه آپلود */}
           <input
             ref={fileInputRef}
             type="file"

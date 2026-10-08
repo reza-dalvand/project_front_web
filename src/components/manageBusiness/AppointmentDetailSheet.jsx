@@ -39,8 +39,18 @@ export default function AppointmentDetailSheet({
   const isDone = appointment.status === 'done';
   const isCancelled = appointment.status === 'cancelled_by_salon';
 
-  const dateStr = appointment.date
-    ? `${toPersianDigit(appointment.date.jy)}/${toPersianDigit(appointment.date.jm)}/${toPersianDigit(appointment.date.jd)}`
+  // ✅ FIX MIN-01: بررسی امنیتی برای جلوگیری از خروجی // در صورت ناقص بودن آبجکت تاریخ
+  const hasValidDate =
+    appointment.date &&
+    typeof appointment.date === 'object' &&
+    appointment.date.jy !== undefined &&
+    appointment.date.jm !== undefined &&
+    appointment.date.jd !== undefined;
+
+  const dateStr = hasValidDate
+    ? `${toPersianDigit(appointment.date.jy)}/${toPersianDigit(
+        String(appointment.date.jm).padStart(2, '0')
+      )}/${toPersianDigit(String(appointment.date.jd).padStart(2, '0'))}`
     : '—';
 
   return (

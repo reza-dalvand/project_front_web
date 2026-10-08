@@ -65,6 +65,17 @@ export default function HomePage() {
     return () => unsubscribe();
   }, []);
 
+  // ✅ PERF-01: پاکسازی کش هنگام لاگ‌اوت یا تغییر کاربر
+  const previousUserId = useRef(user?.id);
+  useEffect(() => {
+    const currentUserId = user?.id;
+    if (previousUserId.current !== currentUserId) {
+      homeDataCache = null;
+      homeDataCacheTime = 0;
+      previousUserId.current = currentUserId;
+    }
+  }, [user?.id]);
+
   const getLocationParams = useCallback(() => useGlobalLocationStore.getState().getLocationParams(), []);
 
   const [searchQuery, setSearchQuery] = useState('');

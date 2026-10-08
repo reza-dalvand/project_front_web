@@ -6,6 +6,7 @@ import { FiCamera, FiEdit, FiX, FiUpload } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { UPLOAD_CONFIG } from '@/api/config';
 import { compressImage } from '@/utils/image-compression';
+import { revokePreviewUrl } from '@/utils/image-utils';
 import Image from 'next/image';
 
 export default function ImageUploader({
@@ -18,20 +19,55 @@ export default function ImageUploader({
   error,
 }) {
   const { colors } = useTheme();
-  const [localPreview, setLocalPreview] = useState(value);
+  const [localPreview, setLocalPreview] = useState(value || null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [validationError, setValidationError] = useState(null);
 
   const objectUrlRef = useRef(null);
+  
+  // ✅ FIX MEM-02: جلوگیری از revoke/recreate حلقه‌ای وقتی والد همان File را برمی‌گرداند
+  const lastProcessedFileRef = useRef(null);
+  
+  // ✅ FIX MEM-02: مدیریت چرخه حیات برای عملیات Async
+  const isMountedRef = useRef(true);
 
+  // Cleanup نهایی هنگام Unmount
   useEffect(() => {
     return () => {
+      isMountedRef.current = false;
       if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
+        revokePreviewUrl(objectUrlRef.current);
         objectUrlRef.current = null;
       }
     };
   }, []);
+
+  // همگام‌سازی با تغییرات پراپ value از بیرون
+  useEffect(() => {
+    // اگر value همان فایلی است که خودمان اخیراً ساخته‌ایم و به والد داده‌ایم، کاری نکن
+    if (value instanceof File && value === lastProcessedFileRef.current) {
+      return;
+    }
+
+    if (value !== localPreview) {
+      // آزاد کردن blob URL قبلی
+      if (objectUrlRef.current) {
+        revokePreviewUrl(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+      
+      // ریست کردن Ref چون مقدار از بیرون تغییر کرده است
+      lastProcessedFileRef.current = null; 
+      
+      if (value instanceof File) {
+        const url = URL.createObjectURL(value);
+        objectUrlRef.current = url;
+        setLocalPreview(url);
+      } else {
+        setLocalPreview(value || null);
+      }
+    }
+  }, [value, localPreview]);
 
   const onDrop = useCallback(
     async (acceptedFiles) => {
@@ -44,20 +80,33 @@ export default function ImageUploader({
       try {
         const compressed = await compressImage(file, variant);
 
+        // ✅ FIX MEM-02: اگر در حین فشرده‌سازی کامپوننت unmount شد، ادامه نده
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        // آزاد کردن blob URL قبلی قبل از ساخت جدید
         if (objectUrlRef.current) {
-          URL.revokeObjectURL(objectUrlRef.current);
+          revokePreviewUrl(objectUrlRef.current);
           objectUrlRef.current = null;
         }
 
         const previewUrl = URL.createObjectURL(compressed);
         objectUrlRef.current = previewUrl;
+        
+        // ✅ ثبت فایل پردازش شده برای جلوگیری از لوپ در useEffect
+        lastProcessedFileRef.current = compressed; 
+        
         setLocalPreview(previewUrl);
         onChange?.(compressed);
       } catch (err) {
+        if (!isMountedRef.current) return;
         console.error('Image compression failed:', err);
         setValidationError(err.message || 'خطا در پردازش تصویر');
       } finally {
-        setIsCompressing(false);
+        if (isMountedRef.current) {
+          setIsCompressing(false);
+        }
       }
     },
     [onChange, variant]
@@ -85,9 +134,10 @@ export default function ImageUploader({
   const handleRemove = (e) => {
     e.stopPropagation();
     if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
+      revokePreviewUrl(objectUrlRef.current);
       objectUrlRef.current = null;
     }
+    lastProcessedFileRef.current = null;
     setLocalPreview(null);
     setValidationError(null);
     onChange?.(null);

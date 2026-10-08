@@ -52,20 +52,8 @@ function CreateModelRequestPageContent() {
       return;
     }
 
-    // ✅ ساخت payload مشترک برای هر دو حالت (ایجاد و ویرایش)
-    // تا از ناهماهنگی فیلدها جلوگیری شود
-    const payload = {
-      service: formData.serviceId,          // ✅ Service ID (نه Category ID)
-      title: formData.title,
-      description: formData.description,
-      cost_type: formData.costType,
-      discount: formData.discount || 0,
-      is_urgent: formData.isUrgent || false,
-      contact_phone: formData.contactPhone,
-    };
-
     try {
-      // ✅ FIX باگ ۱۱: یکپارچه‌سازی Payload
+      // ✅ FIX باگ ۱۱ و LOG-01: یکپارچه‌سازی Payload و حذف متغیر سایه‌شده
       const payload = {
         service: formData.serviceId || formData.categoryId,
         title: formData.title,

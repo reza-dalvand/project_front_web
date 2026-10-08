@@ -1,3 +1,4 @@
+// src/components/manageBusiness/bookingLink/BookingLinkCard.jsx
 'use client';
 
 import { FiLink, FiCopy, FiShare2, FiMousePointer, FiCalendar } from 'react-icons/fi';
@@ -8,10 +9,8 @@ import { toPersianDigit } from '@/utils/numberUtils';
 export default function BookingLinkCard({ bookingLink, onShare, onCopy }) {
   const { colors } = useTheme();
 
-  // استخراج مقدار لینک
+  // ✅ PERF-07: حذف متغیرهای استفاده نشده clicks و bookings
   const linkUrl = typeof bookingLink === 'string' ? bookingLink : bookingLink?.link || '';
-  const clicks = bookingLink?.clicks || 0;
-  const bookings = bookingLink?.bookings || 0;
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(linkUrl);

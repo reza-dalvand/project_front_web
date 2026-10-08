@@ -14,35 +14,70 @@ import { normalizeSuccessResponse, normalizeErrorResponse } from './response-nor
 // ═══════════════════════════════════════════════
 //    تبدیل کلیدها: camelCase → snake_case
 // ═══════════════════════════════════════════════
+
+// ✅ FIX 7.1: کش برای جلوگیری از محاسبات تکراری Regex روی دیتای بزرگ
+const _snakeKeyCache = new Map();
+
 /**
  * تبدیل یک کلید camelCase به snake_case
  * @example 'timeSlot' → 'time_slot'
  * @example 'serviceId' → 'service_id'
  */
-const camelToSnake = (str) => str.replace(/([A-Z])/g, '_$1').toLowerCase();
+const camelToSnake = (str) => {
+  if (_snakeKeyCache.has(str)) return _snakeKeyCache.get(str);
+  
+  // Fast path: اگر حرف بزرگی ندارد، نیازی به تبدیل نیست (از قبل snake_case یا lowercase است)
+  if (!/[A-Z]/.test(str)) {
+    _snakeKeyCache.set(str, str);
+    return str;
+  }
+  
+  const snake = str.replace(/([A-Z])/g, '_$1').toLowerCase();
+  _snakeKeyCache.set(str, snake);
+  return snake;
+};
 
 /**
  * تبدیل بازگشتی تمام کلیدهای یک آبجکت از camelCase به snake_case
- * - FormData, File, Blob دست‌نخورده باقی می‌مانند
+ * - FormData, File, Blob, Date, TypedArray دست‌نخورده باقی می‌مانند
  * - آرایه‌ها element-wise تبدیل می‌شوند
+ * - ✅ FIX 7.1: استفاده از for...in برای عملکرد بهتر روی آبجکت‌های بزرگ
  */
 const toSnakeCase = (obj) => {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj !== 'object') return obj;
-  if (obj instanceof FormData || obj instanceof File || obj instanceof Blob) return obj;
+  
+  // نادیده گرفتن انواع خاصی که نباید پیمایش شوند
+  if (
+    obj instanceof FormData ||
+    obj instanceof File ||
+    obj instanceof Blob ||
+    obj instanceof Date ||
+    ArrayBuffer.isView(obj)
+  ) {
+    return obj;
+  }
+  
   if (Array.isArray(obj)) return obj.map(toSnakeCase);
 
   const result = {};
-  for (const [key, value] of Object.entries(obj)) {
-    const snakeKey = camelToSnake(key);
-    result[snakeKey] =
-      typeof value === 'object' &&
-      value !== null &&
-      !(value instanceof FormData) &&
-      !(value instanceof File) &&
-      !(value instanceof Blob)
-        ? toSnakeCase(value)
-        : value;
+  // استفاده از for...in سریع‌تر از Object.entries است
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const snakeKey = camelToSnake(key);
+      const value = obj[key];
+      
+      result[snakeKey] =
+        typeof value === 'object' &&
+        value !== null &&
+        !(value instanceof FormData) &&
+        !(value instanceof File) &&
+        !(value instanceof Blob) &&
+        !(value instanceof Date) &&
+        !ArrayBuffer.isView(value)
+          ? toSnakeCase(value)
+          : value;
+    }
   }
   return result;
 };

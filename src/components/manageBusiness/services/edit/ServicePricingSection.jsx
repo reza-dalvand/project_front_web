@@ -1,3 +1,4 @@
+// src/components/manageBusiness/services/edit/ServicePricingSection.jsx
 'use client';
 import { useState } from 'react';
 import { FiDollarSign, FiInfo } from 'react-icons/fi';
@@ -6,7 +7,8 @@ import Card from '@/components/common/Card';
 import Input from '@/components/common/Input';
 import SectionHeader from '@/components/common/SectionHeader';
 import PriceGuideModal from '@/components/common/PriceGuideModal';
-import { toPersianDigit, formatPriceInput } from '@/utils/numberUtils';
+// ✅ FIX LOG-04: اضافه کردن parseNumber برای پشتیبانی از اعداد فارسی
+import { toPersianDigit, formatPriceInput, parseNumber } from '@/utils/numberUtils';
 
 export default function ServicePricingSection({
   originalPrice,
@@ -51,7 +53,7 @@ export default function ServicePricingSection({
         />
         
         {/* پیش‌نمایش قیمت */}
-        {parseInt(originalPrice.replace(/[^0-9]/g, '') || '0') > 0 && (
+        {parseNumber(originalPrice) > 0 && (
           <div
             className="mt-3 p-3 rounded-xl border"
             style={{ backgroundColor: colors.background, borderColor: colors.border }}
@@ -64,7 +66,7 @@ export default function ServicePricingSection({
                 {toPersianDigit(finalPrice.toLocaleString())} تومان
               </span>
             </div>
-            {parseInt(discountPercent.replace(/[^0-9]/g, '') || '0') > 0 && (
+            {parseNumber(discountPercent) > 0 && (
               <div className="flex justify-between">
                 <span className="text-xs" style={{ color: colors.textSecondary }}>
                   مبلغ تخفیف:
@@ -73,9 +75,7 @@ export default function ServicePricingSection({
                   -{' '}
                   {toPersianDigit(
                     Math.round(
-                      (parseInt(originalPrice.replace(/[^0-9]/g, '') || '0') *
-                        parseInt(discountPercent.replace(/[^0-9]/g, '') || '0')) /
-                        100
+                      (parseNumber(originalPrice) * parseNumber(discountPercent)) / 100
                     ).toLocaleString()
                   )}{' '}
                   تومان

@@ -11,12 +11,14 @@
  * - تأخیر بین درخواست‌ها
  * - محدودیت تعداد در هر دور
  * - حذف حلقه بی‌نهایت
+ * 
+ * ✅ FIX فاز ۶: جلوگیری از ارسال درخواست‌های منقضی (Stale Requests)
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 const MAX_QUEUE_SIZE = 50;
-const MAX_QUEUE_AGE = 24 * 60 * 60 * 1000;
+const MAX_QUEUE_AGE = 24 * 60 * 60 * 1000; // ۲۴ ساعت
 
 const RETRY_BASE_DELAY_MS = 1000;
 const RETRY_MAX_DELAY_MS = 30000;
@@ -67,6 +69,7 @@ export const useOfflineQueueStore = create(
             retryCount: 0,
           };
           const now = Date.now();
+          // فیلتر کردن آیتم‌های قدیمی هنگام اضافه کردن آیتم جدید
           const filtered = state.queue.filter((item) => now - item.timestamp < MAX_QUEUE_AGE);
           const newQueue = [...filtered, newItem].slice(-MAX_QUEUE_SIZE);
           return { queue: newQueue };
@@ -136,19 +139,42 @@ export const processOfflineQueue = async (apiClient) => {
     useOfflineQueueStore.getState();
 
   if (isProcessing) {
-    return { processed: 0, failed: 0 };
+    return { processed: 0, failed: 0, expired: 0 };
   }
 
-  const queue = useOfflineQueueStore.getState().queue;
+  const { queue } = useOfflineQueueStore.getState();
   if (queue.length === 0) {
-    return { processed: 0, failed: 0 };
+    return { processed: 0, failed: 0, expired: 0 };
   }
 
   startProcessing();
   let processed = 0;
   let failed = 0;
+  let expired = 0;
 
-  const itemsToProcess = [...queue].slice(0, MAX_REQUESTS_PER_BATCH);
+  const now = Date.now();
+  
+  // ✅ FIX حافظه و منطق: پاک‌سازی درخواست‌های منقضی‌شده (Stale) قبل از پردازش
+  // اگر کاربر اپلیکیشن را ببندد و روزها بعد باز کند، نباید درخواست‌های قدیمی ارسال شوند
+  const validItems = [];
+  for (const item of queue) {
+    if (now - item.timestamp > MAX_QUEUE_AGE) {
+      dequeue(item.id);
+      expired++;
+      const ageHours = Math.round((now - item.timestamp) / 3600000);
+      console.warn(`⏳ Dropping expired offline request (Age: ${ageHours}h): ${item.method} ${item.url}`);
+    } else {
+      validItems.push(item);
+    }
+  }
+
+  // اگر همه درخواست‌ها منقضی شده بودند، پردازش را متوقف کن
+  if (validItems.length === 0) {
+    stopProcessing();
+    return { processed, failed, expired };
+  }
+
+  const itemsToProcess = validItems.slice(0, MAX_REQUESTS_PER_BATCH);
 
   for (const item of itemsToProcess) {
     try {
@@ -178,5 +204,5 @@ export const processOfflineQueue = async (apiClient) => {
   }
 
   stopProcessing();
-  return { processed, failed };
+  return { processed, failed, expired };
 };

@@ -1,4 +1,10 @@
 // src/stores/useBusinessStore.js
+/**
+ * ✅ FIX 5.2: مدیریت کامل migration و rehydration
+ * - بهبود migrate function
+ * - اضافه کردن onRehydrateStorage
+ * - محافظت در برابر داده‌های خراب
+ */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { businessesService } from '@/api';
@@ -8,6 +14,36 @@ import { createAppointmentsSlice } from './business/slices/appointmentsSlice';
 import { createTeamSlice } from './business/slices/teamSlice';
 import { createPortfoliosSlice } from './business/slices/portfoliosSlice';
 import { createSchedulesSlice } from './business/slices/schedulesSlice';
+
+/**
+ * ✅ FIX 5.2: اعتبارسنجی و ترمیم ساختار businessData
+ * اگر فیلدهای ضروری وجود نداشته باشند، با مقادیر پیش‌فرض پر می‌شوند
+ */
+const sanitizeBusinessData = (data) => {
+  if (!data || typeof data !== 'object') {
+    return { ...INITIAL_BUSINESS_DATA };
+  }
+
+  return {
+    ...INITIAL_BUSINESS_DATA,
+    ...data,
+    // اطمینان از وجود آرایه‌ها
+    services: Array.isArray(data.services) ? data.services : [],
+    team: Array.isArray(data.team) ? data.team : [],
+    portfolios: Array.isArray(data.portfolios) ? data.portfolios : [],
+    appointments: Array.isArray(data.appointments) ? data.appointments : [],
+    schedules: data.schedules && typeof data.schedules === 'object' ? data.schedules : {},
+    // اطمینان از وجود bankInfo
+    bankInfo: {
+      isRegistered: Boolean(data.bankInfo?.isRegistered ?? false),
+      isVerified: Boolean(data.bankInfo?.isVerified ?? false),
+    },
+    // محافظت در برابر فیلدهای حساس باقی‌مانده از نسخه‌های قدیمی
+    nationalId: undefined,
+    verifiedName: undefined,
+    ownerName: undefined,
+  };
+};
 
 export const useBusinessStore = create(
   persist(
@@ -55,6 +91,11 @@ export const useBusinessStore = create(
           _version: STORAGE_VERSION,
           businessStatus: null,
         });
+        try {
+          useBusinessStore.persist.clearStorage();
+        } catch {
+          // silently ignore
+        }
       },
 
       fetchBusinessDetail: async () => {
@@ -90,8 +131,8 @@ export const useBusinessStore = create(
               longitude: b.longitude || null,
               isActive: b.status === 'approved',
               status: b.status || null,
-              isSuspended: b.isSuspended ?? false,      
-              suspensionReason: b.suspensionReason ?? '', 
+              isSuspended: b.isSuspended ?? false,
+              suspensionReason: b.suspensionReason ?? '',
               services: (b.services || []).map((s) => ({
                 id: s.id,
                 name: s.name,
@@ -147,14 +188,14 @@ export const useBusinessStore = create(
         try {
           const response = await businessesService.getBusinessStatus();
           const data = response.data;
-          
+
           if (data?.hasBusiness) {
             set((state) => ({
               businessStatus: data.status || 'pending',
               businessData: {
                 ...state.businessData,
-                isSuspended: data.isSuspended ?? false,          
-                suspensionReason: data.suspensionReason ?? '',       
+                isSuspended: data.isSuspended ?? false,
+                suspensionReason: data.suspensionReason ?? '',
               },
             }));
           }
@@ -374,8 +415,13 @@ export const useBusinessStore = create(
         businessStatus: state.businessStatus,
         _version: STORAGE_VERSION,
       }),
+
+      // ═══════════════════════════════════════════════════════════════
+      // ✅ FIX 5.2: Migration بهبودیافته
+      // ═══════════════════════════════════════════════════════════════
       migrate: (persistedState, version) => {
-        if (version < STORAGE_VERSION) {
+        // ─── حالت ۱: داده‌ای وجود ندارد ───
+        if (!persistedState) {
           return {
             businessData: INITIAL_BUSINESS_DATA,
             gallery: [],
@@ -383,7 +429,98 @@ export const useBusinessStore = create(
             _version: STORAGE_VERSION,
           };
         }
-        return persistedState;
+
+        // ─── حالت ۲: نسخه قدیمی‌تر از نسخه فعلی ───
+        if (version < STORAGE_VERSION) {
+          console.warn(
+            `[useBusinessStore] Migrating from v${version} to v${STORAGE_VERSION}. Resetting data.`
+          );
+          return {
+            businessData: INITIAL_BUSINESS_DATA,
+            gallery: [],
+            businessStatus: null,
+            _version: STORAGE_VERSION,
+          };
+        }
+
+        // ─── حالت ۳: نسخه مطابقت دارد — اعتبارسنجی ساختار ───
+        return {
+          ...persistedState,
+          businessData: sanitizeBusinessData(persistedState.businessData),
+          gallery: Array.isArray(persistedState.gallery) ? persistedState.gallery : [],
+          businessStatus: persistedState.businessStatus || null,
+          _version: STORAGE_VERSION,
+        };
+      },
+
+      // ═══════════════════════════════════════════════════════════════
+      // ✅ FIX 5.2: اعتبارسنجی و ترمیم هنگام rehydration
+      // ═══════════════════════════════════════════════════════════════
+      onRehydrateStorage: () => {
+        return (state, error) => {
+          if (error) {
+            console.error('[useBusinessStore] Rehydration error:', error);
+            // در صورت خطای rehydration، استور را ریست کن
+            try {
+              useBusinessStore.persist.clearStorage();
+            } catch {
+              // silently ignore
+            }
+            return;
+          }
+
+          if (!state) return;
+
+          // ─── اعتبارسنجی ساختار داده‌ها ───
+          try {
+            // بررسی businessData
+            if (!state.businessData || typeof state.businessData !== 'object') {
+              console.warn('[useBusinessStore] Invalid businessData detected, resetting.');
+              state.businessData = { ...INITIAL_BUSINESS_DATA };
+            } else {
+              // ترمیم آرایه‌ها
+              if (!Array.isArray(state.businessData.services)) {
+                state.businessData.services = [];
+              }
+              if (!Array.isArray(state.businessData.team)) {
+                state.businessData.team = [];
+              }
+              if (!Array.isArray(state.businessData.portfolios)) {
+                state.businessData.portfolios = [];
+              }
+              if (!Array.isArray(state.businessData.appointments)) {
+                state.businessData.appointments = [];
+              }
+              // ترمیم schedules
+              if (!state.businessData.schedules || typeof state.businessData.schedules !== 'object') {
+                state.businessData.schedules = {};
+              }
+              // ترمیم bankInfo
+              if (!state.businessData.bankInfo || typeof state.businessData.bankInfo !== 'object') {
+                state.businessData.bankInfo = {
+                  isRegistered: false,
+                  isVerified: false,
+                };
+              }
+            }
+
+            // بررسی gallery
+            if (!Array.isArray(state.gallery)) {
+              state.gallery = [];
+            }
+
+            // بررسی businessStatus
+            const validStatuses = ['pending', 'approved', 'rejected', null];
+            if (!validStatuses.includes(state.businessStatus)) {
+              state.businessStatus = null;
+            }
+          } catch (sanitizeError) {
+            console.error('[useBusinessStore] Sanitization failed, full reset:', sanitizeError);
+            state.businessData = { ...INITIAL_BUSINESS_DATA };
+            state.gallery = [];
+            state.businessStatus = null;
+          }
+        };
       },
     }
   )

@@ -2,10 +2,12 @@
 /**
  * Store علاقه‌مندی‌ها — هماهنگ با بک‌اند
  * ✅ حذف USE_MOCK — فقط API
+ * ✅ FIX 5.1: مدیریت کامل خطا در Optimistic Update
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { favoritesService } from '@/api';
+import { useToastStore } from '@/hooks/useToast';
 
 export const useFavoriteStore = create(
   persist(
@@ -20,6 +22,7 @@ export const useFavoriteStore = create(
         try {
           const result = await favoritesService.getFavorites();
           set({
+            // ✅ فاز ۳: فقط فیلدهای camelCase (بعد از نرمال‌ساز)
             favoriteBusinesses: (result.data.businesses || []).map((b) => ({
               id: b.business,
               name: b.businessName,
@@ -35,21 +38,27 @@ export const useFavoriteStore = create(
               businessName: p.businessName || '',
               businessLogo: p.businessLogo || null,
               businessBookingSlug: p.businessBookingSlug || null,
-              images: p.images || [],
-              image: p.image || (p.images && p.images[0]) || null,
+              images: p.images || [], // ✅ آرایه کامل تصاویر
+              image: p.image || (p.images && p.images[0]) || null, // برای backward compatibility
             })),
             isLoading: false,
+            error: null,
           });
         } catch (error) {
           console.error('fetchFavorites failed:', error);
-          set({ error: error.message, isLoading: false });
+          const errorMsg = error?.message || 'خطا در دریافت علاقه‌مندی‌ها';
+          set({ error: errorMsg, isLoading: false });
+          useToastStore.getState().showToast(errorMsg, 'error');
         }
       },
 
+      // ✅ FIX 5.1: Optimistic Update با مدیریت کامل خطا و اطلاع‌رسانی
       toggleBusinessFavorite: async (businessId, businessData = null) => {
         const { favoriteBusinesses } = get();
         const isFavorited = favoriteBusinesses.some((b) => b.id === businessId);
+        const previousState = [...favoriteBusinesses]; // ذخیره حالت قبلی برای rollback دقیق
 
+        // ─── Optimistic Update ───
         if (isFavorited) {
           set({
             favoriteBusinesses: favoriteBusinesses.filter((b) => b.id !== businessId),
@@ -62,18 +71,37 @@ export const useFavoriteStore = create(
 
         try {
           await favoritesService.toggleFavorite('business', businessId);
+          set({ error: null });
           return !isFavorited;
         } catch (error) {
           console.error('toggleBusinessFavorite failed:', error);
-          set({ favoriteBusinesses });
+
+          // ─── Rollback: بازگشت دقیق به حالت قبل ───
+          set({
+            favoriteBusinesses: previousState,
+            error: error?.message || 'خطا در به‌روزرسانی علاقه‌مندی',
+          });
+
+          // ✅ FIX 5.1: اطلاع‌رسانی به کاربر درباره شکست و بازگشت تغییرات
+          useToastStore.getState().showToast(
+            isFavorited
+              ? 'خطا در حذف از علاقه‌مندی‌ها. لطفاً دوباره تلاش کنید.'
+              : 'خطا در افزودن به علاقه‌مندی‌ها. لطفاً دوباره تلاش کنید.',
+            'error',
+            4000
+          );
+
           throw error;
         }
       },
 
+      // ✅ FIX 5.1: Optimistic Update با مدیریت کامل خطا و اطلاع‌رسانی
       togglePostFavorite: async (postId, postData = null) => {
         const { favoritePosts } = get();
         const isFavorited = favoritePosts.some((p) => p.id === postId);
+        const previousState = [...favoritePosts]; // ذخیره حالت قبلی برای rollback دقیق
 
+        // ─── Optimistic Update ───
         if (isFavorited) {
           set({
             favoritePosts: favoritePosts.filter((p) => p.id !== postId),
@@ -86,10 +114,26 @@ export const useFavoriteStore = create(
 
         try {
           await favoritesService.toggleFavorite('post', postId);
+          set({ error: null });
           return !isFavorited;
         } catch (error) {
           console.error('togglePostFavorite failed:', error);
-          set({ favoritePosts });
+
+          // ─── Rollback: بازگشت دقیق به حالت قبل ───
+          set({
+            favoritePosts: previousState,
+            error: error?.message || 'خطا در به‌روزرسانی علاقه‌مندی',
+          });
+
+          // ✅ FIX 5.1: اطلاع‌رسانی به کاربر درباره شکست و بازگشت تغییرات
+          useToastStore.getState().showToast(
+            isFavorited
+              ? 'خطا در حذف پست از علاقه‌مندی‌ها. لطفاً دوباره تلاش کنید.'
+              : 'خطا در ذخیره پست. لطفاً دوباره تلاش کنید.',
+            'error',
+            4000
+          );
+
           throw error;
         }
       },
@@ -122,11 +166,12 @@ export const useFavoriteStore = create(
         set({
           favoriteBusinesses: [],
           favoritePosts: [],
+          error: null,
         });
       },
 
       // ═══════════════════════════════════════════════════════
-      // ✅ F-06 Fix: پاک‌سازی کامل هنگام لاگه‌اوت
+      // ✅ F-06 Fix: پاک‌سازی کامل هنگام لاگ‌اوت
       // ═══════════════════════════════════════════════════════
       clearForLogout: () => {
         set({
@@ -137,11 +182,14 @@ export const useFavoriteStore = create(
         });
         try {
           useFavoriteStore.persist.clearStorage();
-        } catch {}
+        } catch {
+          // silently ignore storage clear errors
+        }
       },
     }),
     {
       name: 'beau-favorite-storage',
+      version: 2, // ✅ نسخه استور برای migration آینده
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage
@@ -151,6 +199,34 @@ export const useFavoriteStore = create(
         favoriteBusinesses: state.favoriteBusinesses,
         favoritePosts: state.favoritePosts,
       }),
+      // ✅ FIX 5.1: مدیریت migration برای نسخه‌های آینده
+      migrate: (persistedState, version) => {
+        if (!persistedState || version < 2) {
+          return {
+            favoriteBusinesses: [],
+            favoritePosts: [],
+          };
+        }
+        return persistedState;
+      },
+      // ✅ FIX 5.1: اعتبارسنجی داده‌های ذخیره‌شده هنگام rehydrate
+      onRehydrateStorage: () => {
+        return (state, error) => {
+          if (error) {
+            console.error('useFavoriteStore rehydration error:', error);
+            return;
+          }
+          if (state) {
+            // اعتبارسنجی ساختار داده‌ها
+            if (!Array.isArray(state.favoriteBusinesses)) {
+              state.favoriteBusinesses = [];
+            }
+            if (!Array.isArray(state.favoritePosts)) {
+              state.favoritePosts = [];
+            }
+          }
+        };
+      },
     }
   )
 );

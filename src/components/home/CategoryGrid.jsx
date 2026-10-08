@@ -1,69 +1,8 @@
+// src/components/home/CategoryGrid.jsx
 'use client';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
-import {
-  FiEdit3,
-  FiHeart,
-  FiScissors,
-  FiFeather,
-  FiZap,
-  FiEye,
-  FiDroplet,
-  FiMoreHorizontal,
-  FiStar,
-  FiSun,
-} from 'react-icons/fi';
-
-const ICON_MAP = {
-  nail: FiEdit3,
-  skin: FiHeart,
-  skin_face: FiHeart,
-  hair: FiScissors,
-  makeup: FiFeather,
-  laser: FiZap,
-  eyelash: FiEye,
-  brow_lash: FiEye,
-  massage: FiDroplet,
-  waxing: FiDroplet,
-  bridal: FiStar,
-  tattoo: FiEdit3,
-  skincare: FiDroplet,
-  keratin: FiSun,
-  facial: FiDroplet,
-  face: FiFeather,
-  brush: FiEdit3,
-  'flash-on': FiZap,
-  spa: FiHeart,
-  palette: FiFeather,
-  'auto-awesome': FiStar,
-  visibility: FiEye,
-  'self-improvement': FiDroplet,
-  other: FiMoreHorizontal,
-  default: FiStar,
-};
-
-const COLOR_MAP = {
-  nail: '#7B1FA2',
-  skin: '#C2185B',
-  skin_face: '#C2185B',
-  hair: '#0277BD',
-  makeup: '#AD1457',
-  laser: '#00838F',
-  eyelash: '#4527A0',
-  brow_lash: '#4527A0',
-  massage: '#2E7D32',
-  waxing: '#558B2F',
-  bridal: '#880E4F',
-  tattoo: '#D84315',
-  skincare: '#00695C',
-  keratin: '#E65100',
-  facial: '#00695C',
-  face: '#AD1457',
-  brush: '#7B1FA2',
-  spa: '#C2185B',
-  other: '#455A64',
-  default: '#455A64',
-};
+import { getServiceTypeConfig } from '@/constants/serviceTypes';
 
 export default function CategoryGrid({ categories = [], onSelect, selectedId }) {
   const { colors } = useTheme();
@@ -78,8 +17,9 @@ export default function CategoryGrid({ categories = [], onSelect, selectedId }) 
         const hasCount = (item.count || 0) > 0;
 
         const iconKey = (item.icon || 'default').toLowerCase().replace(/\s+/g, '_');
-        const IconComponent = ICON_MAP[iconKey] || ICON_MAP.default;
-        const iconColor = COLOR_MAP[iconKey] || COLOR_MAP.default;
+        const config = getServiceTypeConfig(iconKey);
+        const IconComponent = config.icon;
+        const iconColor = config.color;
         const gradientStart = item.gradientStart || iconColor;
         const gradientEnd = item.gradientEnd || iconColor + 'CC';
 

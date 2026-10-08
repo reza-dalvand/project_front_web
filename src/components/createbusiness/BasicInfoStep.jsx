@@ -8,7 +8,6 @@ import ProgressCard from './basicinfo/ProgressCard';
 import ImageUploadSection from './basicinfo/ImageUploadSection';
 import BusinessInfoSection from './basicinfo/BusinessInfoSection';
 import LocationSection from './basicinfo/LocationSection';
-import { categoriesService } from '@/api';
 export default function BasicInfoStep({
   formData,
   onUpdate,
