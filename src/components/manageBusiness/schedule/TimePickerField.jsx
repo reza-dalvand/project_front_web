@@ -55,28 +55,8 @@ export default function TimePickerField({
             {icon}
           </span>
         </div>
-        {/* select دقیقه */}
-        <select
-          value={currentMinute}
-          onChange={handleMinuteChange}
-          dir="ltr"
-          className="flex-1 min-w-0 bg-transparent outline-none text-sm font-[Vazir-Bold] text-center cursor-pointer appearance-none"
-          style={{ color: colors.textMain, direction: 'ltr' }}
-        >
-          {MINUTES.map((m) => (
-            <option key={m} value={m}>
-              {String(m).padStart(2, '0')} دقیقه
-            </option>
-          ))}
-        </select>
 
-        <span
-          className="text-lg font-[Vazir-Bold] flex-shrink-0"
-          style={{ color: colors.textMain }}
-        >
-          :
-        </span>
-        {/* select ساعت */}
+        {/* ✅ COMP-03 FIX: select ساعت — قبل از دقیقه */}
         <select
           value={currentHour}
           onChange={handleHourChange}
@@ -87,6 +67,29 @@ export default function TimePickerField({
           {HOURS.map((h) => (
             <option key={h} value={h}>
               {String(h).padStart(2, '0')} ساعت
+            </option>
+          ))}
+        </select>
+
+        {/* جداکننده ساعت و دقیقه */}
+        <span
+          className="text-lg font-[Vazir-Bold] flex-shrink-0"
+          style={{ color: colors.textMain }}
+        >
+          :
+        </span>
+
+        {/* ✅ COMP-03 FIX: select دقیقه — بعد از ساعت */}
+        <select
+          value={currentMinute}
+          onChange={handleMinuteChange}
+          dir="ltr"
+          className="flex-1 min-w-0 bg-transparent outline-none text-sm font-[Vazir-Bold] text-center cursor-pointer appearance-none"
+          style={{ color: colors.textMain, direction: 'ltr' }}
+        >
+          {MINUTES.map((m) => (
+            <option key={m} value={m}>
+              {String(m).padStart(2, '0')} دقیقه
             </option>
           ))}
         </select>

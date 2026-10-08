@@ -13,8 +13,10 @@ import CancelBankForm from './CancelBankForm';
 import { formatPrice, toEnglishDigits, toPersianDigit } from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { appointmentsService, bankInfoService } from '@/api';
-import { getBankOptions } from '@/constants/banks';
+// ✅ FIX MIN-02: حذف import getBankOptions چون در این فایل استفاده نمی‌شود
 import { getCancellationPolicy } from '@/utils/cancellation-utils';
+// ✅ FIX LOG-05: اضافه کردن fromJalaaliKey برای پارس کردن تاریخ در صورت نیاز
+import { fromJalaaliKey } from '@/utils/dateUtils';
 
 const formatSheba = (text) => {
   let cleaned = toEnglishDigits(text)
@@ -42,7 +44,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
   const [bankInfo, setBankInfo] = useState(null);
   const [loadingBankInfo, setLoadingBankInfo] = useState(false);
 
-  const bankOptions = getBankOptions();
+  // ✅ FIX MIN-02: متغیر bankOptions حذف شد (در CancelBankForm مدیریت می‌شود)
 
   useEffect(() => {
     if (!visible) return;
@@ -73,8 +75,14 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
     bankInfo?.bankName && bankInfo?.sheba?.length >= 24 && bankInfo?.cardNumber?.length === 16
   );
 
+  // ✅ FIX LOG-05: استخراج امن dateObj
+  let dateObj = appointment?.dateObj;
+  if (!dateObj && appointment?.date && typeof appointment.date === 'string' && appointment.date.includes('/')) {
+    dateObj = fromJalaaliKey(appointment.date);
+  }
+
   const policy = appointment
-    ? getCancellationPolicy(appointment.dateObj || appointment.date, appointment.time)
+    ? getCancellationPolicy(dateObj, appointment.time)
     : null;
 
   useEffect(() => {
@@ -129,7 +137,6 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
     setError('');
 
     try {
-      // ✅ FIX P0: متغیر reason تعریف نشده بود، مقدار خالی پاس داده می‌شود
       await appointmentsService.cancelAppointment(appointment.id, '');
       setLoading(false);
       onConfirmCancel?.(appointment.id, '');

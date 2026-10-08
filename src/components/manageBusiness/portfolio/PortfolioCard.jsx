@@ -6,7 +6,8 @@ import { FiEdit2, FiTrash2, FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { useMemo } from 'react';
-import { getFullImageUrl } from '@/utils/image-utils';
+// ✅ FIX LOG-02: اضافه کردن getImageUrl به importها
+import { getFullImageUrl, getImageUrl } from '@/utils/image-utils';
 
 export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, priority }) {
   const { colors } = useTheme();
@@ -23,7 +24,7 @@ export default function PortfolioCard({ portfolio, onPress, onEdit, onDelete, pr
     if (portfolio.coverImage && typeof portfolio.coverImage === 'string') {
       return portfolio.coverImage.startsWith('http')
         ? portfolio.coverImage
-        : getImageUrl(portfolio.coverImage); // ✅ FIX P0
+        : getImageUrl(portfolio.coverImage); 
     }
 
     return null;

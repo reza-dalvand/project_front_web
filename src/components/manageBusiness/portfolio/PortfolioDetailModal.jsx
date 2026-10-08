@@ -14,7 +14,8 @@ import { useTheme } from '@/stores/useThemeStore';
 import Button from '@/components/common/Button';
 import { toPersianDigit } from '@/utils/numberUtils';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
-import { getFullImageUrl } from '@/utils/image-utils';
+// ✅ FIX LOG-03: اضافه کردن getImageUrl به importها
+import { getFullImageUrl, getImageUrl } from '@/utils/image-utils';
 
 export default function PortfolioDetailModal({
   visible,
@@ -50,7 +51,7 @@ export default function PortfolioDetailModal({
         if (portfolio.coverImage.startsWith('http')) {
           return [portfolio.coverImage];
         }
-        return [getImageUrl(portfolio.coverImage)]; // ✅ FIX P0
+        return [getImageUrl(portfolio.coverImage)]; 
       }
       return [portfolio.coverImage];
     }

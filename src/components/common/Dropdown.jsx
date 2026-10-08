@@ -19,6 +19,9 @@ export default function Dropdown({
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef(`dropdown-${++dropdownCounter}`);
   const selectedItem = options.find((opt) => opt.id === value);
+  
+  const listboxId = `${instanceId.current}-listbox`;
+  const labelId = `${instanceId.current}-label`;
 
   useEffect(() => {
     setMounted(true);
@@ -68,11 +71,15 @@ export default function Dropdown({
       className="fixed inset-0 z-[10001] flex flex-col justify-end"
       style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
       onClick={() => setVisible(false)}
+      role="presentation"
     >
       <div
         className="w-full max-h-[75vh] rounded-t-3xl flex flex-col animate-slide-up
           bg-[var(--card)] border-t border-[var(--border)]"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={label || placeholder}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
@@ -86,12 +93,13 @@ export default function Dropdown({
           <button
             onClick={() => setVisible(false)}
             className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--bg)]"
+            aria-label="بستن لیست"
           >
-            <FiX size={20} className="text-[var(--text)]" />
+            <FiX size={20} className="text-[var(--text)]" aria-hidden="true" />
           </button>
         </div>
         {/* Options */}
-        <div className="flex-1 overflow-y-auto py-2">
+        <div className="flex-1 overflow-y-auto py-2" role="listbox" id={listboxId}>
           {options.length === 0 ? (
             <div className="py-12 text-center">
               <p className="text-sm text-[var(--text-secondary)]">گزینه‌ای موجود نیست</p>
@@ -103,6 +111,8 @@ export default function Dropdown({
                 <button
                   key={item.id}
                   onClick={() => handleSelect(item)}
+                  role="option"
+                  aria-selected={isSelected}
                   className={`w-full flex items-center justify-between px-5 py-4 border-b
                     transition-colors hover:opacity-80
                     ${isSelected ? 'bg-[var(--primary)]/12' : 'bg-transparent'}
@@ -116,7 +126,7 @@ export default function Dropdown({
                   >
                     {item.label}
                   </span>
-                  {isSelected && <FiCheck size={20} className="text-[var(--primary)]" />}
+                  {isSelected && <FiCheck size={20} className="text-[var(--primary)]" aria-hidden="true" />}
                 </button>
               );
             })
@@ -130,13 +140,19 @@ export default function Dropdown({
   return (
     <div className="w-full mb-4">
       {label && (
-        <label className="block text-sm mb-2 text-right font-vazir-medium text-[var(--text)]">
+        <label id={labelId} className="block text-sm mb-2 text-right font-vazir-medium text-[var(--text)]">
           {label}
         </label>
       )}
       <button
         onClick={() => !disabled && setVisible((v) => !v)}
         disabled={disabled}
+        // ✅ FIX ACC-02: اضافه شدن ویژگی‌های ARIA برای وضعیت و اتصال به لیست
+        aria-expanded={visible}
+        aria-haspopup="dialog"
+        aria-controls={visible ? listboxId : undefined}
+        aria-labelledby={label ? labelId : undefined}
+        aria-label={!label ? placeholder : undefined}
         className={`w-full flex items-center justify-between px-4 h-12 rounded-xl border-2
           transition-colors bg-[var(--card)] ${inputBorderColor}
           ${disabled ? 'opacity-60' : ''}
@@ -153,6 +169,7 @@ export default function Dropdown({
           <FiChevronUp
             size={20}
             className={disabled ? 'text-[var(--text-secondary)]/60' : 'text-[var(--primary)]'}
+            aria-hidden="true"
           />
         ) : (
           <FiChevronDown
@@ -160,6 +177,7 @@ export default function Dropdown({
             className={
               disabled ? 'text-[var(--text-secondary)]/60' : 'text-[var(--text-secondary)]'
             }
+            aria-hidden="true"
           />
         )}
       </button>

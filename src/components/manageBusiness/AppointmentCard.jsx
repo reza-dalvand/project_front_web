@@ -46,6 +46,8 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
     <div
       role="button"
       tabIndex={0}
+      // ✅ FIX ACC-01: اضافه شدن aria-label برای توصیف کارت
+      aria-label={`مشاهده جزئیات نوبت ${appointment.customerName || 'مشتری'} در تاریخ ${dateStr} ساعت ${appointment.time || '—'}`}
       onClick={() => onPress?.(appointment)}
       onKeyDown={handleKeyDown}
       className="w-full rounded-2xl border overflow-hidden text-right transition-all
@@ -72,7 +74,7 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
                 font-[Vazir-Bold] flex-shrink-0"
               style={{ backgroundColor: meta.color + '18', color: meta.color }}
             >
-              <StatusIcon size={10} />
+              <StatusIcon size={10} aria-hidden="true" />
               {meta.label}
             </span>
           </div>
@@ -101,7 +103,7 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
           </span>
         </div>
 
-        <FiChevronLeft size={18} style={{ color: colors.textSecondary, flexShrink: 0 }} />
+        <FiChevronLeft size={18} style={{ color: colors.textSecondary, flexShrink: 0 }} aria-hidden="true" />
       </div>
 
       {/* ═══ بخش اکشن ═══ */}
@@ -112,7 +114,7 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
           className="flex items-start gap-2.5 px-4 py-3 border-t"
           style={{ borderColor: colors.border, backgroundColor: '#43A04708' }}
         >
-          <FiShield size={16} color="#43A047" className="flex-shrink-0 mt-0.5" />
+          <FiShield size={16} color="#43A047" className="flex-shrink-0 mt-0.5" aria-hidden="true" />
           <span
             className="text-[11px] font-[Vazir] leading-[19px] flex-1"
             style={{ color: '#43A047' }}
@@ -136,8 +138,9 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
               borderColor: '#FF980050',
               backgroundColor: '#FF980008',
             }}
+            aria-label="وارد کردن کد تایید برای این نوبت"
           >
-            <FiKey size={14} color="#FF9800" />
+            <FiKey size={14} color="#FF9800" aria-hidden="true" />
             <span className="text-[12px] font-[Vazir-Bold]" style={{ color: '#FF9800' }}>
               وارد کردن کد تایید
             </span>
@@ -151,9 +154,9 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
           className="flex items-start gap-2 px-4 py-2.5 border-t"
           style={{ borderColor: '#E5393520', backgroundColor: '#E5393508' }}
         >
-          <FiInfo size={13} color="#E53935" className="flex-shrink-0 mt-0.5" />
+          <FiInfo size={13} color="#E53935" className="flex-shrink-0 mt-0.5" aria-hidden="true" />
           <span className="text-[10px] font-[Vazir] leading-4" style={{ color: '#E53935' }}>
-            {appointment.cancellationReason}
+            دلیل لغو: {appointment.cancellationReason}
           </span>
         </div>
       )}
@@ -164,7 +167,7 @@ export default function AppointmentCard({ appointment, onPress, onVerify }) {
           className="flex items-center gap-1.5 px-4 py-2.5 border-t"
           style={{ borderColor: '#43A04720', backgroundColor: '#43A04708' }}
         >
-          <FiCheckCircle size={13} color="#43A047" />
+          <FiCheckCircle size={13} color="#43A047" aria-hidden="true" />
           <span className="text-[10px] font-[Vazir]" style={{ color: '#43A047' }}>
             {appointment.trustConfirmed
               ? 'خدمت انجام شد • بدون نیاز به کد • بیعانه آزاد شد'

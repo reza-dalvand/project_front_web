@@ -1,3 +1,4 @@
+// src/components/explore/PostThumbnail.jsx
 'use client';
 import Image from 'next/image';
 import { FiBookmark, FiImage, FiStar } from 'react-icons/fi';
@@ -5,7 +6,7 @@ import { MdAutoAwesome } from 'react-icons/md';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuth } from '@/stores/useAuthStore';
 
-export default function PostThumbnail({ post, onPress }) {
+export default function PostThumbnail({ post, onPress, index = 0 }) {
   const { colors } = useTheme();
   const { isAuthenticated } = useAuth();
 
@@ -15,6 +16,9 @@ export default function PostThumbnail({ post, onPress }) {
   const hasDiscount = post.discount > 0;
   const media = post.images || [];
   const firstImage = media[0] || 'https://picsum.photos/400/400?random=0';
+
+  // ✅ PERF-03: فقط ۶ تصویر اول priority داشته باشند
+  const shouldPrioritize = index < 6;
 
   const handleSaveClick = (e) => {
     e.stopPropagation();
@@ -41,7 +45,7 @@ export default function PostThumbnail({ post, onPress }) {
         src={firstImage}
         alt={post.businessName}
         fill
-        priority
+        priority={shouldPrioritize}
         sizes="(max-width: 768px) 33vw, 200px"
         className="object-cover group-hover:scale-105 transition-transform duration-300"
       />

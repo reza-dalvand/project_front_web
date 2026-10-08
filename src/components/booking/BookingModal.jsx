@@ -177,6 +177,17 @@ export default function BookingModal({
     };
   }, [visible, businessId, serviceId, needsNameStep, resetNameState, prefillNameFromUser]);
 
+  const handleClose = useCallback(() => {
+    resetSteps();
+    resetBookingState();
+    resetNameState();
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    onClose?.();
+  }, [resetSteps, resetBookingState, resetNameState, onClose]);
+
   // ═══════ Escape Key ═══════
   useEffect(() => {
     if (!visible) return;
@@ -185,7 +196,8 @@ export default function BookingModal({
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [visible]);
+  // ✅ FIX MIN-03: handleClose به لیست وابستگی‌ها اضافه شد تا از Stale Closure جلوگیری شود
+  }, [visible, handleClose]);
 
   // ═══════ Price Summary ═══════
   const priceSummary = useMemo(() => {
@@ -229,17 +241,6 @@ export default function BookingModal({
     }
     nextStep();
   }, [needsNameStep, currentStep, nameStepId, validateName, updateUserName, nextStep]);
-
-  const handleClose = useCallback(() => {
-    resetSteps();
-    resetBookingState();
-    resetNameState();
-    if (abortRef.current) {
-      abortRef.current.abort();
-      abortRef.current = null;
-    }
-    onClose?.();
-  }, [resetSteps, resetBookingState, resetNameState, onClose]);
 
   const handleRetry = useCallback(() => {
     setBookingFailed(false);
@@ -297,10 +298,6 @@ export default function BookingModal({
       // ✅ FIX 3.3: ریست لودینگ در catch (قبلاً فقط در finally بود)
       setIsSubmitting(false);
     }
-    // ✅ FIX 3.3: حذف finally — چون در هر دو مسیر (success و error)
-    // setIsSubmitting(false) صدا زده می‌شود.
-    // دلیل: در finally، اگر component unmount شده باشد، setState warning می‌دهد.
-    // با بررسی mountedRef در هر شاخه، این مشکل حل می‌شود.
   }, [
     selectedDate,
     selectedTime,

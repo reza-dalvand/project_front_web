@@ -79,6 +79,7 @@ export default function TicketCreateModal({ visible, onClose, onTicketCreated })
         priority,
       });
       onTicketCreated?.(result.data);
+      onClose(); // ✅ FIX LOG-07: بستن مدال پس از ثبت موفقیت‌آمیز
     } catch (err) {
       setError(err.message || 'خطا در ایجاد تیکت');
     } finally {

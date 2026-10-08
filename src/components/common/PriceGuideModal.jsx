@@ -13,9 +13,8 @@ import {
 } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Button from './Button';
-// ✅ FIX P1: import از price-utils به جای numberUtils
 import { formatPrice, toPersianDigit } from '@/utils/numberUtils';
-import { APP_FEE_TIERS, getCurrentFeeTier, MAX_APP_FEE } from '@/utils/price-utils';
+import { APP_FEE_TIERS, getCurrentFeeTier, MAX_APP_FEE, calculateAppFee } from '@/utils/price-utils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 
 export default function PriceGuideModal({ visible, onClose, currentPrice }) {
@@ -24,16 +23,8 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
   const instanceId = useRef('price-guide-modal');
   const currentTier = currentPrice > 0 ? getCurrentFeeTier(currentPrice) : null;
 
-  function calculateCurrentFee(price) {
-    let fee = 0;
-    if (price < 250000) fee = 9000;
-    else if (price <= 500000)
-      fee = Math.round(price * 0.03); // ✅ اصلاح: ۴٪
-    else fee = Math.round(price * 0.04); // ✅ اصلاح: ۵٪
-    return Math.min(fee, MAX_APP_FEE);
-  }
-
-  const currentFee = currentPrice > 0 ? calculateCurrentFee(currentPrice) : 0;
+  // ✅ PERF-05: استفاده از تابع مرکزی calculateAppFee به جای تکرار منطق
+  const currentFee = currentPrice > 0 ? calculateAppFee(currentPrice) : 0;
 
   useEffect(() => {
     setMounted(true);
@@ -294,7 +285,6 @@ export default function PriceGuideModal({ visible, onClose, currentPrice }) {
             variant="primary"
             size="lg"
             fullWidth
-            // icon={<FiCheck size={18} color="#fff" />}
             iconPosition="right"
           />
         </div>

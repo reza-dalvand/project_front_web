@@ -115,15 +115,18 @@ export default function ProfilePage() {
     router.push(item.route);
   };
 
+  // ✅ FIX LOG-08: مدیریت صحیح خطا در Logout
   const handleLogout = async () => {
     try {
       await logout();
+      setShowLogoutConfirm(false);
+      showToast('با موفقیت از حساب خارج شدید', 'success');
+      router.push('/');
     } catch (err) {
       console.error('Logout API error:', err);
+      setShowLogoutConfirm(false);
+      showToast('خطا در خروج از حساب. لطفاً دوباره تلاش کنید.', 'error');
     }
-    setShowLogoutConfirm(false);
-    showToast('با موفقیت از حساب خارج شدید', 'success');
-    router.push('/');
   };
 
   if (!isAuthenticated) {
