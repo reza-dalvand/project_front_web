@@ -1,4 +1,3 @@
-// src/app/manage/schedule/page.jsx
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -17,6 +16,7 @@ import ServiceTypeIcon from '@/components/manageBusiness/services/ServiceTypeIco
 import { ScheduleModal } from '@/components/manageBusiness/schedule';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { timeToMinutes } from '@/utils/dateUtils';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 const calculateSlotCount = (schedule) => {
   const { workStart, workEnd, slotDuration, breaks = [] } = schedule;
@@ -54,11 +54,11 @@ export default function ManageSchedulePage() {
   const schedulesLoading = useBusinessStore((s) => s.schedulesLoading);
   const services = (businessData?.services || []).filter((s) => s.isActive !== false);
   const schedules = businessData?.schedules || {};
+  const safeGoBack = useSafeBack('/manage');
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState(null);
 
-  // ✅ حذف USE_MOCK — همیشه از API بگیر
   useEffect(() => {
     fetchSchedules().catch(() => {});
   }, []);
@@ -114,7 +114,7 @@ export default function ManageSchedulePage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="مدیریت زمان‌بندی" onBackPress={() => router.push('/manage')} />
+      <Header title="مدیریت زمان‌بندی" onBackPress={safeGoBack} />
 
       <div className="overflow-y-auto pb-32 px-5 pt-4 space-y-4">
         <div className="flex flex-col items-center gap-2 py-3">

@@ -1,4 +1,3 @@
-// src/app/manage/services/edit/page.jsx
 'use client';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,6 +15,8 @@ import ServiceDepositSection from '@/components/manageBusiness/services/edit/Ser
 import ServiceDurationSection from '@/components/manageBusiness/services/edit/ServiceDurationSection';
 import { toPersianDigit, formatPriceInput, parseNumber } from '@/utils/numberUtils';
 import { MIN_FINAL_PRICE, MIN_DEPOSIT } from '@/utils/price-utils';
+import { useSafeBack } from '@/hooks/useSafeBack';
+
 const MAX_DESCRIPTION_LENGTH = 300;
 
 function EditServicePageContent() {
@@ -32,8 +33,8 @@ function EditServicePageContent() {
     ? businessData?.services?.find((s) => s.id === serviceId || String(s.id) === serviceId)
     : null;
   const isEditMode = !!existingService;
+  const safeGoBack = useSafeBack('/manage/services');
 
-  // ═══ State فرم ═══
   const [name, setName] = useState(existingService?.name || '');
   const [categoryId, setCategoryId] = useState(existingService?.categoryId || null);
   const [typeId, setTypeId] = useState(existingService?.typeId || null);
@@ -57,14 +58,9 @@ function EditServicePageContent() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ FIX 3.4: ref برای ردیابی اینکه آیا فرم قبلاً با داده‌های سرویس پر شده است
   const formInitializedRef = useRef(!!existingService);
-
-  // ✅ FIX 3.4: ref برای لغو fetch در صورت unmount
   const fetchCancelledRef = useRef(false);
 
-  // ═══ در حالت ویرایش، اگر سرویس در store نبود از API بگیر ═══
-  // ✅ FIX 3.4: Race condition حل شد — cleanup اضافه شد
   useEffect(() => {
     fetchCancelledRef.current = false;
 
@@ -89,9 +85,6 @@ function EditServicePageContent() {
     };
   }, [serviceId]);
 
-  // ✅ FIX 3.4: سینک state‌های فرم با existingService پس از اتمام fetch
-  // قبلاً state‌ها فقط یکبار در useState initializer مقداردهی می‌شدند
-  // و اگر fetchServices بعداً complete می‌شد، فرم خالی باقی می‌ماند
   useEffect(() => {
     if (existingService && !formInitializedRef.current) {
       formInitializedRef.current = true;
@@ -115,14 +108,12 @@ function EditServicePageContent() {
     }
   }, [existingService]);
 
-  // ═══ محاسبات قیمت ═══
   const originalNum = parseNumber(originalPrice);
   const discountNum = Math.min(parseNumber(discountPercent), 100);
   const discountAmount = Math.round((originalNum * discountNum) / 100);
   const finalPrice = Math.max(0, originalNum - discountAmount);
   const depositNum = parseNumber(depositAmount);
 
-  // ═══ اعتبارسنجی ═══
   const validate = () => {
     const newErrors = {};
     if (!name.trim()) newErrors.name = 'نام خدمت الزامی است';
@@ -148,7 +139,6 @@ function EditServicePageContent() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ═══ ذخیره ═══
   const handleSave = async () => {
     if (!validate()) return;
     setSaving(true);
@@ -174,7 +164,7 @@ function EditServicePageContent() {
         await createServiceApi(serviceData);
         showToast('✓ خدمت جدید اضافه شد', 'success');
       }
-      setTimeout(() => router.push('/manage/services'), 800);
+      setTimeout(() => safeGoBack(), 800);
     } catch (error) {
       showToast(error.message || 'خطا در ذخیره خدمت', 'error');
     } finally {
@@ -196,10 +186,9 @@ function EditServicePageContent() {
     <ScreenWrapper padding={0}>
       <Header
         title={isEditMode ? 'ویرایش خدمت' : 'افزودن خدمت جدید'}
-        onBackPress={() => router.back()}
+        onBackPress={safeGoBack}
       />
       <div className="overflow-y-auto pb-32 px-5 pt-3 space-y-5">
-        {/* اطلاعات پایه */}
         <ServiceBasicInfoSection
           name={name}
           categoryId={categoryId}
@@ -220,7 +209,6 @@ function EditServicePageContent() {
           }}
         />
 
-        {/* قیمت‌گذاری */}
         <ServicePricingSection
           originalPrice={originalPrice}
           discountPercent={discountPercent}
@@ -239,7 +227,6 @@ function EditServicePageContent() {
           }}
         />
 
-        {/* بیعانه */}
         <ServiceDepositSection
           depositAmount={depositAmount}
           errors={errors}
@@ -249,7 +236,6 @@ function EditServicePageContent() {
           }}
         />
 
-        {/* مدت، یادآوری و توضیحات */}
         <ServiceDurationSection
           duration={duration}
           renewalDays={renewalDays}
@@ -265,7 +251,6 @@ function EditServicePageContent() {
           }}
         />
 
-        {/* دکمه ذخیره */}
         <Button
           title={saving ? 'در حال ذخیره...' : isEditMode ? 'ذخیره تغییرات' : 'افزودن خدمت'}
           onPress={handleSave}

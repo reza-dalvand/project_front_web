@@ -1,4 +1,3 @@
-// src/app/manage/model-requests/create/page.jsx
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -11,8 +10,8 @@ import Header from '@/components/common/Header';
 import ModelRequestForm from '@/components/manageBusiness/modelRequest/ModelRequestForm';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
-// ═══════════ کامپوننت داخلی با useSearchParams ═══════════
 function CreateModelRequestPageContent() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -20,6 +19,7 @@ function CreateModelRequestPageContent() {
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
   const businessData = useBusinessStore((s) => s.businessData);
+  const safeGoBack = useSafeBack('/manage/model-requests');
 
   const requestId = searchParams.get('id');
   const [existingRequest, setExistingRequest] = useState(null);
@@ -46,14 +46,12 @@ function CreateModelRequestPageContent() {
   }, [requestId, showToast]);
 
   const handleSave = async (formData) => {
-    // ✅ FIX: بررسی اعتبار serviceId قبل از ارسال به بک‌اند
     if (!formData.serviceId) {
       showToast('لطفاً خدمت موردنظر را انتخاب کنید', 'error');
       return;
     }
 
     try {
-      // ✅ FIX باگ ۱۱ و LOG-01: یکپارچه‌سازی Payload و حذف متغیر سایه‌شده
       const payload = {
         service: formData.serviceId || formData.categoryId,
         title: formData.title,
@@ -65,18 +63,15 @@ function CreateModelRequestPageContent() {
       };
 
       if (isEditMode) {
-        // ✅ حالت ویرایش → آپدیت با requestId
         await adsService.updateModelRequest(requestId, payload);
         showToast('درخواست مدل با موفقیت ویرایش شد', 'success');
       } else {
-        // ✅ حالت ایجاد → ساخت جدید
         await adsService.createModelRequest(payload);
         showToast('درخواست مدل با موفقیت ایجاد شد', 'success');
       }
-      setTimeout(() => router.push('/manage/model-requests'), 1200);
+      setTimeout(() => safeGoBack(), 1200);
     } catch (error) {
       console.error('Failed to save model request:', error);
-      // ✅ بهبود نمایش خطا: استخراج پیام دقیق خطای اعتبارسنجی بک‌اند
       let errorMsg = error.message || 'خطا در ذخیره درخواست';
       if (error.details && typeof error.details === 'object') {
         const detailsMsg = Object.values(error.details).flat().join(' | ');
@@ -85,8 +80,6 @@ function CreateModelRequestPageContent() {
       showToast(errorMsg, 'error');
     }
   };
-
-  const handleClose = () => router.push('/manage/model-requests');
 
   if (!isAuthenticated) {
     return (
@@ -102,7 +95,7 @@ function CreateModelRequestPageContent() {
     <ScreenWrapper padding={0}>
       <Header
         title={isEditMode ? 'ویرایش درخواست مدل' : 'ایجاد درخواست مدل'}
-        onBackPress={() => router.back()}
+        onBackPress={safeGoBack}
       />
       <div className="flex-1 overflow-y-auto">
         {isLoadingExisting ? (
@@ -115,7 +108,7 @@ function CreateModelRequestPageContent() {
             initialData={existingRequest}
             defaultPhone={businessData?.phone || ''}
             onSave={handleSave}
-            onClose={handleClose}
+            onClose={safeGoBack}
           />
         )}
       </div>

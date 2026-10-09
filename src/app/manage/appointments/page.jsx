@@ -12,6 +12,7 @@ import AppointmentFilters from '@/components/manageBusiness/AppointmentFilters';
 import AppointmentSearchBar from '@/components/manageBusiness/AppointmentSearchBar';
 import AppointmentCard from '@/components/manageBusiness/AppointmentCard';
 import { useAppointmentsManager } from '@/hooks/useAppointmentsManager';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 // ✅ Lazy Load — مودال‌های سنگین
 const AppointmentDetailSheet = dynamic(
@@ -53,6 +54,7 @@ export default function AllAppointmentsPage() {
   const [verifyVisible, setVerifyVisible] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelVisible, setCancelVisible] = useState(false);
+  const safeGoBack = useSafeBack('/manage');
 
   // ═══ Handlers با useCallback ═══
   const openDetail = useCallback((apt) => {
@@ -165,7 +167,7 @@ export default function AllAppointmentsPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="مدیریت نوبت‌ها" onBackPress={goBack} />
+      <Header title="مدیریت نوبت‌ها" onBackPress={safeGoBack} />
       <AppointmentSearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

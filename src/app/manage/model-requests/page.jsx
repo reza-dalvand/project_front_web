@@ -1,4 +1,3 @@
-// src/app/manage/model-requests/page.jsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -15,20 +14,20 @@ import ModelRequestCard from '@/components/manageBusiness/modelRequest/ModelRequ
 import ModelRequestStats from '@/components/manageBusiness/modelRequest/ModelRequestStats';
 import ModelRequestDetailModal from '@/components/manageBusiness/modelRequest/ModelRequestDetailModal';
 import { adsService } from '@/api';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 export default function ModelRequestsPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
+  const safeGoBack = useSafeBack('/manage');
 
-  // ✅ State اولیه خالی — داده فقط از API می‌آید
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  // ═══════ دریافت لیست من از API ═══════
   useEffect(() => {
     const fetchMyRequests = async () => {
       setIsLoading(true);
@@ -91,7 +90,7 @@ export default function ModelRequestsPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="درخواست‌های مدل" onBackPress={() => router.push('/manage')} />
+      <Header title="درخواست‌های مدل" onBackPress={safeGoBack} />
 
       <div className="flex-1 overflow-y-auto p-4 pb-32">
         <div className="flex flex-col items-center gap-2 py-4 mb-4">
@@ -160,7 +159,6 @@ export default function ModelRequestsPage() {
         )}
       </div>
 
-      {/* مدال جزئیات درخواست مدل */}
       <ModelRequestDetailModal
         visible={detailVisible}
         request={selectedRequest}
