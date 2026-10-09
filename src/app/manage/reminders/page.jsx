@@ -1,4 +1,3 @@
-// src/app/manage/reminders/page.jsx
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +11,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { remindersService } from '@/api';
 import Button from '@/components/common/Button';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 const REMINDER_THRESHOLD_DAYS = 2;
 
@@ -19,19 +19,18 @@ export default function RemindersPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { showToast } = useToast();
+  const safeGoBack = useSafeBack('/manage');
 
   const [customers, setCustomers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [sending, setSending] = useState(false);
 
-  // ═══ دریافت لیست یادآوری‌ها از API ═══
   useEffect(() => {
     const fetchReminders = async () => {
       setIsLoading(true);
       try {
         const result = await remindersService.getBusinessReminders();
-        // ✅ اصلاح: مدیریت حالت‌های مختلف بازگشتی (wrapped یا unwrapped)
         const items = result?.data || result || [];
         setCustomers(Array.isArray(items) ? items : []);
       } catch (error) {
@@ -44,16 +43,13 @@ export default function RemindersPage() {
     fetchReminders();
   }, [showToast]);
 
-  // ═══ مشتریان نیازمند یادآوری ═══
   const dueCustomers = useMemo(() => {
     return customers.filter((c) => {
-      // ✅ اصلاح: پشتیبانی از camelCase (تولید شده توسط normalizer) و snake_case
       const days = c.daysRemaining ?? c.days_remaining;
       return days !== undefined && days !== null && days <= REMINDER_THRESHOLD_DAYS;
     });
   }, [customers]);
 
-  // ═══ مشتریان قابل ارسال ═══
   const sendableCustomers = useMemo(() => {
     return dueCustomers.filter((c) => {
       const sent = c.reminderSent ?? c.reminder_sent;
@@ -65,20 +61,13 @@ export default function RemindersPage() {
     });
   }, [dueCustomers]);
 
-  // ═══ آمار ═══
   const stats = useMemo(() => {
     return {
-      // ✅ اصلاح ۱: نیازمند یادآوری = کسانی که موعدشان نزدیک است و هنوز ارسال نشده‌اند
-      // (دقیقاً همان لیست sendableCustomers)
       totalDue: sendableCustomers.length,
-
-      // ✅ اصلاح ۲: گذشته از موعد (از بین نیازمندانِ ارسال نشده)
       overdue: sendableCustomers.filter((c) => {
         const days = c.daysRemaining ?? c.days_remaining;
         return days < 0;
       }).length,
-
-      // ✅ اصلاح ۳: ارسال شده (پشتیبانی از هر دو فرمت snake_case و camelCase)
       sentToday: customers.filter((c) => {
         const isSent = c.reminderSent ?? c.reminder_sent;
         const sentDate = c.sentDate || c.sent_date;
@@ -87,7 +76,6 @@ export default function RemindersPage() {
     };
   }, [sendableCustomers, customers]);
 
-  // ═══ انتخاب/لغو انتخاب ═══
   const toggleCustomer = useCallback((customerId) => {
     setSelectedIds((prev) =>
       prev.includes(customerId) ? prev.filter((id) => id !== customerId) : [...prev, customerId]
@@ -102,7 +90,6 @@ export default function RemindersPage() {
     }
   }, [selectedIds.length, sendableCustomers]);
 
-  // ═══ ارسال یادآوری ═══
   const handleSendReminders = useCallback(async () => {
     if (selectedIds.length === 0) {
       showToast('لطفاً حداقل یک مشتری را انتخاب کنید', 'warning');
@@ -143,9 +130,8 @@ export default function RemindersPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="یادآوری تمدید خدمت" onBackPress={() => router.push('/manage')} />
+      <Header title="یادآوری تمدید خدمت" onBackPress={safeGoBack} />
 
-      {/* آمار */}
       <div className="flex gap-3 px-5 py-4">
         <div
           className="flex-1 p-3 rounded-xl border text-center"
@@ -182,7 +168,6 @@ export default function RemindersPage() {
         </div>
       </div>
 
-      {/* نوار انتخاب همه */}
       {sendableCustomers.length > 0 && (
         <div className="flex items-center justify-between px-5 pb-3">
           <button onClick={selectAll} className="flex items-center gap-2">
@@ -201,7 +186,6 @@ export default function RemindersPage() {
         </div>
       )}
 
-      {/* لیست مشتریان */}
       <div className="px-5 pb-32 space-y-3">
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -212,7 +196,6 @@ export default function RemindersPage() {
             const isSendable = sendableCustomers.some((c) => c.id === customer.id);
             const isSelected = selectedIds.includes(customer.id);
 
-            // ✅ استخراج متغیرها با پشتیبانی از هر دو فرمت
             const customerName = customer.customerName || customer.customer_name;
             const customerPhone = customer.customerPhone || customer.customer_phone;
             const serviceName = customer.serviceName || customer.service_name;
@@ -222,7 +205,6 @@ export default function RemindersPage() {
             const reminderSent = customer.reminderSent ?? customer.reminder_sent;
             const sentDate = customer.sentDate || customer.sent_date;
 
-            // ✅ اصلاح: استفاده از متغیر استخراج شده به جای دسترسی مستقیم که undefined بود
             const isOverdue = daysRemaining < 0;
             const isToday = daysRemaining === 0;
 
@@ -241,7 +223,6 @@ export default function RemindersPage() {
                       : colors.border + '60',
                 }}
               >
-                {/* چک‌باکس */}
                 <div className="flex-shrink-0 mt-1">
                   {isSelected ? (
                     <FiCheckSquare size={22} style={{ color: colors.primary }} />
@@ -253,7 +234,6 @@ export default function RemindersPage() {
                   )}
                 </div>
 
-                {/* اطلاعات */}
                 <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span
@@ -288,7 +268,6 @@ export default function RemindersPage() {
                     </span>
                   </div>
 
-                  {/* Badge وضعیت */}
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     {reminderSent && (
                       <span
@@ -336,7 +315,6 @@ export default function RemindersPage() {
         )}
       </div>
 
-      {/* دکمه ارسال */}
       {selectedIds.length > 0 && (
         <div
           className="fixed bottom-0 left-0 right-0 px-5 pt-3 pb-5 border-t z-30"

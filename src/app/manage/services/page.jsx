@@ -19,7 +19,8 @@ import {
   ServiceStats,
   ServiceEmptyState,
 } from '@/components/manageBusiness/services';
-import { toPersianDigit } from '@/utils/numberUtils';
+import { useSafeBack } from '@/hooks/useSafeBack';
+
 
 export default function ManageServicesPage() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function ManageServicesPage() {
   const toggleServiceActiveApi = useBusinessStore((s) => s.toggleServiceActiveApi);
   const servicesLoading = useBusinessStore((s) => s.servicesLoading);
   const services = businessData?.services || [];
+  const safeGoBack = useSafeBack('/manage');
 
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -81,8 +83,7 @@ export default function ManageServicesPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="مدیریت خدمات" onBackPress={() => router.push('/manage')} />
-
+      <Header title="مدیریت خدمات" onBackPress={safeGoBack} />
       <div className="overflow-y-auto pb-32">
         <ServiceHeader servicesCount={services.length} />
 

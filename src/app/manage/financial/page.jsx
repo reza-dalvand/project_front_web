@@ -1,4 +1,3 @@
-// src/app/manage/financial/page.jsx
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,6 +14,7 @@ import FinancialTabs from '@/components/manageBusiness/financial/FinancialTabs';
 import TransactionItem from '@/components/manageBusiness/financial/TransactionItem';
 import { usePaymentManager } from '@/hooks/usePaymentManager';
 import dynamic from 'next/dynamic';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 const TransactionDetailModal = dynamic(
   () => import('@/components/manageBusiness/financial/TransactionDetailModal'),
@@ -33,6 +33,7 @@ export default function FinancialManagementPage() {
   const updateBankInfoApi = useBusinessStore((s) => s.updateBankInfoApi);
   const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
   const { showToast } = useToast();
+  const safeGoBack = useSafeBack('/manage');
 
   const {
     businessStats,
@@ -66,7 +67,6 @@ export default function FinancialManagementPage() {
   const handleSaveBankInfo = async (data) => {
     setBankSaving(true);
     try {
-      // ✅ مستقیم به بک‌اند — بدون هیچ مقایسه‌ای
       await updateBankInfoApi(data);
       await fetchBusinessDetail();
       setBankEditVisible(false);
@@ -90,9 +90,8 @@ export default function FinancialManagementPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="مدیریت مالی" onBackPress={() => router.push('/manage')} />
+      <Header title="مدیریت مالی" onBackPress={safeGoBack} />
       <div className="flex-1 overflow-y-auto p-4 pb-32">
-        {/* آمار مالی */}
         {isLoadingStats ? (
           <div className="flex justify-center py-8">
             <div
@@ -104,7 +103,6 @@ export default function FinancialManagementPage() {
           <FinancialStatsCards stats={businessStats} />
         )}
 
-        {/* اطلاعات بانکی */}
         <BankInfoCard
           bankInfo={bankInfo}
           onEdit={handleOpenBankEdit}
@@ -114,7 +112,6 @@ export default function FinancialManagementPage() {
           }
         />
 
-        {/* تب‌ها */}
         <div className="flex items-center gap-2 mb-3 px-0.5">
           <FiCreditCard size={20} style={{ color: colors.primary }} />
           <h3 className="text-sm font-[Vazir-Bold]" style={{ color: colors.textMain }}>
@@ -123,7 +120,6 @@ export default function FinancialManagementPage() {
         </div>
         <FinancialTabs active={activeTab} counts={tabCounts} onChange={setActiveTab} />
 
-        {/* لیست تراکنش‌ها */}
         {isLoading ? (
           <div className="flex justify-center py-8">
             <div
@@ -145,7 +141,6 @@ export default function FinancialManagementPage() {
         )}
       </div>
 
-      {/* مدال‌ها */}
       <TransactionDetailModal visible={detailVisible} tx={selectedTx} onClose={handleCloseDetail} />
       <BankEditModal
         visible={bankEditVisible}

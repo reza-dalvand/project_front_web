@@ -1,4 +1,3 @@
-// src/app/manage/booking-link/page.jsx
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -13,6 +12,7 @@ import Card from '@/components/common/Card';
 import BookingLinkCard from '@/components/manageBusiness/bookingLink/BookingLinkCard';
 import env from '@/config/env';
 import dynamic from 'next/dynamic';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 const ShareBookingLinkModal = dynamic(
   () => import('@/components/manageBusiness/bookingLink/ShareBookingLinkModal'),
@@ -26,8 +26,8 @@ export default function BookingLinkPage() {
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const safeGoBack = useSafeBack('/manage');
 
-  // ✅ FIX: استفاده از bookingSlug و مسیر صحیح /business?slug=
   const bookingSlug = businessData?.bookingSlug || '';
   const bookingLink = bookingSlug ? `${env.SITE_DOMAIN}/business?slug=${bookingSlug}` : '';
 
@@ -66,9 +66,8 @@ export default function BookingLinkPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="لینک اختصاصی رزرو" onBackPress={() => router.push('/manage')} />
+      <Header title="لینک اختصاصی رزرو" onBackPress={safeGoBack} />
       <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-5">
-        {/* هدر توضیحی */}
         <div className="flex flex-col items-center gap-3 py-4 text-center">
           <div
             className="w-[72px] h-[72px] rounded-3xl flex items-center justify-center"
@@ -84,7 +83,6 @@ export default function BookingLinkPage() {
           </p>
         </div>
 
-        {/* ✅ FIX: هشدار اگر اسلاگ هنوز ایجاد نشده */}
         {!bookingSlug && (
           <div
             className="flex items-start gap-3 p-4 rounded-2xl border"
@@ -106,12 +104,10 @@ export default function BookingLinkPage() {
           </div>
         )}
 
-        {/* کارت اصلی لینک */}
         {bookingSlug && (
           <BookingLinkCard bookingLink={linkStats} onShare={handleShare} onCopy={handleCopy} />
         )}
 
-        {/* راهنمای استفاده */}
         <Card variant="elevated" padding={16} radius={16}>
           <div className="flex items-center gap-2 mb-4">
             <FiZap size={20} color="#FFC107" />
@@ -144,7 +140,6 @@ export default function BookingLinkPage() {
           </div>
         </Card>
 
-        {/* مزایا */}
         <Card variant="elevated" padding={16} radius={16}>
           <div className="flex items-center gap-2 mb-4">
             <FiAward size={20} style={{ color: colors.primary }} />
@@ -171,7 +166,6 @@ export default function BookingLinkPage() {
         </Card>
       </div>
 
-      {/* مدال اشتراک‌گذاری */}
       <ShareBookingLinkModal
         visible={shareModalVisible}
         onClose={() => setShareModalVisible(false)}

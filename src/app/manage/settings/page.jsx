@@ -1,4 +1,3 @@
-// src/app/manage/settings/page.jsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -17,12 +16,14 @@ import BusinessImagesSection from '@/components/manageBusiness/settings/Business
 import BusinessBasicInfoSection from '@/components/manageBusiness/settings/BusinessBasicInfoSection';
 import BusinessLocationSection from '@/components/manageBusiness/settings/BusinessLocationSection';
 import BusinessDangerZone from '@/components/manageBusiness/settings/BusinessDangerZone';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 export default function BusinessSettingsPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
+  const safeGoBack = useSafeBack('/manage');
 
   const businessData = useBusinessStore((s) => s.businessData);
   const updateBusinessInfo = useBusinessStore((s) => s.updateBusinessInfo);
@@ -49,7 +50,6 @@ export default function BusinessSettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  // ✅ حذف USE_MOCK — همیشه از API
   useEffect(() => {
     const loadBusinessData = async () => {
       setIsLoading(true);
@@ -109,7 +109,6 @@ export default function BusinessSettingsPage() {
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  // ✅ حذف USE_MOCK — فقط API
   const handleSave = async () => {
     if (!validate()) return;
 
@@ -141,7 +140,6 @@ export default function BusinessSettingsPage() {
     }
   };
 
-  // ✅ حذف USE_MOCK — فقط API
   const handleDeleteConfirm = async () => {
     setDeleteModalVisible(false);
     try {
@@ -166,7 +164,7 @@ export default function BusinessSettingsPage() {
   if (isLoading) {
     return (
       <ScreenWrapper padding={0}>
-        <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.push('/manage')} />
+        <Header title="تنظیمات کسب‌وکار" onBackPress={safeGoBack} />
         <div className="flex items-center justify-center py-20">
           <LoadingSpinner label="در حال بارگذاری اطلاعات..." />
         </div>
@@ -176,7 +174,7 @@ export default function BusinessSettingsPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="تنظیمات کسب‌وکار" onBackPress={() => router.push('/manage')} />
+      <Header title="تنظیمات کسب‌وکار" onBackPress={safeGoBack} />
 
       <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
         <BusinessImagesSection

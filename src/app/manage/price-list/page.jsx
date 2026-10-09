@@ -1,4 +1,3 @@
-// src/app/manage/price-list/page.jsx
 'use client';
 
 import { useEffect } from 'react';
@@ -15,8 +14,8 @@ import Card from '@/components/common/Card';
 import SectionHeader from '@/components/common/SectionHeader';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import PriceListMenu from '@/components/priceList/PriceListMenu';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
-// ═══════ ثابت محلی: تم‌ها (همان ساختار قبلی) ═══════
 const PRICE_LIST_THEMES = [
   {
     id: 'classic',
@@ -38,8 +37,8 @@ export default function ManagePriceListPage() {
   const { showToast } = useToast();
   const businessData = useBusinessStore((s) => s.businessData);
   const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
+  const safeGoBack = useSafeBack('/manage');
   
-  // ✅ FIX: حذف مقدار پیش‌فرض 'biz_1' و استفاده از شناسه واقعی
   const businessId = businessData?.id;
 
   const list = usePriceListStore((s) => (businessId ? s.lists[businessId] : undefined));
@@ -49,7 +48,6 @@ export default function ManagePriceListPage() {
   const setTheme = usePriceListStore((s) => s.setTheme);
   const togglePublish = usePriceListStore((s) => s.togglePublish);
 
-  // ═══════ بارگذاری اولیه ═══════
   useEffect(() => {
     if (!businessId && isAuthenticated) {
       fetchBusinessDetail();
@@ -68,7 +66,6 @@ export default function ManagePriceListPage() {
     }
   }, [businessId, ensureList]);
 
-  // ═══════ Handlerها ═══════
   const handleTogglePublish = () => {
     if (!businessId) return;
     const next = togglePublish(businessId);
@@ -100,17 +97,15 @@ export default function ManagePriceListPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="لیست قیمت خدمات" onBackPress={() => router.push('/manage')} />
+      <Header title="لیست قیمت خدمات" onBackPress={safeGoBack} />
 
       <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-5">
-        {/* ═══ لودینگ ═══ */}
         {isLoading && (
           <div className="flex justify-center py-8">
             <LoadingSpinner label="در حال بارگذاری لیست قیمت..." />
           </div>
         )}
 
-        {/* ═══ انتشار / مخفی ═══ */}
         <Card variant="elevated" padding={16} radius={18}>
           <div className="flex items-center gap-3">
             <div
@@ -151,7 +146,6 @@ export default function ManagePriceListPage() {
           </div>
         </Card>
 
-        {/* ═══ انتخاب تم ═══ */}
         <div>
           <SectionHeader
             icon={<FiTag size={18} />}
@@ -198,7 +192,6 @@ export default function ManagePriceListPage() {
           </div>
         </div>
 
-        {/* ═══ پیش‌نمایش زنده ═══ */}
         <div>
           <SectionHeader
             icon={<FiEye size={18} />}
@@ -213,7 +206,6 @@ export default function ManagePriceListPage() {
           />
         </div>
 
-        {/* ═══ راهنمای قیمت‌ها ═══ */}
         <Card
           variant="default"
           padding={14}

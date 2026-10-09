@@ -1,4 +1,3 @@
-// src/app/manage/line-rental/page.jsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -16,12 +15,14 @@ import LineRentalStats from '@/components/manageBusiness/lineRental/LineRentalSt
 import CreateLineRentalAdSheet from '@/components/manageBusiness/lineRental/CreateLineRentalAdSheet';
 import LineRentalDetailModal from '@/components/manageBusiness/lineRental/LineRentalDetailModal';
 import { adsService } from '@/api';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 export default function LineRentalPage() {
   const { colors } = useTheme();
   const router = useRouter();
   const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
   const { showToast } = useToast();
+  const safeGoBack = useSafeBack('/manage');
 
   const [ads, setAds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,7 +75,6 @@ export default function LineRentalPage() {
   const handleSave = useCallback(
     async (adData) => {
       try {
-        // 🔄 نگاشت کلیدهای camelCase فرم به snake_case مورد انتظار بک‌اند
         const payload = {
           title: adData.title,
           description: adData.description,
@@ -84,7 +84,6 @@ export default function LineRentalPage() {
           contact_phone: adData.contactPhone,
         };
 
-        // افزودن فیلدهای مالی بر اساس نوع همکاری
         if (adData.collabType === 'percent') {
           payload.percent_salon = adData.percentSalon;
           payload.percent_partner = adData.percentPartner;
@@ -110,7 +109,6 @@ export default function LineRentalPage() {
       } catch (error) {
         console.error('Save failed:', error);
 
-        // ✅ بهبود نمایش خطا: استخراج پیام دقیق خطای اعتبارسنجی بک‌اند
         let errorMsg = error.message || 'خطا در ذخیره آگهی';
         if (error.details && typeof error.details === 'object') {
           const detailsMsg = Object.values(error.details).flat().join(' | ');
@@ -123,7 +121,6 @@ export default function LineRentalPage() {
     [editingAd, showToast]
   );
 
-  // ✅ حذف USE_MOCK — فقط API
   const handleDelete = useCallback(
     async (ad) => {
       try {
@@ -151,7 +148,7 @@ export default function LineRentalPage() {
 
   return (
     <ScreenWrapper padding={0}>
-      <Header title="اجاره لاین" onBackPress={() => router.push('/manage')} />
+      <Header title="اجاره لاین" onBackPress={safeGoBack} />
 
       <div className="flex-1 overflow-y-auto p-4 pb-32">
         <div className="flex flex-col items-center gap-2 py-4 mb-4">
