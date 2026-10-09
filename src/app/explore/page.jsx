@@ -11,7 +11,9 @@ import { PostGrid, ActiveFilterChips, FilterModal, PostModal } from '@/component
 import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 import { exploreService } from '@/api';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
-import { useShallow } from 'zustand/react/shallow'; // ✅ FIX 2.3
+import { useShallow } from 'zustand/react/shallow'; 
+import { BottomTabBar } from '@/components/common';
+
 
 const PAGE_SIZE = 21;
 
@@ -166,6 +168,7 @@ export default function ExplorePage() {
           hasMore={hasMore} totalLoaded={filteredPosts.length}
         />
       </div>
+      <BottomTabBar />
       <FilterModal visible={filterVisible} onClose={handleFilterClose} onApply={handleFilterChange} currentFilters={filters} />
       <PostModal
         post={activePost} visible={!!activePost} onClose={handlePostClose}
