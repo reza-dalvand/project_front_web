@@ -104,7 +104,6 @@ let refreshTimer = null;
 const startPeriodicRefresh = () => {
   if (refreshTimer) clearInterval(refreshTimer);
 
-  // هر ۵۰ دقیقه (۱۰ دقیقه قبل از انقضای ۱ ساعته)
   refreshTimer = setInterval(
     async () => {
       const { accessToken, refreshToken } = useTokenStore.getState();
@@ -114,10 +113,10 @@ const startPeriodicRefresh = () => {
         return;
       }
 
-      // ✅ FIX F-14: استفاده از centralized refresh
+      // ✅ FIX: استفاده از Interceptor به جای رفرش دستی
       if (accessToken && isTokenExpiringSoon(accessToken)) {
         try {
-          await centralizedRefresh();
+          await authService.getSessionStatus();
         } catch (error) {
           console.warn('Periodic refresh failed:', error);
           stopPeriodicRefresh();
@@ -125,8 +124,10 @@ const startPeriodicRefresh = () => {
       }
     },
     50 * 60 * 1000
-  ); // ۵۰ دقیقه
+  );
 };
+
+
 
 const stopPeriodicRefresh = () => {
   if (refreshTimer) {
@@ -363,10 +364,10 @@ export const useAuthStore = create(
 
         if (refreshToken) {
           try {
-            await centralizedRefresh();
+            await authService.getSessionStatus();
             set({ lastSessionCheck: Date.now() });
             return true;
-          } catch {
+          } catch (error) {
             useTokenStore.getState().clearTokens();
             set({ isAuthenticated: false, user: null });
             return false;

@@ -4,10 +4,8 @@
  * ✅ FIX باگ ۱۲: مدیریت امن base64 decode بدون کرش
  */
 
-const STORAGE_KEY =
-  typeof window !== 'undefined'
-    ? window.navigator?.userAgent?.slice(0, 16) || 'beau-secure-key-16'
-    : 'beau-secure-key-16';
+const STORAGE_KEY = 'beau-club-secure-xor-key-2024-fixed';
+
 
 /**
  * ✅ رمزنگاری ساده با XOR
@@ -56,7 +54,10 @@ export const decryptToken = (encrypted) => {
     }
     return result;
   } catch {
-    return encrypted;
+    // ❌ OLD: return encrypted; (این کار باعث ارسال توکن خراب به بک‌اند و ارور 401 می‌شد)
+    // ✅ NEW: در صورت شکست رمزگشایی، رشته خالی برگردان تا اپلیکیشن بداند توکن نامعتبر است
+    console.warn('Token decryption failed, clearing invalid token.');
+    return '';
   }
 };
 
