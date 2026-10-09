@@ -7,10 +7,14 @@ import { useTokenStore } from '@/stores/useTokenStore';
 import { isTokenExpired } from '@/utils/jwt-utils';
 
 /**
- * Hook محافظت از صفحات
+ * Hook محافظت از صفحات و مدیریت سیشن
+ *
+ * ✅ FIX: جلوگیری از ریدایرکت اجباری به صفحه /auth/login
+ * به جای آن، مدال احراز هویت باز می‌شود و UI (مثل تب‌بار) خودکار آپدیت می‌شود.
+ * سیشن کاربر به لطف Refresh Token تا ۳۰ روز اعتبار دارد.
  *
  * @param {object} options
- * @param {boolean} options.redirectToLogin - ریدایرکت به صفحه لاگین یا باز کردن مدال
+ * @param {boolean} options.redirectToLogin - آیا در صورت عدم احراز هویت، چالش لاگین نشان داده شود؟
  * @returns {{ isAuthenticated: boolean, hydrated: boolean }}
  */
 export const useRequireAuth = (options = {}) => {
@@ -26,35 +30,43 @@ export const useRequireAuth = (options = {}) => {
   useEffect(() => {
     if (!hydrated) return;
 
-    // بررسی اعتبار توکن
     const validateSession = async () => {
       const hasToken = useTokenStore.getState().getAccessToken();
 
+      // ۱. اگر توکن وجود دارد ولی منقضی شده، تلاش برای refresh (اعتبار ۳۰ روزه)
       if (isAuthenticated && hasToken && isTokenExpired(hasToken)) {
-        // توکن منقضی شده — تلاش برای refresh
         const isValid = await checkSession();
         if (!isValid) {
-          // Refresh failed — خروج
-          if (redirectToLogin) {
-            router.replace(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
-          } else {
-            openAuthModal();
+          // سیشن کاملاً منقضی شده (بعد از ۱ ماه) یا refresh شکست خورده
+          // به جای ریدایرکت به /auth/login، به صفحه اصلی برو و مدال را باز کن
+          if (pathname !== '/') {
+            router.replace('/');
           }
+          // تاخیر کوتاه برای جلوگیری از فلش زدن صفحه و اطمینان از رندر شدن لای‌اوت
+          setTimeout(() => openAuthModal(), 300);
         }
         return;
       }
 
+      // ۲. اگر کلاً لاگین نیست
       if (!isAuthenticated) {
-        if (redirectToLogin) {
-          router.replace(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
-        } else {
+        // صفحاتی که حتماً نیاز به لاگین دارند
+        const protectedPrefixes = ['/manage', '/profile', '/create-business'];
+        const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
+        
+        if (isProtected && pathname !== '/') {
+          // اگر در صفحه محافظت‌شده است، به خانه برگردان
+          router.replace('/');
+          setTimeout(() => openAuthModal(), 300);
+        } else if (redirectToLogin) {
+          // اگر کامپوننت صراحتاً خواسته که چالش لاگین نشان دهد (مثلاً هنگام کلیک روی دکمه رزرو)
           openAuthModal();
         }
       }
     };
 
     validateSession();
-  }, [isAuthenticated, hydrated, redirectToLogin, router, pathname, openAuthModal, checkSession]);
+  }, [isAuthenticated, hydrated, router, pathname, openAuthModal, checkSession, redirectToLogin]);
 
   return { isAuthenticated, hydrated };
 };

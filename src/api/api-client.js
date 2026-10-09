@@ -1,4 +1,3 @@
-// src/api/api-client.js
 /**
  * 🛡️ API Client - لایه نهایی درخواست‌ها
  *
@@ -7,6 +6,8 @@
  *   - تبدیل خودکار camelCase → snake_case برای سازگاری با Django
  *   - نرمال‌سازی Response (شامل fieldMapper و pagination)
  *   - مدیریت خطا
+ *
+ * ✅ FIX F-18: محدود کردن اندازه کش snake_case
  */
 import api from './axios-instance';
 import { normalizeSuccessResponse, normalizeErrorResponse } from './response-normalizer';
@@ -15,8 +16,9 @@ import { normalizeSuccessResponse, normalizeErrorResponse } from './response-nor
 //    تبدیل کلیدها: camelCase → snake_case
 // ═══════════════════════════════════════════════
 
-// ✅ FIX 7.1: کش برای جلوگیری از محاسبات تکراری Regex روی دیتای بزرگ
+// ✅ FIX F-18: کش با محدودیت اندازه برای جلوگیری از memory leak
 const _snakeKeyCache = new Map();
+const MAX_CACHE_SIZE = 500;
 
 /**
  * تبدیل یک کلید camelCase به snake_case
@@ -26,13 +28,25 @@ const _snakeKeyCache = new Map();
 const camelToSnake = (str) => {
   if (_snakeKeyCache.has(str)) return _snakeKeyCache.get(str);
   
-  // Fast path: اگر حرف بزرگی ندارد، نیازی به تبدیل نیست (از قبل snake_case یا lowercase است)
+  // Fast path: اگر حرف بزرگی ندارد، نیازی به تبدیل نیست
   if (!/[A-Z]/.test(str)) {
+    // ✅ FIX F-18: بررسی اندازه کش قبل از اضافه کردن
+    if (_snakeKeyCache.size >= MAX_CACHE_SIZE) {
+      // پاک کردن نیمی از کش (قدیمی‌ترین ورودی‌ها)
+      const keysToDelete = Array.from(_snakeKeyCache.keys()).slice(0, MAX_CACHE_SIZE / 2);
+      keysToDelete.forEach((k) => _snakeKeyCache.delete(k));
+    }
     _snakeKeyCache.set(str, str);
     return str;
   }
   
   const snake = str.replace(/([A-Z])/g, '_$1').toLowerCase();
+  
+  // ✅ FIX F-18: بررسی اندازه کش
+  if (_snakeKeyCache.size >= MAX_CACHE_SIZE) {
+    const keysToDelete = Array.from(_snakeKeyCache.keys()).slice(0, MAX_CACHE_SIZE / 2);
+    keysToDelete.forEach((k) => _snakeKeyCache.delete(k));
+  }
   _snakeKeyCache.set(str, snake);
   return snake;
 };
@@ -41,7 +55,6 @@ const camelToSnake = (str) => {
  * تبدیل بازگشتی تمام کلیدهای یک آبجکت از camelCase به snake_case
  * - FormData, File, Blob, Date, TypedArray دست‌نخورده باقی می‌مانند
  * - آرایه‌ها element-wise تبدیل می‌شوند
- * - ✅ FIX 7.1: استفاده از for...in برای عملکرد بهتر روی آبجکت‌های بزرگ
  */
 const toSnakeCase = (obj) => {
   if (obj === null || obj === undefined) return obj;
@@ -61,7 +74,6 @@ const toSnakeCase = (obj) => {
   if (Array.isArray(obj)) return obj.map(toSnakeCase);
 
   const result = {};
-  // استفاده از for...in سریع‌تر از Object.entries است
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       const snakeKey = camelToSnake(key);

@@ -5,6 +5,8 @@
  * ✅ FIX: حذف logout تکراری
  * ✅ FIX F-14: رفع Race Condition با centralized refresh
  * ✅ FIX F-15: اضافه شدن session status check
+ * ✅ FIX F-16: رفع مشکل Dynamic Import در logout
+ * ✅ FIX F-17: تکمیل partialize برای جلوگیری از از دست رفتن داده‌ها
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -13,7 +15,6 @@ import { Preferences } from '@capacitor/preferences';
 import { authService } from '@/api';
 import { useTokenStore } from './useTokenStore';
 import { isTokenExpired, isTokenExpiringSoon } from '@/utils/jwt-utils';
-import { usePathname, useRouter } from 'next/navigation';
 
 // ═══════════════════════════════════════════════
 //    Custom Storage برای Capacitor
@@ -135,6 +136,54 @@ const stopPeriodicRefresh = () => {
 };
 
 // ═══════════════════════════════════════════════
+//    ✅ FIX F-16: Static Store Import Map
+//    Dynamic import با template literal در Next.js کار نمی‌کند
+//    بنابراین از یک نقشه استاتیک از توابع import استفاده می‌کنیم
+// ═══════════════════════════════════════════════
+const STORE_IMPORT_MAP = {
+  useTokenStore: () => import('./useTokenStore'),
+  useBusinessStore: () => import('./useBusinessStore'),
+  usePaymentStore: () => import('./usePaymentStore'),
+  useFavoriteStore: () => import('./useFavoriteStore'),
+  useReviewStore: () => import('./useReviewStore'),
+  useNotificationStore: () => import('./useNotificationStore'),
+  useOfflineQueueStore: () => import('./useOfflineQueueStore'),
+  useApiCacheStore: () => import('./useApiCacheStore'),
+  usePriceListStore: () => import('./usePriceListStore'),
+  useNearbyStore: () => import('./useNearbyStore'),
+};
+
+/**
+ * پاک‌سازی امن یک استور با استفاده از import map استاتیک
+ * @param {string} storeName - نام export شده استور
+ * @param {string} method - نام متد پاک‌سازی
+ */
+const clearStoreSafely = async (storeName, method) => {
+  const importFn = STORE_IMPORT_MAP[storeName];
+  if (!importFn) {
+    console.warn(`[logout] Unknown store: ${storeName}`);
+    return;
+  }
+
+  try {
+    const storeModule = await importFn();
+    // پشتیبانی از named export و default export
+    const store = storeModule[storeName] || storeModule.default;
+    
+    if (store && typeof store.getState === 'function') {
+      const state = store.getState();
+      if (typeof state[method] === 'function') {
+        await state[method]();
+      } else {
+        console.warn(`[logout] Method "${method}" not found on ${storeName}`);
+      }
+    }
+  } catch (err) {
+    console.warn(`[logout] Failed to clear ${storeName}:`, err?.message);
+  }
+};
+
+// ═══════════════════════════════════════════════
 //    ۱. Store اصلی احراز هویت
 // ═══════════════════════════════════════════════
 export const useAuthStore = create(
@@ -186,6 +235,8 @@ export const useAuthStore = create(
             isNationalIdVerified: userData.isNationalIdVerified ?? false,
             verifiedName: userData.verifiedName || '',
             dateJoined: userData.dateJoined || '',
+            referralCode: userData.referralCode || userData.referral_code || null,
+            memberSince: userData.memberSince || userData.dateJoined || '',
           },
           pendingPhone: null,
           pendingName: null,
@@ -213,7 +264,8 @@ export const useAuthStore = create(
         }
 
         // ─── ۳. پاک‌سازی متمرکز تمام استورهای حساس به کاربر ───
-        const userSensitiveStores = [
+        // ✅ FIX F-16: استفاده از import map استاتیک به جای dynamic import با template literal
+        const storesToClear = [
           { name: 'useTokenStore', method: 'clearTokens' },
           { name: 'useBusinessStore', method: 'clearForLogout' },
           { name: 'usePaymentStore', method: 'clearPaymentState' },
@@ -226,21 +278,11 @@ export const useAuthStore = create(
           { name: 'useNearbyStore', method: 'reset' },
         ];
 
-        for (const { name, method } of userSensitiveStores) {
-          try {
-            const storeModule = await import(`./${name}.js`);
-            const store = storeModule[name];
-            
-            if (store && typeof store.getState === 'function') {
-              const state = store.getState();
-              if (typeof state[method] === 'function') {
-                await state[method]();
-              }
-            }
-          } catch (err) {
-            console.warn(`Failed to clear ${name}:`, err?.message);
-          }
-        }
+        // ✅ FIX F-16: اجرای parallel با Promise.allSettled
+        // اگر یک استور خطا بدهد، بقیه همچنان پاک می‌شوند
+        await Promise.allSettled(
+          storesToClear.map(({ name, method }) => clearStoreSafely(name, method))
+        );
 
         // ─── ۴. پاک‌سازی مستقیم localStorage به عنوان fallback ───
         if (typeof window !== 'undefined') {
@@ -255,6 +297,8 @@ export const useAuthStore = create(
             'beau-offline-queue-storage',
             'beau-api-cache-storage',
             'beau-pricelist-storage',
+            'beau-nearby-storage',
+            'beau-global-location-storage',
           ];
           storageKeys.forEach((key) => {
             try {
@@ -288,7 +332,7 @@ export const useAuthStore = create(
 
       updateUser: (updates) =>
         set((state) => ({
-          user: { ...state.user, ...updates },
+          user: state.user ? { ...state.user, ...updates } : null,
         })),
 
       completeProfile: () => {
@@ -368,14 +412,26 @@ export const useAuthStore = create(
     {
       name: 'beau-auth-storage',
       storage: createJSONStorage(getStorage),
+      // ✅ FIX F-17: تکمیل partialize — تمام فیلدهای user ذخیره شوند
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
-        user: state.user ? {
-          id: state.user.id,
-          name: state.user.name,
-          avatar: state.user.avatar,
-          isVerified: state.user.isVerified,
-        } : null,
+        user: state.user
+          ? {
+              id: state.user.id,
+              phone: state.user.phone,
+              phoneDisplay: state.user.phoneDisplay,
+              name: state.user.name,
+              firstName: state.user.firstName,
+              lastName: state.user.lastName,
+              avatar: state.user.avatar,
+              isVerified: state.user.isVerified,
+              isNationalIdVerified: state.user.isNationalIdVerified,
+              verifiedName: state.user.verifiedName,
+              dateJoined: state.user.dateJoined,
+              referralCode: state.user.referralCode,
+              memberSince: state.user.memberSince,
+            }
+          : null,
         needsProfileCompletion: state.needsProfileCompletion,
         isSuspended: state.isSuspended,
         suspensionReason: state.suspensionReason,
@@ -424,6 +480,7 @@ export const useAuthModalStore = create((set, get) => ({
 //    ۳. Hook ترکیبی: useAuth
 // ═══════════════════════════════════════════════
 export const useAuth = () => {
+  const { useRouter, usePathname } = require('next/navigation');
   const router = useRouter();
   const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);

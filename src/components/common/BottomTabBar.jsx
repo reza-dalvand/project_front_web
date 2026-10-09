@@ -24,7 +24,14 @@ export default function BottomTabBar() {
 
   const businessData = useBusinessStore((s) => s.businessData);
   const businessStatus = useBusinessStore((s) => s.businessStatus);
-  const hasBusiness = Boolean(businessData?.id) || Boolean(businessStatus);
+
+  // ✅ FIX F-21: بررسی جامع‌تر hasBusiness
+  // شامل: id، businessStatus، و status داخل businessData
+  const hasBusiness =
+    Boolean(businessData?.id) ||
+    Boolean(businessStatus) ||
+    Boolean(businessData?.status) ||
+    Boolean(businessData?.bookingSlug);
 
   const tabs = isAuthenticated
     ? [
