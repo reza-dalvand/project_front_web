@@ -2,6 +2,7 @@
  * 🌐 Axios Instance مرکزی — فاز ۲ + ✅ پشتیبانی از تعلیق کاربر
  *
  * ✅ FIX: حذف require() در interceptor برای جلوگیری از کرش در Edge/SSR
+ * ✅ FIX F-19: بررسی skipAuthInterceptor در request interceptor
  */
 import axios from 'axios';
 import { API_CONFIG } from './config';
@@ -18,6 +19,11 @@ const api = axios.create({
 // ═══════════════════════════════════════════════
 api.interceptors.request.use(
   (config) => {
+    // ✅ FIX F-19: اگر درخواست مشخص کرده که auth نمی‌خواهد، رد کن
+    if (config.skipAuthInterceptor) {
+      return config;
+    }
+
     try {
       const token = useTokenStore.getState().getAccessToken();
       if (token) {
@@ -79,6 +85,7 @@ api.interceptors.response.use(
     const errorCode = errorData?.error_code || errorData?.code;
     const statusCode = error.response?.status;
 
+    // ─── مدیریت تعلیق حساب ───
     if (
       (errorCode === 'ACCOUNT_SUSPENDED' ||
         (statusCode === 403 && errorCode === 'ACCOUNT_SUSPENDED')) &&
@@ -100,10 +107,12 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // ─── بررسی‌های اولیه برای refresh ───
     if (!originalRequest || originalRequest._retry) {
       return Promise.reject(error);
     }
 
+    // ✅ اگر خود درخواست refresh شکست خورد، دیگر تلاش نکن
     if (originalRequest._isRefreshRequest) {
       return Promise.reject(error);
     }
@@ -116,6 +125,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // ─── صف‌بندی درخواست‌ها هنگام refresh ───
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
@@ -136,6 +146,7 @@ api.interceptors.response.use(
 
       if (!refreshToken) {
         clearTokens();
+        processQueue(new Error('No refresh token'), null);
         return Promise.reject(error);
       }
 
@@ -145,7 +156,7 @@ api.interceptors.response.use(
         {
           _isRefreshRequest: true,
           timeout: API_CONFIG.timeout,
-          skipAuthInterceptor: true,
+          skipAuthInterceptor: true, // ✅ FIX F-19: جلوگیری از تزریق توکن منقضی‌شده
         }
       );
 

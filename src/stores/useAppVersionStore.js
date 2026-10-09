@@ -1,4 +1,3 @@
-// src/stores/useAppVersionStore.js
 'use client';
 
 import { create } from 'zustand';
@@ -16,21 +15,7 @@ import { Capacitor } from '@capacitor/core';
  * 📦 Store نسخه اپلیکیشن
  *
  * ✅ فاز ۵: MOCK_REMOTE_CONFIG حذف شد.
- * اطلاعات نسخه فقط از API دریافت می‌شود.
- *
- * Endpoint پیشنهادی بک‌اند:
- *   GET /config/app-version/
- *   Response: {
- *     latest_version: string,
- *     min_required_version: string,
- *     is_force_update: boolean,
- *     release_date: string,
- *     title: string,
- *     update_message: string,
- *     changelog: [{ icon: string, text: string }],
- *     store_url: string,
- *     store_name: string
- *   }
+ * ✅ فاز ۶: پشتیبانی کامل از PWA (پاک‌سازی کش و ریلود اجباری در وب)
  */
 export const useAppVersionStore = create(
   persist(
@@ -42,7 +27,6 @@ export const useAppVersionStore = create(
 
       /**
        * بررسی نسخه جدید از API
-       * ✅ فقط از بک‌اند می‌خواند — بدون fallback ماک
        */
       checkForUpdate: async (silent = false) => {
         if (!silent) set({ checking: true });
@@ -66,27 +50,23 @@ export const useAppVersionStore = create(
             return;
           }
 
-          // ✅ فاز جدید: بررسی پلتفرم و تنظیمات ادمین
+          // ✅ تشخیص پلتفرم
           const isNative = Capacitor.isNativePlatform();
-          
-          // در وب اصلاً مدال آپدیت نشان نده (وب خودش آپدیت می‌شود)
-          if (!isNative) {
-            set({ updateInfo: null, checking: false });
-            return;
-          }
-
-          // بررسی آپدیت اجباری
           const isForce = compareMin < 0 || config.isForceUpdate === true;
 
-          // ✅ فاز جدید: بررسی تنظیمات ادمین برای اندروید
-          if (isForce && !config.androidForceUpdateEnabled) {
-            set({ updateInfo: null, checking: false });
-            return;
+          // ✅ منطق اختصاصی اندروید (بررسی تیک‌های ادمین)
+          if (isNative) {
+            if (isForce && !config.androidForceUpdateEnabled) {
+              set({ updateInfo: null, checking: false });
+              return;
+            }
+            if (!isForce && !config.androidOptionalUpdateEnabled) {
+              set({ updateInfo: null, checking: false });
+              return;
+            }
           }
-          if (!isForce && !config.androidOptionalUpdateEnabled) {
-            set({ updateInfo: null, checking: false });
-            return;
-          }
+          // 🌐 در محیط وب/PWA، اگر نسخه جدیدی باشد (compareLatest < 0)، 
+          // مستقیماً به بخش ساخت updateInfo می‌رویم (بدون نیاز به تیک‌های اندروید).
 
           // اگر آپدیت اختیاری است و کاربر قبلاً رد کرده
           if (!isForce) {
@@ -112,7 +92,6 @@ export const useAppVersionStore = create(
             checking: false,
           });
         } catch (error) {
-          // ✅ در صورت خطای API، مدال آپدیت نمایش داده نمی‌شود
           console.log('Version check failed (non-critical):', error);
           set({ checking: false });
         }
@@ -133,21 +112,44 @@ export const useAppVersionStore = create(
       },
 
       /**
-       * باز کردن لینک آپدیت (در وب = ریلود صفحه)
+       * باز کردن لینک آپدیت (اندروید = استور / وب = پاک‌سازی کش و ریلود)
        */
       openStore: async () => {
         const { updateInfo } = get();
         if (!updateInfo) return;
 
-        const url = updateInfo.storeUrl || DEFAULT_STORE_URL;
+        const isNative = Capacitor.isNativePlatform();
 
         if (typeof window !== 'undefined') {
-          if (Capacitor.isNativePlatform()) {
+          if (isNative) {
             // ✅ در اندروید لینک را مستقیماً در اپلیکیشن استور یا مرورگر سیستم باز می‌کند
+            const url = updateInfo.storeUrl || DEFAULT_STORE_URL;
             window.open(url, '_system');
           } else {
-            // ✅ در وب در تب جدید باز می‌کند
-            window.open(url, '_blank');
+            // 🌐 در وب / PWA: پاک‌سازی کش Service Worker و ریلود اجباری
+            try {
+              // ۱. unregister کردن Service Worker
+              if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                  await registration.unregister();
+                }
+              }
+              
+              // ۲. پاک‌سازی کامل Cache Storage مرورگر
+              if ('caches' in window) {
+                const cacheKeys = await caches.keys();
+                await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+              }
+            } catch (error) {
+              console.error('Error clearing PWA cache:', error);
+            }
+            
+            // ۳. ریلود اجباری صفحه (بدون استفاده از کش مرورگر)
+            // استفاده از href برای اطمینان از بای‌پس شدن کش در برخی مرورگرها
+            const url = new URL(window.location.href);
+            url.searchParams.set('v', Date.now().toString());
+            window.location.href = url.toString();
           }
         }
       },

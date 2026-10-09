@@ -13,13 +13,10 @@ export default function AuthProvider({ children }) {
   const lastRefreshRef = useRef(0);
   const lastSessionCheckRef = useRef(0);
 
-  // ═══════════════════════════════════════════════
-  //    ✅ FIX F-14: Activity-based Refresh
-  // ═══════════════════════════════════════════════
   useEffect(() => {
     const platform = Capacitor.getPlatform();
     const MIN_REFRESH_INTERVAL = 60 * 1000; // حداقل ۱ دقیقه
-    const MIN_SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // حداقل ۵ دقیقه برای session check
+    const MIN_SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // حداقل ۵ دقیقه
 
     const handleRefresh = async () => {
       const now = Date.now();
@@ -45,7 +42,7 @@ export default function AuthProvider({ children }) {
         }
       }
 
-      // ✅ FIX F-15: Session Status Check
+      // ─── Session Status Check ───
       if (now - lastSessionCheckRef.current >= MIN_SESSION_CHECK_INTERVAL) {
         lastSessionCheckRef.current = now;
         try {
@@ -83,22 +80,35 @@ export default function AuthProvider({ children }) {
 
     // ─── Android/iOS: appStateChange ───
     if (platform === 'android' || platform === 'ios') {
-      let listener;
+      let listener = null;
+      let isMounted = true; // ✅ FIX F-20: محافظت در برابر unmount قبل از resolve
 
       CapApp.addListener('appStateChange', ({ isActive }) => {
-        if (isActive && isAuthenticated) {
+        // ✅ FIX F-20: فقط اگر کامپوننت هنوز mounted است اجرا شود
+        if (isMounted && isActive && isAuthenticated) {
           handleRefresh();
         }
-      }).then((l) => {
-        listener = l;
+      }).then((pluginListener) => {
+        if (isMounted) {
+          listener = pluginListener;
+        } else {
+          // ✅ FIX F-20: کامپوننت قبل از resolve شدن unmount شده
+          // listener را فوراً remove کن
+          pluginListener.remove();
+        }
       });
 
       return () => {
+        isMounted = false;
         if (listener) {
           listener.remove();
+          listener = null;
         }
       };
     }
+
+    // Fallback: هیچ cleanup لازم نیست
+    return undefined;
   }, [isAuthenticated]);
 
   return <>{children}</>;
