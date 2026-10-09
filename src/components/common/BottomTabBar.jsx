@@ -95,7 +95,7 @@ export default function BottomTabBar() {
           backgroundColor: `${colors.cardBackground}f2`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           border: `1px solid ${colors.border}`,
-          bottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
+          bottom: 'calc(8px + max(env(safe-area-inset-bottom, 0px), 0px))',
         }}
       >
         {tabs.map((tab) => {
