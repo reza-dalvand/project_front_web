@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'ir.beauclub.app',
-  appName: 'BU Club',
+  appName: 'Beau Club',
   webDir: 'out',
   backgroundColor: '#F5F0EC',
   server: {
