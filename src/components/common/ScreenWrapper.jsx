@@ -6,6 +6,7 @@ export default function ScreenWrapper({
   padding = 0,
   className = '',
   contentClassName = '',
+  hasBottomTab = false
 }) {
   const paddingStyle = padding > 0 ? { padding: `${padding}px` } : undefined;
 
@@ -40,11 +41,11 @@ export default function ScreenWrapper({
       style={paddingStyle}
     >
       <div
-        className="
-          flex-1 flex flex-col
-          max-w-7xl mx-auto w-full
-          overflow-hidden
-        "
+        className={`flex-1 ${scrollable ? 'overflow-y-auto' : 'overflow-hidden'}`}
+        style={{
+          padding: padding ? `${padding * 4}px` : '0',
+          paddingBottom: safeBottom,
+        }}
       >
         {children}
       </div>

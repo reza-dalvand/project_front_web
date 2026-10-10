@@ -1,6 +1,30 @@
 @import 'tailwindcss';
 @import 'maplibre-gl/dist/maplibre-gl.css';
 
+@layer base {
+  :root {
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --tab-bar-height: 64px;
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    /* جلوگیری از کشیده شدن صفحه (Overscroll) که باعث بهم ریختن Fixed ها می‌شود */
+    overscroll-behavior: none; 
+  }
+
+  /* Fallback برای وب‌ویوهای قدیمی‌تر اندروید که dvh را نمی‌شناسند */
+  .h-dvh {
+    height: 100vh;
+    height: 100dvh;
+  }
+  .min-h-dvh {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ═══════ فونت‌های وزیر ═══════ */

@@ -85,16 +85,13 @@ export default function BottomTabBar() {
 
       {/* ═══ Bottom Tab Bar — Floating Glass Dock ═══ */}
       <nav
-        className="
-          fixed
-          left-3 right-3
-          sm:left-6 sm:right-6
-          md:left-1/2 md:right-auto md:-translate-x-1/2
-          md:max-w-lg md:w-[calc(100%-3rem)]
-          z-40
-        "
-        style={{ bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}
-        aria-label="ناوبری اصلی"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t"
+        style={{
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+          // ✅ FIX: فاصله از پایین برای جلوگیری از پرش روی نوتچ/ژست شیائومی
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
       >
         <div
           className="relative w-full flex items-stretch overflow-hidden rounded-[26px] sm:rounded-[30px]"

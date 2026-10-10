@@ -149,7 +149,7 @@ export default function ExplorePage() {
   );
 
   return (
-    <ScreenWrapper scrollable={false} padding={0}>
+    <ScreenWrapper scrollable={false} padding={0} hasBottomTab={true}>
       <div className="px-5 pt-3.5 border-b" style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}>
         <SectionHeader
           icon={<span className="text-lg">🖼️</span>} title="ویترین" subtitle="نمونه‌کار کسب‌وکارها" centered
