@@ -1,4 +1,4 @@
-package com.zibano.app;
+package com.beauclub.app;
 
 import com.getcapacitor.BridgeActivity;
 

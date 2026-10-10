@@ -1,16 +1,11 @@
 {
   "appId": "app.beauclub",
   "appName": "BEAU CLUB",
-  "webDir": "public",
+  "webDir": "out",
   "bundledWebRuntime": false,
   "android": {
     "allowMixedContent": true,
     "captureInput": true,
     "webContentsDebuggingEnabled": true
-  },
-  "server": {
-    "url": "http://192.168.1.43:3000",
-    "cleartext": true,
-    "androidScheme": "http"
   }
 }
