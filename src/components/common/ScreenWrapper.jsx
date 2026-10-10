@@ -1,4 +1,6 @@
 // src/components/common/ScreenWrapper.jsx
+import { useTheme } from '@/stores/useThemeStore';
+
 export default function ScreenWrapper({ 
   children, 
   padding = 4, 
