@@ -271,8 +271,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen pb-28" style={{ backgroundColor: colors.background }}>
-      <div className="app-container">
+      <div 
+        className="min-h-dvh flex flex-col" 
+        style={{ 
+          backgroundColor: colors.background,
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+        }}
+      >
+        <div className="app-container">
         <HomeHeader
           userName={user?.name} userAvatar={user?.avatar} searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

@@ -11,7 +11,7 @@
 
 // ✅ نسخه کش باید با هر دیپلوی تغییر کند
 // برای جلوگیری از فراموشی، از یک نسخه داینامیک استفاده می‌کنیم
-const CACHE_VERSION = 'v4'; // ⬅️ هر بار که این فایل تغییر کرد، نسخه را افزایش دهید
+const CACHE_VERSION = 'v5'; // ⬅️ هر بار که این فایل تغییر کرد، نسخه را افزایش دهید
 const STATIC_CACHE = `beau-static-${CACHE_VERSION}`;
 const PAGE_CACHE = `beau-pages-${CACHE_VERSION}`;
 const IMAGE_CACHE = `beau-images-${CACHE_VERSION}`;

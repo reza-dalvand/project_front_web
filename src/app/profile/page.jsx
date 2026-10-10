@@ -140,7 +140,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <ScreenWrapper scrollable padding={0}>
+    <ScreenWrapper scrollable padding={0} hasBottomTab={true}>
       <ProfileHeader user={user} />
       <div className="px-5 pt-6">
         <ProfileStatsCard stats={userStats} />
