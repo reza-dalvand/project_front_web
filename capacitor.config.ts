@@ -7,8 +7,6 @@ const config: CapacitorConfig = {
   backgroundColor: '#F5F0EC',
   server: {
     androidScheme: 'https',
-    cleartext: true,
-    url: 'https://app.beauclub.ir',
   },
   android: {
     allowMixedContent: true,
