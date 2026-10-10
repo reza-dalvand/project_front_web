@@ -1,50 +1,27 @@
-'use client';
-
-export default function ScreenWrapper({
-  children,
-  scrollable = false,
-  padding = 0,
-  className = '',
-  contentClassName = '',
-  hasBottomTab = false
+// src/components/common/ScreenWrapper.jsx
+export default function ScreenWrapper({ 
+  children, 
+  padding = 4, 
+  scrollable = true,
+  hasBottomTab = false // ✅ پراپ جدید
 }) {
-  const paddingStyle = padding > 0 ? { padding: `${padding}px` } : undefined;
+  const { colors } = useTheme();
 
-  if (scrollable) {
-    return (
-      <div
-        className={`
-          min-h-screen min-h-dvh bg-[var(--bg)]
-          ${className}
-        `}
-        style={paddingStyle}
-      >
-        <div
-          className={`
-            max-w-7xl mx-auto w-full
-            px-0 sm:px-4 lg:px-6
-            ${contentClassName}
-          `}
-        >
-          {children}
-        </div>
-      </div>
-    );
-  }
+  // محاسبه پدینگ پایین: ارتفاع تب‌بار + Safe Area + فاصله اضافی
+  const safeBottom = hasBottomTab 
+    ? 'calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px) + 16px)' 
+    : 'env(safe-area-inset-bottom, 0px)';
 
   return (
     <div
-      className={`
-        h-screen h-dvh flex flex-col overflow-hidden bg-[var(--bg)]
-        ${className}
-      `}
-      style={paddingStyle}
+      className="flex flex-col h-dvh w-full overflow-hidden" // ✅ استفاده از h-dvh
+      style={{ backgroundColor: colors.background }}
     >
       <div
         className={`flex-1 ${scrollable ? 'overflow-y-auto' : 'overflow-hidden'}`}
         style={{
           padding: padding ? `${padding * 4}px` : '0',
-          paddingBottom: safeBottom,
+          paddingBottom: safeBottom, // ✅ پدینگ داینامیک
         }}
       >
         {children}
