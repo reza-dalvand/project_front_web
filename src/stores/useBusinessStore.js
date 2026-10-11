@@ -66,10 +66,12 @@ export const useBusinessStore = create(
         })),
 
       deleteBusiness: () => {
-        set((state) => ({
-          businessData: { ...state.businessData, isActive: false },
+        set({
+          businessData: INITIAL_BUSINESS_DATA,
+          gallery: [],
+          _version: STORAGE_VERSION,
           businessStatus: null,
-        }));
+        });
         return true;
       },
 
@@ -324,10 +326,19 @@ export const useBusinessStore = create(
       deleteBusinessApi: async () => {
         try {
           await businessesService.deleteBusiness();
-          set((state) => ({
-            businessData: { ...state.businessData, isActive: false },
+
+          set({
+            businessData: INITIAL_BUSINESS_DATA,
+            gallery: [],
+            _version: STORAGE_VERSION,
             businessStatus: null,
-          }));
+          });
+
+          try {
+            useBusinessStore.persist.clearStorage();
+          } catch {
+            // silently ignore
+          }
         } catch (error) {
           console.error('deleteBusinessApi failed:', error);
           throw error;

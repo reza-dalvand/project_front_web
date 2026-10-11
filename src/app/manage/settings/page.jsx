@@ -145,7 +145,7 @@ export default function BusinessSettingsPage() {
     try {
       await deleteBusinessApi();
       showToast('کسب‌وکار حذف شد', 'info');
-      router.push('/create-business');
+      router.replace('/create-business');
     } catch (error) {
       showToast(error.message || 'خطا در حذف کسب‌وکار', 'error');
     }
