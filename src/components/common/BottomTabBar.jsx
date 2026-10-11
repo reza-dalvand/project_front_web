@@ -8,7 +8,7 @@ import {
   FiPlusSquare,
   FiUser,
   FiLogIn,
-  FiStar,
+  FiCamera,
 } from 'react-icons/fi';
 
 import { usePathname, useRouter } from 'next/navigation';
@@ -63,13 +63,13 @@ export default function BottomTabBar({ showSpacer = true }) {
         hasBusiness
           ? { id: 'manage', icon: FiBriefcase, label: 'مدیریت', path: '/manage' }
           : { id: 'create', icon: FiPlusSquare, label: 'ثبت آگهی', path: '/create-business' },
-        { id: 'model-requests', icon: FiStar, label: 'آگهی مدل', path: '/model-requests' },
+        { id: 'model-requests', icon: FiCamera, label: 'آگهی مدل', path: '/model-requests' },
         { id: 'profile', icon: FiUser, label: 'پروفایل', path: '/profile' },
       ]
     : [
         { id: 'home', icon: FiHome, label: 'خانه', path: '/' },
         { id: 'explore', icon: FiSearch, label: 'ویترین', path: '/explore' },
-        { id: 'model-requests', icon: FiStar, label: 'درخواست مدل', path: '/model-requests' },
+        { id: 'model-requests', icon: FiCamera, label: 'درخواست مدل', path: '/model-requests' },
         { id: 'login', icon: FiLogIn, label: 'ورود و ثبت‌نام', isAuthAction: true },
       ];
 
