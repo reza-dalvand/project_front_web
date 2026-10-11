@@ -459,3 +459,203 @@ export const fromJalaaliKey = (dateKey) => {
   }
   return { jy: parts[0], jm: parts[1], jd: parts[2] };
 };
+
+
+// ═══════════════════════════════════════════════════════
+//    فرمت‌دهنده مدت عضویت کاربر
+// ═══════════════════════════════════════════════════════
+
+const FA_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+
+const toFaDigits = (value) =>
+  String(value).replace(/[0-9]/g, (digit) => FA_DIGITS[Number(digit)]);
+
+const normalizeDigits = (value) =>
+  String(value)
+    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String('٠١٣٤٥٧٨٩'.indexOf(digit)));
+
+/**
+ * تبدیل ورودی‌های مختلف تاریخ به Date معتبر
+ * پشتیبانی از:
+ * - ISO string
+ * - Unix timestamp seconds
+ * - Unix timestamp milliseconds
+ * - تاریخ شمسی مثل 1403/01/15
+ * - تاریخ میلادی مثل 2024-01-15
+ */
+const parseMembershipDate = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === 'number') {
+    // اعداد خیلی کوچک احتمالاً timestamp نیستند
+    if (!Number.isFinite(value) || value <= 0 || value < 1000000000) {
+      return null;
+    }
+
+    // اگر کمتر از 100 میلیارد باشد، احتمالاً ثانیه است؛ در غیر این صورت میلی‌ثانیه
+    const milliseconds = value < 100000000000 ? value * 1000 : value;
+    const date = new Date(milliseconds);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === 'string') {
+    const raw = value.trim();
+    if (!raw) return null;
+
+    const normalized = normalizeDigits(raw);
+
+    // فقط عدد: Unix timestamp
+    if (/^\d+$/.test(normalized)) {
+      return parseMembershipDate(Number(normalized));
+    }
+
+    // تاریخ شمسی: 1403/01/15 یا 1403-01-15
+    const jalaliMatch = normalized.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+    if (jalaliMatch) {
+      const jy = Number(jalaliMatch[1]);
+      const jm = Number(jalaliMatch[2]);
+      const jd = Number(jalaliMatch[3]);
+
+      if (jy && jm && jd) {
+        try {
+          const gregorian = toGregorian(jy, jm, jd);
+          const date = new Date(gregorian.year, gregorian.month - 1, gregorian.day);
+          return Number.isNaN(date.getTime()) ? null : date;
+        } catch {
+          return null;
+        }
+      }
+    }
+
+    // تاریخ میلادی بدون ساعت: 2024-01-15
+    const gregorianDateOnlyMatch = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (gregorianDateOnlyMatch) {
+      const year = Number(gregorianDateOnlyMatch[1]);
+      const month = Number(gregorianDateOnlyMatch[2]);
+      const day = Number(gregorianDateOnlyMatch[3]);
+
+      const date = new Date(year, month - 1, day);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    // اگر حاوی حروف فارسی/عربی است، احتمالاً متن خوانا است نه timestamp
+    if (/[\u0600-\u06FF]/.test(normalized)) {
+      return null;
+    }
+
+    // ISO یا تاریخ قابل parse توسط Date
+    const isoCandidate = normalized.replace(' ', 'T');
+    const date = new Date(isoCandidate);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
+};
+
+/**
+ * محاسبه مدت زمان بین دو تاریخ به سال/ماه/روز
+ */
+const getCalendarDuration = (startDate, endDate) => {
+  if (!startDate || !endDate) return null;
+  if (startDate > endDate) return null;
+
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+  let days = endDate.getDate() - startDate.getDate();
+
+  if (days < 0) {
+    months -= 1;
+    const daysInPreviousMonth = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      0
+    ).getDate();
+    days += daysInPreviousMonth;
+  }
+
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+
+  if (years < 0) return null;
+  if (years === 0 && months === 0 && days <= 0) return null;
+
+  return { years, months, days };
+};
+
+/**
+ * تبدیل مدت زمان به متن فارسی مناسب عضویت
+ */
+const formatCalendarDurationForMembership = ({ years, months, days }) => {
+  const parts = [];
+
+  if (years > 0) {
+    parts.push(`${toFaDigits(years)} سال`);
+  }
+
+  if (months > 0) {
+    parts.push(`${toFaDigits(months)} ماه`);
+  }
+
+  // روز فقط وقتی سال نداشته باشیم نمایش داده می‌شود تا متن شلوغ نشود
+  if (years === 0 && days > 0) {
+    parts.push(`${toFaDigits(days)} روز`);
+  }
+
+  if (parts.length === 0) {
+    if (days > 0) {
+      parts.push(`${toFaDigits(days)} روز`);
+    } else {
+      return 'عضو جدید';
+    }
+  }
+
+  // حداکثر دو واحد اصلی نمایش داده می‌شود
+  return `${parts.slice(0, 2).join(' و ')} عضو`;
+};
+
+/**
+ * تابع اصلی:
+ * ورودی خام تاریخ/timestamp را به متن مدت عضویت تبدیل می‌کند.
+ *
+ * مثال:
+ * formatMembershipSince('2024-01-15T10:23:45Z')
+ * => '۲ سال و ... عضو'
+ *
+ * formatMembershipSince(1712345678)
+ * => '...'
+ *
+ * formatMembershipSince('عضو جدید')
+ * => 'عضو جدید'
+ */
+export const formatMembershipSince = (value, fallback = 'عضو جدید') => {
+  const date = parseMembershipDate(value);
+
+  if (!date) {
+    // اگر مقدار از قبل متن فارسی خوانا بود، همان را نگه دار
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed && /[\u0600-\u06FF]/.test(trimmed)) {
+        return trimmed;
+      }
+    }
+
+    return fallback;
+  }
+
+  const duration = getCalendarDuration(date, new Date());
+
+  if (!duration) {
+    return fallback;
+  }
+
+  return formatCalendarDurationForMembership(duration);
+};
