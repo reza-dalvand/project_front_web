@@ -4,7 +4,9 @@
 @layer base {
   :root {
     --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --tab-bar-height: 64px;
+    --tab-bar-height: 60px;
+    --tab-bar-bottom-gap: 12px;
+    --tab-bar-clearance: calc(var(--tab-bar-height) + var(--tab-bar-bottom-gap) + 8px);
   }
 
   html, body {

@@ -18,12 +18,27 @@ import { useAuth } from '@/stores/useAuthStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 
 /* ═══════ تنظیمات ظاهری (قابل تیون در یک جا) ═══════ */
-const BAR_HEIGHT = 68; // ارتفاع بار (px)
-const BUBBLE_INSET_Y = 7; // فاصله حباب از لبه بالا/پایین بار (px)
+const BAR_HEIGHT = 60; // ارتفاع dock داخلی
+const BOTTOM_GAP = 12; // فاصله dock از پایین صفحه
+const BUBBLE_INSET_Y = 5; // فاصله حباب فعال از لبه بالا/پایین dock
 const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; // منحنی فنری انیمیشن
 
-export default function BottomTabBar() {
-  const { colors } = useTheme();
+/**
+ * BottomTabBar — نسخه Floating Compact Glass Dock
+ *
+ * ویژگی‌ها:
+ * - تمام‌عرض نیست؛ وسط و با max-width نمایش داده می‌شود.
+ * - شیشه‌ای، گرد، سبک و جمع‌وجور.
+ * - حباب گرادیانی فعال حفظ شده است.
+ * - safe-area پایین رعایت می‌شود.
+ * - منطق تب‌های قبلی بدون تغییر مانده است.
+ *
+ * نکته:
+ * اگر صفحه‌ای خودش padding پایین برای تب‌بار دارد،
+ * می‌توانی showSpacer={false} بدهی تا فضای خالی تکراری ایجاد نشود.
+ */
+export default function BottomTabBar({ showSpacer = true }) {
+  const { colors, resolvedTheme } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -37,6 +52,8 @@ export default function BottomTabBar() {
     Boolean(businessStatus) ||
     Boolean(businessData?.status) ||
     Boolean(businessData?.bookingSlug);
+
+  const isDark = resolvedTheme === 'dark';
 
   // ═══════ منطق تب‌ها — بدون تغییر ═══════
   const tabs = isAuthenticated
@@ -75,107 +92,128 @@ export default function BottomTabBar() {
   const activeIndex = tabs.findIndex((tab) => isActive(tab));
   const slotWidth = 100 / tabs.length;
 
+  // فضای خالی پایین صفحه برای اینکه محتوا زیر dock نرود.
+  // 60 ارتفاع dock + 12 فاصله پایین + 8 حاشیه امن = 80px
+  const clearanceHeight = `calc(${BAR_HEIGHT + BOTTOM_GAP + 8}px + env(safe-area-inset-bottom, 0px))`;
+
+  const dockShadow = isDark
+    ? '0 18px 42px rgba(0,0,0,0.48), 0 2px 10px rgba(0,0,0,0.28)'
+    : '0 16px 38px rgba(44,37,33,0.16), 0 2px 10px rgba(44,37,33,0.08)';
+
   return (
     <>
-      {/* فضای خالی برای محتوا — responsive */}
-      <div
-        className="h-24 sm:h-28 md:h-32"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      />
+      {/* فضای خالی اختیاری برای صفحاتی که خودشون padding پایین ندارند */}
+      {showSpacer && (
+        <div
+          aria-hidden="true"
+          style={{
+            height: clearanceHeight,
+          }}
+        />
+      )}
 
-      {/* ═══ Bottom Tab Bar — Floating Glass Dock ═══ */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-40 border-t"
+      {/* ═══ Floating Bottom Tab Bar — Compact Glass Dock ═══ */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pointer-events-none"
         style={{
-          backgroundColor: colors.cardBackground,
-          borderColor: colors.border,
-          // ✅ FIX: فاصله از پایین برای جلوگیری از پرش روی نوتچ/ژست شیائومی
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          paddingBottom: `calc(${BOTTOM_GAP}px + env(safe-area-inset-bottom, 0px))`,
         }}
       >
-        <div
-          className="relative w-full flex items-stretch overflow-hidden rounded-[26px] sm:rounded-[30px]"
+        <nav
+          aria-label="ناوبری اصلی"
+          className="pointer-events-auto relative w-full max-w-[420px] sm:max-w-[480px] md:max-w-[540px] overflow-hidden rounded-full border"
           style={{
             height: BAR_HEIGHT,
-            backgroundColor: `${colors.cardBackground}d9`,
-            backdropFilter: 'blur(22px) saturate(1.4)',
-            WebkitBackdropFilter: 'blur(22px) saturate(1.4)',
-            border: `1px solid ${colors.border}`,
-            boxShadow: '0 12px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06)',
+            backgroundColor: `${colors.cardBackground}f2`,
+            borderColor: colors.border,
+            boxShadow: dockShadow,
+            backdropFilter: 'blur(22px) saturate(1.35)',
+            WebkitBackdropFilter: 'blur(22px) saturate(1.35)',
           }}
         >
           {/* ═══ حباب گرادیانی لغزان پشت تب فعال ═══ */}
-          <div
-            aria-hidden="true"
-            className="absolute rounded-[20px] sm:rounded-[24px]"
-            style={{
-              top: BUBBLE_INSET_Y,
-              bottom: BUBBLE_INSET_Y,
-              insetInlineStart: `${(activeIndex >= 0 ? activeIndex : 0) * slotWidth}%`,
-              width: `${slotWidth}%`,
-              opacity: activeIndex >= 0 ? 1 : 0,
-              transform: activeIndex >= 0 ? 'scale(1)' : 'scale(0.85)',
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
-              boxShadow: `0 6px 16px ${colors.primary}55`,
-              transition: `inset-inline-start 450ms ${SPRING}, opacity 250ms ease, transform 250ms ease`,
-            }}
-          >
-            {/* برق شیشه‌ای روی حباب */}
+          {activeIndex >= 0 && (
             <div
-              className="absolute inset-x-3 top-1 h-1/3 rounded-full"
+              aria-hidden="true"
+              className="absolute rounded-full"
               style={{
-                background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0))',
+                top: BUBBLE_INSET_Y,
+                bottom: BUBBLE_INSET_Y,
+                insetInlineStart: `${activeIndex * slotWidth}%`,
+                width: `${slotWidth}%`,
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
+                boxShadow: `0 8px 20px ${colors.primary}55`,
+                transition: `inset-inline-start 450ms ${SPRING}`,
               }}
-            />
-          </div>
+            >
+              {/* برق شیشه‌ای روی حباب */}
+              <div
+                className="absolute inset-x-3 top-1 h-1/3 rounded-full"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0))',
+                }}
+              />
+            </div>
+          )}
 
           {/* ═══ تب‌ها ═══ */}
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const active = isActive(tab);
+          <div className="relative flex h-full items-stretch">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = isActive(tab);
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabPress(tab)}
-                type="button"
-                aria-current={active ? 'page' : undefined}
-                className="
-                  relative flex-1 min-w-0
-                  flex flex-col items-center justify-center gap-1
-                  transition-transform duration-200
-                  active:scale-[0.94]
-                "
-              >
-                <Icon
-                  size={21}
-                  className="sm:w-[23px] sm:h-[23px] transition-all duration-300"
-                  style={{
-                    color: active ? '#fff' : colors.textSecondary,
-                    transform: active ? 'translateY(-1px)' : 'none',
-                    filter: active ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' : 'none',
-                  }}
-                />
-                <span
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabPress(tab)}
+                  type="button"
+                  aria-current={active ? 'page' : undefined}
                   className="
-                    text-[9.5px] sm:text-[10.5px] leading-none
-                    truncate max-w-[64px] sm:max-w-[76px]
-                    transition-all duration-300
+                    relative flex-1 min-w-0
+                    flex flex-col items-center justify-center gap-[3px]
+                    transition-transform duration-200
+                    active:scale-[0.94]
+                    focus:outline-none
                   "
                   style={{
-                    color: active ? '#fff' : colors.textSecondary,
-                    opacity: active ? 1 : 0.8,
-                    fontFamily: active ? 'Vazir-Bold' : 'Vazir-Medium',
+                    WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+                  <Icon
+                    size={active ? 22 : 20}
+                    className="transition-all duration-300"
+                    style={{
+                      color: active ? '#fff' : colors.textSecondary,
+                      transform: active ? 'translateY(-1px) scale(1.04)' : 'none',
+                      filter: active
+                        ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.22))'
+                        : 'none',
+                    }}
+                  />
+
+                  <span
+                    className="
+                      max-w-[68px] sm:max-w-[78px]
+                      truncate
+                      text-[9px] sm:text-[10px]
+                      leading-none
+                      transition-all duration-300
+                    "
+                    style={{
+                      color: active ? '#fff' : colors.textSecondary,
+                      opacity: active ? 1 : 0.72,
+                      fontFamily: active ? 'Vazir-Bold' : 'Vazir-Medium',
+                    }}
+                  >
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      </div>
     </>
   );
 }

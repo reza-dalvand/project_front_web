@@ -168,7 +168,7 @@ export default function ExplorePage() {
           hasMore={hasMore} totalLoaded={filteredPosts.length}
         />
       </div>
-      <BottomTabBar />
+      <BottomTabBar showSpacer={false} />
       <FilterModal visible={filterVisible} onClose={handleFilterClose} onApply={handleFilterChange} currentFilters={filters} />
       <PostModal
         post={activePost} visible={!!activePost} onClose={handlePostClose}
