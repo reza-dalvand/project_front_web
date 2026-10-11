@@ -57,7 +57,9 @@ export default function CategoryHeader({
             </div>
             <div className="flex flex-col gap-0.5 md:gap-1">
               <span className="text-[11px] sm:text-xs md:text-sm text-white/80 font-[Vazir]">دسته‌بندی</span>
-              <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-[Vazir-Bold] text-white">{categoryName}</h1>
+              <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-[Vazir-Bold] text-white">
+                {categoryName || 'دسته‌بندی'}
+              </h1>
             </div>
           </div>
 
@@ -101,7 +103,7 @@ export default function CategoryHeader({
           <SearchBar
             value={searchQuery}
             onChangeText={onSearchChange}
-            placeholder={`جستجو در ${categoryName}...`}
+            placeholder={`جستجو در ${categoryName || 'دسته‌بندی'}.`}
           />
         </div>
       </div>
