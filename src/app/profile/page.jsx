@@ -171,7 +171,7 @@ export default function ProfilePage() {
           </span>
         </div>
       </div>
-      <BottomTabBar />
+      <BottomTabBar showSpacer={false} />
       {showLogoutConfirm && (
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center p-6"

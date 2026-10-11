@@ -271,11 +271,11 @@ export default function HomePage() {
   }
 
   return (
-      <div 
-        className="min-h-dvh flex flex-col" 
-        style={{ 
+      <div
+        className="min-h-dvh flex flex-col"
+        style={{
           backgroundColor: colors.background,
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          paddingBottom: 'calc(var(--tab-bar-height) + 20px + env(safe-area-inset-bottom, 0px))',
         }}
       >
         <div className="app-container">
@@ -328,7 +328,7 @@ export default function HomePage() {
           )}
         </div>
       </div>
-      <BottomTabBar />
+      <BottomTabBar showSpacer={false} />
       <NotificationModal visible={notificationVisible} onClose={() => setNotificationVisible(false)} />
       <HomeFilterModal visible={filterVisible} onClose={() => setFilterVisible(false)} onApply={setFilters} currentFilters={filters} />
       <ReviewModal visible={reviewVisible} appointment={currentReviewAppointment} onClose={handleReviewClose} />
