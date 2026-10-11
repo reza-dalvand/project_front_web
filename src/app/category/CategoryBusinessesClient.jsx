@@ -9,7 +9,7 @@ import BusinessListCard from '@/components/home/BusinessListCard';
 import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import dynamic from 'next/dynamic';
-import { businessesService } from '@/api';
+import { businessesService, categoriesService } from '@/api';
 import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 
 const CategoryFilterModal = dynamic(() => import('@/components/home/CategoryFilterModal'), {
@@ -71,6 +71,37 @@ export default function CategoryBusinessesPage({ categoryId }) {
   const getLocationParams = useCallback(() => {
     return useGlobalLocationStore.getState().getLocationParams();
   }, []);
+
+  // ═══════ دریافت نام دسته‌بندی بر اساس categoryId ═══════
+  useEffect(() => {
+    if (!categoryId) return;
+
+    let cancelled = false;
+
+    const fetchCategoryName = async () => {
+      try {
+        const result = await categoriesService.getServiceCategories();
+
+        if (cancelled) return;
+
+        const found = (result.data || []).find(
+          (category) => String(category.id) === String(categoryId)
+        );
+
+        if (found?.name) {
+          setCategoryName(found.name);
+        }
+      } catch (error) {
+        console.error('Failed to fetch category name:', error);
+      }
+    };
+
+    fetchCategoryName();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryId]);
 
   // ═══════ FIX: دریافت لیست با dependency صحیح ═══════
   useEffect(() => {
