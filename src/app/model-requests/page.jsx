@@ -6,6 +6,7 @@ import { useNearbyStore } from '@/stores/useNearbyStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { BottomTabBar } from '@/components/common';
 import { adsService } from '@/api';
 import ModelRequestHeader from '@/components/modelRequests/ModelRequestHeader';
 import ModelRequestFilter from '@/components/modelRequests/ModelRequestFilter';
@@ -104,11 +105,11 @@ export default function ModelRequestsPage() {
   );
 
   return (
-    <ScreenWrapper scrollable padding={0}>
+    <ScreenWrapper scrollable padding={0} hasBottomTab={true}>
       <ModelRequestHeader count={filteredRequests.length} />
       <ModelRequestFilter activeFilter={costFilter} onFilterChange={setCostFilter} />
 
-      <div className="px-5 pb-32 space-y-4">
+      <div className="px-5 pb-6 space-y-4">
         {isLoading ? (
           <div className="flex justify-center py-12">
             <LoadingSpinner label="در حال بارگذاری..." />
@@ -125,6 +126,8 @@ export default function ModelRequestsPage() {
           />
         )}
       </div>
+
+      <BottomTabBar showSpacer={false} />
     </ScreenWrapper>
   );
 }
