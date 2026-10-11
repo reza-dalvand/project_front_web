@@ -136,4 +136,15 @@ const finalConfig = {
   NODE_ENV: env,
 };
 
+console.log('[BEAU CONFIG DEBUG]', {
+  nodeEnv: finalConfig.NODE_ENV,
+  isNative: Capacitor.isNativePlatform(),
+  apiBaseUrl: finalConfig.API_BASE_URL,
+  mediaBaseUrl: finalConfig.MEDIA_BASE_URL,
+  localNetworkIp:
+    typeof process !== 'undefined'
+      ? process.env?.NEXT_PUBLIC_LOCAL_NETWORK_IP
+      : undefined,
+});
+
 export default finalConfig;

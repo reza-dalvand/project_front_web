@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════
-#   Development Environment
+#   Development Environment (با اتصال به Production API)
 #   استفاده: docker-compose up -d
 # ═══════════════════════════════════════════════════════════
 
@@ -12,15 +12,22 @@ services:
       dockerfile: Dockerfile
       target: builder # فقط تا stage بیلد
       args:
-        NEXT_PUBLIC_USE_MOCK: 'true'
-        NEXT_PUBLIC_API_BASE_URL: 'http://localhost:8000/api/v1'
-        NODE_ENV: 'development'
+        NEXT_PUBLIC_USE_MOCK: 'false'
+        NEXT_PUBLIC_API_BASE_URL: 'https://api.beauclub.ir/api/v1'
+        NEXT_PUBLIC_SITE_DOMAIN: 'https://app.beauclub.ir'
+        NEXT_PUBLIC_MEDIA_BASE_URL: 'https://api.beauclub.ir'
+        NEXT_PUBLIC_ARVAN_CDN_URL: 'https://cdn.beauclub.ir'
+        NODE_ENV: 'production'
     container_name: beau-frontend-dev
     ports:
       - '3000:3000'
     environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_USE_MOCK=true
+      - NODE_ENV=production
+      - NEXT_PUBLIC_USE_MOCK=false
+      - NEXT_PUBLIC_API_BASE_URL=https://api.beauclub.ir/api/v1
+      - NEXT_PUBLIC_SITE_DOMAIN=https://app.beauclub.ir
+      - NEXT_PUBLIC_MEDIA_BASE_URL=https://api.beauclub.ir
+      - NEXT_PUBLIC_ARVAN_CDN_URL=https://cdn.beauclub.ir
     volumes:
       - .:/app
       - /app/node_modules

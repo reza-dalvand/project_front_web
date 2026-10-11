@@ -11,20 +11,31 @@ import { useBusinessStore } from '@/stores/useBusinessStore';
  * قوانین:
  *  ۱. لاگین نیست → باز کردن مدال لاگین و ریدایرکت به خانه (بدون رفتن به /auth/login)
  *  ۲. لاگین هست ولی کسب‌وکار ندارد → ریدایرکت به /create-business
- *  ۳. لاگین هست و کسب‌وکار دارد → دسترسی مجاز
+ *  ۳. لاگین هست و کسب‌وکار دارد ولی هنوز تایید نشده → layout پیام مناسب نشان می‌دهد
+ *  ۴. لاگین هست و کسب‌وکار تایید شده → دسترسی مجاز
  */
 export const useRequireBusiness = () => {
   const router = useRouter();
   const pathname = usePathname();
+
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const authHydrated = useAuthStore((s) => s._hydrated);
   const checkSession = useAuthStore((s) => s.checkSession);
   const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
 
-  // بررسی ساده‌تر — فقط وجود id یا businessStatus کافی است
-  const hasBusiness = useBusinessStore(
-    (s) => Boolean(s.businessData?.id) || Boolean(s.businessStatus)
-  );
+  const businessId = useBusinessStore((s) => s.businessData?.id);
+  const businessStatus = useBusinessStore((s) => s.businessStatus);
+  const businessDataStatus = useBusinessStore((s) => s.businessData?.status);
+  const businessIsActive = useBusinessStore((s) => s.businessData?.isActive);
+
+  // آیا کاربر اصلاً کسب‌وکاری دارد؟
+  const hasBusiness = Boolean(businessId) || Boolean(businessStatus);
+
+  // آیا کسب‌وکار تایید نهایی شده است؟
+  const isApproved =
+    businessStatus === 'approved' ||
+    businessDataStatus === 'approved' ||
+    businessIsActive === true;
 
   useEffect(() => {
     if (!authHydrated) return;
@@ -39,7 +50,7 @@ export const useRequireBusiness = () => {
         return;
       }
 
-      // ─── ۲. بررسی اعتبار session (تلاش برای استفاده از Refresh Token ۳۰ روزه) ───
+      // ─── ۲. بررسی اعتبار session ───
       const isValid = await checkSession();
       if (!isValid) {
         if (pathname !== '/') {
@@ -53,14 +64,28 @@ export const useRequireBusiness = () => {
       if (!hasBusiness) {
         router.replace('/create-business');
       }
+
+      // نکته:
+      // اگر hasBusiness true باشد ولی isApproved false باشد،
+      // در اینجا ریدایرکت نمی‌کنیم؛ layout پیام «در انتظار تایید / تایید نشده» نشان می‌دهد.
     };
 
     validate();
-  }, [isAuthenticated, authHydrated, hasBusiness, router, pathname, checkSession, openAuthModal]);
+  }, [
+    isAuthenticated,
+    authHydrated,
+    hasBusiness,
+    router,
+    pathname,
+    checkSession,
+    openAuthModal,
+  ]);
 
   return {
     isAuthenticated,
     hasBusiness,
+    isApproved,
+    businessStatus,
     hydrated: authHydrated,
   };
 };
