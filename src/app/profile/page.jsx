@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FiCalendar,
+  FiCheckCircle,
   FiHeart,
   FiCreditCard,
   FiEdit3,
@@ -35,30 +36,74 @@ export default function ProfilePage() {
   const isDark = resolvedTheme === 'dark';
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  // ✅ FIX: آمار از بک‌اند می‌آید نه هاردکد
+  // ✅ آمار پروفایل: نوبت‌ها، انجام شده، علاقه‌مندی
   const [userStats, setUserStats] = useState([
     { id: 1, label: 'نوبت‌ها', value: 0, icon: FiCalendar, color: '#2196F3' },
-    { id: 2, label: 'علاقه‌مندی', value: 0, icon: FiHeart, color: '#E91E63' },
+    { id: 2, label: 'انجام شده', value: 0, icon: FiCheckCircle, color: '#43A047' },
+    { id: 3, label: 'علاقه‌مندی', value: 0, icon: FiHeart, color: '#E91E63' },
   ]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
+
     const fetchStats = async () => {
       try {
         const [apptRes, favRes] = await Promise.allSettled([
           appointmentsService.getMyAppointments('all'),
           favoritesService.getFavoritesCount(),
         ]);
-        const apptCount = apptRes.status === 'fulfilled' ? (apptRes.value.data || []).length : 0;
-        const favCount = favRes.status === 'fulfilled' ? favRes.value.data?.total || 0 : 0;
+
+        const rawAppointments =
+          apptRes.status === 'fulfilled' ? apptRes.value?.data : [];
+
+        const appointments = Array.isArray(rawAppointments)
+          ? rawAppointments
+          : Array.isArray(rawAppointments?.results)
+            ? rawAppointments.results
+            : [];
+
+        const apptCount = appointments.length;
+
+        const doneCount = appointments.filter(
+          (appointment) => appointment?.status === 'done'
+        ).length;
+
+        const favData =
+          favRes.status === 'fulfilled' ? favRes.value?.data : null;
+
+        const favCount =
+          typeof favData === 'number'
+            ? favData
+            : favData?.total || 0;
+
         setUserStats([
-          { id: 1, label: 'نوبت‌ها', value: apptCount, icon: FiCalendar, color: '#2196F3' },
-          { id: 2, label: 'علاقه‌مندی', value: favCount, icon: FiHeart, color: '#E91E63' },
+          {
+            id: 1,
+            label: 'نوبت‌ها',
+            value: apptCount,
+            icon: FiCalendar,
+            color: '#2196F3',
+          },
+          {
+            id: 2,
+            label: 'انجام شده',
+            value: doneCount,
+            icon: FiCheckCircle,
+            color: '#43A047',
+          },
+          {
+            id: 3,
+            label: 'علاقه‌مندی',
+            value: favCount,
+            icon: FiHeart,
+            color: '#E91E63',
+          },
         ]);
       } catch (err) {
         console.error('Failed to fetch profile stats:', err);
       }
     };
+
     fetchStats();
   }, [isAuthenticated]);
 
@@ -144,15 +189,26 @@ export default function ProfilePage() {
       <ProfileHeader user={user} />
       <div className="px-5 pt-6">
         <ProfileStatsCard stats={userStats} />
-        <ProfileMenuList title="دسترسی سریع" items={quickMenuItems} onItemPress={handleMenuPress} />
+        <ProfileMenuList
+          title="دسترسی سریع"
+          items={quickMenuItems}
+          onItemPress={handleMenuPress}
+        />
         <div className="mb-6">
-          <h3 className="text-base font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
+          <h3
+            className="text-base font-[Vazir-Bold] mb-3"
+            style={{ color: colors.textMain }}
+          >
             تنظیمات
           </h3>
           <div className="mb-2.5">
             <ThemeToggleItem isDark={isDark} onToggle={toggleTheme} />
           </div>
-          <ProfileMenuList title="" items={settingsMenuItems} onItemPress={handleMenuPress} />
+          <ProfileMenuList
+            title=""
+            items={settingsMenuItems}
+            onItemPress={handleMenuPress}
+          />
         </div>
         <div className="mt-4 flex flex-col gap-3 items-center pb-4">
           <Button
@@ -166,7 +222,10 @@ export default function ProfilePage() {
             className="!border-[#E53935] !border-[1.5px]"
             style={{ color: '#E53935' }}
           />
-          <span className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
+          <span
+            className="text-xs font-[Vazir]"
+            style={{ color: colors.textSecondary }}
+          >
             نسخه ۱.۰.۰ - بیو کلاب
           </span>
         </div>
@@ -194,7 +253,10 @@ export default function ProfilePage() {
             >
               خروج از حساب کاربری
             </h3>
-            <p className="text-sm text-center leading-6" style={{ color: colors.textSecondary }}>
+            <p
+              className="text-sm text-center leading-6"
+              style={{ color: colors.textSecondary }}
+            >
               آیا از خروج از حساب کاربری خود مطمئن هستید؟
             </p>
             <div className="flex gap-3 w-full mt-2">

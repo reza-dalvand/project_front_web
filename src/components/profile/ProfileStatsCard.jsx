@@ -7,29 +7,64 @@ import { toPersianDigit } from '@/utils/numberUtils';
 export default function ProfileStatsCard({ stats }) {
   const { colors } = useTheme();
 
+  const items = Array.isArray(stats) ? stats : [];
+  const isCompact = items.length >= 3;
+
+  if (items.length === 0) {
+    return null;
+  }
+
   return (
     <Card variant="elevated" padding={0} radius={20} className="mb-6">
-      <div className="flex py-5">
-        {stats.map((stat, index) => {
+      <div
+        className="grid"
+        style={{
+          gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
+        }}
+      >
+        {items.map((stat, index) => {
           const Icon = stat.icon;
+          const iconColor = stat.color || colors.primary;
+
           return (
-            <div key={stat.id} className="flex flex-1 flex-col items-center gap-2 relative">
+            <div
+              key={stat.id ?? index}
+              className={`relative flex min-w-0 flex-col items-center justify-center ${
+                isCompact ? 'gap-1.5 px-1.5 py-4' : 'gap-2 px-2 py-5'
+              }`}
+            >
               <div
-                className="w-12 h-12 rounded-full flex items-center justify-center mb-1"
-                style={{ backgroundColor: stat.color + '20' }}
+                className={`flex items-center justify-center rounded-full ${
+                  isCompact ? 'h-10 w-10' : 'h-12 w-12'
+                }`}
+                style={{ backgroundColor: `${iconColor}1A` }}
               >
-                {Icon && <Icon size={24} color={stat.color} />}
+                {Icon && <Icon size={isCompact ? 20 : 24} color={iconColor} />}
               </div>
-              <span className="text-xl font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+
+              <span
+                className={`${
+                  isCompact ? 'text-base' : 'text-xl'
+                } font-[Vazir-Bold] leading-none`}
+                style={{ color: colors.textMain }}
+              >
                 {toPersianDigit(stat.value)}
               </span>
-              <span className="text-xs" style={{ color: colors.textSecondary }}>
+
+              <span
+                className={`w-full truncate text-center font-[Vazir] ${
+                  isCompact ? 'text-[10px]' : 'text-xs'
+                }`}
+                style={{ color: colors.textSecondary }}
+              >
                 {stat.label}
               </span>
 
-              {index < stats.length - 1 && (
+              {index < items.length - 1 && (
                 <div
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-[60%]"
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-px ${
+                    isCompact ? 'h-8' : 'h-10'
+                  }`}
                   style={{ backgroundColor: colors.border }}
                 />
               )}
