@@ -1,11 +1,14 @@
 // src/app/manage/layout.jsx
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useRequireBusiness } from '@/hooks/useRequireBusiness';
 import { useTheme } from '@/stores/useThemeStore';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import Button from '@/components/common/Button';
 
 export default function ManageLayout({ children }) {
+  const router = useRouter();
   const { colors } = useTheme();
 
   const {
@@ -43,7 +46,7 @@ export default function ManageLayout({ children }) {
       ? 'برای بررسی دلیل و اقدام بعدی با پشتیبانی تماس بگیرید.'
       : isPending
         ? 'پس از تایید کسب‌وکار، دسترسی به بخش مدیریت فعال می‌شود.'
-        : 'لطفاً بعداً دوباره تلاش کنید یا وضعیت کسب‌وکار را بررسی کنید.';
+        : 'لطفاً بعداَ دوباره تلاش کنید یا وضعیت کسب‌وکار را بررسی کنید.';
 
     return (
       <div dir="rtl" className="min-h-screen flex items-center justify-center p-6">
@@ -63,6 +66,16 @@ export default function ManageLayout({ children }) {
           >
             {description}
           </p>
+
+          {isPending && (
+            <Button
+              title="بازگشت به صفحه اصلی"
+              onPress={() => router.replace('/')}
+              variant="primary"
+              size="md"
+              fullWidth
+            />
+          )}
         </div>
       </div>
     );
