@@ -116,6 +116,7 @@ export default function LineRentalDetailPage({ rentalId }) {
 
 
   const priceInfo = {
+    collabType,
     percentSalon,
     percentPartner,
     fixedAmount,
@@ -144,7 +145,7 @@ export default function LineRentalDetailPage({ rentalId }) {
           </h1>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <CollabBadge type={collabType} priceDisplay={getPriceDisplay()} variant="default" />
+            <CollabBadge type={collabType} variant="default" />
           </div>
 
           {businessName && (

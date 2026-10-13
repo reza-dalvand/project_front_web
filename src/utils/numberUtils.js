@@ -171,6 +171,135 @@ export const getLineRentalPriceDisplay = (rental = {}) => {
   return rental.priceDisplay || '';
 };
 
+
+export const getLineRentalCollabLabel = (rental = {}) => {
+  const collabType = rental.collab_type || rental.collabType;
+
+  if (collabType === 'percent') return 'درصدی';
+  if (collabType === 'fixed') return 'اجاره ثابت';
+  if (collabType === 'hourly') return 'ساعتی';
+
+  return 'همکاری';
+};
+
+/**
+ * ساخت ساختار نمایشی جدا برای مبالغ آگهی لاین
+ *
+ * خروجی:
+ * {
+ *   rows: [
+ *     { id, label, value, tone }
+ *   ],
+ *   tags: [
+ *     { id, label, tone }
+ *   ]
+ * }
+ *
+ * مثال fixed با رهن:
+ * rows:
+ *   اجاره ماهانه: ۵ میلیون تومان
+ *   رهن: ۲۰ میلیون تومان
+ *
+ * مثال fixed بدون رهن:
+ * rows:
+ *   اجاره ماهانه: ۵ میلیون تومان
+ * tags:
+ *   بدون رهن
+ *
+ * مثال hourly:
+ * rows:
+ *   نرخ ساعتی: ۱۵۰ هزار تومان
+ *
+ * مثال percent:
+ * rows:
+ *   سهم سالن: ۴۰٪
+ *   سهم همکار: ۶۰٪
+ */
+export const getLineRentalPricePresentation = (rental = {}) => {
+  const collabType = rental.collab_type || rental.collabType;
+  const rows = [];
+  const tags = [];
+
+  if (collabType === 'percent') {
+    const salon = rental.percent_salon ?? rental.percentSalon;
+    const partner = rental.percent_partner ?? rental.percentPartner;
+
+    if (hasValue(salon) || hasValue(partner)) {
+      rows.push({
+        id: 'salon',
+        label: 'سهم سالن',
+        value: `${toPersianDigit(toFiniteNumber(salon))}٪`,
+        tone: 'purple',
+      });
+
+      rows.push({
+        id: 'partner',
+        label: 'سهم همکار',
+        value: `${toPersianDigit(toFiniteNumber(partner))}٪`,
+        tone: 'indigo',
+      });
+    }
+  } else if (collabType === 'fixed') {
+    const amount = rental.fixed_amount ?? rental.fixedAmount;
+    const deposit = rental.fixed_deposit ?? rental.fixedDeposit;
+
+    const amountValue = toFiniteNumber(amount);
+    const depositValue = toFiniteNumber(deposit);
+
+    if (amountValue > 0) {
+      rows.push({
+        id: 'rent',
+        label: 'اجاره ماهانه',
+        value: formatCompactToman(amountValue),
+        tone: 'blue',
+      });
+    }
+
+    if (depositValue > 0) {
+      rows.push({
+        id: 'deposit',
+        label: 'رهن',
+        value: formatCompactToman(depositValue),
+        tone: 'amber',
+      });
+    } else if (amountValue > 0 || hasValue(amount) || hasValue(deposit)) {
+      tags.push({
+        id: 'no-deposit',
+        label: 'بدون رهن',
+        tone: 'success',
+      });
+    }
+  } else if (collabType === 'hourly') {
+    const rate = rental.hourly_rate ?? rental.hourlyRate;
+    const rateValue = toFiniteNumber(rate);
+
+    if (rateValue > 0) {
+      rows.push({
+        id: 'hourly',
+        label: 'نرخ ساعتی',
+        value: formatCompactToman(rateValue),
+        tone: 'orange',
+      });
+    }
+  }
+
+  // fallback اگر هیچ‌کدام از فیلدهای عددی موجود نبود
+  if (rows.length === 0 && tags.length === 0) {
+    const fallback = rental.priceDisplay || getLineRentalPriceDisplay(rental);
+    if (fallback) {
+      rows.push({
+        id: 'fallback',
+        label: 'قیمت',
+        value: fallback,
+        tone: 'gray',
+      });
+    }
+  }
+
+  return { rows, tags };
+};
+
+
 // ═══════════════════════════════════════════════════════
 //    ⚠️ DEPRECATED — فقط برای سازگاری موقت
 //    این export‌ها صرفاً re-export از price-utils هستند

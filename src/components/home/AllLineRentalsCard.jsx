@@ -3,8 +3,8 @@
 import { FiMapPin, FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { Card, CollabBadge } from '@/components/common';
-import { getLineRentalPriceDisplay } from '@/utils/numberUtils';
-
+import LineRentalPriceRows from '@/components/lineRentals/LineRentalPriceRows';
+import { getLineRentalCollabLabel } from '@/utils/numberUtils';
 
 const getLineEmoji = (typeName = '') => {
   if (typeName.includes('ناخن')) return '💅';
@@ -21,18 +21,11 @@ const getLineEmoji = (typeName = '') => {
 export default function AllLineRentalsCard({ ad, onPress }) {
   const { colors } = useTheme();
 
-  const typeName = ad.serviceTypeName || 'لاین زیبایی';
-  const businessName = ad.businessName || 'کسب‌وکار بیو کلاب';
+  const typeName = ad.serviceTypeName || ad.service_category_name || 'لاین زیبایی';
+  const businessName = ad.businessName || ad.business_name || 'کسب‌وکار بیو کلاب';
   const city = ad.city || '';
   const collabType = ad.collab_type || ad.collabType;
-  const priceDisplay = getLineRentalPriceDisplay(ad);
-
-  const priceText =
-    collabType === 'percent'
-      ? `درصدی ${priceDisplay}`
-      : collabType === 'hourly'
-        ? `ساعتی ${priceDisplay}`
-        : `اجاره ثابت ${priceDisplay}`;
+  const collabLabel = getLineRentalCollabLabel(ad);
 
   return (
     <Card
@@ -91,7 +84,7 @@ export default function AllLineRentalsCard({ ad, onPress }) {
             style={{ backgroundColor: 'rgba(0,0,0,0.22)' }}
           >
             <span className="flex-1 truncate text-[11px] font-[Vazir-Medium] text-white/90">
-              {priceText}
+              {collabLabel}
             </span>
           </div>
         </div>
@@ -104,6 +97,9 @@ export default function AllLineRentalsCard({ ad, onPress }) {
           >
             {ad.title}
           </h3>
+
+          {/* نمایش جدا مبالغ — حالت B */}
+          <LineRentalPriceRows rental={ad} />
 
           <div className="flex flex-wrap items-center gap-1.5">
             <span
@@ -132,11 +128,7 @@ export default function AllLineRentalsCard({ ad, onPress }) {
             )}
           </div>
 
-          <CollabBadge
-            type={collabType}
-            priceDisplay={priceDisplay}
-            variant="compact"
-          />
+          <CollabBadge type={collabType} variant="compact" />
 
           <div className="flex items-center justify-between pt-0.5">
             <span
