@@ -1,5 +1,6 @@
 'use client';
-import { FiMapPin } from 'react-icons/fi';
+
+import { FiMapPin, FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { Card } from '@/components/common';
 import CostTypeBadge from '@/components/common/CostTypeBadge';
@@ -24,95 +25,166 @@ const getServiceEmoji = (serviceName = '') => {
 
 export default function AllModelRequestsCard({ request, onPress }) {
   const { colors } = useTheme();
+
+  const serviceName = request.serviceName || 'خدمات زیبایی';
+  const businessName = request.businessName || 'کسب‌وکار بیو کلاب';
+  const city = request.city || '';
+  const discount = request.discount || 0;
+  const rawDistance = request.distance;
+
+  const numericDistance =
+    rawDistance === null || rawDistance === undefined || rawDistance === ''
+      ? null
+      : Number(rawDistance);
+
+  const hasDistance = numericDistance !== null && !Number.isNaN(numericDistance);
+
+  const distanceText = hasDistance
+    ? numericDistance < 1
+      ? `${toPersianDigit(Math.round(numericDistance * 1000))} متر`
+      : `${toPersianDigit(numericDistance.toFixed(1))} کیلومتر`
+    : '';
+
   return (
-    <Card variant="elevated" padding={0} radius={20}>
+    <Card
+      variant="elevated"
+      padding={0}
+      radius={26}
+      className="group overflow-hidden transition-all duration-300 hover:-translate-y-1"
+      style={{ boxShadow: '0 14px 34px rgba(233,30,99,0.10)' }}
+    >
       <button onClick={() => onPress?.(request)} className="w-full text-right">
-        {/* ═══ هدر گرادیانی (بدون تصویر) ═══ */}
+        {/* ═══ هدر ═══ */}
         <div
-          className="relative w-full h-[160px] overflow-hidden"
+          className="relative h-[145px] w-full overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #E91E63 0%, #AD1457 60%, #880E4F 100%)',
+            background:
+              'linear-gradient(135deg, #FF8FAB 0%, #E91E63 48%, #880E4F 100%)',
           }}
         >
-          {/* دایره‌های تزئینی */}
           <div
-            className="absolute -top-8 -right-8 w-28 h-28 rounded-full"
-            style={{ backgroundColor: 'rgba(255,255,255,0.10)' }}
+            className="absolute -right-8 -top-8 h-28 w-28 rounded-full blur-2xl"
+            style={{ backgroundColor: 'rgba(255,255,255,0.22)' }}
           />
           <div
-            className="absolute -bottom-6 -left-4 w-20 h-20 rounded-full"
-            style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+            className="absolute -bottom-10 -left-6 h-32 w-32 rounded-full blur-2xl"
+            style={{ backgroundColor: 'rgba(255,255,255,0.14)' }}
           />
-          <div
-            className="absolute top-8 left-10 w-10 h-10 rounded-full"
-            style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
-          />
-          <div
-            className="absolute bottom-4 right-6 w-6 h-6 rounded-full"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-          />
-          {/* ایموجی خدمت */}
+
           <div className="absolute inset-0 flex items-center justify-center">
-            <span
-              className="text-[48px]"
-              style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.25))' }}
+            <div
+              className="flex h-18 w-18 items-center justify-center rounded-full border backdrop-blur-md"
+              style={{
+                width: '72px',
+                height: '72px',
+                backgroundColor: 'rgba(255,255,255,0.14)',
+                borderColor: 'rgba(255,255,255,0.24)',
+              }}
             >
-              {getServiceEmoji(request.serviceName)}
-            </span>
+              <span
+                className="text-[34px]"
+                style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.22))' }}
+              >
+                {getServiceEmoji(serviceName)}
+              </span>
+            </div>
           </div>
-          {/* بج فوری */}
+
           {request.isUrgent && (
             <div
-              className="absolute top-3 right-3 px-2.5 py-1 rounded-lg shadow-md"
-              style={{ backgroundColor: '#FF9800' }}
+              className="absolute left-3 top-3 rounded-full px-2.5 py-1 shadow-md"
+              style={{
+                background: 'linear-gradient(135deg, #F59E0B, #EA580C)',
+                boxShadow: '0 8px 20px rgba(245,158,11,0.28)',
+              }}
             >
-              <span className="text-[11px] font-[Vazir-Bold] text-white">🔥 فوری</span>
+              <span className="text-[10px] font-[Vazir-Bold] text-white">🔥 فوری</span>
             </div>
           )}
-          {/* بج نوع هزینه */}
-          <div className="absolute top-3 left-3">
+
+          <div className="absolute right-3 top-3">
             <CostTypeBadge type={request.costType} variant="solid" />
           </div>
-          {/* نوار شیشه‌ای */}
+
           <div
-            className="absolute bottom-0 left-0 right-0 h-[36px] flex items-center px-3 gap-2"
-            style={{ backgroundColor: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
+            className="absolute bottom-0 left-0 right-0 flex h-[38px] items-center gap-2 px-3 backdrop-blur-md"
+            style={{ backgroundColor: 'rgba(0,0,0,0.22)' }}
           >
-            <span className="text-[11px] font-[Vazir-Medium] text-white/90 truncate flex-1">
-              {request.serviceName}
+            <span className="flex-1 truncate text-[11px] font-[Vazir-Medium] text-white/90">
+              {serviceName}
             </span>
-            {request.discount > 0 && (
+            {discount > 0 && (
               <span
-                className="text-[10px] font-[Vazir-Bold] px-1.5 py-0.5 rounded-md flex-shrink-0"
-                style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: '#fff' }}
+                className="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-[Vazir-Bold] text-white"
+                style={{ backgroundColor: 'rgba(255,255,255,0.22)' }}
               >
-                {toPersianDigit(request.discount)}٪ تخفیف
+                {toPersianDigit(discount)}٪
               </span>
             )}
           </div>
         </div>
+
         {/* ═══ محتوا ═══ */}
-        <div className="p-3.5 space-y-2">
+        <div className="space-y-2.5 p-3.5">
           <h3
-            className="text-base font-[Vazir-Bold] leading-[23px] line-clamp-2 min-h-[46px]"
+            className="line-clamp-2 min-h-[44px] text-[15px] font-[Vazir-Bold] leading-6"
             style={{ color: colors.textMain }}
           >
             {request.title}
           </h3>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm">🏪</span>
+
+          <div className="flex flex-wrap items-center gap-1.5">
             <span
-              className="text-[11px] font-[Vazir-Medium] line-clamp-1"
-              style={{ color: colors.primary }}
+              className="inline-flex max-w-[130px] items-center gap-1 rounded-full px-2 py-1 text-[10px] font-[Vazir-Medium]"
+              style={{
+                backgroundColor: `${colors.primary}14`,
+                color: colors.primary,
+              }}
             >
-              {request.businessName}
+              <span className="text-[10px] leading-none">🏪</span>
+              <span className="truncate">{businessName}</span>
             </span>
+
+            {city && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px]"
+                style={{
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                  color: colors.textSecondary,
+                }}
+              >
+                <FiMapPin size={10} />
+                <span className="max-w-[70px] truncate">{city}</span>
+              </span>
+            )}
+
+            {hasDistance && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-[Vazir-Bold]"
+                style={{
+                  backgroundColor: 'rgba(33,150,243,0.12)',
+                  color: '#2196F3',
+                }}
+              >
+                <FiMapPin size={10} />
+                {distanceText}
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1">
-            <FiMapPin size={12} color={colors.textSecondary} />
-            <span className="text-[10px]" style={{ color: colors.textSecondary }}>
-              {request.city}
+
+          <div className="flex items-center justify-between pt-0.5">
+            <span
+              className="text-[10px] font-[Vazir-Medium]"
+              style={{ color: colors.textSecondary }}
+            >
+              مشاهده
             </span>
+            <FiChevronLeft
+              size={14}
+              className="transition-transform duration-300 group-hover:-translate-x-1"
+              style={{ color: colors.primary }}
+            />
           </div>
         </div>
       </button>
