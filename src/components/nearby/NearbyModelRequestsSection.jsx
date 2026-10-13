@@ -1,14 +1,11 @@
-// src/components/nearby/NearbyModelRequestsSection.jsx
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useTheme } from '@/stores/useThemeStore';
 import SectionHeader from '@/components/common/SectionHeader';
 import SeeAllButton from '@/components/home/SeeAllButton';
 import AllModelRequestsCard from '@/components/home/AllModelRequestsCard';
 
 export default function NearbyModelRequestsSection({ nearbyModelRequests, onModelPress }) {
-  const { colors } = useTheme();
   const router = useRouter();
 
   if (!nearbyModelRequests || nearbyModelRequests.length === 0) return null;
@@ -26,9 +23,10 @@ export default function NearbyModelRequestsSection({ nearbyModelRequests, onMode
           />
         }
       />
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+
+      <div className="-mx-1 flex gap-3.5 overflow-x-auto px-1 pb-2 scrollbar-hide">
         {nearbyModelRequests.map((req) => (
-          <div key={req.id} className="flex-shrink-0 w-[220px]">
+          <div key={req.id} className="w-[235px] flex-shrink-0 snap-start">
             <AllModelRequestsCard request={req} onPress={onModelPress} />
           </div>
         ))}

@@ -1,5 +1,5 @@
-// src/components/lineRentals/detail/LineRentalHero.jsx
 'use client';
+
 import { FiArrowRight, FiShare2 } from 'react-icons/fi';
 
 const getLineEmoji = (typeName = '') => {
@@ -21,83 +21,122 @@ export default function LineRentalHero({
   onBack,
   onShare,
 }) {
+  const safeTypeName = serviceTypeName || 'لاین زیبایی';
+
+  const collabLabel =
+    collabType === 'percent'
+      ? 'همکاری درصدی'
+      : collabType === 'fixed'
+        ? 'اجاره ثابت'
+        : 'همکاری ساعتی';
+
   return (
     <div
-      className="relative w-full h-[320px] overflow-hidden"
+      className="relative h-[340px] w-full overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #5a67d8 50%, #764ba2 100%)',
+        background:
+          'linear-gradient(135deg, #C4B5FD 0%, #8B5CF6 45%, #5B21B6 100%)',
       }}
     >
-      {/* دایره‌های تزئینی */}
+      {/* نورهای تزئینی */}
       <div
-        className="absolute -top-12 -left-12 w-44 h-44 rounded-full"
-        style={{ backgroundColor: 'rgba(255,255,255,0.10)' }}
+        className="absolute -left-16 -top-16 h-56 w-56 rounded-full blur-3xl"
+        style={{ backgroundColor: 'rgba(255,255,255,0.20)' }}
       />
       <div
-        className="absolute -bottom-10 -right-8 w-36 h-36 rounded-full"
-        style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+        className="absolute -bottom-20 -right-12 h-64 w-64 rounded-full blur-3xl"
+        style={{ backgroundColor: 'rgba(255,255,255,0.13)' }}
       />
       <div
-        className="absolute top-16 right-14 w-14 h-14 rounded-full"
+        className="absolute left-16 top-20 h-20 w-20 rounded-full blur-2xl"
         style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
       />
       <div
-        className="absolute bottom-16 left-10 w-8 h-8 rounded-full"
-        style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-      />
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full"
-        style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
+        className="absolute bottom-24 right-14 h-12 w-12 rounded-full blur-xl"
+        style={{ backgroundColor: 'rgba(255,255,255,0.16)' }}
       />
 
-      {/* ایموجی خدمت */}
+      {/* مدال مرکزی */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[80px]" style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.3))' }}>
-          {getLineEmoji(serviceTypeName)}
-        </span>
+        <div
+          className="flex h-28 w-28 items-center justify-center rounded-full border shadow-2xl backdrop-blur-xl"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.13)',
+            borderColor: 'rgba(255,255,255,0.24)',
+            boxShadow: '0 24px 70px rgba(0,0,0,0.18)',
+          }}
+        >
+          <span
+            className="text-[64px]"
+            style={{ filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.28))' }}
+          >
+            {getLineEmoji(safeTypeName)}
+          </span>
+        </div>
       </div>
 
-      {/* دکمه‌ها */}
-      <div className="absolute top-4 left-4 right-4 flex items-center gap-3 z-10">
+      {/* دکمه‌های بالا */}
+      <div className="absolute left-4 right-4 top-4 z-10 flex items-center gap-3">
         <button
           onClick={onBack}
-          className="w-11 h-11 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-sm"
-          style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+          className="flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-md transition-all hover:scale-105 active:scale-95"
+          style={{
+            backgroundColor: 'rgba(0,0,0,0.28)',
+            borderColor: 'rgba(255,255,255,0.16)',
+          }}
         >
           <FiArrowRight size={22} color="#fff" />
         </button>
+
         <div className="flex-1" />
+
         <button
           onClick={onShare}
-          className="w-11 h-11 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-sm"
-          style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+          className="flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-md transition-all hover:scale-105 active:scale-95"
+          style={{
+            backgroundColor: 'rgba(0,0,0,0.28)',
+            borderColor: 'rgba(255,255,255,0.16)',
+          }}
         >
           <FiShare2 size={20} color="#fff" />
         </button>
       </div>
 
       {/* بج نوع خدمت */}
-      {serviceTypeName && (
-        <div
-          className="absolute top-20 left-4 px-3 py-1.5 rounded-xl shadow-md"
-          style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-        >
-          <span className="text-[11px] font-[Vazir-Bold] text-white">{serviceTypeName}</span>
-        </div>
-      )}
-
-      {/* نوار شیشه‌ای پایین */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-[50px] flex items-center px-5 gap-3"
-        style={{ backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
+        className="absolute left-4 top-20 rounded-full px-3 py-1.5 text-[11px] font-[Vazir-Bold] text-white backdrop-blur-md"
+        style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}
       >
-        <span className="text-sm font-[Vazir-Medium] text-white/90 truncate flex-1">
-          {collabType === 'percent'
-            ? `درصدی ${priceDisplay}`
-            : collabType === 'fixed'
-              ? `اجاره ثابت ${priceDisplay}`
-              : `ساعتی ${priceDisplay}`}
-        </span>
+        {safeTypeName}
+      </div>
+
+      {/* پنل پایین */}
+      <div
+        className="absolute bottom-0 left-0 right-0 px-5 pb-5 pt-20"
+        style={{
+          background:
+            'linear-gradient(to top, rgba(0,0,0,0.58) 0%, rgba(0,0,0,0.28) 45%, rgba(0,0,0,0) 100%)',
+        }}
+      >
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <span className="mb-1 block text-[11px] font-[Vazir-Medium] text-white/70">
+              نوع همکاری
+            </span>
+            <h2 className="truncate text-lg font-[Vazir-Bold] text-white">
+              {collabLabel}
+            </h2>
+          </div>
+
+          {priceDisplay && (
+            <span
+              className="flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-[Vazir-Bold] text-white backdrop-blur-md"
+              style={{ backgroundColor: 'rgba(255,255,255,0.20)' }}
+            >
+              {priceDisplay}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
