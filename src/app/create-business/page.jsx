@@ -64,7 +64,10 @@ export default function CreateBusinessPage() {
       return false;
     }
     if (!formData.categoryId) {
-      showToast('نوع کسب‌وکار را انتخاب کنید', 'error');
+      showToast(
+        'نوع پیش‌فرض کسب‌وکار هنوز آماده نشده است، لطفاً چند لحظه صبر کنید',
+        'error'
+      );
       return false;
     }
     if (!formData.provinceId) {
@@ -173,6 +176,8 @@ export default function CreateBusinessPage() {
         onSubmit={handleFinalSubmit}
         submitting={submitting}
         isFinalStep
+        hideCategorySelect
+        defaultCategoryLabel="خدمات چند منظوره"
       />
     );
   };

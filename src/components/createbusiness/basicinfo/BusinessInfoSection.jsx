@@ -1,5 +1,6 @@
 // src/components/createbusiness/basicinfo/BusinessInfoSection.jsx
 'use client';
+import { useEffect, useMemo, useRef } from 'react';
 import { FiBriefcase, FiPhone, FiClock } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
@@ -7,6 +8,20 @@ import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import { toPersianDigit } from '@/utils/numberUtils';
 import { useBusinessCategories } from '@/hooks/useCategoryOptions';
+
+/**
+ * نرمال‌سازی برچسب دسته‌بندی برای مقایسه امن‌تر
+ * - حذف نیم‌فاصله
+ * - یکسان‌سازی ی/ي و ک/ك
+ * - حذف فاصله‌های اضافی
+ */
+const normalizeLabel = (value) =>
+  String(value ?? '')
+    .replace(/[\u200c\u200d]/g, '')
+    .replace(/[\u064A\u06CC]/g, '\u06CC')
+    .replace(/[\u0643\u06A9]/g, '\u06A9')
+    .replace(/\s+/g, '')
+    .trim();
 
 export default function BusinessInfoSection({
   name,
@@ -25,10 +40,53 @@ export default function BusinessInfoSection({
   onPhoneTouched,
   onWorkingHoursTouched,
   onAboutTouched,
+  hideCategorySelect = false,
+  defaultCategoryLabel = null,
 }) {
   const { colors } = useTheme();
+
   // ✅ دریافت دسته‌بندی‌ها از بک‌اند
   const { categories: businessCategories } = useBusinessCategories();
+
+  /**
+   * اگر حالت hidden فعال باشد، دسته پیش‌فرض را از لیست بک‌اند پیدا می‌کنیم.
+   */
+  const defaultCategoryId = useMemo(() => {
+    if (!hideCategorySelect || !defaultCategoryLabel) return null;
+    if (!Array.isArray(businessCategories) || businessCategories.length === 0) return null;
+
+    const target = normalizeLabel(defaultCategoryLabel);
+    const found = businessCategories.find(
+      (category) => normalizeLabel(category?.label) === target
+    );
+
+    return found?.id ?? null;
+  }, [hideCategorySelect, defaultCategoryLabel, businessCategories]);
+
+  /**
+   * برای جلوگیری از re-renderهای اضافی، callback را در ref نگه می‌داریم.
+   */
+  const onCategoryChangeRef = useRef(onCategoryChange);
+
+  useEffect(() => {
+    onCategoryChangeRef.current = onCategoryChange;
+  }, [onCategoryChange]);
+
+  /**
+   * ✅ ست کردن خودکار نوع پیش‌فرض کسب‌وکار
+   * فقط وقتی که dropdown مخفی است و هنوز categoryId انتخاب نشده.
+   */
+  useEffect(() => {
+    if (!hideCategorySelect || !defaultCategoryLabel || !defaultCategoryId) return;
+    if (categoryId) return;
+
+    onCategoryChangeRef.current?.(defaultCategoryId);
+  }, [
+    hideCategorySelect,
+    defaultCategoryLabel,
+    defaultCategoryId,
+    categoryId,
+  ]);
 
   return (
     <div className="space-y-3">
@@ -70,19 +128,26 @@ export default function BusinessInfoSection({
           {errors.name && <p className="text-xs text-[#E53935] mt-1.5">{errors.name}</p>}
         </div>
 
-        {/* نوع کسب‌وکار — ✅ از بک‌اند */}
-        <Dropdown
-          label="نوع کسب‌وکار *"
-          placeholder="انتخاب کنید"
-          value={categoryId}
-          options={businessCategories}
-          onSelect={(val) => {
-            onCategoryChange(val);
-            onCategoryTouched();
-          }}
-        />
+        {/* نوع کسب‌وکار — فقط در حالت عادی نمایش داده می‌شود */}
+        {!hideCategorySelect && (
+          <Dropdown
+            label="نوع کسب‌وکار *"
+            placeholder="انتخاب کنید"
+            value={categoryId}
+            options={businessCategories}
+            onSelect={(val) => {
+              onCategoryChange(val);
+              onCategoryTouched();
+            }}
+          />
+        )}
+
         {errors.categoryId && (
-          <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
+          <div
+            className={`flex items-center gap-1 ${
+              hideCategorySelect ? 'mb-2 px-1' : 'mt-[-8px] mb-2 px-1'
+            }`}
+          >
             <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
               {errors.categoryId}
             </span>

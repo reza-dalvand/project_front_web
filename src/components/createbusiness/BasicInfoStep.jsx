@@ -8,6 +8,7 @@ import ProgressCard from './basicinfo/ProgressCard';
 import ImageUploadSection from './basicinfo/ImageUploadSection';
 import BusinessInfoSection from './basicinfo/BusinessInfoSection';
 import LocationSection from './basicinfo/LocationSection';
+
 export default function BasicInfoStep({
   formData,
   onUpdate,
@@ -15,45 +16,57 @@ export default function BasicInfoStep({
   onSubmit,
   submitting = false,
   isFinalStep = false,
+  hideCategorySelect = false,
+  defaultCategoryLabel = null,
 }) {
   const { colors } = useTheme();
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
   // ─── اعتبارسنجی ───
-  const validateField = useCallback((field, value) => {
-    switch (field) {
-      case 'name':
-        if (!value?.trim()) return 'نام کسب‌وکار الزامی است';
-        if (value.trim().length < 3) return 'حداقل ۳ کاراکتر';
-        return '';
-      case 'categoryId':
-        return !value ? 'نوع کسب‌وکار را انتخاب کنید' : '';
-      case 'provinceId':
-        return !value ? 'استان را انتخاب کنید' : '';
-      case 'cityId':
-        return !value ? 'شهر را انتخاب کنید' : '';
-      case 'address':
-        if (!value?.trim()) return 'آدرس الزامی است';
-        if (value.trim().length < 10) return 'حداقل ۱۰ کاراکتر';
-        return '';
-      case 'phone':
-        return !value?.trim() ? 'شماره تماس الزامی است' : '';
-      case 'workingHours':
-        return !value?.trim() ? 'ساعات کاری الزامی است' : '';
-      case 'about':
-        if (!value?.trim()) return 'توضیحات الزامی است';
-        if (value.trim().length < 20) return 'حداقل ۲۰ کاراکتر';
-        return '';
-      case 'coverUrl':
-        return !value ? 'تصویر کاور الزامی است' : '';
-      case 'ownerPhoto':
-        return !value ? 'تصویر صاحب کسب‌وکار الزامی است' : '';
-      case 'location':
-        return !value ? 'موقعیت روی نقشه الزامی است' : '';
-      default:
-        return '';
-    }
-  }, []);
+  const validateField = useCallback(
+    (field, value) => {
+      switch (field) {
+        case 'name':
+          if (!value?.trim()) return 'نام کسب‌وکار الزامی است';
+          if (value.trim().length < 3) return 'حداقل ۳ کاراکتر';
+          return '';
+        case 'categoryId':
+          if (!value) {
+            return hideCategorySelect
+              ? 'نوع پیش‌فرض کسب‌وکار هنوز آماده نشده است'
+              : 'نوع کسب‌وکار را انتخاب کنید';
+          }
+          return '';
+        case 'provinceId':
+          return !value ? 'استان را انتخاب کنید' : '';
+        case 'cityId':
+          return !value ? 'شهر را انتخاب کنید' : '';
+        case 'address':
+          if (!value?.trim()) return 'آدرس الزامی است';
+          if (value.trim().length < 10) return 'حداقل ۱۰ کاراکتر';
+          return '';
+        case 'phone':
+          return !value?.trim() ? 'شماره تماس الزامی است' : '';
+        case 'workingHours':
+          return !value?.trim() ? 'ساعات کاری الزامی است' : '';
+        case 'about':
+          if (!value?.trim()) return 'توضیحات الزامی است';
+          if (value.trim().length < 20) return 'حداقل ۲۰ کاراکتر';
+          return '';
+        case 'coverUrl':
+          return !value ? 'تصویر کاور الزامی است' : '';
+        case 'ownerPhoto':
+          return !value ? 'تصویر صاحب کسب‌وکار الزامی است' : '';
+        case 'location':
+          return !value ? 'موقعیت روی نقشه الزامی است' : '';
+        default:
+          return '';
+      }
+    },
+    [hideCategorySelect]
+  );
+
   const validateAll = useCallback(() => {
     const fields = [
       'name',
@@ -70,6 +83,7 @@ export default function BasicInfoStep({
     ];
     const newErrors = {};
     let hasError = false;
+
     fields.forEach((field) => {
       const error = validateField(field, formData[field]);
       if (error) {
@@ -77,8 +91,10 @@ export default function BasicInfoStep({
         hasError = true;
       }
     });
+
     return { newErrors, isValid: !hasError };
   }, [formData, validateField]);
+
   useEffect(() => {
     const { newErrors, isValid } = validateAll();
     const filtered = {};
@@ -88,6 +104,7 @@ export default function BasicInfoStep({
     setErrors(filtered);
     onValidationChange?.(isValid);
   }, [formData, touched, validateAll, onValidationChange]);
+
   const handleFieldChange = (key, value) => {
     onUpdate(key, value);
     if (errors[key]) {
@@ -100,7 +117,9 @@ export default function BasicInfoStep({
         });
     }
   };
+
   const markTouched = (field) => setTouched((prev) => ({ ...prev, [field]: true }));
+
   const handleProvinceChange = (provinceId) => {
     handleFieldChange('provinceId', provinceId);
     onUpdate('cityId', null);
@@ -108,6 +127,7 @@ export default function BasicInfoStep({
     onUpdate('mapAddress', '');
     markTouched('provinceId');
   };
+
   // ─── ساخت FormData ───
   const buildFormData = () => {
     const fd = new FormData();
@@ -120,14 +140,21 @@ export default function BasicInfoStep({
     fd.append('working_hours', formData.workingHours);
     fd.append('about', formData.about);
     if (formData.location) {
-      fd.append('latitude', parseFloat(String(formData.location.latitude.toFixed(7))));
-      fd.append('longitude', parseFloat(String(formData.location.longitude.toFixed(7))));
+      fd.append(
+        'latitude',
+        parseFloat(String(formData.location.latitude.toFixed(7)))
+      );
+      fd.append(
+        'longitude',
+        parseFloat(String(formData.location.longitude.toFixed(7)))
+      );
     }
     if (formData.coverUrl instanceof File) fd.append('cover_image', formData.coverUrl);
     if (formData.ownerPhoto instanceof File) fd.append('owner_photo', formData.ownerPhoto);
     if (formData.logo instanceof File) fd.append('logo', formData.logo);
     return fd;
   };
+
   const handleSave = () => {
     const { newErrors, isValid } = validateAll();
     setErrors(newErrors);
@@ -147,6 +174,7 @@ export default function BasicInfoStep({
     if (!isValid) return;
     onSubmit?.(buildFormData());
   };
+
   // ─── شمارنده فیلدهای پرشده ───
   const filledCount = [
     formData.name,
@@ -161,11 +189,14 @@ export default function BasicInfoStep({
     formData.ownerPhoto,
     formData.location,
   ].filter(Boolean).length;
+
   const totalCount = 11;
+
   return (
     <div className="px-5 pt-4 pb-6 space-y-5">
       {/* نوار پیشرفت */}
       <ProgressCard filledCount={filledCount} totalCount={totalCount} />
+
       {/* بخش تصاویر */}
       <ImageUploadSection
         coverUrl={formData.coverUrl}
@@ -176,6 +207,7 @@ export default function BasicInfoStep({
         onCoverTouched={() => markTouched('coverUrl')}
         onOwnerPhotoTouched={() => markTouched('ownerPhoto')}
       />
+
       {/* بخش مشخصات */}
       <BusinessInfoSection
         name={formData.name}
@@ -194,7 +226,10 @@ export default function BasicInfoStep({
         onPhoneTouched={() => markTouched('phone')}
         onWorkingHoursTouched={() => markTouched('workingHours')}
         onAboutTouched={() => markTouched('about')}
+        hideCategorySelect={hideCategorySelect}
+        defaultCategoryLabel={defaultCategoryLabel}
       />
+
       {/* بخش موقعیت مکانی */}
       <LocationSection
         provinceId={formData.provinceId}
@@ -215,6 +250,7 @@ export default function BasicInfoStep({
         }}
         onAddressTouched={() => markTouched('address')}
       />
+
       {/* دکمه ثبت نهایی */}
       {isFinalStep && (
         <div className="pt-2 pb-4">
