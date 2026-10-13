@@ -94,7 +94,7 @@ function CreateModelRequestPageContent() {
   return (
     <ScreenWrapper padding={0}>
       <Header
-        title={isEditMode ? 'ویرایش درخواست مدل' : 'ایجاد درخواست مدل'}
+        title={isEditMode ? 'ویرایش اگهی مدل' : 'ایجاد اگهی مدل'}
         onBackPress={safeGoBack}
       />
       <div className="flex-1 overflow-y-auto">
