@@ -1,12 +1,17 @@
 // src/components/home/LineRentalCard.jsx
 'use client';
+
 import { FiMapPin } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import CollabBadge from '@/components/common/CollabBadge';
-import { toPersianDigit } from '@/utils/numberUtils';
+import LineRentalPriceRows from '@/components/lineRentals/LineRentalPriceRows';
+import {
+  toPersianDigit,
+  getLineRentalCollabLabel,
+} from '@/utils/numberUtils';
 
 /**
- * کارت اجاره لاین — هماهنگ با بک‌اند
+ * کارت اجاره لاین — صفحه هوم
  */
 
 // ═══ ایموجی بر اساس نام خدمت ═══
@@ -22,42 +27,33 @@ const getLineEmoji = (typeName = '') => {
   return '🏢';
 };
 
-// ═══ ساخت نمایش قیمت بر اساس نوع همکاری ═══
-const getPriceDisplay = (rental) => {
-  const collabType = rental.collabType;
+const formatDistance = (distance) => {
+  if (distance === null || distance === undefined || distance === '') return '';
 
-  if (collabType === 'percent') {
-    const salon = rental.percentSalon || 0;
-    const partner = rental.percentPartner || 0;
-    return `${toPersianDigit(salon)}-${toPersianDigit(partner)}٪`;
+  const numericDistance = Number(distance);
+  if (Number.isNaN(numericDistance)) return '';
+
+  if (numericDistance < 1) {
+    return `${toPersianDigit(Math.round(numericDistance * 1000))} متر`;
   }
-  if (collabType === 'fixed') {
-    const fixedAmount = rental.fixedAmount || 0;
-    const fixedDeposit = rental.fixedDeposit || 0;
-    if (fixedDeposit > 0) {
-      return `${toPersianDigit(fixedAmount.toLocaleString('en-US'))} + ${toPersianDigit(fixedDeposit.toLocaleString('en-US'))} رهن`;
-    }
-    return `${toPersianDigit(fixedAmount.toLocaleString('en-US'))} تومان`;
-  }
-  if (collabType === 'hourly') {
-    const hourlyRate = rental.hourlyRate || 0;
-    return `${toPersianDigit(hourlyRate.toLocaleString('en-US'))} / ساعت`;
-  }
-  return '—';
+
+  return `${toPersianDigit(numericDistance.toFixed(1))} کیلومتر`;
 };
 
 export default function LineRentalCard({ rental, onPress }) {
   const { colors } = useTheme();
+
   if (!rental) return null;
 
-  const collabType = rental.collabType;
-  const businessName = rental.businessName || '';
-  const city = rental.city || '';
-  const serviceTypeName = rental.serviceCategoryName || '';
-  const subServiceName = rental.subServiceName || '';
-  const distance = rental.distance;
+  const collabType = rental.collab_type || rental.collabType;
+  const collabLabel = getLineRentalCollabLabel(rental);
 
-  const priceDisplay = getPriceDisplay(rental);
+  const businessName = rental.business_name || rental.businessName || '';
+  const city = rental.city || '';
+  const serviceTypeName =
+    rental.service_category_name || rental.serviceCategoryName || '';
+  const subServiceName = rental.sub_service_name || rental.subServiceName || '';
+  const distanceText = formatDistance(rental.distance);
 
   return (
     <button
@@ -69,13 +65,17 @@ export default function LineRentalCard({ rental, onPress }) {
         border overflow-hidden text-right transition-all
         hover:shadow-md active:scale-[0.99]
       "
-      style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+      style={{
+        backgroundColor: colors.cardBackground,
+        borderColor: colors.border,
+      }}
     >
       {/* ═══ هدر گرادیانی ═══ */}
       <div
         className="relative w-full h-[140px] sm:h-[160px] md:h-[170px] lg:h-[180px] overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #5a67d8 50%, #764ba2 100%)',
+          background:
+            'linear-gradient(135deg, #667eea 0%, #5a67d8 50%, #764ba2 100%)',
         }}
       >
         {/* دایره‌های تزئینی */}
@@ -121,14 +121,13 @@ export default function LineRentalCard({ rental, onPress }) {
         {/* نوار شیشه‌ای پایین هدر */}
         <div
           className="absolute bottom-0 left-0 right-0 h-[32px] sm:h-[36px] md:h-[40px] flex items-center px-2.5 sm:px-3 gap-2"
-          style={{ backgroundColor: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
+          style={{
+            backgroundColor: 'rgba(0,0,0,0.25)',
+            backdropFilter: 'blur(8px)',
+          }}
         >
           <span className="text-[10px] sm:text-[11px] md:text-xs font-[Vazir-Medium] text-white/90 truncate flex-1">
-            {collabType === 'percent'
-              ? `درصدی ${priceDisplay}`
-              : collabType === 'hourly'
-                ? `ساعتی ${priceDisplay}`
-                : `اجاره ثابت ${priceDisplay}`}
+            {collabLabel}
           </span>
         </div>
       </div>
@@ -143,9 +142,12 @@ export default function LineRentalCard({ rental, onPress }) {
           {rental.title}
         </h3>
 
-        {/* بج نوع همکاری */}
+        {/* نمایش جدا مبالغ — حالت B */}
+        <LineRentalPriceRows rental={rental} />
+
+        {/* بج نوع همکاری بدون تکرار مبلغ */}
         <div className="flex items-center gap-1.5">
-          <CollabBadge type={collabType} priceDisplay={priceDisplay} variant="compact" />
+          <CollabBadge type={collabType} variant="compact" />
         </div>
 
         {/* کسب‌وکار + شهر + فاصله */}
@@ -159,21 +161,27 @@ export default function LineRentalCard({ rental, onPress }) {
               {businessName}
             </span>
           </div>
+
           {city && (
             <div className="flex items-center gap-1">
               <FiMapPin size={11} className="sm:w-3 sm:h-3" color={colors.textSecondary} />
-              <span className="text-[9px] sm:text-[10px] md:text-[11px]" style={{ color: colors.textSecondary }}>
+              <span
+                className="text-[9px] sm:text-[10px] md:text-[11px]"
+                style={{ color: colors.textSecondary }}
+              >
                 {city}
               </span>
             </div>
           )}
-          {distance !== null && distance !== undefined && (
+
+          {distanceText && (
             <div className="flex items-center gap-1">
               <FiMapPin size={11} className="sm:w-3 sm:h-3" color="#2196F3" />
-              <span className="text-[9px] sm:text-[10px] md:text-[11px] font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
-                {distance < 1
-                  ? `${Math.round(distance * 1000)} متر`
-                  : `${distance.toFixed(1)} کیلومتر`}
+              <span
+                className="text-[9px] sm:text-[10px] md:text-[11px] font-[Vazir-Bold]"
+                style={{ color: '#2196F3' }}
+              >
+                {distanceText}
               </span>
             </div>
           )}

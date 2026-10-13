@@ -4,7 +4,11 @@
 import { FiMapPin, FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import CollabBadge from '@/components/common/CollabBadge';
-import { toPersianDigit, getLineRentalPriceDisplay } from '@/utils/numberUtils';
+import LineRentalPriceRows from '@/components/lineRentals/LineRentalPriceRows';
+import {
+  toPersianDigit,
+  getLineRentalCollabLabel,
+} from '@/utils/numberUtils';
 
 const getLineEmoji = (typeName = '') => {
   if (typeName.includes('ناخن')) return '💅';
@@ -31,30 +35,16 @@ const formatDistance = (distance) => {
   return `${toPersianDigit(numericDistance.toFixed(1))} کیلومتر`;
 };
 
-const getPriceText = (collabType, priceDisplay) => {
-  const safePrice = priceDisplay || '';
-
-  if (collabType === 'percent') {
-    return safePrice ? `درصدی ${safePrice}` : 'همکاری درصدی';
-  }
-
-  if (collabType === 'fixed') {
-    return safePrice ? `اجاره ثابت ${safePrice}` : 'اجاره ثابت';
-  }
-
-  return safePrice ? `ساعتی ${safePrice}` : 'همکاری ساعتی';
-};
-
 export default function LineRentalCard({ rental, onPress }) {
   const { colors } = useTheme();
 
   const collabType = rental.collab_type || rental.collabType;
+  const collabLabel = getLineRentalCollabLabel(rental);
+
   const businessName = rental.business_name || rental.businessName || '';
   const city = rental.city || '';
   const serviceTypeName =
     rental.service_category_name || rental.serviceTypeName || 'لاین زیبایی';
-  const priceDisplay = getLineRentalPriceDisplay(rental);
-  const priceText = getPriceText(collabType, priceDisplay);
   const distanceText = formatDistance(rental.distance);
 
   return (
@@ -121,7 +111,7 @@ export default function LineRentalCard({ rental, onPress }) {
           style={{ backgroundColor: 'rgba(0,0,0,0.22)' }}
         >
           <span className="flex-1 truncate text-[12px] font-[Vazir-Medium] text-white/90">
-            {priceText}
+            {collabLabel}
           </span>
         </div>
       </div>
@@ -135,11 +125,10 @@ export default function LineRentalCard({ rental, onPress }) {
           {rental.title}
         </h3>
 
-        <CollabBadge
-          type={collabType}
-          priceDisplay={priceDisplay}
-          variant="compact"
-        />
+        {/* نمایش جدا مبالغ — حالت B */}
+        <LineRentalPriceRows rental={rental} />
+
+        <CollabBadge type={collabType} variant="compact" />
 
         <div className="flex flex-wrap items-center gap-2">
           {businessName && (
