@@ -13,14 +13,16 @@ import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 export default function HomeFilterModal({ visible, onClose }) {
   const { colors } = useTheme();
   const { provinces } = useProvinces();
-  const { provinceId, cityId, setLocation } = useGlobalLocationStore();
 
+  const provinceId = useGlobalLocationStore((s) => s.provinceId);
+  const cityId = useGlobalLocationStore((s) => s.cityId);
+  const setLocation = useGlobalLocationStore((s) => s.setLocation);
   const gpsEnabled = useGlobalLocationStore((s) => s.gpsEnabled);
-
-  const { cities, isLoading: citiesLoading } = useCities(localProvince);
 
   const [localProvince, setLocalProvince] = useState(provinceId);
   const [localCity, setLocalCity] = useState(cityId);
+
+  const { cities, isLoading: citiesLoading } = useCities(localProvince);
 
   useEffect(() => {
     if (visible) {
