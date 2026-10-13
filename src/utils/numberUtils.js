@@ -46,6 +46,131 @@ export const formatPercentInput = (text) => {
   return toPersianDigit(String(Math.min(parseInt(cleaned, 10), 100)));
 };
 
+const toFiniteNumber = (value) => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  const normalized = toEnglishDigits(String(value ?? ''))
+    .replace(/[^\d.-]/g, '');
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const trimDecimalZero = (value) => {
+  const fixed = value.toFixed(1);
+  return fixed.endsWith('.0') ? fixed.slice(0, -2) : fixed;
+};
+
+const COMPACT_TOMAN_SCALES = [
+  { threshold: 1000000000, label: 'میلیارد', decimals: 1 },
+  { threshold: 1000000, label: 'میلیون', decimals: 1 },
+  { threshold: 1000, label: 'هزار', decimals: 0 },
+];
+
+/**
+ * فرمت فشرده مبلغ به تومان
+ * مثال:
+ * 5000000 -> ۵ میلیون تومان
+ * 300000 -> ۳۰۰ هزار تومان
+ * 1500000 -> ۱.۵ میلیون تومان
+ */
+export const formatCompactToman = (value) => {
+  const numeric = Math.max(0, Math.floor(toFiniteNumber(value)));
+
+  if (numeric < 1000) {
+    return `${toPersianDigit(numeric)} تومان`;
+  }
+
+  for (const scale of COMPACT_TOMAN_SCALES) {
+    if (numeric >= scale.threshold) {
+      const rawScaled = numeric / scale.threshold;
+
+      const scaled =
+        scale.decimals === 0
+          ? Math.floor(rawScaled)
+          : Math.floor(rawScaled * 10) / 10;
+
+      const displayNumber =
+        scale.decimals === 0
+          ? toPersianDigit(scaled)
+          : toPersianDigit(trimDecimalZero(scaled));
+
+      return `${displayNumber} ${scale.label} تومان`;
+    }
+  }
+
+  return `${toPersianDigit(numeric)} تومان`;
+};
+
+/**
+ * فرمت قیمت اجاره ثابت لاین
+ * اگر رهن صفر باشد، فقط اجاره ماهانه نمایش داده می‌شود.
+ */
+export const formatLineRentalFixedPrice = (fixedAmount, fixedDeposit = 0) => {
+  const rentText = formatCompactToman(fixedAmount);
+  const depositValue = toFiniteNumber(fixedDeposit);
+
+  if (depositValue > 0) {
+    return `${rentText} + ${formatCompactToman(depositValue)} رهن`;
+  }
+
+  return rentText;
+};
+
+const hasValue = (value) => value !== undefined && value !== null && value !== '';
+
+/**
+ * ساخت priceDisplay استاندارد برای آگهی‌های Line Rental
+ * - percent: بدون تغییر منطق درصدی
+ * - fixed: فشرده + رهن اختیاری
+ * - hourly: فقط مبلغ فشرده؛ suffix / ساعت در کامپوننت‌های لازم اضافه می‌شود
+ */
+export const getLineRentalPriceDisplay = (rental = {}) => {
+  const collabType = rental.collab_type || rental.collabType;
+
+  if (collabType === 'percent') {
+    const salon = rental.percent_salon ?? rental.percentSalon;
+    const partner = rental.percent_partner ?? rental.percentPartner;
+
+    if (hasValue(salon) && hasValue(partner)) {
+      return toPersianDigit(
+        `${toFiniteNumber(salon)}-${toFiniteNumber(partner)}٪`
+      );
+    }
+
+    return rental.priceDisplay || '';
+  }
+
+  if (collabType === 'fixed') {
+    const amount = rental.fixed_amount ?? rental.fixedAmount;
+    const deposit = rental.fixed_deposit ?? rental.fixedDeposit;
+
+    if (hasValue(amount)) {
+      return formatLineRentalFixedPrice(amount, deposit);
+    }
+
+    return rental.priceDisplay || '';
+  }
+
+  if (collabType === 'hourly') {
+    const rate = rental.hourly_rate ?? rental.hourlyRate;
+
+    if (hasValue(rate)) {
+      return formatCompactToman(rate);
+    }
+
+    // اگر فقط priceDisplay داشتیم و suffix / ساعت داشت، آن را حذف می‌کنیم
+    // تا در کارت‌هایی که خودشون پیشوند "ساعتی" می‌زنند تکراری نشود.
+    return String(rental.priceDisplay || '')
+      .replace(/\s*\/\s*ساعت\s*$/, '')
+      .trim();
+  }
+
+  return rental.priceDisplay || '';
+};
+
 // ═══════════════════════════════════════════════════════
 //    ⚠️ DEPRECATED — فقط برای سازگاری موقت
 //    این export‌ها صرفاً re-export از price-utils هستند

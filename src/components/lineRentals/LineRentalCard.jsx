@@ -4,7 +4,7 @@
 import { FiMapPin, FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import CollabBadge from '@/components/common/CollabBadge';
-import { toPersianDigit } from '@/utils/numberUtils';
+import { toPersianDigit, getLineRentalPriceDisplay } from '@/utils/numberUtils';
 
 const getLineEmoji = (typeName = '') => {
   if (typeName.includes('ناخن')) return '💅';
@@ -53,7 +53,7 @@ export default function LineRentalCard({ rental, onPress }) {
   const city = rental.city || '';
   const serviceTypeName =
     rental.service_category_name || rental.serviceTypeName || 'لاین زیبایی';
-  const priceDisplay = rental.priceDisplay || '';
+  const priceDisplay = getLineRentalPriceDisplay(rental);
   const priceText = getPriceText(collabType, priceDisplay);
   const distanceText = formatDistance(rental.distance);
 

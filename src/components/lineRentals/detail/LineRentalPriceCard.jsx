@@ -1,7 +1,7 @@
 // src/components/lineRentals/detail/LineRentalPriceCard.jsx
 'use client';
 import Card from '@/components/common/Card';
-import { toPersianDigit } from '@/utils/numberUtils';
+import { toPersianDigit, formatCompactToman } from '@/utils/numberUtils';
 import { useTheme } from '@/stores/useThemeStore';
 
 export default function LineRentalPriceCard({ collabType, priceInfo }) {
@@ -16,23 +16,23 @@ export default function LineRentalPriceCard({ collabType, priceInfo }) {
           color: '#9C27B0',
           icon: '📊',
         };
-      case 'fixed':
-        return {
-          label: priceInfo.fixedDeposit > 0 ? 'اجاره ماهانه + رهن' : 'اجاره ماهانه',
-          value:
-            priceInfo.fixedDeposit > 0
-              ? `${toPersianDigit((priceInfo.fixedAmount || 0).toLocaleString('en-US'))} + ${toPersianDigit((priceInfo.fixedDeposit || 0).toLocaleString('en-US'))} رهن`
-              : `${toPersianDigit((priceInfo.fixedAmount || 0).toLocaleString('en-US'))} تومان`,
-          color: '#2196F3',
-          icon: '💰',
-        };
-      case 'hourly':
-        return {
-          label: 'نرخ ساعتی',
-          value: `${toPersianDigit((priceInfo.hourlyRate || 0).toLocaleString('en-US'))} تومان / ساعت`,
-          color: '#FF9800',
-          icon: '⏰',
-        };
+    case 'fixed':
+      return {
+        label: priceInfo.fixedDeposit > 0 ? 'اجاره ماهانه + رهن' : 'اجاره ماهانه',
+        value:
+          priceInfo.fixedDeposit > 0
+            ? `${formatCompactToman(priceInfo.fixedAmount)} + ${formatCompactToman(priceInfo.fixedDeposit)} رهن`
+            : formatCompactToman(priceInfo.fixedAmount),
+        color: '#2196F3',
+        icon: '💰',
+      };
+    case 'hourly':
+      return {
+        label: 'نرخ ساعتی',
+        value: `${formatCompactToman(priceInfo.hourlyRate)} / ساعت`,
+        color: '#FF9800',
+        icon: '⏰',
+      };
       default:
         return {
           label: 'قیمت',

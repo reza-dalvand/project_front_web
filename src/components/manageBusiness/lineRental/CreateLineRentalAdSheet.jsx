@@ -9,7 +9,12 @@ import CollabTypeSelector from './CollabTypeSelector';
 import PercentPriceFields from './PercentPriceFields';
 import FixedPriceFields from './FixedPriceFields';
 import HourlyPriceFields from './HourlyPriceFields';
-import { toPersianDigit, parseNumber, formatPriceInput } from '@/utils/numberUtils';
+import {
+  toPersianDigit,
+  parseNumber,
+  formatPriceInput,
+  formatCompactToman,
+} from '@/utils/numberUtils';
 import { COLLAB_TYPES } from '@/constants/collabTypes';
 import { useServiceCategories, useSubServices } from '@/hooks/useCategoryOptions';
 
@@ -151,11 +156,11 @@ export default function CreateLineRentalAdSheet({ visible, onClose, onSave, edit
       };
       priceDisplay =
         priceData.fixedDeposit > 0
-          ? `${toPersianDigit(priceData.fixedAmount.toLocaleString('en-US'))} + ${toPersianDigit(priceData.fixedDeposit.toLocaleString('en-US'))} رهن`
-          : `${toPersianDigit(priceData.fixedAmount.toLocaleString('en-US'))} تومان`;
+          ? `${formatCompactToman(priceData.fixedAmount)} + ${formatCompactToman(priceData.fixedDeposit)} رهن`
+          : formatCompactToman(priceData.fixedAmount);
     } else if (collabType === 'hourly') {
       priceData = { hourlyRate: parseNumber(hourlyRate) };
-      priceDisplay = `${toPersianDigit(priceData.hourlyRate.toLocaleString('en-US'))} / ساعت`;
+      priceDisplay = formatCompactToman(priceData.hourlyRate);
     }
 
     setSaving(true);

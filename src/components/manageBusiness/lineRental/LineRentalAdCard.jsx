@@ -3,6 +3,8 @@
 import { FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import CollabBadge from '@/components/common/CollabBadge';
+import { getLineRentalPriceDisplay } from '@/utils/numberUtils';
+
 
 const getLineEmoji = (typeName = '') => {
   if (typeName.includes('ناخن')) return '💅';
@@ -21,6 +23,8 @@ export default function LineRentalAdCard({ ad, onPress }) {
 
   const isActive = ad.isActive !== false;
   const emoji = getLineEmoji(ad.serviceTypeName || ad.title || '');
+  const collabType = ad.collab_type || ad.collabType;
+  const priceDisplay = getLineRentalPriceDisplay(ad);
 
   return (
     <button
@@ -51,8 +55,8 @@ export default function LineRentalAdCard({ ad, onPress }) {
 
         <div className="flex flex-wrap items-center gap-2">
           <CollabBadge
-            type={ad.collabType}
-            priceDisplay={ad.priceDisplay}
+            type={collabType}
+            priceDisplay={priceDisplay}
             variant="compact"
           />
 

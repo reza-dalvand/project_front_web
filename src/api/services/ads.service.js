@@ -18,6 +18,97 @@
  *   DELETE /ads/my-line-rentals/{pk}/delete/
  */
 import apiClient from '../api-client';
+import { getLineRentalPriceDisplay } from '../../utils/numberUtils';
+
+
+const hasLineRentalPriceFields = (item) =>
+  Boolean(
+    item &&
+      typeof item === 'object' &&
+      (
+        item.collab_type !== undefined ||
+        item.collabType !== undefined ||
+        item.fixed_amount !== undefined ||
+        item.fixedAmount !== undefined ||
+        item.hourly_rate !== undefined ||
+        item.hourlyRate !== undefined ||
+        item.percent_salon !== undefined ||
+        item.percentSalon !== undefined
+      )
+  );
+
+const normalizeLineRentalItem = (item) => {
+  if (!hasLineRentalPriceFields(item)) return item;
+
+  return {
+    ...item,
+    priceDisplay: getLineRentalPriceDisplay(item),
+  };
+};
+
+const normalizeLineRentalCollection = (collection) => {
+  if (!collection) return collection;
+
+  if (Array.isArray(collection)) {
+    return collection.map(normalizeLineRentalItem);
+  }
+
+  if (typeof collection === 'object') {
+    if (Array.isArray(collection.results)) {
+      return {
+        ...collection,
+        results: collection.results.map(normalizeLineRentalItem),
+      };
+    }
+
+    if (Array.isArray(collection.items)) {
+      return {
+        ...collection,
+        items: collection.items.map(normalizeLineRentalItem),
+      };
+    }
+
+    if (Array.isArray(collection.data)) {
+      return {
+        ...collection,
+        data: collection.data.map(normalizeLineRentalItem),
+      };
+    }
+
+    return normalizeLineRentalItem(collection);
+  }
+
+  return collection;
+};
+
+const normalizeLineRentalResponse = (response) => {
+  if (!response) return response;
+
+  if (Array.isArray(response)) {
+    return response.map(normalizeLineRentalItem);
+  }
+
+  if (typeof response === 'object') {
+    if ('data' in response) {
+      return {
+        ...response,
+        data: normalizeLineRentalCollection(response.data),
+      };
+    }
+
+    if ('results' in response) {
+      return {
+        ...response,
+        results: normalizeLineRentalCollection(response.results),
+      };
+    }
+
+    return normalizeLineRentalCollection(response);
+  }
+
+  return response;
+};
+
 
 export const adsService = {
   // ═══════════ Model Requests - Public ═══════════
@@ -132,12 +223,14 @@ export const adsService = {
    *     created_jalali, expires_jalali, created_at, distance }
    */
   getLineRentals: (params = {}) => {
-    return apiClient.get('/ads/line-rentals/', {
-      params: {
-        ...params,
-        _t: Date.now(), // ✅ Cache buster
-      },
-    });
+    return apiClient
+      .get('/ads/line-rentals/', {
+        params: {
+          ...params,
+          _t: Date.now(), // ✅ Cache buster
+        },
+      })
+      .then(normalizeLineRentalResponse);
   },
 
   /**
@@ -148,9 +241,11 @@ export const adsService = {
    *   LineRentalListSerializer + business_booking_slug, line_image_url
    */
   getLineRentalDetail: (rentalId) => {
-    return apiClient.get(`/ads/line-rentals/${rentalId}/`, {
-      params: { _t: Date.now() }, // ✅ Cache buster
-    });
+    return apiClient
+      .get(`/ads/line-rentals/${rentalId}/`, {
+        params: { _t: Date.now() },
+      })
+      .then(normalizeLineRentalResponse);
   },
 
   // ═══════════ Line Rentals - Business ═══════════
@@ -160,9 +255,11 @@ export const adsService = {
    * GET /ads/my-line-rentals/
    */
   getMyLineRentals: () => {
-    return apiClient.get('/ads/my-line-rentals/', {
-      params: { _t: Date.now() }, // ✅ Cache buster
-    });
+    return apiClient
+      .get('/ads/my-line-rentals/', {
+        params: { _t: Date.now() }, 
+      })
+      .then(normalizeLineRentalResponse);
   },
 
   /**
