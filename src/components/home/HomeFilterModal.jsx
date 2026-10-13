@@ -17,7 +17,7 @@ export default function HomeFilterModal({ visible, onClose }) {
 
   const gpsEnabled = useGlobalLocationStore((s) => s.gpsEnabled);
 
-  const { cities } = useCities(provinceId);
+  const { cities, isLoading: citiesLoading } = useCities(localProvince);
 
   const [localProvince, setLocalProvince] = useState(provinceId);
   const [localCity, setLocalCity] = useState(cityId);
@@ -86,11 +86,17 @@ export default function HomeFilterModal({ visible, onClose }) {
 
           <Dropdown
             label="شهر"
-            placeholder={localProvince ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
+            placeholder={
+              localProvince
+                ? citiesLoading
+                  ? 'در حال بارگذاری شهرها...'
+                  : 'انتخاب شهر'
+                : 'ابتدا استان را انتخاب کنید'
+            }
             value={localCity}
             options={cities}
             onSelect={setLocalCity}
-            disabled={gpsEnabled || !localProvince}
+            disabled={gpsEnabled || !localProvince || citiesLoading}
           />
         </div>
 
