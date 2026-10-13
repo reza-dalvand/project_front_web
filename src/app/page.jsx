@@ -197,38 +197,41 @@ export default function HomePage() {
   }, [isAuthenticated, addPendingReview]);
 
   const handleNearbyToggle = useCallback(async () => {
-    const { gpsEnabled, disableGps, enableGps, handleGpsError, setGpsLoading } = useGlobalLocationStore.getState();
-    if (gpsEnabled) {
-      disableGps();
+    const store = useGlobalLocationStore.getState();
+
+    // ✅ جلوگیری از اجرای موازی
+    if (store.gpsLoading) return;
+
+    if (store.gpsEnabled) {
+      store.disableGps();
       showToast('فیلتر موقعیت مکانی غیرفعال شد', 'info');
       return;
     }
-    setGpsLoading(true);
+
+    store.setGpsLoading(true);
+
     try {
       const loc = await getCurrentLocation({ showSettingsPrompt: true });
-      enableGps(loc.latitude, loc.longitude);
+
+      store.enableGps(loc.latitude, loc.longitude);
       showToast('موقعیت مکانی شما فعال شد', 'success');
     } catch (err) {
-      handleGpsError();
+      store.handleGpsError();
+
       if (err.code === 2 || err.gpsDisabled) {
-        showToast('لطفاً GPS گوشی را روشن کنید و دوباره تلاش کنید', 'warning');
+        showToast('GPS گوشی خاموش بود. لطفاً آن را روشن کنید و دوباره تلاش کنید.', 'warning');
       } else if (err.code === 1) {
-        if (err.needsSettings) {
-          const shouldOpen = window.confirm('دسترسی به موقعیت رد شده است.\n\nبرای فعال‌سازی، باید از تنظیمات گوشی اجازه دهید.\n\nآیا می‌خواهید به تنظیمات بروید؟');
-          if (shouldOpen) {
-            const { openAppSettings } = await import('@/utils/geo-utils');
-            await openAppSettings();
-          }
-        } else {
-          showToast('دسترسی به موقعیت رد شد', 'error');
-        }
+        showToast(
+          err.message || 'دسترسی دقیق به موقعیت داده نشد. لطفاً از تنظیمات اپ اجازه دهید.',
+          'error'
+        );
       } else if (err.code === 3) {
-        showToast('دریافت موقعیت زمان‌بر شد. دوباره تلاش کنید.', 'warning');
+        showToast('دریافت موقعیت دقیق زمان‌بر شد. دوباره تلاش کنید.', 'warning');
       } else {
-        showToast('خطا در دریافت موقعیت', 'error');
+        showToast(err.message || 'خطا در دریافت موقعیت', 'error');
       }
     } finally {
-      setGpsLoading(false);
+      store.setGpsLoading(false);
     }
   }, [showToast]);
 
