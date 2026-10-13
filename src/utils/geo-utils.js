@@ -42,15 +42,82 @@ export const isWithinRadius = (lat, lng, centerLat, centerLng, radiusKm) => {
   return distance !== null && distance <= radiusKm;
 };
 
-// ═══════ مدیریت دسترسی و GPS در Native Platform ═══════
+// ═══════ ثابت‌های GPS ═══════
+
+/**
+ * زمان انتظار برای گرفتن موقعیت دقیق GPS.
+ * اگر می‌خواهی سریع‌تر fail شود این را کم کن، ولی شانس timeout بیشتر می‌شود.
+ */
+const NATIVE_POSITION_TIMEOUT_MS = 15000;
+
+/**
+ * بعد از باز کردن Settings، حداکثر چقدر صبر کنیم کاربر برگردد.
+ */
+const NATIVE_SETTINGS_WAIT_TIMEOUT_MS = 60000;
+
+/**
+ * بعد از resume شدن اپ، کمی صبر کنیم تا Android وضعیت Location Services را به‌روز کند.
+ */
+const NATIVE_RESUME_SETTLE_MS = 800;
+
+const WEB_HIGH_ACCURACY_TIMEOUT_MS = 15000;
+const WEB_FALLBACK_TIMEOUT_MS = 10000;
+
+/**
+ * برای جلوگیری از اجرای موازی چند درخواست موقعیت.
+ */
+let nativeLocationPromise = null;
+
+// ═══════ توابع کمکی خطا ═══════
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const getErrorText = (error) =>
+  String(error?.message || error?.errorMessage || error || '').toLowerCase();
+
+const createLocationError = (message, code, extra = {}) => {
+  const error = new Error(message);
+  error.code = code;
+  Object.assign(error, extra);
+  return error;
+};
+
+const isPermissionDeniedError = (error) => {
+  const text = getErrorText(error);
+  return (
+    error?.code === 1 ||
+    text.includes('denied') ||
+    text.includes('permission') ||
+    text.includes('not allowed') ||
+    text.includes('user denied')
+  );
+};
+
+const isLocationDisabledError = (error) => {
+  const text = getErrorText(error);
+  return (
+    error?.code === 2 ||
+    text.includes('disabled') ||
+    text.includes('off') ||
+    text.includes('unavailable') ||
+    text.includes('service') ||
+    text.includes('provider') ||
+    text.includes('location settings')
+  );
+};
+
+const isTimeoutError = (error) => {
+  const text = getErrorText(error);
+  return error?.code === 3 || text.includes('timeout') || text.includes('timed out');
+};
+
+// ═══════ باز کردن تنظیمات ═══════
 
 /**
  * 📱 باز کردن تنظیمات موقعیت مکانی گوشی
- * 
- * ✅ Android: باز کردن Settings > Location
- * ✅ iOS: باز کردن Settings > Privacy > Location Services
- * 
- * @returns {Promise<boolean>} آیا تنظیمات باز شد؟
+ *
+ * ✅ Android: Settings > Location
+ * ✅ iOS: Settings > Privacy > Location Services
  */
 export const openLocationSettings = async () => {
   const isNative = Capacitor.isNativePlatform();
@@ -70,103 +137,366 @@ export const openLocationSettings = async () => {
 };
 
 /**
- * 🔍 بررسی وضعیت GPS (روشن/خاموش بودن)
- * 
- * @returns {Promise<boolean>} آیا GPS روشن است؟
+ * 🔧 باز کردن تنظیمات اپلیکیشن
+ *
+ * برای مواردی مثل:
+ * - دسترسی location رد شده
+ * - Android 12+ کاربر "Precise location" را فعال نکرده
  */
-const checkGpsEnabled = async () => {
-  const isNative = Capacitor.isNativePlatform();
-
-  if (!isNative) {
-    // در Web، مرورگر خودش مدیریت می‌کند
-    return true;
-  }
+export const openAppSettings = async () => {
+  if (!Capacitor.isNativePlatform()) return false;
 
   try {
-    // تلاش برای دریافت موقعیت با timeout کوتاه
-    // اگر GPS خاموش باشد، خطای خاصی برمی‌گردد
-    await Geolocation.getCurrentPosition({
-      enableHighAccuracy: false,
-      timeout: 3000, // 3 ثانیه برای بررسی سریع
-      maximumAge: 0,
-    });
-    return true;
+    const { App: CapApp } = await import('@capacitor/app');
+
+    if (typeof CapApp.openSettings === 'function') {
+      await CapApp.openSettings();
+      return true;
+    }
+
+    return false;
   } catch (error) {
-    // اگر خطا مربوط به GPS disabled باشد
-    const errorMsg = error.message?.toLowerCase() || '';
-    
-    if (
-      errorMsg.includes('disabled') ||
-      errorMsg.includes('unavailable') ||
-      errorMsg.includes('service') ||
-      error.code === 2 // POSITION_UNAVAILABLE
-    ) {
+    console.error('Cannot open app settings:', error);
+    return false;
+  }
+};
+
+/**
+ * بعد از باز کردن Settings، منتظر resume شدن اپ می‌ماند.
+ *
+ * ⚠️ نکته مهم:
+ * listener قبل از action وصل می‌شود تا اگر app خیلی سریع pause/resume شد، event را از دست ندهیم.
+ */
+const waitForAppResumeAfterAction = async (
+  action,
+  timeoutMs = NATIVE_SETTINGS_WAIT_TIMEOUT_MS
+) => {
+  if (!Capacitor.isNativePlatform()) return false;
+
+  let listener = null;
+  let timer = null;
+
+  try {
+    const { App: CapApp } = await import('@capacitor/app');
+
+    let resolveResume;
+    const resumePromise = new Promise((resolve) => {
+      resolveResume = resolve;
+    });
+
+    timer = setTimeout(() => {
+      resolveResume(false);
+      timer = null;
+    }, timeoutMs);
+
+    listener = await CapApp.addListener('resume', () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      resolveResume(true);
+    });
+
+    const opened = await action();
+
+    if (!opened) {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
       return false;
     }
-    
-    // سایر خطاها (مثل permission) را نادیده بگیریم
-    return true;
+
+    return await resumePromise;
+  } catch (error) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    throw error;
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+
+    if (listener) {
+      try {
+        await listener.remove();
+      } catch {
+        // ignore
+      }
+    }
+  }
+};
+
+// ═══════ دسترسی Location ═══════
+
+const evaluatePermissionStatus = (status) => {
+  /**
+   * برای GPS دقیق، ideally به fine location نیاز داریم.
+   * در بعضی نسخه‌های Capacitor ممکن است status.location نماینده fine باشد.
+   */
+  const fineGranted =
+    status?.fineLocation === 'granted' || status?.location === 'granted';
+
+  const coarseGranted = status?.coarseLocation === 'granted';
+  const anyGranted = fineGranted || coarseGranted;
+
+  const denied =
+    status?.location === 'denied' ||
+    status?.fineLocation === 'denied' ||
+    status?.coarseLocation === 'denied';
+
+  return {
+    granted: anyGranted,
+    fineGranted,
+    coarseGranted,
+    denied,
+    needsSettings: !fineGranted,
+  };
+};
+
+const ensureNativePermission = async () => {
+  try {
+    let status = await Geolocation.checkPermissions();
+    let result = evaluatePermissionStatus(status);
+
+    if (result.fineGranted) {
+      return result;
+    }
+
+    const requestResult = await Geolocation.requestPermissions({
+      permissions: ['location', 'coarseLocation', 'fineLocation'],
+    });
+
+    result = evaluatePermissionStatus(requestResult);
+
+    if (result.fineGranted) {
+      return result;
+    }
+
+    return {
+      ...result,
+      needsSettings: true,
+    };
+  } catch (error) {
+    console.error('Permission request error:', error);
+    return {
+      granted: false,
+      fineGranted: false,
+      coarseGranted: false,
+      denied: true,
+      needsSettings: true,
+      error,
+    };
   }
 };
 
 /**
  * 📱 درخواست دسترسی موقعیت جغرافیایی
+ *
+ * برای backward compatibility نگه داشته شد.
  */
 export const requestLocationPermission = async () => {
-  const isNative = Capacitor.isNativePlatform();
-
-  if (isNative) {
-    try {
-      // 1. بررسی وضعیت فعلی
-      const status = await Geolocation.checkPermissions();
-
-      if (status.location === 'granted' || status.coarseLocation === 'granted') {
-        return { granted: true, denied: false, needsSettings: false };
-      }
-
-      if (status.location === 'denied' || status.coarseLocation === 'denied') {
-        return { granted: false, denied: true, needsSettings: true };
-      }
-
-      // 2. نمایش دیالوگ اجازه دسترسی
-      const requestResult = await Geolocation.requestPermissions({
-        permissions: ['location', 'coarseLocation'],
-      });
-
-      const granted =
-        requestResult.location === 'granted' ||
-        requestResult.coarseLocation === 'granted';
-
-      return {
-        granted,
-        denied: !granted,
-        needsSettings: !granted,
-      };
-    } catch (error) {
-      console.error('Permission request error:', error);
-      return { granted: false, denied: true, needsSettings: true };
-    }
+  if (!Capacitor.isNativePlatform()) {
+    return { granted: true, denied: false, needsSettings: false };
   }
 
-  // Web: مرورگر خودش دیالوگ نشان می‌دهد
-  return { granted: true, denied: false, needsSettings: false };
+  const result = await ensureNativePermission();
+
+  return {
+    granted: result.granted,
+    denied: !result.granted,
+    needsSettings: result.needsSettings,
+  };
 };
+
+// ═══════ وضعیت سرویس‌های Location ═══════
 
 /**
- * 🔧 باز کردن تنظیمات اپلیکیشن
+ * به‌جای checkGpsEnabled قدیمی که خودش getCurrentPosition می‌زد،
+ * از getProviderStatus استفاده می‌کنیم.
+ *
+ * این خیلی سریع‌تر و دقیق‌تر است.
  */
-export const openAppSettings = async () => {
-  if (Capacitor.isNativePlatform()) {
-    try {
-      const { App } = await import('@capacitor/app');
-      await App.openSettings?.();
-    } catch (error) {
-      console.error('Cannot open app settings:', error);
+const ensureNativeLocationServices = async () => {
+  try {
+    const status = await Geolocation.getProviderStatus();
+
+    const locationServicesEnabled = status?.locationServicesEnabled !== false;
+    const gpsEnabled = status?.gpsEnabled !== false;
+
+    if (!locationServicesEnabled) {
+      return { enabled: false, reason: 'location_services' };
     }
+
+    if (!gpsEnabled) {
+      return { enabled: false, reason: 'gps' };
+    }
+
+    return { enabled: true };
+  } catch (error) {
+    console.warn('getProviderStatus failed, falling back to direct attempt:', error);
+
+    /**
+     * اگر API در دسترس نبود، جلوی کاربر را نمی‌گیریم.
+     * بعداً از خطای getCurrentPosition تشخیص می‌دهیم.
+     */
+    return { enabled: true, unknown: true };
   }
 };
 
-// ═══════ دریافت موقعیت ═══════
+// ═══════ گرفتن موقعیت ═══════
+
+const acquireNativePosition = async () => {
+  const position = await Geolocation.getCurrentPosition({
+    enableHighAccuracy: true,
+    timeout: NATIVE_POSITION_TIMEOUT_MS,
+    maximumAge: 0,
+  });
+
+  return {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+    accuracy: position.coords.accuracy,
+    source: position.coords.accuracy <= 100 ? 'gps' : 'fused',
+  };
+};
+
+const retryAfterNativeSettings = async (opener, options, retryCount) => {
+  if (retryCount > 0) return false;
+  if (options?.showSettingsPrompt === false) return false;
+
+  try {
+    const resumed = await waitForAppResumeAfterAction(opener);
+
+    if (!resumed) return false;
+
+    await sleep(NATIVE_RESUME_SETTLE_MS);
+    return true;
+  } catch (error) {
+    console.error('Auto retry after settings failed:', error);
+    return false;
+  }
+};
+
+const getCurrentLocationNative = async (options = {}, retryCount = 0) => {
+  const { showSettingsPrompt = true } = options;
+  const nextOptions = { ...options, showSettingsPrompt };
+
+  // ═══ مرحله ۱: permission دقیق ═══
+  const permission = await ensureNativePermission();
+
+  if (!permission.fineGranted) {
+    const error = createLocationError(
+      'دسترسی دقیق به موقعیت داده نشده است. لطفاً از تنظیمات اپ اجازه دهید.',
+      1,
+      {
+        needsSettings: true,
+      }
+    );
+
+    const shouldRetry = await retryAfterNativeSettings(
+      () => openAppSettings(),
+      nextOptions,
+      retryCount
+    );
+
+    if (shouldRetry) {
+      return getCurrentLocationNative(nextOptions, retryCount + 1);
+    }
+
+    throw error;
+  }
+
+  // ═══ مرحله ۲: بررسی روشن بودن GPS / Location Services ═══
+  const services = await ensureNativeLocationServices();
+
+  if (!services.enabled) {
+    const error = createLocationError(
+      'GPS یا خدمات موقعیت‌یابی گوشی خاموش است. لطفاً آن را روشن کنید.',
+      2,
+      {
+        gpsDisabled: true,
+        reason: services.reason,
+      }
+    );
+
+    const shouldRetry = await retryAfterNativeSettings(
+      () => openLocationSettings(),
+      nextOptions,
+      retryCount
+    );
+
+    if (shouldRetry) {
+      return getCurrentLocationNative(nextOptions, retryCount + 1);
+    }
+
+    throw error;
+  }
+
+  // ═══ مرحله ۳: گرفتن موقعیت دقیق ═══
+  try {
+    return await acquireNativePosition();
+  } catch (posError) {
+    if (isLocationDisabledError(posError)) {
+      const error = createLocationError(
+        'GPS گوشی خاموش است. لطفاً آن را روشن کنید.',
+        2,
+        {
+          gpsDisabled: true,
+        }
+      );
+
+      const shouldRetry = await retryAfterNativeSettings(
+        () => openLocationSettings(),
+        nextOptions,
+        retryCount
+      );
+
+      if (shouldRetry) {
+        return getCurrentLocationNative(nextOptions, retryCount + 1);
+      }
+
+      throw error;
+    }
+
+    if (isPermissionDeniedError(posError)) {
+      const error = createLocationError(
+        'دسترسی به موقعیت رد شده است. لطفاً از تنظیمات اپ اجازه دهید.',
+        1,
+        {
+          needsSettings: true,
+        }
+      );
+
+      const shouldRetry = await retryAfterNativeSettings(
+        () => openAppSettings(),
+        nextOptions,
+        retryCount
+      );
+
+      if (shouldRetry) {
+        return getCurrentLocationNative(nextOptions, retryCount + 1);
+      }
+
+      throw error;
+    }
+
+    if (isTimeoutError(posError)) {
+      throw createLocationError(
+        'دریافت موقعیت دقیق زمان‌بر شد. لطفاً دوباره تلاش کنید.',
+        3
+      );
+    }
+
+    throw createLocationError(
+      posError?.message || 'خطا در دریافت موقعیت',
+      posError?.code || 0
+    );
+  }
+};
 
 const getPositionWithStrategy = (options) => {
   return new Promise((resolve, reject) => {
@@ -185,113 +515,18 @@ const getPositionWithStrategy = (options) => {
   });
 };
 
-/**
- * 📍 دریافت موقعیت فعلی کاربر
- * 
- * ✅ ترتیب عملیات در Native (Android/iOS):
- *    1. بررسی روشن بودن GPS
- *    2. اگر خاموش است → باز کردن Location Settings
- *    3. درخواست Runtime Permission
- *    4. دریافت موقعیت
- * 
- * ✅ در Web:
- *    استفاده از navigator.geolocation
- */
-export const getCurrentLocation = async (options = {}) => {
-  const { preferSpeed = true, showSettingsPrompt = true } = options;
-  const isNative = Capacitor.isNativePlatform();
+const getCurrentLocationWeb = async (options = {}) => {
+  const { preferSpeed = false } = options;
 
-  // ─── Native Platform: Android / iOS ───
-  if (isNative) {
-    // ═══ مرحله ۱: بررسی روشن بودن GPS ═══
-    const gpsEnabled = await checkGpsEnabled();
-    
-    if (!gpsEnabled) {
-      // GPS خاموش است
-      const error = new Error('GPS گوشی شما خاموش است. لطفاً آن را روشن کنید.');
-      error.code = 2; // POSITION_UNAVAILABLE
-      error.gpsDisabled = true;
-      
-      if (showSettingsPrompt) {
-        // باز کردن Location Settings
-        await openLocationSettings();
-      }
-      
-      throw error;
-    }
-
-    // ═══ مرحله ۲: درخواست دسترسی ═══
-    const permission = await requestLocationPermission();
-
-    if (!permission.granted) {
-      const error = new Error(
-        permission.needsSettings
-          ? 'دسترسی به موقعیت رد شده است. لطفاً از تنظیمات اجازه دهید.'
-          : 'دسترسی به موقعیت جغرافیایی داده نشد.'
-      );
-      error.code = 1; // PERMISSION_DENIED
-      error.needsSettings = permission.needsSettings;
-      throw error;
-    }
-
-    // ═══ مرحله ۳: دریافت موقعیت ═══
-    try {
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: !preferSpeed,
-        timeout: preferSpeed ? 15000 : 25000,
-        maximumAge: preferSpeed ? 120000 : 30000,
-      });
-
-      return {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        source: preferSpeed ? 'network' : 'gps',
-      };
-    } catch (capacitorError) {
-      const error = new Error(capacitorError.message || 'خطا در دریافت موقعیت');
-      
-      const errorMsg = capacitorError.message?.toLowerCase() || '';
-      
-      if (
-        errorMsg.includes('disabled') ||
-        errorMsg.includes('unavailable') ||
-        errorMsg.includes('service')
-      ) {
-        error.code = 2; // GPS خاموش
-        error.gpsDisabled = true;
-        
-        if (showSettingsPrompt) {
-          await openLocationSettings();
-        }
-      } else if (
-        errorMsg.includes('denied') ||
-        errorMsg.includes('permission')
-      ) {
-        error.code = 1; // PERMISSION_DENIED
-        error.needsSettings = true;
-      } else if (errorMsg.includes('timeout')) {
-        error.code = 3; // TIMEOUT
-      } else {
-        error.code = 0;
-      }
-      
-      throw error;
-    }
-  }
-
-  // ─── Web Platform ───
   if (typeof window === 'undefined' || !navigator.geolocation) {
-    const error = new Error('مرورگر شما از موقعیت‌یابی پشتیبانی نمی‌کند');
-    error.code = 0;
-    throw error;
+    throw createLocationError('مرورگر شما از موقعیت‌یابی پشتیبانی نمی‌کند', 0);
   }
 
   if (preferSpeed) {
     try {
       return await getPositionWithStrategy({
         enableHighAccuracy: false,
-        timeout: 10000,
+        timeout: WEB_FALLBACK_TIMEOUT_MS,
         maximumAge: 120000,
       });
     } catch (networkError) {
@@ -299,24 +534,40 @@ export const getCurrentLocation = async (options = {}) => {
     }
   }
 
-  try {
-    return await getPositionWithStrategy({
-      enableHighAccuracy: true,
-      timeout: 20000,
-      maximumAge: 30000,
-    });
-  } catch (gpsError) {
-    if (preferSpeed) {
-      try {
-        return await getPositionWithStrategy({
-          enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 300000,
-        });
-      } catch (finalError) {
-        if (finalError.code === 1) throw finalError;
-      }
-    }
-    throw gpsError;
+  return await getPositionWithStrategy({
+    enableHighAccuracy: true,
+    timeout: WEB_HIGH_ACCURACY_TIMEOUT_MS,
+    maximumAge: 0,
+  });
+};
+
+/**
+ * 📍 دریافت موقعیت فعلی کاربر
+ *
+ * ✅ Native:
+ *    - permission دقیق
+ *    - بررسی Location Services / GPS با getProviderStatus
+ *    - اگر خاموش بود، Settings باز می‌شود
+ *    - بعد از بازگشت کاربر، auto-retry می‌شود
+ *    - موقعیت با high accuracy گرفته می‌شود
+ *
+ * ✅ Web:
+ *    - به‌صورت پیش‌فرض high accuracy
+ */
+export const getCurrentLocation = async (options = {}) => {
+  if (nativeLocationPromise) {
+    return nativeLocationPromise;
   }
+
+  const isNative = Capacitor.isNativePlatform();
+
+  nativeLocationPromise = (
+    isNative
+      ? getCurrentLocationNative(options, 0)
+      : getCurrentLocationWeb(options)
+  ).finally(() => {
+    nativeLocationPromise = null;
+  });
+
+  return nativeLocationPromise;
 };

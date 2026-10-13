@@ -46,7 +46,7 @@ export default function NearbyPage() {
   const [nearbyModelRequests, setNearbyModelRequests] = useState([]);
   const [nearbyLineRentals, setNearbyLineRentals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  const locationLoadingRef = useRef(false);
   // ✅ PERF-02: پاکسازی کش هنگام لاگ‌اوت یا تغییر کاربر
   const previousUserId = useRef(user?.id);
   useEffect(() => {
@@ -59,15 +59,25 @@ export default function NearbyPage() {
   }, [user?.id]);
 
   const fetchLocation = useCallback(async (forceRefresh = false) => {
-    if (!forceRefresh && cachedLocation && Date.now() - cachedLocationTimestamp < LOCATION_CACHE_TTL) {
+    // ✅ جلوگیری از اجرای موازی
+    if (locationLoadingRef.current) return;
+
+    if (
+      !forceRefresh &&
+      cachedLocation &&
+      Date.now() - cachedLocationTimestamp < LOCATION_CACHE_TTL
+    ) {
       setUserLocation(cachedLocation);
       return;
     }
 
+    locationLoadingRef.current = true;
     setLocationLoading(true);
     setLocationError(null);
+
     try {
       const loc = await getCurrentLocation({ showSettingsPrompt: true });
+
       cachedLocation = loc;
       cachedLocationTimestamp = Date.now();
       setUserLocation(loc);
@@ -75,8 +85,8 @@ export default function NearbyPage() {
       cachedLocation = null;
       cachedLocationTimestamp = 0;
       setLocationError(err);
-      if (err.code === 2 || err.gpsDisabled) console.log('GPS is disabled');
     } finally {
+      locationLoadingRef.current = false;
       setLocationLoading(false);
     }
   }, []);
