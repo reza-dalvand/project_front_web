@@ -8,7 +8,11 @@ import Card from '@/components/common/Card';
 import Badge from '@/components/common/Badge';
 import CollabBadge from '@/components/common/CollabBadge';
 import InfoRow from '@/components/common/InfoRow';
-import { toPersianDigit } from '@/utils/numberUtils';
+import {
+  toPersianDigit,
+  formatCompactToman,
+  getLineRentalPriceDisplay,
+} from '@/utils/numberUtils';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { useToast } from '@/hooks/useToast';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
@@ -45,6 +49,7 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
 
   if (!mounted || !visible || !ad) return null;
 
+  const priceDisplay = getLineRentalPriceDisplay(ad);
   const st = !ad.isActive
     ? { label: 'فعال', variant: 'success' }
     : { label: 'غیرفعال', variant: 'error' };
@@ -81,20 +86,20 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
           label: ad.fixedDeposit > 0 ? 'اجاره ماهانه + رهن' : 'اجاره ماهانه',
           value:
             ad.fixedDeposit > 0
-              ? `${toPersianDigit((ad.fixedAmount || 0).toLocaleString('en-US'))} + ${toPersianDigit((ad.fixedDeposit || 0).toLocaleString('en-US'))} رهن`
-              : `${toPersianDigit((ad.fixedAmount || 0).toLocaleString('en-US'))} تومان`,
+              ? `${formatCompactToman(ad.fixedAmount)} + ${formatCompactToman(ad.fixedDeposit)} رهن`
+              : formatCompactToman(ad.fixedAmount),
           color: '#2196F3',
           icon: '💰',
         };
       case 'hourly':
         return {
           label: 'نرخ ساعتی',
-          value: `${toPersianDigit((ad.hourlyRate || 0).toLocaleString('en-US'))} تومان / ساعت`,
+          value: `${formatCompactToman(ad.hourlyRate)} / ساعت`,
           color: '#FF9800',
           icon: '⏰',
         };
       default:
-        return { label: 'قیمت', value: ad.priceDisplay || '—', color: '#607D8B', icon: '💰' };
+        return { label: 'قیمت', value: priceDisplay || '—', color: '#607D8B', icon: '💰' };
     }
   };
   const pi = getPriceInfo();
@@ -137,7 +142,11 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
               {ad.title}
             </h2>
             <div className="flex items-center gap-2 flex-wrap">
-              <CollabBadge type={ad.collabType} priceDisplay={ad.priceDisplay} variant="default" />
+              <CollabBadge
+                type={ad.collab_type || ad.collabType}
+                priceDisplay={priceDisplay}
+                variant="default"
+              />              
               <Badge label={st.label} variant={st.variant} size="md" />
             </div>
             {ad.businessName && (

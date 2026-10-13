@@ -3,6 +3,8 @@
 import { FiMapPin, FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { Card, CollabBadge } from '@/components/common';
+import { getLineRentalPriceDisplay } from '@/utils/numberUtils';
+
 
 const getLineEmoji = (typeName = '') => {
   if (typeName.includes('ناخن')) return '💅';
@@ -22,12 +24,15 @@ export default function AllLineRentalsCard({ ad, onPress }) {
   const typeName = ad.serviceTypeName || 'لاین زیبایی';
   const businessName = ad.businessName || 'کسب‌وکار بیو کلاب';
   const city = ad.city || '';
+  const collabType = ad.collab_type || ad.collabType;
+  const priceDisplay = getLineRentalPriceDisplay(ad);
+
   const priceText =
-    ad.collabType === 'percent'
-      ? `درصدی ${ad.priceDisplay}`
-      : ad.collabType === 'hourly'
-        ? `ساعتی ${ad.priceDisplay}`
-        : `اجاره ثابت ${ad.priceDisplay}`;
+    collabType === 'percent'
+      ? `درصدی ${priceDisplay}`
+      : collabType === 'hourly'
+        ? `ساعتی ${priceDisplay}`
+        : `اجاره ثابت ${priceDisplay}`;
 
   return (
     <Card
@@ -128,8 +133,8 @@ export default function AllLineRentalsCard({ ad, onPress }) {
           </div>
 
           <CollabBadge
-            type={ad.collabType}
-            priceDisplay={ad.priceDisplay}
+            type={collabType}
+            priceDisplay={priceDisplay}
             variant="compact"
           />
 

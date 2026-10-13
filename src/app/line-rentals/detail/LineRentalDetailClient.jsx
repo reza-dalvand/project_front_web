@@ -12,7 +12,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import LineRentalHero from '@/components/lineRentals/detail/LineRentalHero';
 import LineRentalPriceCard from '@/components/lineRentals/detail/LineRentalPriceCard';
 import LineRentalDatesCard from '@/components/lineRentals/detail/LineRentalDatesCard';
-import { toPersianDigit } from '@/utils/numberUtils';
+import { toPersianDigit, getLineRentalPriceDisplay } from '@/utils/numberUtils';
 import { cleanPhone } from '@/utils/phoneUtils';
 import { useToast } from '@/hooks/useToast';
 import { adsService } from '@/api';
@@ -112,22 +112,8 @@ export default function LineRentalDetailPage({ rentalId }) {
   const fixedDeposit = rental.fixedDeposit;
   const hourlyRate = rental.hourlyRate;
 
-  const getPriceDisplay = () => {
-    if (collabType === 'percent') {
-      return `${toPersianDigit(percentSalon || 0)}-${toPersianDigit(percentPartner || 0)}٪`;
-    }
-    if (collabType === 'fixed') {
-      let text = `${toPersianDigit((fixedAmount || 0).toLocaleString('en-US'))} تومان`;
-      if (fixedDeposit > 0) {
-        text += ` + ${toPersianDigit(fixedDeposit.toLocaleString('en-US'))} رهن`;
-      }
-      return text;
-    }
-    if (collabType === 'hourly') {
-      return `${toPersianDigit((hourlyRate || 0).toLocaleString('en-US'))} / ساعت`;
-    }
-    return '';
-  };
+  const getPriceDisplay = () => getLineRentalPriceDisplay(rental);
+
 
   const priceInfo = {
     percentSalon,
