@@ -50,7 +50,7 @@ export function useBookingName() {
     return isValid;
   };
 
-  const prefillNameFromUser = () => {
+  const prefillNameFromUser = useCallback(() => {
     if (user?.firstName) setFirstName(user.firstName);
     if (user?.lastName) setLastName(user.lastName);
     if (!user?.firstName && !user?.lastName && user?.name) {
@@ -60,7 +60,7 @@ export function useBookingName() {
         setLastName(parts.slice(1).join(' '));
       }
     }
-  };
+  }, [user?.firstName, user?.lastName, user?.name]);
 
   const updateUserName = () => {
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
@@ -71,12 +71,12 @@ export function useBookingName() {
     });
   };
 
-  const resetNameState = () => {
+  const resetNameState = useCallback(() => {
     setFirstName('');
     setLastName('');
     setNameConfirmed(false);
     setNameErrors({ firstName: '', lastName: '', confirm: '' });
-  };
+  }, []);
 
   return {
     firstName,

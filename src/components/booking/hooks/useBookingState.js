@@ -18,7 +18,7 @@ export function useBookingState() {
   const [bookingFailed, setBookingFailed] = useState(false);
   const [bookingError, setBookingError] = useState(null);
 
-  const resetBookingState = () => {
+  const resetBookingState = useCallback(() => {
     setSelectedDate(null);
     setSelectedTime(null);
     setTrustEnabled(false);
@@ -27,7 +27,7 @@ export function useBookingState() {
     setBookingFailed(false);
     setBookingError(null);
     setAvailableSlots([]);
-  };
+  }, []);
 
   return {
     selectedDate,
