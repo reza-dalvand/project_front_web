@@ -1,6 +1,6 @@
 // src/components/booking/hooks/useBookingState.js
 'use client';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 /**
  * Hook برای مدیریت وضعیت‌های رزرو نوبت
