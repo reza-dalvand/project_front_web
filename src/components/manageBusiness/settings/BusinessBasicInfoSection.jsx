@@ -1,30 +1,22 @@
-// src/components/manageBusiness/settings/BusinessBasicInfoSection.jsx
 'use client';
+
 import { FiBriefcase, FiPhone, FiClock } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import Card from '@/components/common/Card';
-import Dropdown from '@/components/common/Dropdown';
 import SectionHeader from '@/components/common/SectionHeader';
-import { useBusinessCategories } from '@/hooks/useCategoryOptions';
 
 export default function BusinessBasicInfoSection({
   name,
-  categoryId,
   phone,
   workingHours,
   about,
   errors,
   onNameChange,
-  onCategoryChange,
   onPhoneChange,
   onWorkingHoursChange,
   onAboutChange,
 }) {
   const { colors } = useTheme();
-  const { categories: businessCategories } = useBusinessCategories();
-
-  // ✅ FIX باگ ۹: تبدیل categoryId به string برای تطابق با options
-  const normalizedCategoryId = categoryId != null ? String(categoryId) : null;
 
   return (
     <div className="space-y-3">
@@ -43,6 +35,7 @@ export default function BusinessBasicInfoSection({
           >
             نام کسب‌وکار <span style={{ color: '#E53935' }}>*</span>
           </label>
+
           <input
             type="text"
             value={name}
@@ -55,25 +48,8 @@ export default function BusinessBasicInfoSection({
               color: colors.textMain,
             }}
           />
-          {errors.name && <p className="text-xs text-[#E53935] mt-1.5">{errors.name}</p>}
-        </div>
 
-        {/* نوع کسب‌وکار — ✅ FIX: تطابق ID */}
-        <div className="mt-3">
-          <Dropdown
-            label="نوع کسب‌وکار *"
-            placeholder="انتخاب کنید"
-            value={normalizedCategoryId}
-            options={businessCategories}
-            onSelect={(val) => onCategoryChange(val)}
-          />
-          {errors.categoryId && (
-            <div className="flex items-center gap-1 mt-[-8px] mb-2 px-1">
-              <span className="text-xs font-[Vazir]" style={{ color: '#E53935' }}>
-                {errors.categoryId}
-              </span>
-            </div>
-          )}
+          {errors.name && <p className="text-xs text-[#E53935] mt-1.5">{errors.name}</p>}
         </div>
 
         {/* شماره تماس */}
@@ -84,17 +60,19 @@ export default function BusinessBasicInfoSection({
           >
             شماره تماس
           </label>
+
           <div className="relative">
             <FiPhone
               size={18}
               className="absolute right-4 top-1/2 -translate-y-1/2"
               style={{ color: colors.textSecondary }}
             />
+
             <input
               type="tel"
               value={phone}
               onChange={(e) => onPhoneChange(e.target.value)}
-              placeholder="مثال: ۰۲۱-۲۲۳۳۴۴۵۵"
+              placeholder="مثال: ۰۲-۲۲۳۳۴۴۵۵"
               className="w-full pr-12 pl-4 h-12 rounded-xl border-2 outline-none text-sm font-[Vazir] transition-colors"
               style={{
                 backgroundColor: colors.background,
@@ -113,12 +91,14 @@ export default function BusinessBasicInfoSection({
           >
             ساعات کاری
           </label>
+
           <div className="relative">
             <FiClock
               size={18}
               className="absolute right-4 top-1/2 -translate-y-1/2"
               style={{ color: colors.textSecondary }}
             />
+
             <input
               type="text"
               value={workingHours}
@@ -142,6 +122,7 @@ export default function BusinessBasicInfoSection({
           >
             درباره کسب‌وکار
           </label>
+
           <textarea
             value={about}
             onChange={(e) => onAboutChange(e.target.value)}
