@@ -31,21 +31,21 @@ export function useBookingSteps(needsNameStep) {
   const dateStepId = needsNameStep ? 3 : 2;
   const timeStepId = needsNameStep ? 4 : 3;
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentStep < timeStepId) {
       setCurrentStep((p) => p + 1);
     }
-  };
+  }, [currentStep, timeStepId]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep((p) => p - 1);
     }
-  };
+  }, [currentStep]);
 
-  const resetSteps = () => {
+  const resetSteps = useCallback(() => {
     setCurrentStep(1);
-  };
+  }, []);
 
   return {
     currentStep,
