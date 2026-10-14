@@ -143,29 +143,28 @@ export default function BusinessDetailsClient({ businessSlug }) {
 
   const priceListSettings = useMemo(() => {
     const storeList = priceListFromStore;
-    if (storeList) {
-      // اگر سرویس خالی بود ولی سرویس‌های کسب‌وکار موجود بود، از آنها بساز
-      if ((!storeList.services || storeList.services.length === 0) && business?.services?.length) {
-        return {
-          ...storeList,
-          isPublished: true, // ✅ FIX: اگر سرویس هست، نمایش بده
-          services: business.services
-            .filter((s) => s.isActive !== false)
-            .map(mapServiceToPriceList),
-        };
-      }
-      return storeList;
+
+    // فقط وقتی لیست قیمت عمومی منتشرشده است که store صریحاً isPublished: true داشته باشد
+    if (!storeList?.isPublished) {
+      return null;
     }
-    // اگر هنوز از بک‌اند نیامده ولی سرویس داریم، پیش‌نمایش نشان بده
-    if (business?.services?.length) {
-      return {
-        businessId: business.id,
-        themeId: 'classic',
-        isPublished: true,
-        services: business.services.filter((s) => s.isActive !== false).map(mapServiceToPriceList),
-      };
+
+    const apiServices = Array.isArray(storeList.services) ? storeList.services : [];
+
+    const fallbackServices = (business?.services || [])
+      .filter((s) => s.isActive !== false)
+      .map(mapServiceToPriceList);
+
+    const services = apiServices.length > 0 ? apiServices : fallbackServices;
+
+    if (services.length === 0) {
+      return null;
     }
-    return null;
+
+    return {
+      ...storeList,
+      services,
+    };
   }, [priceListFromStore, business]);
 
   const showPrices = Boolean(

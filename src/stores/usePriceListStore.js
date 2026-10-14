@@ -75,22 +75,31 @@ const buildServicesFromBusiness = () => {
     }));
 };
 
-const mapPublicPriceListFromApi = (data, businessId) => ({
-  businessId,
-  themeId: data.theme || 'classic',
-  isPublished: data.isPublished ?? data.is_published ?? true,
-  services: (data.services || []).map((s) => ({
-    id: s.id,
-    name: s.name,
-    typeName: s.typeName || s.type_name || '',
-    typeId: s.typeId || s.type_id || '',
-    originalPrice: s.originalPrice ?? s.original_price ?? 0,
-    discountPercent: s.discountPercent ?? s.discount_percent ?? 0,
-    finalPrice: s.finalPrice ?? s.final_price ?? 0,
-    hasDeposit: s.hasDeposit ?? s.has_deposit ?? false,
-    depositAmount: s.depositAmount ?? s.deposit_amount ?? 0,
-  })),
-});
+const mapPublicPriceListFromApi = (data, businessId) => {
+  const safeData = data || {};
+
+  return {
+    businessId,
+    themeId: safeData.theme || 'classic',
+    isPublished: Boolean(safeData.isPublished ?? safeData.is_published ?? false),
+    services: Array.isArray(safeData.services)
+      ? safeData.services.map((rawService) => {
+          const s = rawService || {};
+          return {
+            id: s.id,
+            name: s.name,
+            typeName: s.typeName || s.type_name || '',
+            typeId: s.typeId || s.type_id || '',
+            originalPrice: s.originalPrice ?? s.original_price ?? 0,
+            discountPercent: s.discountPercent ?? s.discount_percent ?? 0,
+            finalPrice: s.finalPrice ?? s.final_price ?? 0,
+            hasDeposit: s.hasDeposit ?? s.has_deposit ?? false,
+            depositAmount: s.depositAmount ?? s.deposit_amount ?? 0,
+          };
+        })
+      : [],
+  };
+};
 
 const mapPriceListFromApi = (data, businessId) => ({
   businessId,
@@ -123,45 +132,66 @@ export const usePriceListStore = create(
 
       fetchPublicPriceList: async (businessId) => {
         set({ isLoading: true, error: null });
+
         try {
           const result = await priceListService.getPublicPriceList(businessId);
           const mapped = mapPublicPriceListFromApi(result.data, businessId);
+
           set((s) => ({
             lists: { ...s.lists, [businessId]: mapped },
             isLoading: false,
           }));
+
           return mapped;
         } catch (error) {
           console.error('fetchPublicPriceList failed:', error);
-          set({ error: error.message, isLoading: false });
-          return null;
+
+          const safeList = DEFAULT_LIST(businessId);
+
+          set((s) => ({
+            lists: {
+              ...s.lists,
+              [businessId]: safeList,
+            },
+            error: error?.message || 'خطا در دریافت لیست قیمت عمومی',
+            isLoading: false,
+          }));
+
+          return safeList;
         }
       },
 
       fetchPriceList: async (businessId) => {
         set({ isLoading: true, error: null });
+
         try {
           const result = await priceListService.getPriceList();
           const mapped = mapPriceListFromApi(result.data, businessId);
+
           set((s) => ({
             lists: { ...s.lists, [businessId]: mapped },
             isLoading: false,
           }));
+
           return mapped;
         } catch (error) {
           console.error('fetchPriceList failed:', error);
+
           const services = buildServicesFromBusiness();
+
           const fallbackList = {
             businessId,
             themeId: 'classic',
-            isPublished: services.length > 0,
+            isPublished: false,
             services,
           };
+
           set((s) => ({
             lists: { ...s.lists, [businessId]: fallbackList },
-            error: error.message,
+            error: error?.message || 'خطا در دریافت لیست قیمت',
             isLoading: false,
           }));
+
           return fallbackList;
         }
       },
@@ -169,6 +199,7 @@ export const usePriceListStore = create(
       ensureList: (businessId) => {
         if (!get().lists[businessId]) {
           const services = buildServicesFromBusiness();
+
           set((s) => ({
             lists: {
               ...s.lists,
@@ -196,21 +227,30 @@ export const usePriceListStore = create(
 
       setTheme: (businessId, themeId) => {
         get().updateList(businessId, { themeId });
+
         const list = get().lists[businessId];
+
         priceListService
           .updatePriceList(mapPriceListToApi(list))
           .catch((err) => console.error('setTheme API failed:', err));
       },
 
-      togglePublish: (businessId) => {
+      togglePublish: async (businessId) => {
         const current = get().lists[businessId] || DEFAULT_LIST(businessId);
-        const next = !current.isPublished;
-        get().updateList(businessId, { isPublished: next });
-        const list = get().lists[businessId];
-        priceListService
-          .updatePriceList(mapPriceListToApi(list))
-          .catch((err) => console.error('togglePublish API failed:', err));
-        return next;
+        const previousPublished = Boolean(current.isPublished);
+        const nextPublished = !previousPublished;
+
+        get().updateList(businessId, { isPublished: nextPublished });
+
+        try {
+          const list = get().lists[businessId];
+          await priceListService.updatePriceList(mapPriceListToApi(list));
+
+          return nextPublished;
+        } catch (error) {
+          get().updateList(businessId, { isPublished: previousPublished });
+          throw error;
+        }
       },
 
       getTheme: (businessId) => {
@@ -228,6 +268,7 @@ export const usePriceListStore = create(
           isLoading: false,
           error: null,
         });
+
         try {
           usePriceListStore.persist.clearStorage();
         } catch {}
