@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiTag, FiEye, FiEyeOff, FiEdit2, FiInfo } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -38,7 +38,7 @@ export default function ManagePriceListPage() {
   const businessData = useBusinessStore((s) => s.businessData);
   const fetchBusinessDetail = useBusinessStore((s) => s.fetchBusinessDetail);
   const safeGoBack = useSafeBack('/manage');
-  
+
   const businessId = businessData?.id;
 
   const list = usePriceListStore((s) => (businessId ? s.lists[businessId] : undefined));
@@ -47,6 +47,8 @@ export default function ManagePriceListPage() {
   const ensureList = usePriceListStore((s) => s.ensureList);
   const setTheme = usePriceListStore((s) => s.setTheme);
   const togglePublish = usePriceListStore((s) => s.togglePublish);
+
+  const [isPublishSaving, setIsPublishSaving] = useState(false);
 
   useEffect(() => {
     if (!businessId && isAuthenticated) {
@@ -66,15 +68,31 @@ export default function ManagePriceListPage() {
     }
   }, [businessId, ensureList]);
 
-  const handleTogglePublish = () => {
-    if (!businessId) return;
-    const next = togglePublish(businessId);
-    showToast(
-      next
-        ? '✓ لیست قیمت منتشر شد و در صفحه کسب‌وکار نمایش داده می‌شود'
-        : 'لیست قیمت از صفحه کسب‌وکار مخفی شد',
-      next ? 'success' : 'info'
-    );
+  const handleTogglePublish = async () => {
+    if (!businessId || isPublishSaving) return;
+
+    const currentPublished = Boolean(list?.isPublished);
+    const nextPublished = !currentPublished;
+
+    setIsPublishSaving(true);
+
+    try {
+      await togglePublish(businessId);
+
+      showToast(
+        nextPublished
+          ? '✓ لیست قیمت منتشر شد و در صفحه کسب‌وکار نمایش داده می‌شود'
+          : 'لیست قیمت از صفحه کسب‌وکار مخفی شد',
+        nextPublished ? 'success' : 'info'
+      );
+    } catch (error) {
+      showToast(
+        error?.message || 'خطا در ذخیره‌سازی وضعیت انتشار لیست قیمت',
+        'error'
+      );
+    } finally {
+      setIsPublishSaving(false);
+    }
   };
 
   const handleThemeChange = (themeId) => {
@@ -132,7 +150,10 @@ export default function ManagePriceListPage() {
             </div>
             <button
               onClick={handleTogglePublish}
-              className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
+              disabled={isPublishSaving}
+              className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                isPublishSaving ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
               style={{ backgroundColor: settings.isPublished ? '#43A047' : colors.border }}
             >
               <div
