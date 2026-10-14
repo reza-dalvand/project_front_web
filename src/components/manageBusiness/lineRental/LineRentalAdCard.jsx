@@ -2,9 +2,7 @@
 
 import { FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import CollabBadge from '@/components/common/CollabBadge';
-import { getLineRentalPriceDisplay } from '@/utils/numberUtils';
-
+import { parseNumber, toPersianDigit } from '@/utils/numberUtils';
 
 const getLineEmoji = (typeName = '') => {
   if (typeName.includes('ناخن')) return '💅';
@@ -18,13 +16,82 @@ const getLineEmoji = (typeName = '') => {
   return '🏢';
 };
 
+const toPositiveNumber = (value) => {
+  const parsed = parseNumber(value);
+  const num = Number(parsed);
+
+  if (!Number.isFinite(num) || num <= 0) {
+    return 0;
+  }
+
+  return num;
+};
+
+const formatToman = (value) => {
+  const num = toPositiveNumber(value);
+
+  if (!num) return '';
+
+  const formatted = new Intl.NumberFormat('en-US').format(num);
+
+  return `${toPersianDigit(formatted)} تومان`;
+};
+
+const getPriceItems = (ad) => {
+  const collabType = String(ad?.collab_type || ad?.collabType || '').toLowerCase();
+
+  if (collabType === 'fixed') {
+    const value = formatToman(ad?.fixed_amount ?? ad?.fixedAmount);
+
+    if (!value) return [];
+
+    return [
+      {
+        id: 'fixed',
+        label: 'ثابت',
+        value,
+      },
+    ];
+  }
+
+  if (collabType === 'hourly') {
+    const value = formatToman(ad?.hourly_rate ?? ad?.hourlyRate);
+
+    if (!value) return [];
+
+    return [
+      {
+        id: 'hourly',
+        label: 'اجاره',
+        value,
+      },
+    ];
+  }
+
+  if (collabType === 'percent') {
+    const salon = toPositiveNumber(ad?.percent_salon ?? ad?.percentSalon);
+    const partner = toPositiveNumber(ad?.percent_partner ?? ad?.percentPartner);
+
+    if (!salon || !partner) return [];
+
+    return [
+      {
+        id: 'percent',
+        label: 'درصدی',
+        value: `${toPersianDigit(salon)}٪ - ${toPersianDigit(partner)}٪`,
+      },
+    ];
+  }
+
+  return [];
+};
+
 export default function LineRentalAdCard({ ad, onPress }) {
   const { colors } = useTheme();
 
-  const isActive = ad.isActive !== false;
-  const emoji = getLineEmoji(ad.serviceTypeName || ad.title || '');
-  const collabType = ad.collab_type || ad.collabType;
-  const priceDisplay = getLineRentalPriceDisplay(ad);
+  const isActive = ad?.isActive !== false;
+  const emoji = getLineEmoji(ad?.serviceTypeName || ad?.title || '');
+  const priceItems = getPriceItems(ad);
 
   return (
     <button
@@ -45,21 +112,43 @@ export default function LineRentalAdCard({ ad, onPress }) {
         <span style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.18))' }}>{emoji}</span>
       </div>
 
-      <div className="min-w-0 flex-1 space-y-1.5">
+      <div className="min-w-0 flex-1 space-y-2">
         <h4
           className="line-clamp-1 text-sm font-[Vazir-Bold]"
           style={{ color: colors.textMain }}
         >
-          {ad.title}
+          {ad?.title}
         </h4>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <CollabBadge
-            type={collabType}
-            priceDisplay={priceDisplay}
-            variant="compact"
-          />
+        {priceItems.length > 0 && (
+          <div
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl border px-2.5 py-1.5"
+            style={{
+              backgroundColor: 'rgba(16,185,129,0.08)',
+              borderColor: 'rgba(16,185,129,0.18)',
+            }}
+          >
+            {priceItems.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-1 text-[11px] leading-5"
+              >
+                <span style={{ color: colors.textSecondary }}>
+                  {item.label}:
+                </span>
 
+                <span
+                  className="whitespace-nowrap font-[Vazir-Bold]"
+                  style={{ color: '#10B981' }}
+                >
+                  {item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2">
           <span
             className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-[Vazir-Bold]"
             style={{
