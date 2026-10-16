@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
@@ -35,6 +36,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
 
   useEffect(() => {
     setMounted(true);
+
     return () => {
       setMounted(false);
       releaseScrollLock(instanceId.current);
@@ -50,26 +52,32 @@ export default function ReviewModal({ visible, appointment, onClose }) {
     } else {
       releaseScrollLock(instanceId.current);
     }
+
     return () => releaseScrollLock(instanceId.current);
   }, [visible]);
 
   useEffect(() => {
     if (!visible) return;
+
     const handleEsc = (e) => {
       if (e.key === 'Escape') onClose?.();
     };
+
     window.addEventListener('keydown', handleEsc);
+
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
 
   const voteTag = (tagId, voteType) => {
     setTagVotes((prev) => {
       const current = prev[tagId];
+
       if (current === voteType) {
         const newVotes = { ...prev };
         delete newVotes[tagId];
         return newVotes;
       }
+
       return { ...prev, [tagId]: voteType };
     });
   };
@@ -80,8 +88,14 @@ export default function ReviewModal({ visible, appointment, onClose }) {
       vote_type: voteType,
     }));
 
-    if (tagVotesArray.length === 0 && !comment.trim()) {
-      showToast('لطفاً حداقل یک نشان را انتخاب کنید یا نظر بدهید', 'warning');
+    // ✅ اصلاح مهم:
+    // امتیاز باید بر اساس رای کاربران محاسبه شود،
+    // پس حداقل یک لایک یا دیسلایک الزامی است.
+    if (tagVotesArray.length === 0) {
+      showToast(
+        'برای ثبت امتیاز، لطفاً حداقل به یکی از موارد لایک یا دیسلایک بزنید',
+        'warning'
+      );
       return;
     }
 
@@ -100,6 +114,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
       });
 
       setShowSuccess(true);
+
       setTimeout(() => {
         setShowSuccess(false);
         onClose?.();
@@ -140,23 +155,37 @@ export default function ReviewModal({ visible, appointment, onClose }) {
               className="rounded-xl"
             />
           )}
+
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-[Vazir-Bold] truncate" style={{ color: colors.textMain }}>
+            <h3
+              className="text-base font-[Vazir-Bold] truncate"
+              style={{ color: colors.textMain }}
+            >
               {appointment.businessName}
             </h3>
+
             <p
               className="text-[11px] font-[Vazir] truncate"
               style={{ color: colors.textSecondary }}
             >
               {appointment.serviceName}
+
               {appointment.date && (
-                <span> • {toPersianDigit(String(appointment.date).replace(/\//g, '/'))}</span>
+                <span>
+                  {' '}
+                  • {toPersianDigit(String(appointment.date).replace(/\//g, '/'))}
+                </span>
               )}
+
               {appointment.time && (
-                <span> • {toPersianDigit(String(appointment.time).substring(0, 5))}</span>
+                <span>
+                  {' '}
+                  • {toPersianDigit(String(appointment.time).substring(0, 5))}
+                </span>
               )}
             </p>
           </div>
+
           <button
             onClick={onClose}
             className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
@@ -176,12 +205,14 @@ export default function ReviewModal({ visible, appointment, onClose }) {
               >
                 <FiCheck size={48} color="#fff" />
               </div>
+
               <h3
                 className="text-xl font-[Vazir-Bold] text-center"
                 style={{ color: colors.textMain }}
               >
                 نظر شما ثبت شد!
               </h3>
+
               <p
                 className="text-sm font-[Vazir] text-center leading-6"
                 style={{ color: colors.textSecondary }}
@@ -193,11 +224,18 @@ export default function ReviewModal({ visible, appointment, onClose }) {
             <>
               {/* عنوان */}
               <div className="text-center space-y-1">
-                <h3 className="text-lg font-[Vazir-Bold]" style={{ color: colors.textMain }}>
+                <h3
+                  className="text-lg font-[Vazir-Bold]"
+                  style={{ color: colors.textMain }}
+                >
                   تجربه‌تان چطور بود؟
                 </h3>
-                <p className="text-xs font-[Vazir]" style={{ color: colors.textSecondary }}>
-                  نظرتان به بهبود خدمات کمک می‌کند
+
+                <p
+                  className="text-xs font-[Vazir]"
+                  style={{ color: colors.textSecondary }}
+                >
+                  برای ثبت امتیاز، حداقل به یکی از موارد لایک یا دیسلایک بزنید
                 </p>
               </div>
 
@@ -219,7 +257,11 @@ export default function ReviewModal({ visible, appointment, onClose }) {
                           : isDislike
                             ? '#F4433608'
                             : colors.background,
-                        borderColor: isLike ? '#4CAF5040' : isDislike ? '#F4433640' : colors.border,
+                        borderColor: isLike
+                          ? '#4CAF5040'
+                          : isDislike
+                            ? '#F4433640'
+                            : colors.border,
                       }}
                     >
                       {/* ایموجی */}
@@ -282,6 +324,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
                 >
                   نظر شما (اختیاری)
                 </label>
+
                 <textarea
                   value={comment}
                   onChange={(e) => {
@@ -301,6 +344,7 @@ export default function ReviewModal({ visible, appointment, onClose }) {
                     direction: 'rtl',
                   }}
                 />
+
                 <div className="flex justify-between items-center">
                   <span className="text-[11px]" style={{ color: colors.textSecondary }}>
                     {toPersianDigit(comment.length)}/{toPersianDigit(MAX_COMMENT_LENGTH)}
