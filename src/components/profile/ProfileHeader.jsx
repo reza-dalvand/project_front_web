@@ -40,7 +40,7 @@ export default function ProfileHeader({ user }) {
           className="mb-3 block text-[11px] font-[Vazir-Medium]"
           style={{ color: 'rgba(255,255,255,0.68)' }}
         >
-          پروفایل من
+          {/* پروفایل من */}
         </span>
 
         <div className="flex items-center gap-4">
