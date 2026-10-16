@@ -1,31 +1,50 @@
-// src/__tests__/components/StarRating.test.jsx
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import StarRating from '@/components/common/StarRating';
 
 describe('StarRating', () => {
   it('نمایش ۵ ستاره', () => {
     const { container } = render(<StarRating value={3} />);
-    // ✅ FIX: فقط فرزندان مستقیم wrapper را بشمار (نه span های داخلی)
-    const wrapper = container.querySelector('.flex');
-    expect(wrapper.children.length).toBe(5);
+    const stars = container.querySelectorAll('[data-star-index]');
+    expect(stars).toHaveLength(5);
   });
 
   it('ستاره‌های پر و خالی', () => {
     const { container } = render(<StarRating value={3} />);
-    const wrapper = container.querySelector('.flex');
-    // ✅ FIX: بررسی textContent هر wrapper (شامل ★ اگر پر باشد)
-    const filledStars = Array.from(wrapper.children).filter((el) =>
-      el.textContent.includes('★')
-    );
-    expect(filledStars.length).toBe(3);
+
+    const fullStars = container.querySelectorAll('[data-star-state="full"]');
+    const emptyStars = container.querySelectorAll('[data-star-state="empty"]');
+
+    expect(fullStars).toHaveLength(3);
+    expect(emptyStars).toHaveLength(2);
+  });
+
+  it('پشتیبانی از امتیاز اعشاری', () => {
+    const { container } = render(<StarRating value={3.5} />);
+
+    const partialStar = container.querySelector('[data-star-index="3"]');
+
+    expect(partialStar?.getAttribute('data-star-fill')).toBe('50');
+    expect(partialStar?.getAttribute('data-star-state')).toBe('partial');
+  });
+
+  it('مقدار نامعتبر باعث نمایش ستاره پر نمی‌شود', () => {
+    const { container } = render(<StarRating value={NaN} />);
+
+    const fullStars = container.querySelectorAll('[data-star-state="full"]');
+    const emptyStars = container.querySelectorAll('[data-star-state="empty"]');
+
+    expect(fullStars).toHaveLength(0);
+    expect(emptyStars).toHaveLength(5);
   });
 
   it('حالت تعاملی', () => {
     const onRate = jest.fn();
     render(<StarRating value={0} interactive onRate={onRate} />);
-    // کلیک روی ستاره سوم
+
     const buttons = screen.getAllByRole('button');
-    buttons[2].click();
+    expect(buttons).toHaveLength(5);
+
+    fireEvent.click(buttons[2]);
     expect(onRate).toHaveBeenCalledWith(3);
   });
 });

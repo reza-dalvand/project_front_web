@@ -4,6 +4,10 @@
  * - بهبود migrate function
  * - اضافه کردن onRehydrateStorage
  * - محافظت در برابر داده‌های خراب
+ *
+ * ✅ FIX rating:
+ * - rating همیشه بین 0 تا 5 نرمال‌سازی شود
+ * - reviewsCount همیشه عدد صحیح نامنفی باشد
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -15,18 +19,44 @@ import { createTeamSlice } from './business/slices/teamSlice';
 import { createPortfoliosSlice } from './business/slices/portfoliosSlice';
 import { createSchedulesSlice } from './business/slices/schedulesSlice';
 
+const toFiniteNumber = (value) => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const clampRating = (value, max = 5) => {
+  const numeric = toFiniteNumber(value);
+  const rounded = Math.round(numeric * 10) / 10;
+  return Math.max(0, Math.min(max, rounded));
+};
+
+const toPositiveInteger = (value) => {
+  const numeric = toFiniteNumber(value);
+  return Math.max(0, Math.trunc(numeric));
+};
+
 /**
  * ✅ FIX 5.2: اعتبارسنجی و ترمیم ساختار businessData
  * اگر فیلدهای ضروری وجود نداشته باشند، با مقادیر پیش‌فرض پر می‌شوند
  */
 const sanitizeBusinessData = (data) => {
   if (!data || typeof data !== 'object') {
-    return { ...INITIAL_BUSINESS_DATA };
+    return {
+      ...INITIAL_BUSINESS_DATA,
+      rating: clampRating(INITIAL_BUSINESS_DATA?.rating),
+      reviewsCount: toPositiveInteger(INITIAL_BUSINESS_DATA?.reviewsCount),
+    };
   }
 
   return {
     ...INITIAL_BUSINESS_DATA,
     ...data,
+    rating: clampRating(data.rating),
+    reviewsCount: toPositiveInteger(data.reviewsCount),
     // اطمینان از وجود آرایه‌ها
     services: Array.isArray(data.services) ? data.services : [],
     team: Array.isArray(data.team) ? data.team : [],
@@ -118,8 +148,8 @@ export const useBusinessStore = create(
               phone: b.phone || '',
               workingHours: b.workingHours || '',
               about: b.about || '',
-              rating: b.rating || 0,
-              reviewsCount: b.reviewsCount || 0,
+              rating: clampRating(b.rating),
+              reviewsCount: toPositiveInteger(b.reviewsCount),
               VIP: b.isVip || false,
               logo: b.logo || null,
               coverUrl: b.coverImage || null,
@@ -489,6 +519,10 @@ export const useBusinessStore = create(
               console.warn('[useBusinessStore] Invalid businessData detected, resetting.');
               state.businessData = { ...INITIAL_BUSINESS_DATA };
             } else {
+              // ترمیم rating و reviewsCount
+              state.businessData.rating = clampRating(state.businessData.rating);
+              state.businessData.reviewsCount = toPositiveInteger(state.businessData.reviewsCount);
+
               // ترمیم آرایه‌ها
               if (!Array.isArray(state.businessData.services)) {
                 state.businessData.services = [];
