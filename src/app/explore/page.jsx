@@ -5,6 +5,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useFavoriteStore } from '@/stores/useFavoriteStore';
 import ScreenWrapper from '@/components/common/ScreenWrapper';
 import SectionHeader from '@/components/common/SectionHeader';
 import { PostGrid, ActiveFilterChips, FilterModal, PostModal } from '@/components/explore';
@@ -27,6 +29,10 @@ const shuffleArray = (array) => {
 export default function ExplorePage() {
   const { colors } = useTheme();
   const router = useRouter();
+
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const authHydrated = useAuthStore((s) => s._hydrated);
+  const fetchFavorites = useFavoriteStore((s) => s.fetchFavorites);
 
   const [allPosts, setAllPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +70,12 @@ export default function ExplorePage() {
     () => useGlobalLocationStore.getState().getLocationParams(),
     []
   );
+
+  // ✅ همگام‌سازی علاقه‌مندی‌ها هنگام ورود کاربر
+  useEffect(() => {
+    if (!authHydrated || !isAuthenticated) return;
+    fetchFavorites();
+  }, [authHydrated, isAuthenticated, fetchFavorites]);
 
   const fetchPortfolios = useCallback(
     async (pageNum = 1, append = false) => {
