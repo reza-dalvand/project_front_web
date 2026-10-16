@@ -50,7 +50,7 @@ export default function ProfilePage() {
       try {
         const [apptRes, favRes] = await Promise.allSettled([
           appointmentsService.getMyAppointments('all'),
-          favoritesService.getFavoritesCount(),
+          favoritesService.getFavorites(),
         ]);
 
         const rawAppointments =
@@ -68,13 +68,18 @@ export default function ProfilePage() {
           (appointment) => appointment?.status === 'done'
         ).length;
 
-        const favData =
+        const favPayload =
           favRes.status === 'fulfilled' ? favRes.value?.data : null;
 
-        const favCount =
-          typeof favData === 'number'
-            ? favData
-            : favData?.total || 0;
+        const favBusinesses = Array.isArray(favPayload?.businesses)
+          ? favPayload.businesses
+          : [];
+
+        const favPosts = Array.isArray(favPayload?.posts)
+          ? favPayload.posts
+          : [];
+
+        const favCount = favBusinesses.length + favPosts.length;
 
         setUserStats([
           {
