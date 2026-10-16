@@ -2,6 +2,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { FiSave } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useToast } from '@/hooks/useToast';
@@ -16,7 +17,6 @@ import DeleteConfirmModal from '@/components/profile/edit/DeleteConfirmModal';
 import DeleteOtpModal from '@/components/profile/edit/DeleteOtpModal';
 import { profileService, authService } from '@/api';
 import { OTP_CONFIG } from '@/api/config';
-
 
 const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;
 const RESEND_SECONDS = OTP_CONFIG.RESEND_COOLDOWN_SECONDS;
@@ -167,38 +167,56 @@ export default function EditProfilePage() {
 
   return (
     <ScreenWrapper padding={0}>
-      {/* ✅ FIX فاز ۲: دکمه بازگشت هم ایمن شد */}
-      <Header title="ویرایش پروفایل" onBackPress={() => safeNavigateBack(router)} />
-      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-6">
-        <ProfileAvatarSection userName={user?.name} />
-        <ProfileFormSection
-          firstName={formData.firstName}
-          lastName={formData.lastName}
-          errors={errors}
-          onFirstNameChange={(t) => {
-            setFormData((prev) => ({ ...prev, firstName: t }));
-            if (errors.firstName) setErrors((prev) => ({ ...prev, firstName: '' }));
-          }}
-          onLastNameChange={(t) => {
-            setFormData((prev) => ({ ...prev, lastName: t }));
-            if (errors.lastName) setErrors((prev) => ({ ...prev, lastName: '' }));
-          }}
-        />
-        <PhoneSection
-          phone={user?.phone}
-          onChangePhonePress={() => router.push('/profile/change-phone')}
-        />
-        <Button
-          title="ذخیره تغییرات"
-          onPress={handleSave}
-          loading={loading}
-          disabled={loading}
-          variant="primary"
-          size="lg"
-          fullWidth
-        />
-        <DangerZone onDeletePress={() => setShowDeleteConfirm(true)} />
+      <Header
+        title="ویرایش پروفایل"
+        subtitle="مدیریت اطلاعات شخصی و امنیت حساب"
+        onBackPress={() => safeNavigateBack(router)}
+      />
+
+      <div className="flex-1 overflow-y-auto px-4 sm:px-5 pt-5 pb-10">
+        <div className="mx-auto w-full max-w-2xl space-y-5">
+          <ProfileAvatarSection userName={user?.name} />
+
+          <ProfileFormSection
+            firstName={formData.firstName}
+            lastName={formData.lastName}
+            errors={errors}
+            onFirstNameChange={(t) => {
+              setFormData((prev) => ({ ...prev, firstName: t }));
+              if (errors.firstName) setErrors((prev) => ({ ...prev, firstName: '' }));
+            }}
+            onLastNameChange={(t) => {
+              setFormData((prev) => ({ ...prev, lastName: t }));
+              if (errors.lastName) setErrors((prev) => ({ ...prev, lastName: '' }));
+            }}
+          />
+
+          <PhoneSection
+            phone={user?.phone}
+            onChangePhonePress={() => router.push('/profile/change-phone')}
+          />
+
+          <div className="pt-1">
+            <Button
+              title="ذخیره تغییرات"
+              onPress={handleSave}
+              loading={loading}
+              disabled={loading}
+              variant="primary"
+              size="lg"
+              fullWidth
+              icon={<FiSave size={18} color="#fff" />}
+              iconPosition="right"
+              style={{
+                boxShadow: `0 12px 28px ${colors.primary}30`,
+              }}
+            />
+          </div>
+
+          <DangerZone onDeletePress={() => setShowDeleteConfirm(true)} />
+        </div>
       </div>
+
       <DeleteConfirmModal
         visible={showDeleteConfirm}
         onConfirm={handleStartDelete}
