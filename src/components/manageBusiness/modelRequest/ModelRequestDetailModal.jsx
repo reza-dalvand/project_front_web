@@ -12,10 +12,17 @@ import InfoRow from '@/components/common/InfoRow';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 
-export default function ModelRequestDetailModal({ visible, request, onClose, onEdit, onDelete }) {
+export default function ModelRequestDetailModal({
+  visible,
+  request,
+  onClose,
+  onEdit,
+  onDelete,
+}) {
   const { colors } = useTheme();
   const instanceId = useRef('mr-detail-modal');
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -35,15 +42,23 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
 
+  useEffect(() => {
+    if (!visible) {
+      setDeleteDialogVisible(false);
+      setIsDeleting(false);
+    }
+  }, [visible]);
+
   if (!visible || !request) return null;
 
   const statusConfig = {
     active: { label: 'فعال', variant: 'success' },
     inactive: { label: 'غیرفعال', variant: 'error' },
   };
+
   const currentStatus = !request.status
-    ? { label: 'فعال', variant: 'success' }
-    : { label: 'غیرفعال', variant: 'error' };
+    ? statusConfig.active
+    : statusConfig.inactive;
 
   const handleCall = () => {
     if (request.contactPhone) {
@@ -52,13 +67,29 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
   };
 
   const handleDeleteRequest = () => {
+    if (isDeleting) return;
     setDeleteDialogVisible(true);
   };
 
-  const handleDeleteConfirm = () => {
-    setDeleteDialogVisible(false);
-    onClose();
-    onDelete?.(request);
+  const handleDeleteConfirm = async () => {
+    if (!request || isDeleting) return;
+
+    setIsDeleting(true);
+
+    try {
+      const success = await onDelete?.(request);
+
+      setDeleteDialogVisible(false);
+
+      if (success !== false) {
+        onClose?.();
+      }
+    } catch (error) {
+      console.error('Delete model request failed:', error);
+      setDeleteDialogVisible(false);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const content = (
@@ -193,7 +224,9 @@ export default function ModelRequestDetailModal({ visible, request, onClose, onE
         cancelText="انصراف"
         variant="danger"
         onConfirm={handleDeleteConfirm}
-        onCancel={() => setDeleteDialogVisible(false)}
+        onCancel={() => {
+          if (!isDeleting) setDeleteDialogVisible(false);
+        }}
       />
     </div>
   );

@@ -1,6 +1,7 @@
+// src/app/manage/model-requests/page.jsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiPlus, FiUser } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
@@ -16,6 +17,24 @@ import ModelRequestDetailModal from '@/components/manageBusiness/modelRequest/Mo
 import { adsService } from '@/api';
 import { useSafeBack } from '@/hooks/useSafeBack';
 
+const normalizeId = (id) => {
+  if (id === undefined || id === null || id === '') return '';
+  return String(id);
+};
+
+const extractRequestList = (result) => {
+  const data = result?.data;
+
+  if (Array.isArray(data)) return data.filter(Boolean);
+  if (Array.isArray(data?.results)) return data.results.filter(Boolean);
+  if (Array.isArray(data?.items)) return data.items.filter(Boolean);
+
+  if (Array.isArray(result?.results)) return result.results.filter(Boolean);
+  if (Array.isArray(result?.items)) return result.items.filter(Boolean);
+
+  return [];
+};
+
 export default function ModelRequestsPage() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -23,29 +42,39 @@ export default function ModelRequestsPage() {
   const { showToast } = useToast();
   const safeGoBack = useSafeBack('/manage');
 
+  const showToastRef = useRef(showToast);
+
+  useEffect(() => {
+    showToastRef.current = showToast;
+  }, [showToast]);
+
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
+  const fetchRequests = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const result = await adsService.getMyModelRequests();
+      setRequests(extractRequestList(result));
+    } catch (error) {
+      console.error('Failed to fetch my model requests:', error);
+      showToastRef.current('خطا در بارگذاری درخواست‌ها', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchMyRequests = async () => {
-      setIsLoading(true);
-      try {
-        const result = await adsService.getMyModelRequests();
-        setRequests(result.data || []);
-      } catch (error) {
-        console.error('Failed to fetch my model requests:', error);
-        showToast('خطا در بارگذاری درخواست‌ها', 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!isAuthenticated) return;
+    fetchRequests();
+  }, [isAuthenticated, fetchRequests]);
 
-    fetchMyRequests();
-  }, [showToast]);
-
-  const handleCreate = useCallback(() => router.push('/manage/model-requests/create'), [router]);
+  const handleCreate = useCallback(
+    () => router.push('/manage/model-requests/create'),
+    [router]
+  );
 
   const handleEdit = useCallback(
     (request) => router.push(`/manage/model-requests/create?id=${request.id}`),
@@ -62,21 +91,34 @@ export default function ModelRequestsPage() {
     setSelectedRequest(null);
   }, []);
 
-  const handleDelete = useCallback(
-    async (request) => {
-      try {
-        await adsService.deleteModelRequest(request.id);
-        setRequests((prev) => prev.filter((r) => r.id !== request.id));
-        showToast('درخواست مدل با موفقیت حذف شد', 'success');
-        setDetailVisible(false);
-        setSelectedRequest(null);
-      } catch (error) {
-        console.error('Failed to delete model request:', error);
-        showToast(error.message || 'خطا در حذف درخواست', 'error');
-      }
-    },
-    [showToast]
-  );
+  const handleDelete = useCallback(async (request) => {
+    const targetId = normalizeId(request?.id);
+
+    if (!targetId) {
+      showToastRef.current('شناسه درخواست نامعتبر است', 'error');
+      return false;
+    }
+
+    try {
+      await adsService.deleteModelRequest(request.id);
+
+      setRequests((prev) =>
+        prev.filter(
+          (item) => item !== request && normalizeId(item?.id) !== targetId
+        )
+      );
+
+      setDetailVisible(false);
+      setSelectedRequest(null);
+      showToastRef.current('درخواست مدل با موفقیت حذف شد', 'success');
+
+      return true;
+    } catch (error) {
+      console.error('Failed to delete model request:', error);
+      showToastRef.current(error?.message || 'خطا در حذف درخواست', 'error');
+      return false;
+    }
+  }, []);
 
   if (!isAuthenticated) {
     return (
