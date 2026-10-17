@@ -112,6 +112,7 @@ export const useBusinessStore = create(
       _version: STORAGE_VERSION,
 
       businessStatus: null, // 'pending' | 'approved' | 'rejected' | null
+      businessFetchState: 'idle',
 
       ...createServicesSlice(set, get),
       ...createAppointmentsSlice(set),
@@ -142,6 +143,7 @@ export const useBusinessStore = create(
           gallery: [],
           _version: STORAGE_VERSION,
           businessStatus: null,
+          businessFetchState: 'idle',
         });
       },
 
@@ -151,7 +153,9 @@ export const useBusinessStore = create(
           gallery: [],
           _version: STORAGE_VERSION,
           businessStatus: null,
+          businessFetchState: 'idle',
         });
+
         try {
           useBusinessStore.persist.clearStorage();
         } catch {
@@ -160,10 +164,14 @@ export const useBusinessStore = create(
       },
 
       fetchBusinessDetail: async () => {
+        set({ businessFetchState: 'loading' });
+
         try {
           const response = await businessesService.getBusinessDetail();
           const b = response.data;
+
           set((state) => ({
+            businessFetchState: 'ready',
             businessData: {
               ...state.businessData,
               id: b.id,
@@ -218,13 +226,15 @@ export const useBusinessStore = create(
                 sheba: b.bankSheba || b.sheba || '',
                 cardNumber: b.bankCardNumber || b.cardNumber || '',
                 ownerName: b.bankOwnerName || b.ownerName || b.owner_name || '',
-                accountNumber: b.bankAccountNumber || b.accountNumber || b.account_number || '',
+                accountNumber:
+                  b.bankAccountNumber || b.accountNumber || b.account_number || '',
                 nationalId: b.bankNationalId || b.nationalId || b.national_id || '',
               },
             },
             gallery: b.gallery || [],
             businessStatus: b.status || state.businessStatus,
           }));
+
           return response.data;
         } catch (error) {
           const isNoBusiness =
@@ -232,15 +242,19 @@ export const useBusinessStore = create(
             error?.status === 404 ||
             (typeof error?.message === 'string' &&
               error.message.includes('کسب‌وکاری ثبت نکرده‌اید'));
+
           if (isNoBusiness) {
             set({
+              businessFetchState: 'ready',
               businessData: INITIAL_BUSINESS_DATA,
               gallery: [],
               businessStatus: null,
             });
             return null;
           }
+
           console.error('fetchBusinessDetail failed:', error);
+          set({ businessFetchState: 'error' });
           throw error;
         }
       },
@@ -391,6 +405,7 @@ export const useBusinessStore = create(
             gallery: [],
             _version: STORAGE_VERSION,
             businessStatus: null,
+            businessFetchState: 'ready',
           });
 
           try {
@@ -493,9 +508,11 @@ export const useBusinessStore = create(
         // ─── حالت ۱: داده‌ای وجود ندارد ───
         if (!persistedState) {
           return {
-            businessData: INITIAL_BUSINESS_DATA,
-            gallery: [],
-            businessStatus: null,
+            ...persistedState,
+            businessData: sanitizeBusinessData(persistedState.businessData),
+            gallery: Array.isArray(persistedState.gallery) ? persistedState.gallery : [],
+            businessStatus: persistedState.businessStatus || null,
+            businessFetchState: 'idle',
             _version: STORAGE_VERSION,
           };
         }
@@ -509,6 +526,7 @@ export const useBusinessStore = create(
             businessData: INITIAL_BUSINESS_DATA,
             gallery: [],
             businessStatus: null,
+            businessFetchState: 'idle',
             _version: STORAGE_VERSION,
           };
         }
@@ -519,6 +537,7 @@ export const useBusinessStore = create(
           businessData: sanitizeBusinessData(persistedState.businessData),
           gallery: Array.isArray(persistedState.gallery) ? persistedState.gallery : [],
           businessStatus: persistedState.businessStatus || null,
+          businessFetchState: 'idle',
           _version: STORAGE_VERSION,
         };
       },
@@ -617,3 +636,6 @@ export const useHasAnyBusiness = () =>
 
 export const useBusinessHasData = () =>
   useBusinessStore((s) => Boolean(s.businessData?.id && s.businessData?.name));
+
+export const useBusinessFetchState = () =>
+  useBusinessStore((s) => s.businessFetchState);

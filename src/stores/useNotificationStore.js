@@ -7,12 +7,17 @@
  * - تعداد خوانده‌نشده‌ها
  * - علامت‌گذاری خوانده‌شده
  * - حذف اعلان
+ *
+ * ✅ FIX دسته ۴:
+ * - محاسبه دقیق unreadCount هنگام markAsRead جزئی
+ * - محاسبه دقیق totalCount در deleteAllRead
+ * - جلوگیری از منفی شدن شمارنده‌ها
  */
 import { create } from 'zustand';
 import { notificationsService } from '@/api';
 
 export const useNotificationStore = create((set, get) => ({
-  // ─── State ───
+  // ─── State ──
   notifications: [],
   unreadCount: 0,
   totalCount: 0,
@@ -26,6 +31,7 @@ export const useNotificationStore = create((set, get) => ({
    */
   fetchNotifications: async (params = {}) => {
     set({ isLoading: true, error: null });
+
     try {
       const result = await notificationsService.getNotifications(params);
       set({
@@ -59,17 +65,30 @@ export const useNotificationStore = create((set, get) => ({
    */
   markAsRead: async (notificationIds = []) => {
     try {
-      const result = await notificationsService.markAsRead(notificationIds);
+      await notificationsService.markAsRead(notificationIds);
 
-      // بروزرسانی محلی
-      set((state) => ({
-        notifications: state.notifications.map((n) =>
-          notificationIds.length === 0 || notificationIds.includes(n.id)
-            ? { ...n, isRead: true } // ✅ فاز ۳: isRead (نه is_read)
-            : n
-        ),
-        unreadCount: Math.max(0, state.unreadCount - (notificationIds.length || state.unreadCount)),
-      }));
+      set((state) => {
+        const ids =
+          notificationIds.length > 0 ? new Set(notificationIds) : null;
+
+        let changedCount = 0;
+
+        const notifications = state.notifications.map((n) => {
+          const shouldMark = !ids || ids.has(n.id);
+
+          if (shouldMark && !n.isRead) {
+            changedCount += 1;
+            return { ...n, isRead: true };
+          }
+
+          return n;
+        });
+
+        return {
+          notifications,
+          unreadCount: Math.max(0, state.unreadCount - changedCount),
+        };
+      });
     } catch (error) {
       console.error('Mark as read failed:', error);
       throw error;
@@ -100,10 +119,21 @@ export const useNotificationStore = create((set, get) => ({
   deleteAllRead: async () => {
     try {
       const result = await notificationsService.deleteAll();
-      set((state) => ({
-        notifications: state.notifications.filter((n) => !n.isRead), // ✅ فاز ۳
-        totalCount: Math.max(0, state.totalCount - (result.data?.deletedCount || 0)), // ✅ فاز ۳
-      }));
+
+      set((state) => {
+        const removedLocally = state.notifications.filter((n) => n.isRead).length;
+
+        const deletedCount = Number(
+          result?.data?.deletedCount ??
+            result?.data?.deleted_count ??
+            removedLocally
+        ) || removedLocally;
+
+        return {
+          notifications: state.notifications.filter((n) => !n.isRead),
+          totalCount: Math.max(0, state.totalCount - deletedCount),
+        };
+      });
     } catch (error) {
       console.error('Delete all read failed:', error);
       throw error;

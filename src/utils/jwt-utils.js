@@ -2,10 +2,13 @@
 /**
  * ابزارهای JWT
  * ✅ FIX باگ ۱۲: مدیریت امن base64 decode بدون کرش
+ * ✅ FIX دسته ۴:
+ * - حذف double decoding خطرناک در decodeJWT
+ * - افزودن cache محدود برای کاهش CPU overhead
+ * - decode ایمن‌تر UTF-8 با TextDecoder
  */
 
 const STORAGE_KEY = 'beau-club-secure-xor-key-2024-fixed';
-
 
 /**
  * ✅ رمزنگاری ساده با XOR
@@ -54,81 +57,125 @@ export const decryptToken = (encrypted) => {
     }
     return result;
   } catch {
-    // ❌ OLD: return encrypted; (این کار باعث ارسال توکن خراب به بک‌اند و ارور 401 می‌شد)
-    // ✅ NEW: در صورت شکست رمزگشایی، رشته خالی برگردان تا اپلیکیشن بداند توکن نامعتبر است
     console.warn('Token decryption failed, clearing invalid token.');
     return '';
   }
 };
 
 // ═══════════════════════════════════════════════
-//    ✅ FIX باگ ۱۲: Base64 URL Decode — بدون کرش
+//    Base64URL Decode — ایمن و بدون corruption
 // ═══════════════════════════════════════════════
+
+const addBase64Padding = (base64) => {
+  const remainder = base64.length % 4;
+  if (!remainder) return base64;
+  return base64 + '='.repeat(4 - remainder);
+};
+
+const binaryStringToUtf8 = (binary) => {
+  // ✅ روش ترجیحی: TextDecoder
+  if (typeof TextDecoder !== 'undefined') {
+    try {
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+    } catch {
+      // fallback
+    }
+  }
+
+  // fallback قدیمی
+  try {
+    return decodeURIComponent(escape(binary));
+  } catch {
+    return binary;
+  }
+};
+
 const base64UrlDecode = (base64url) => {
   if (!base64url || typeof base64url !== 'string') return '';
 
-  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  const base64 = addBase64Padding(
+    base64url.replace(/-/g, '+').replace(/_/g, '/')
+  );
 
-  // ✅ روش امن: استفاده از atob + TextDecoder برای UTF-8
+  let binary = '';
+
   try {
-    let binaryStr;
-
     if (typeof window !== 'undefined' && typeof window.atob === 'function') {
-      binaryStr = window.atob(base64);
+      binary = window.atob(base64);
     } else if (typeof atob === 'function') {
-      binaryStr = atob(base64);
+      binary = atob(base64);
     } else if (typeof Buffer !== 'undefined') {
       return Buffer.from(base64, 'base64').toString('utf-8');
-    } else if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
-      binaryStr = globalThis.atob(base64);
+    } else if (
+      typeof globalThis !== 'undefined' &&
+      typeof globalThis.atob === 'function'
+    ) {
+      binary = globalThis.atob(base64);
     } else {
       return '';
-    }
-
-    // ✅ FIX: تبدیل امن binary string به UTF-8
-    // به جای decodeURIComponent(escape(...)) که روی UTF-8 نامعتبر کرش می‌کند
-    try {
-      return decodeURIComponent(escape(binaryStr));
-    } catch {
-      // اگر UTF-8 نامعتبر بود، مستقیماً برگردان
-      return binaryStr;
     }
   } catch {
     return '';
   }
+
+  return binaryStringToUtf8(binary);
 };
 
 // ═══════════════════════════════════════════════
-//    JWT Decode
+//    JWT Decode + Cache محدود
 // ═══════════════════════════════════════════════
+
+const JWT_DECODE_CACHE_MAX = 100;
+const _jwtDecodeCache = new Map();
+
+const pruneJwtDecodeCache = () => {
+  if (_jwtDecodeCache.size < JWT_DECODE_CACHE_MAX) return;
+
+  const keysToDelete = Array.from(_jwtDecodeCache.keys()).slice(
+    0,
+    Math.floor(JWT_DECODE_CACHE_MAX / 2)
+  );
+
+  keysToDelete.forEach((key) => _jwtDecodeCache.delete(key));
+};
+
 export const decodeJWT = (token) => {
   if (!token || typeof token !== 'string') return null;
+
+  if (_jwtDecodeCache.has(token)) {
+    return _jwtDecodeCache.get(token);
+  }
+
   try {
     const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3) {
+      pruneJwtDecodeCache();
+      _jwtDecodeCache.set(token, null);
+      return null;
+    }
 
     const payload = parts[1];
     const decoded = base64UrlDecode(payload);
 
-    if (!decoded) return null;
-
-    // ✅ FIX: پارش امن JSON
-    let jsonStr = decoded;
-    try {
-      // تلاش برای decode URI-encoded string
-      jsonStr = decodeURIComponent(
-        decoded
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-    } catch {
-      // اگر decode نشد، از decoded مستقیم استفاده کن
-      jsonStr = decoded;
+    if (!decoded) {
+      pruneJwtDecodeCache();
+      _jwtDecodeCache.set(token, null);
+      return null;
     }
 
-    return JSON.parse(jsonStr);
+    const parsed = JSON.parse(decoded);
+
+    pruneJwtDecodeCache();
+    _jwtDecodeCache.set(token, parsed);
+
+    return parsed;
   } catch {
+    pruneJwtDecodeCache();
+    _jwtDecodeCache.set(token, null);
     return null;
   }
 };
@@ -136,6 +183,7 @@ export const decodeJWT = (token) => {
 // ═══════════════════════════════════════════════
 //    Token Status Checks
 // ═══════════════════════════════════════════════
+
 export const isTokenExpired = (token) => {
   const payload = decodeJWT(token);
   if (!payload || !payload.exp) return true;
