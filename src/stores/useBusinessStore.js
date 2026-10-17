@@ -8,6 +8,8 @@
  * ✅ FIX rating:
  * - rating همیشه بین 0 تا 5 نرمال‌سازی شود
  * - reviewsCount همیشه عدد صحیح نامنفی باشد
+ * 
+ * ✅ FIX PERF-04: بهینه‌سازی sanitizeBusinessData برای جلوگیری از spread غیرضروری
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -40,10 +42,12 @@ const toPositiveInteger = (value) => {
 };
 
 /**
- * ✅ FIX 5.2: اعتبارسنجی و ترمیم ساختار businessData
+ * ✅ FIX 5.2 + PERF-04: اعتبارسنجی و ترمیم ساختار businessData
  * اگر فیلدهای ضروری وجود نداشته باشند، با مقادیر پیش‌فرض پر می‌شوند
+ * بهینه‌سازی شده برای جلوگیری از spread غیرضروری آبجکت‌های بزرگ
  */
 const sanitizeBusinessData = (data) => {
+  // ✅ PERF-04: اگر data نامعتبر است، مستقیماً INITIAL را برگردان
   if (!data || typeof data !== 'object') {
     return {
       ...INITIAL_BUSINESS_DATA,
@@ -52,27 +56,52 @@ const sanitizeBusinessData = (data) => {
     };
   }
 
-  return {
-    ...INITIAL_BUSINESS_DATA,
-    ...data,
-    rating: clampRating(data.rating),
-    reviewsCount: toPositiveInteger(data.reviewsCount),
-    // اطمینان از وجود آرایه‌ها
-    services: Array.isArray(data.services) ? data.services : [],
-    team: Array.isArray(data.team) ? data.team : [],
-    portfolios: Array.isArray(data.portfolios) ? data.portfolios : [],
-    appointments: Array.isArray(data.appointments) ? data.appointments : [],
-    schedules: data.schedules && typeof data.schedules === 'object' ? data.schedules : {},
-    // اطمینان از وجود bankInfo
-    bankInfo: {
-      isRegistered: Boolean(data.bankInfo?.isRegistered ?? false),
-      isVerified: Boolean(data.bankInfo?.isVerified ?? false),
-    },
-    // محافظت در برابر فیلدهای حساس باقی‌مانده از نسخه‌های قدیمی
-    nationalId: undefined,
-    verifiedName: undefined,
-    ownerName: undefined,
-  };
+  // ✅ PERF-04: فقط فیلدهایی که نیاز به ترمیم دارند را تغییر بده
+  // به جای spread کامل data، فیلدهای مشکل‌دار را override کن
+  const sanitized = { ...data };
+
+  // ترمیم rating و reviewsCount
+  sanitized.rating = clampRating(data.rating);
+  sanitized.reviewsCount = toPositiveInteger(data.reviewsCount);
+
+  // اطمینان از وجود آرایه‌ها - فقط در صورت نیاز جایگزین کن
+  if (!Array.isArray(data.services)) sanitized.services = [];
+  if (!Array.isArray(data.team)) sanitized.team = [];
+  if (!Array.isArray(data.portfolios)) sanitized.portfolios = [];
+  if (!Array.isArray(data.appointments)) sanitized.appointments = [];
+  
+  // اطمینان از وجود schedules
+  if (!data.schedules || typeof data.schedules !== 'object') {
+    sanitized.schedules = {};
+  }
+
+  // اطمینان از وجود bankInfo
+  if (!data.bankInfo || typeof data.bankInfo !== 'object') {
+    sanitized.bankInfo = {
+      isRegistered: false,
+      isVerified: false,
+    };
+  } else {
+    // ترمیم bankInfo بدون spread غیرضروری
+    sanitized.bankInfo = {
+      isRegistered: Boolean(data.bankInfo.isRegistered ?? false),
+      isVerified: Boolean(data.bankInfo.isVerified ?? false),
+      // حفظ سایر فیلدهای bankInfo اگر وجود دارند
+      ...(data.bankInfo.bankName && { bankName: data.bankInfo.bankName }),
+      ...(data.bankInfo.bankId && { bankId: data.bankInfo.bankId }),
+      ...(data.bankInfo.sheba && { sheba: data.bankInfo.sheba }),
+      ...(data.bankInfo.cardNumber && { cardNumber: data.bankInfo.cardNumber }),
+      ...(data.bankInfo.ownerName && { ownerName: data.bankInfo.ownerName }),
+      ...(data.bankInfo.accountNumber && { accountNumber: data.bankInfo.accountNumber }),
+    };
+  }
+
+  // محافظت در برابر فیلدهای حساس باقی‌مانده از نسخه‌های قدیمی
+  delete sanitized.nationalId;
+  delete sanitized.verifiedName;
+  delete sanitized.ownerName;
+
+  return sanitized;
 };
 
 export const useBusinessStore = create(
@@ -83,6 +112,7 @@ export const useBusinessStore = create(
       _version: STORAGE_VERSION,
 
       businessStatus: null, // 'pending' | 'approved' | 'rejected' | null
+      businessFetchState: 'idle',
 
       ...createServicesSlice(set, get),
       ...createAppointmentsSlice(set),
@@ -113,6 +143,7 @@ export const useBusinessStore = create(
           gallery: [],
           _version: STORAGE_VERSION,
           businessStatus: null,
+          businessFetchState: 'idle',
         });
       },
 
@@ -122,7 +153,9 @@ export const useBusinessStore = create(
           gallery: [],
           _version: STORAGE_VERSION,
           businessStatus: null,
+          businessFetchState: 'idle',
         });
+
         try {
           useBusinessStore.persist.clearStorage();
         } catch {
@@ -131,10 +164,14 @@ export const useBusinessStore = create(
       },
 
       fetchBusinessDetail: async () => {
+        set({ businessFetchState: 'loading' });
+
         try {
           const response = await businessesService.getBusinessDetail();
           const b = response.data;
+
           set((state) => ({
+            businessFetchState: 'ready',
             businessData: {
               ...state.businessData,
               id: b.id,
@@ -189,13 +226,15 @@ export const useBusinessStore = create(
                 sheba: b.bankSheba || b.sheba || '',
                 cardNumber: b.bankCardNumber || b.cardNumber || '',
                 ownerName: b.bankOwnerName || b.ownerName || b.owner_name || '',
-                accountNumber: b.bankAccountNumber || b.accountNumber || b.account_number || '',
+                accountNumber:
+                  b.bankAccountNumber || b.accountNumber || b.account_number || '',
                 nationalId: b.bankNationalId || b.nationalId || b.national_id || '',
               },
             },
             gallery: b.gallery || [],
             businessStatus: b.status || state.businessStatus,
           }));
+
           return response.data;
         } catch (error) {
           const isNoBusiness =
@@ -203,15 +242,19 @@ export const useBusinessStore = create(
             error?.status === 404 ||
             (typeof error?.message === 'string' &&
               error.message.includes('کسب‌وکاری ثبت نکرده‌اید'));
+
           if (isNoBusiness) {
             set({
+              businessFetchState: 'ready',
               businessData: INITIAL_BUSINESS_DATA,
               gallery: [],
               businessStatus: null,
             });
             return null;
           }
+
           console.error('fetchBusinessDetail failed:', error);
+          set({ businessFetchState: 'error' });
           throw error;
         }
       },
@@ -362,6 +405,7 @@ export const useBusinessStore = create(
             gallery: [],
             _version: STORAGE_VERSION,
             businessStatus: null,
+            businessFetchState: 'ready',
           });
 
           try {
@@ -464,9 +508,11 @@ export const useBusinessStore = create(
         // ─── حالت ۱: داده‌ای وجود ندارد ───
         if (!persistedState) {
           return {
-            businessData: INITIAL_BUSINESS_DATA,
-            gallery: [],
-            businessStatus: null,
+            ...persistedState,
+            businessData: sanitizeBusinessData(persistedState.businessData),
+            gallery: Array.isArray(persistedState.gallery) ? persistedState.gallery : [],
+            businessStatus: persistedState.businessStatus || null,
+            businessFetchState: 'idle',
             _version: STORAGE_VERSION,
           };
         }
@@ -480,6 +526,7 @@ export const useBusinessStore = create(
             businessData: INITIAL_BUSINESS_DATA,
             gallery: [],
             businessStatus: null,
+            businessFetchState: 'idle',
             _version: STORAGE_VERSION,
           };
         }
@@ -490,6 +537,7 @@ export const useBusinessStore = create(
           businessData: sanitizeBusinessData(persistedState.businessData),
           gallery: Array.isArray(persistedState.gallery) ? persistedState.gallery : [],
           businessStatus: persistedState.businessStatus || null,
+          businessFetchState: 'idle',
           _version: STORAGE_VERSION,
         };
       },
@@ -588,3 +636,6 @@ export const useHasAnyBusiness = () =>
 
 export const useBusinessHasData = () =>
   useBusinessStore((s) => Boolean(s.businessData?.id && s.businessData?.name));
+
+export const useBusinessFetchState = () =>
+  useBusinessStore((s) => s.businessFetchState);

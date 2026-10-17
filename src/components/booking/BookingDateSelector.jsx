@@ -61,8 +61,23 @@ export default function BookingDateSelector({
     );
   };
 
-  const monthLength = jalaaliMonthLength(currentView.jy, currentView.jm);
-  const firstDayOfWeek = getFirstDayOfWeekJalaali(currentView.jy, currentView.jm);
+  const monthLength = useMemo(
+    () => jalaaliMonthLength(currentView.jy, currentView.jm),
+    [currentView.jy, currentView.jm]
+  );
+
+  const firstDayOfWeek = useMemo(
+    () => getFirstDayOfWeekJalaali(currentView.jy, currentView.jm),
+    [currentView.jy, currentView.jm]
+  );
+
+  const availableDateKeys = useMemo(
+    () =>
+      new Set(
+        (availableDates || []).map((d) => `${d.jy}/${d.jm}/${d.jd}`)
+      ),
+    [availableDates]
+  );
 
   const isSameDate = (d1, d2) => d1 && d2 && d1.jy === d2.jy && d1.jm === d2.jm && d1.jd === d2.jd;
 
@@ -76,10 +91,11 @@ export default function BookingDateSelector({
   };
 
   const isAvailable = (day) => {
-    if (availableDates.length === 0) return !isPast(currentView.jy, currentView.jm, day);
-    return availableDates.some(
-      (d) => d.jy === currentView.jy && d.jm === currentView.jm && d.jd === day
-    );
+    if (availableDateKeys.size === 0) {
+      return !isPast(currentView.jy, currentView.jm, day);
+    }
+
+    return availableDateKeys.has(`${currentView.jy}/${currentView.jm}/${day}`);
   };
 
   const toggleDay = (day) => {
@@ -88,13 +104,24 @@ export default function BookingDateSelector({
     onDateSelect({ jy: currentView.jy, jm: currentView.jm, jd: day });
   };
 
-  const days = [];
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    days.push({ empty: true, key: `e-${i}` });
-  }
-  for (let d = 1; d <= monthLength; d++) {
-    days.push({ jd: d, jy: currentView.jy, jm: currentView.jm, key: `d-${d}` });
-  }
+  const days = useMemo(() => {
+    const arr = [];
+
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      arr.push({ empty: true, key: `e-${i}` });
+    }
+
+    for (let d = 1; d <= monthLength; d++) {
+      arr.push({
+        jd: d,
+        jy: currentView.jy,
+        jm: currentView.jm,
+        key: `d-${d}`,
+      });
+    }
+
+    return arr;
+  }, [currentView.jy, currentView.jm, firstDayOfWeek, monthLength]);
 
   return (
     <div className="flex flex-col gap-3 px-1">

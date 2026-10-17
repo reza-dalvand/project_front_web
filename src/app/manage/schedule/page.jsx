@@ -52,8 +52,10 @@ export default function ManageSchedulePage() {
   const fetchSchedules = useBusinessStore((s) => s.fetchSchedules);
   const createScheduleApi = useBusinessStore((s) => s.createScheduleApi);
   const schedulesLoading = useBusinessStore((s) => s.schedulesLoading);
-  const services = (businessData?.services || []).filter((s) => s.isActive !== false);
-  const schedules = businessData?.schedules || {};
+  const services = useMemo(
+    () => (businessData?.services || []).filter((s) => s.isActive !== false),
+    [businessData?.services]
+  );  const schedules = businessData?.schedules || {};
   const safeGoBack = useSafeBack('/manage');
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -61,7 +63,7 @@ export default function ManageSchedulePage() {
 
   useEffect(() => {
     fetchSchedules().catch(() => {});
-  }, []);
+  }, [fetchSchedules]);
 
   const existingDates = useMemo(() => {
     if (!selectedServiceId || !schedules) return [];

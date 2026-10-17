@@ -27,6 +27,7 @@ export function useBookingState() {
     setBookingFailed(false);
     setBookingError(null);
     setAvailableSlots([]);
+    setAvailableDates([]);
   }, []);
 
   return {

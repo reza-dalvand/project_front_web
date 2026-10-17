@@ -7,6 +7,8 @@
  * ✅ FIX F-15: اضافه شدن session status check
  * ✅ FIX F-16: رفع مشکل Dynamic Import در logout
  * ✅ FIX F-17: تکمیل partialize برای جلوگیری از از دست رفتن داده‌ها
+ * ✅ FIX BUG-01: checkSession و startPeriodicRefresh حالا واقعاً توکن را رفرش می‌کنند
+ * ✅ FIX BUG-02: requireAuth حالا از مدال استفاده می‌کند (سازگار با useRequireAuth)
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -14,7 +16,11 @@ import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { authService } from '@/api';
 import { useTokenStore } from './useTokenStore';
-import { isTokenExpired, isTokenExpiringSoon } from '@/utils/jwt-utils';
+import {
+  isTokenExpired,
+  isTokenExpiringSoon,
+  getTokenRemainingTime,
+} from '@/utils/jwt-utils';
 
 // ═══════════════════════════════════════════════
 //    Custom Storage برای Capacitor
@@ -96,6 +102,9 @@ const centralizedRefresh = async () => {
   return refreshPromise;
 };
 
+const PROACTIVE_REFRESH_CHECK_INTERVAL_MS = 5 * 60 * 1000; // هر ۵ دقیقه بررسی
+const PROACTIVE_REFRESH_THRESHOLD_MS = 10 * 60 * 1000; // اگر کمتر از ۱۰ دقیقه مانده بود refresh کن
+
 // ═══════════════════════════════════════════════
 //    Periodic Refresh Timer
 // ═══════════════════════════════════════════════
@@ -113,17 +122,19 @@ const startPeriodicRefresh = () => {
         return;
       }
 
-      // ✅ FIX: استفاده از Interceptor به جای رفرش دستی
-      if (accessToken && isTokenExpiringSoon(accessToken)) {
+      const remaining = accessToken ? getTokenRemainingTime(accessToken) : 0;
+
+      // ✅ FIX: اگر توکن نداشتیم یا کمتر از ۱۰ دقیقه مانده، proactive refresh انجام بده
+      if (!accessToken || remaining <= PROACTIVE_REFRESH_THRESHOLD_MS) {
         try {
-          await authService.getSessionStatus();
+          await centralizedRefresh();
         } catch (error) {
+          // ✅ FIX: خطای موقت شبکه نباید periodic refresh را برای همیشه خاموش کند
           console.warn('Periodic refresh failed:', error);
-          stopPeriodicRefresh();
         }
       }
     },
-    50 * 60 * 1000
+    PROACTIVE_REFRESH_CHECK_INTERVAL_MS
   );
 };
 
@@ -348,7 +359,7 @@ export const useAuthStore = create(
         });
       },
 
-      // ✅ FIX F-14: استفاده از centralized refresh
+      // ✅ FIX BUG-01: استفاده از centralized refresh به جای getSessionStatus
       checkSession: async () => {
         const { accessToken, refreshToken } = useTokenStore.getState();
 
@@ -364,9 +375,16 @@ export const useAuthStore = create(
 
         if (refreshToken) {
           try {
-            await authService.getSessionStatus();
-            set({ lastSessionCheck: Date.now() });
-            return true;
+            // ✅ FIX BUG-01: واقعاً توکن را رفرش کن، نه فقط بررسی وضعیت
+            const newAccessToken = await centralizedRefresh();
+            if (newAccessToken) {
+              set({ lastSessionCheck: Date.now() });
+              return true;
+            }
+            // اگر رفرش شکست خورد، fall through به بخش خطا
+            useTokenStore.getState().clearTokens();
+            set({ isAuthenticated: false, user: null });
+            return false;
           } catch (error) {
             useTokenStore.getState().clearTokens();
             set({ isAuthenticated: false, user: null });
@@ -375,6 +393,26 @@ export const useAuthStore = create(
         }
 
         return false;
+      },
+
+            // ✅ FIX: refresh مرکزی برای استفاده AuthProvider و جلوگیری از race condition
+      refreshSessionToken: async () => {
+        const { accessToken, refreshToken } = useTokenStore.getState();
+
+        if (!refreshToken) return false;
+
+        const remaining = accessToken ? getTokenRemainingTime(accessToken) : 0;
+
+        if (!accessToken || remaining <= PROACTIVE_REFRESH_THRESHOLD_MS) {
+          try {
+            await centralizedRefresh();
+            return true;
+          } catch {
+            return false;
+          }
+        }
+
+        return true;
       },
 
       // ✅ FIX F-15: بررسی وضعیت session از سرور
@@ -395,7 +433,8 @@ export const useAuthStore = create(
 
             // اگر کاربر دیگر وجود ندارد یا غیرفعال شده
             if (data.isDeactivated) {
-              get().logout();
+              // ✅ FIX: await کردن logout چون async است
+              await get().logout();
             }
           }
         } catch (error) {
@@ -481,20 +520,20 @@ export const useAuthModalStore = create((set, get) => ({
 //    ۳. Hook ترکیبی: useAuth
 // ═══════════════════════════════════════════════
 export const useAuth = () => {
-  const { useRouter, usePathname } = require('next/navigation');
-  const router = useRouter();
-  const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const needsProfileCompletion = useAuthStore((s) => s.needsProfileCompletion);
   const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
   const logout = useAuthStore((s) => s.logout);
 
+  // ✅ FIX BUG-02: استفاده از مدال به جای ریدایرکت (سازگار با useRequireAuth)
   const requireAuth = (action) => {
     if (isAuthenticated) {
       action?.();
     } else {
-      router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+      // به جای ریدایرکت به /auth/login، مدال را باز کن
+      // و action را به عنوان pendingAction ذخیره کن تا بعد از لاگین اجرا شود
+      openAuthModal(action);
     }
   };
 

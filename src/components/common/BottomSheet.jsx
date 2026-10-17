@@ -93,10 +93,9 @@ export default function BottomSheet({
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[9998] transition-opacity duration-300
-          ${animating && !visible ? 'opacity-0' : 'opacity-100'}
-          ${visible && !animating ? 'opacity-100' : 'opacity-0'}
-        `}
+        className={`fixed inset-0 z-[9998] transition-opacity duration-300 ${
+          visible && !animating ? 'opacity-100' : 'opacity-0'
+        }`}
         style={{ backgroundColor: 'rgba(0, 0, 0, 0.55)' }}
         onClick={onClose}
       />

@@ -24,7 +24,6 @@ export default function PortfolioFormSheet({
   const { colors } = useTheme();
   const isEditMode = !!editingPortfolio;
 
-  // ─── State فرم ───
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState(null);
@@ -35,15 +34,11 @@ export default function PortfolioFormSheet({
   const [saving, setSaving] = useState(false);
 
   const fileInputRef = useRef(null);
-  
-  // ✅ FIX MEM-01: استفاده از Ref برای جلوگیری از Stale Closure در cleanup
   const blobUrlsRef = useRef([]);
 
-  // ─── دسته‌بندی‌ها از بک‌اند ───
   const { categories: serviceCategories } = useServiceCategories();
   const { subServices: availableSubServices } = useSubServices(categoryId);
 
-  // ─── مدیریت وضعیت فرم و پاک‌سازی حافظه ───
   useEffect(() => {
     if (visible) {
       if (editingPortfolio) {
@@ -64,7 +59,6 @@ export default function PortfolioFormSheet({
       setErrors({});
       setSaving(false);
     } else {
-      // ✅ FIX MEM-01: وقتی شیت بسته می‌شود، بلافاصله حافظه را آزاد کن
       blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       blobUrlsRef.current = [];
       setImagePreviews([]);
@@ -72,7 +66,7 @@ export default function PortfolioFormSheet({
     }
   }, [visible, editingPortfolio]);
 
-  // ─── انتخاب فایل ───
+  // ✅ FIX: اعتبارسنجی همه فایل‌ها قبل از پردازش — جلوگیری از از دست رفتن فایل‌های معتبر
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
@@ -82,45 +76,60 @@ export default function PortfolioFormSheet({
 
     if (filesToAdd.length === 0) return;
 
+    // ✅ FIX: ابتدا همه فایل‌ها را اعتبارسنجی می‌کنیم
+    const invalidFiles = [];
     const validFiles = [];
-    const newPreviews = [];
     
     for (const file of filesToAdd) {
       if (!file.type.startsWith('image/')) {
-        setErrors((prev) => ({ ...prev, images: 'فقط فایل تصویری مجاز است' }));
-        return;
+        invalidFiles.push({ file, reason: 'type' });
+      } else if (file.size > 10 * 1024 * 1024) {
+        invalidFiles.push({ file, reason: 'size' });
+      } else {
+        validFiles.push(file);
       }
-      if (file.size > 10 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, images: 'حجم هر تصویر حداکثر ۱۰ مگابایت' }));
-        return;
-      }
-      validFiles.push(file);
-      
+    }
+
+    // اگر فایل نامعتبری وجود دارد، خطا نمایش بده ولی فایل‌های معتبر را پردازش کن
+    if (invalidFiles.length > 0) {
+      const firstInvalid = invalidFiles[0];
+      const errorMsg = firstInvalid.reason === 'type' 
+        ? 'فقط فایل تصویری مجاز است' 
+        : 'حجم هر تصویر حداکثر ۱۰ مگابایت';
+      setErrors((prev) => ({ ...prev, images: errorMsg }));
+    } else {
+      setErrors((prev) => ({ ...prev, images: '' }));
+    }
+
+    // ✅ FIX: فایل‌های معتبر را پردازش کن حتی اگر بعضی نامعتبر بودند
+    if (validFiles.length === 0) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const newPreviews = [];
+    for (const file of validFiles) {
       const url = URL.createObjectURL(file);
-      blobUrlsRef.current.push(url); // ✅ ثبت در Ref
+      blobUrlsRef.current.push(url);
       newPreviews.push(url);
     }
 
     setImages((prev) => [...prev, ...validFiles]);
     setImagePreviews((prev) => [...prev, ...newPreviews]);
-    setErrors((prev) => ({ ...prev, images: '' }));
 
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // ─── حذف تصویر ───
   const removeImage = (index) => {
     const urlToRemove = imagePreviews[index];
     if (urlToRemove) {
       URL.revokeObjectURL(urlToRemove);
-      // ✅ حذف از Ref
       blobUrlsRef.current = blobUrlsRef.current.filter((u) => u !== urlToRemove);
     }
     setImages((prev) => prev.filter((_, i) => i !== index));
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ─── اعتبارسنجی ───
   const validate = () => {
     const newErrors = {};
     if (!title.trim()) newErrors.title = 'عنوان نمونه‌کار الزامی است';
@@ -162,7 +171,6 @@ export default function PortfolioFormSheet({
     }
   };
 
-  // ✅ FIX MEM-01: Cleanup تضمینی هنگام Unmount شدن کامپوننت
   useEffect(() => {
     return () => {
       blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
@@ -190,7 +198,7 @@ export default function PortfolioFormSheet({
       }
     >
       <div className="space-y-5 pb-4">
-        {/* ═══ آپلود تصاویر — اجباری ═══ */}
+        {/* آپلود تصاویر */}
         <div>
           <label
             className="block text-sm font-[Vazir-Medium] mb-2"
@@ -273,7 +281,7 @@ export default function PortfolioFormSheet({
           )}
         </div>
 
-        {/* ═══ عنوان ═══ */}
+        {/* عنوان */}
         <Input
           label="عنوان نمونه‌کار *"
           placeholder="مثال: کاشت ناخن مینیمال"
@@ -285,7 +293,7 @@ export default function PortfolioFormSheet({
           error={errors.title}
         />
 
-        {/* ═══ دسته‌بندی ═══ */}
+        {/* دسته‌بندی */}
         <Dropdown
           label="دسته‌بندی خدمات *"
           placeholder="دسته‌بندی را انتخاب کنید"
@@ -303,7 +311,7 @@ export default function PortfolioFormSheet({
           </p>
         )}
 
-        {/* ═══ نوع خدمت ═══ */}
+        {/* نوع خدمت */}
         <Dropdown
           label="نوع خدمت *"
           placeholder={categoryId ? 'نوع خدمت را انتخاب کنید' : 'ابتدا دسته‌بندی را انتخاب کنید'}
@@ -321,7 +329,7 @@ export default function PortfolioFormSheet({
           </p>
         )}
 
-        {/* ═══ توضیحات ═══ */}
+        {/* توضیحات */}
         <Input
           label="توضیحات (اختیاری)"
           placeholder="توضیحاتی درباره این نمونه‌کار..."

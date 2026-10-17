@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FiKey, FiChevronLeft, FiCheckCircle, FiShield } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
-import { toPersianDigit } from '@/utils/numberUtils';
+import { toPersianDigit, toEnglishDigits } from '@/utils/numberUtils';
 
 const STATUS_META = {
   reserved: {
@@ -42,10 +42,16 @@ export default function AppointmentListItem({
   const isTrust = appointment.status === 'confirmed';
 
   const handleVerify = async () => {
-    if (codeInput.length < 4) return;
+    const normalizedCode = toEnglishDigits(codeInput)
+      .replace(/[^0-9]/g, '')
+      .slice(0, 4);
+
+    if (normalizedCode.length < 4) return;
+
     setVerifying(true);
-    const success = await onVerifyCode?.(appointment.id, codeInput);
+    const success = await onVerifyCode?.(appointment.id, normalizedCode);
     setVerifying(false);
+
     if (success) {
       setCodeInput('');
       setShowCodeInput(false);

@@ -1,3 +1,4 @@
+// src/components/manageBusiness/lineRental/LineRentalDetailModal.jsx
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -50,7 +51,9 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
   if (!mounted || !visible || !ad) return null;
 
   const priceDisplay = getLineRentalPriceDisplay(ad);
-  const st = !ad.isActive
+  
+  // ✅ FIX: منطق معکوس اصلاح شد — ad.isActive=true یعنی فعال
+  const st = ad.isActive
     ? { label: 'فعال', variant: 'success' }
     : { label: 'غیرفعال', variant: 'error' };
 
@@ -73,28 +76,31 @@ export default function LineRentalDetailModal({ visible, ad, onClose, onEdit, on
   };
 
   const getPriceInfo = () => {
-    switch (ad.collabType) {
+    const collabType = ad.collab_type || ad.collabType;
+    switch (collabType) {
       case 'percent':
         return {
           label: 'تقسیم درآمد',
-          value: `سالن ${toPersianDigit(ad.percentSalon || 0)}٪ - همکار ${toPersianDigit(ad.percentPartner || 0)}٪`,
+          value: `سالن ${toPersianDigit(ad.percentSalon || ad.percent_salon || 0)}٪ - همکار ${toPersianDigit(ad.percentPartner || ad.percent_partner || 0)}٪`,
           color: '#9C27B0',
           icon: '📊',
         };
       case 'fixed':
+        const fixedAmount = ad.fixedAmount || ad.fixed_amount || 0;
+        const fixedDeposit = ad.fixedDeposit || ad.fixed_deposit || 0;
         return {
-          label: ad.fixedDeposit > 0 ? 'اجاره ماهانه + رهن' : 'اجاره ماهانه',
+          label: fixedDeposit > 0 ? 'اجاره ماهانه + رهن' : 'اجاره ماهانه',
           value:
-            ad.fixedDeposit > 0
-              ? `${formatCompactToman(ad.fixedAmount)} + ${formatCompactToman(ad.fixedDeposit)} رهن`
-              : formatCompactToman(ad.fixedAmount),
+            fixedDeposit > 0
+              ? `${formatCompactToman(fixedAmount)} + ${formatCompactToman(fixedDeposit)} رهن`
+              : formatCompactToman(fixedAmount),
           color: '#2196F3',
           icon: '💰',
         };
       case 'hourly':
         return {
           label: 'نرخ ساعتی',
-          value: `${formatCompactToman(ad.hourlyRate)} / ساعت`,
+          value: `${formatCompactToman(ad.hourlyRate || ad.hourly_rate || 0)} / ساعت`,
           color: '#FF9800',
           icon: '⏰',
         };

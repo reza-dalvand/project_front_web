@@ -369,10 +369,17 @@ export const minutesToTime = (totalMinutes) => {
  * تبدیل آبجکت تاریخ جلالی به عدد قابل مقایسه
  * ✅ COMP-01 FIX: محافظت در برابر ورودی نامعتبر
  */
-export const jalaaliToNumber = ({ jy, jm, jd }) => {
-  if (!isValidNumber(jy) || !isValidNumber(jm) || !isValidNumber(jd)) {
-    return 0; // مقدار پیش‌فرض امن برای فیلتر/مرتب‌سازی
+export const jalaaliToNumber = (date) => {
+  if (!date || typeof date !== 'object') {
+    return 0;
   }
+
+  const { jy, jm, jd } = date;
+
+  if (!isValidNumber(jy) || !isValidNumber(jm) || !isValidNumber(jd)) {
+    return 0;
+  }
+
   return jy * 10000 + jm * 100 + jd;
 };
 
@@ -472,8 +479,8 @@ const toFaDigits = (value) =>
 
 const normalizeDigits = (value) =>
   String(value)
-    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String('٠١٣٤٥٧٨٩'.indexOf(digit)));
+    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
 
 /**
  * تبدیل ورودی‌های مختلف تاریخ به Date معتبر

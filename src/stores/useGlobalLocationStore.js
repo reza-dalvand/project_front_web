@@ -175,7 +175,12 @@ export const useGlobalLocationStore = create(
       getLocationParams: () => {
         const { locationType, provinceId, cityId, latitude, longitude, gpsEnabled } = get();
 
-        if (locationType === LOCATION_TYPES.GPS && gpsEnabled && latitude && longitude) {
+        if (
+          locationType === LOCATION_TYPES.GPS &&
+          gpsEnabled &&
+          latitude != null &&
+          longitude != null
+        ) {
           return { lat: latitude, lng: longitude };
         }
 

@@ -16,6 +16,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { BottomTabBar } from '@/components/common';
 
 const PAGE_SIZE = 21;
+// ✅ FIX: محدودیت حداکثر اندازه آرایه برای جلوگیری از memory leak
+const MAX_POSTS_SIZE = 500;
 
 const shuffleArray = (array) => {
   const shuffled = [...array];
@@ -168,10 +170,17 @@ export default function ExplorePage() {
         const shuffled = shuffleArray(mappedData);
 
         if (append) {
-          // ✅ جلوگیری از duplicate شدن آیتم‌ها در صفحات بعدی
+          // ✅ FIX: جلوگیری از duplicate و محدود کردن اندازه آرایه
           setAllPosts((prev) => {
             const seen = new Set(prev.map((post) => post.id));
-            return [...prev, ...shuffled.filter((post) => !seen.has(post.id))];
+            const newPosts = shuffled.filter((post) => !seen.has(post.id));
+            const combined = [...prev, ...newPosts];
+            
+            // ✅ FIX: محدود کردن اندازه آرایه برای جلوگیری از memory leak
+            if (combined.length > MAX_POSTS_SIZE) {
+              return combined.slice(combined.length - MAX_POSTS_SIZE);
+            }
+            return combined;
           });
         } else {
           setAllPosts(shuffled);

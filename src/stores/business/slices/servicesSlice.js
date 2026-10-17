@@ -18,6 +18,7 @@ import { servicesService } from '@/api';
  */
 const mapServiceFromApi = (s) => {
   if (!s) return null;
+
   return {
     id: s.id,
     name: s.name,
@@ -25,19 +26,21 @@ const mapServiceFromApi = (s) => {
     typeName: s.subService?.name || s.subServiceName || '',
     categoryId: s.categoryId || s.category?.id || null,
     categoryLabel: s.categoryName || '',
-    originalPrice: s.originalPrice,
-    discountPercent: s.discountPercent || 0,
-    discountAmount: s.discountAmount || 0,
-    finalPrice: s.finalPrice || s.originalPrice,
-    appFee: s.appFee || 0,
+    originalPrice: s.originalPrice ?? 0,
+    discountPercent: s.discountPercent ?? 0,
+    discountAmount: s.discountAmount ?? 0,
+    // ✅ FIX: اگر finalPrice صفر معتبر باشد، نباید به originalPrice fallback کند
+    finalPrice: s.finalPrice ?? s.originalPrice ?? 0,
+    appFee: s.appFee ?? 0,
     duration: s.duration || 60,
-    hasDeposit: s.hasDeposit || false,
-    depositAmount: s.depositAmount || 0,
-    renewalDays: s.renewalDays || 0,
+    hasDeposit: s.hasDeposit ?? false,
+    depositAmount: s.depositAmount ?? 0,
+    renewalDays: s.renewalDays ?? 0,
     isActive: s.isActive !== false,
     description: s.description || '',
   };
 };
+
 
 /**
  * تبدیل فرمت فرانت به فرمت بک‌اند (برای ایجاد/بروزرسانی)

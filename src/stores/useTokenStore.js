@@ -8,9 +8,10 @@
  * ✅ FIX F-13: رمزنگاری ساده توکن‌ها قبل از ذخیره
  * ✅ FIX F-13: استفاده از sessionStorage برای refresh token در وب
  * ✅ FIX F-22: رفع double serialization در secure storage
+ * ✅ FIX PERF-01: حذف createJSONStorage برای جلوگیری از double stringify/parse
  */
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { JWT_CONFIG } from '@/api/config';
@@ -51,9 +52,10 @@ const createCapacitorStorage = () => ({
 });
 
 // ═══════════════════════════════════════════════
-//    ✅ FIX F-22: Secure Web Storage
-//    createJSONStorage خودش JSON.stringify/parse می‌کند
-//    بنابراین ما فقط روی فیلدهای حساس رمزنگاری/رمزگشایی اعمال می‌کنیم
+//    ✅ FIX PERF-01: Secure Web Storage (بدون createJSONStorage)
+//    createJSONStorage خودش یک لایه stringify/parse اضافه می‌کند
+//    ما مستقیماً رابط storage را پیاده‌سازی می‌کنیم تا از
+//    double serialization جلوگیری شود
 // ═══════════════════════════════════════════════
 const createSecureWebStorage = (storageType = 'localStorage') => {
   const storage = typeof window !== 'undefined' 
@@ -67,11 +69,7 @@ const createSecureWebStorage = (storageType = 'localStorage') => {
         const raw = storage.getItem(name);
         if (!raw) return null;
         
-        // ✅ FIX F-22: createJSONStorage خودش JSON.parse می‌کند
-        // ما فقط raw string را برمی‌گردانیم تا createJSONStorage آن را parse کند
-        // اما قبل از برگرداندن، باید فیلدهای رمزنگاری‌شده را رمزگشایی کنیم
-        
-        // ابتدا JSON.parse می‌کنیم تا به ساختار zustand برسیم
+        // ✅ FIX: فقط یک بار parse می‌کنیم
         const parsed = JSON.parse(raw);
         
         // رمزگشایی فیلدهای حساس در state
@@ -92,8 +90,8 @@ const createSecureWebStorage = (storageType = 'localStorage') => {
           }
         }
         
-        // ✅ FIX F-22: دوباره stringify می‌کنیم تا createJSONStorage بتواند parse کند
-        return JSON.stringify(parsed);
+        // ✅ FIX: آبجکت را مستقیماً برمی‌گردانیم (zustand خودش هندل می‌کند)
+        return parsed;
       } catch {
         return null;
       }
@@ -103,20 +101,24 @@ const createSecureWebStorage = (storageType = 'localStorage') => {
       try {
         if (!storage) return;
         
-        // ✅ FIX F-22: value از createJSONStorage یک JSON string است
-        // آن را parse می‌کنیم، فیلدهای حساس را رمزنگاری می‌کنیم، و دوباره stringify می‌کنیم
-        const parsed = JSON.parse(value);
+        // ✅ FIX: value از zustand یک آبجکت است (نه string)
+        // آن را clone می‌کنیم، فیلدهای حساس را رمزنگاری می‌کنیم
+        const stateToStore = {
+          ...value,
+          state: value.state ? { ...value.state } : undefined,
+        };
         
-        if (parsed?.state) {
-          if (parsed.state.accessToken && typeof parsed.state.accessToken === 'string') {
-            parsed.state.accessToken = encryptToken(parsed.state.accessToken);
+        if (stateToStore.state) {
+          if (stateToStore.state.accessToken && typeof stateToStore.state.accessToken === 'string') {
+            stateToStore.state.accessToken = encryptToken(stateToStore.state.accessToken);
           }
-          if (parsed.state.refreshToken && typeof parsed.state.refreshToken === 'string') {
-            parsed.state.refreshToken = encryptToken(parsed.state.refreshToken);
+          if (stateToStore.state.refreshToken && typeof stateToStore.state.refreshToken === 'string') {
+            stateToStore.state.refreshToken = encryptToken(stateToStore.state.refreshToken);
           }
         }
         
-        storage.setItem(name, JSON.stringify(parsed));
+        // ✅ FIX: فقط یک بار stringify می‌کنیم
+        storage.setItem(name, JSON.stringify(stateToStore));
       } catch {
         // ignore
       }
@@ -146,9 +148,17 @@ const getStorage = () => {
     return createCapacitorStorage();
   }
 
-  // ✅ FIX F-22: در Web — استفاده از localStorage با رمزنگاری
+  // ✅ FIX PERF-01: در Web — استفاده از localStorage با رمزنگاری (بدون createJSONStorage)
   return createSecureWebStorage('localStorage');
 };
+
+
+const tokenPersistStorage = {
+  getItem: (name) => getStorage().getItem(name),
+  setItem: (name, value) => getStorage().setItem(name, value),
+  removeItem: (name) => getStorage().removeItem(name),
+};
+
 
 export const useTokenStore = create(
   persist(
@@ -213,7 +223,8 @@ export const useTokenStore = create(
     }),
     {
       name: 'beau-token-storage',
-      storage: createJSONStorage(getStorage),
+      // ✅ FIX PERF-01: استفاده مستقیم از getStorage بدون createJSONStorage
+      storage: tokenPersistStorage,
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,

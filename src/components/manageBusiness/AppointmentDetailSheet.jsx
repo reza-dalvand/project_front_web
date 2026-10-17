@@ -37,8 +37,10 @@ export default function AppointmentDetailSheet({
   const isReserved = appointment.status === 'reserved';
   const isTrust = appointment.trustBased === true;
   const isDone = appointment.status === 'done';
-  const isCancelled = appointment.status === 'cancelled_by_salon';
-
+  const isCancelled =
+    appointment.status === 'cancelled_by_salon' ||
+    appointment.status === 'cancelled_by_customer';
+    
   // ✅ FIX MIN-01: بررسی امنیتی برای جلوگیری از خروجی // در صورت ناقص بودن آبجکت تاریخ
   const hasValidDate =
     appointment.date &&
