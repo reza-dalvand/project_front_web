@@ -1,6 +1,6 @@
 // src/app/manage/appointments/page.jsx
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useTheme } from '@/stores/useThemeStore';
@@ -29,6 +29,32 @@ const CancelReasonModal = dynamic(() => import('@/components/manageBusiness/Canc
   ssr: false,
   loading: () => null,
 });
+
+// ✅ FIX: EMPTY_CONFIGS را بیرون از کامپوننت قرار بده
+const EMPTY_CONFIGS = {
+  all: {
+    icon: '📅',
+    title: 'هنوز نوبتی ثبت نشده',
+    description: 'پس از رزرو اولین نوبت، اینجا نمایش داده می‌شود',
+  },
+  reserved: {
+    icon: '📋',
+    title: 'نوبت رزرو شده‌ای نیست',
+    description: 'در حال حاضر نوبت فعالی وجود ندارد',
+  },
+  needs_code: {
+    icon: '🔑',
+    title: 'نوبتی بدون کد تایید نیست',
+    description: 'همه نوبت‌ها اعتمادی هستند',
+  },
+  trust_based: {
+    icon: '🛡️',
+    title: 'نوبت اعتمادی نیست',
+    description: 'هنوز مشتری‌ای گزینه اعتماد را فعال نکرده',
+  },
+  done: { icon: '✅', title: 'نوبت انجام شده‌ای نیست', description: 'هنوز خدمتی تکمیل نشده' },
+  cancelled: { icon: '❌', title: 'نوبت لغو شده‌ای نیست', description: 'هیچ نوبتی لغو نشده' },
+};
 
 export default function AllAppointmentsPage() {
   const { colors } = useTheme();
@@ -123,37 +149,13 @@ export default function AllAppointmentsPage() {
 
   const goBack = useCallback(() => router.push('/manage'), [router]);
 
-  // ═══ حالت خالی ═══
-  const getEmptyConfig = () => {
+  // ✅ PERF: memoize کردن emptyConfig
+  const emptyConfig = useMemo(() => {
     if (searchQuery || dateFilter) {
       return { icon: '🔍', title: 'نتیجه‌ای یافت نشد', description: 'فیلترها را تغییر دهید' };
     }
-    const configs = {
-      all: {
-        icon: '📅',
-        title: 'هنوز نوبتی ثبت نشده',
-        description: 'پس از رزرو اولین نوبت، اینجا نمایش داده می‌شود',
-      },
-      reserved: {
-        icon: '📋',
-        title: 'نوبت رزرو شده‌ای نیست',
-        description: 'در حال حاضر نوبت فعالی وجود ندارد',
-      },
-      needs_code: {
-        icon: '🔑',
-        title: 'نوبتی بدون کد تایید نیست',
-        description: 'همه نوبت‌ها اعتمادی هستند',
-      },
-      trust_based: {
-        icon: '🛡️',
-        title: 'نوبت اعتمادی نیست',
-        description: 'هنوز مشتری‌ای گزینه اعتماد را فعال نکرده',
-      },
-      done: { icon: '✅', title: 'نوبت انجام شده‌ای نیست', description: 'هنوز خدمتی تکمیل نشده' },
-      cancelled: { icon: '❌', title: 'نوبت لغو شده‌ای نیست', description: 'هیچ نوبتی لغو نشده' },
-    };
-    return configs[activeFilter] || configs.all;
-  };
+    return EMPTY_CONFIGS[activeFilter] || EMPTY_CONFIGS.all;
+  }, [searchQuery, dateFilter, activeFilter]);
 
   if (!isAuthenticated) {
     return (
@@ -190,7 +192,7 @@ export default function AllAppointmentsPage() {
             ))}
           </div>
         ) : (
-          <EmptyState {...getEmptyConfig()} />
+          <EmptyState {...emptyConfig} />
         )}
       </div>
 

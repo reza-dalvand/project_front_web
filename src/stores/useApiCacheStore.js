@@ -8,8 +8,12 @@
  * - TTL (Time To Live) برای انقضای کش
  *
  * ⚠️ این استور persist نمی‌شود (فقط حافظه runtime)
+ * 
+ * ✅ FIX: بهبود بررسی انقضا در hasCache
+ * ✅ FIX: memoize کردن refresh در useCachedData
  */
 import { create } from 'zustand';
+import { useCallback } from 'react';
 
 const CACHE_TTL = {
   categories: 24 * 60 * 60 * 1000,
@@ -56,9 +60,23 @@ export const useApiCacheStore = create((set, get) => ({
     return entry.data;
   },
 
+  // ✅ FIX: بررسی انقضا در hasCache
   hasCache: (key) => {
     const { cache } = get();
-    return key in cache;
+    const entry = cache[key];
+    if (!entry) return false;
+    
+    // بررسی انقضا
+    if (Date.now() - entry.timestamp > entry.ttl) {
+      // پاک‌سازی entry منقضی‌شده
+      set((state) => {
+        const { [key]: _, ...rest } = state.cache;
+        return { cache: rest };
+      });
+      return false;
+    }
+    
+    return true;
   },
 
   invalidateCache: (key) => {
@@ -104,13 +122,14 @@ export const useApiCacheStore = create((set, get) => ({
 //    Hook کمکی: useCachedData
 // ═══════════════════════════════════════════
 export const useCachedData = (key, fetchFn, options = {}) => {
-  const { ttl = CACHE_TTL.default, forceRefresh = false } = options;
+  const { ttl = CACHE_TTL.default } = options;
   const getCache = useApiCacheStore((s) => s.getCache);
   const setCache = useApiCacheStore((s) => s.setCache);
 
   const cachedData = getCache(key);
 
-  const refresh = async () => {
+  // ✅ FIX: memoize کردن refresh برای جلوگیری از re-render غیرضروری
+  const refresh = useCallback(async () => {
     try {
       const data = await fetchFn();
       setCache(key, data, ttl);
@@ -118,7 +137,7 @@ export const useCachedData = (key, fetchFn, options = {}) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, [key, fetchFn, ttl, setCache]);
 
   return {
     data: cachedData,

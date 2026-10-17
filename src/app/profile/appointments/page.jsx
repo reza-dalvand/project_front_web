@@ -23,7 +23,7 @@ const TABS = [
   { id: 'cancelled', label: 'لغو شده', icon: FiXCircle, color: '#E53935' },
 ];
 
-// ═══════ وضعیت‌های نوبت ═══════
+// ✅ FIX: STATUS_CONFIG را بیرون از کامپوننت قرار بده تا هر render ساخته نشود
 const STATUS_CONFIG = {
   reserved: { label: 'رزرو شده', color: '#2196F3' },
   done: { label: 'انجام شده', color: '#4CAF50' },
@@ -182,7 +182,7 @@ export default function AppointmentsPage() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
 
-    // ═══════ شمارنده تب‌ها ═══════
+  // ═══════ شمارنده تب‌ها ═══════
   const [tabCounts, setTabCounts] = useState({
     upcoming: 0,
     past: 0,
@@ -222,8 +222,7 @@ export default function AppointmentsPage() {
     }
   }, [showToast]);
 
-
-    // ═══════ دریافت آمار تب‌ها ═══════
+  // ═══════ دریافت آمار تب‌ها ═══════
   const fetchStats = useCallback(async () => {
     try {
       const result = await appointmentsService.getMyAppointmentsStats();
@@ -240,7 +239,7 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     fetchAppointments(activeTab);
-    fetchStats(); 
+    fetchStats();
   }, [activeTab, fetchAppointments, fetchStats]);
 
   // ═══════ هندلرها ═══════

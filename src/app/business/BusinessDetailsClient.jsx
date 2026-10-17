@@ -19,7 +19,6 @@ import EmptyState from '@/components/common/EmptyState';
 import { businessesService, portfoliosService } from '@/api';
 import { useAuth } from '@/stores/useAuthStore';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
-import { priceListService } from '@/api';
 
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), { ssr: false });
 const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'), { ssr: false });
@@ -54,10 +53,11 @@ export default function BusinessDetailsClient({ businessSlug }) {
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
   const fetchPublicPriceList = usePriceListStore((s) => s.fetchPublicPriceList);
 
-  const isFavorite = business?.id ? isBusinessFavorited(business.id) : false;
-  const priceListFromStore = usePriceListStore((s) => s.lists[business?.id]);
+  // ✅ FIX: استفاده از businessId به جای business برای dependency
+  const businessId = business?.id;
+  const isFavorite = businessId ? isBusinessFavorited(businessId) : false;
+  const priceListFromStore = usePriceListStore((s) => s.lists[businessId]);
 
-  // ✅ اصلاح ۱: استفاده از businessSlug برای دریافت اطلاعات
   useEffect(() => {
     if (!businessSlug) return;
     const fetchBusiness = async () => {
@@ -116,10 +116,10 @@ export default function BusinessDetailsClient({ businessSlug }) {
   }, [businessSlug, showToast]);
 
   useEffect(() => {
-    if (!business?.id) return;
+    if (!businessId) return;
     const fetchPortfolios = async () => {
       try {
-        const result = await portfoliosService.getPortfolios({ business_id: business.id });
+        const result = await portfoliosService.getPortfolios({ business_id: businessId });
         const portfolios = (result.data || []).map((p) => ({
           id: p.id,
           title: p.title,
@@ -133,24 +133,22 @@ export default function BusinessDetailsClient({ businessSlug }) {
       }
     };
     fetchPortfolios();
-  }, [business?.id]);
+  }, [businessId]);
 
   useEffect(() => {
-    if (business?.id) {
-      fetchPublicPriceList(business.id).catch(() => {});
+    if (businessId) {
+      fetchPublicPriceList(businessId).catch(() => {});
     }
-  }, [business?.id, fetchPublicPriceList]);
+  }, [businessId, fetchPublicPriceList]);
 
   const priceListSettings = useMemo(() => {
     const storeList = priceListFromStore;
 
-    // فقط وقتی لیست قیمت عمومی منتشرشده است که store صریحاً isPublished: true داشته باشد
     if (!storeList?.isPublished) {
       return null;
     }
 
     const apiServices = Array.isArray(storeList.services) ? storeList.services : [];
-
     const fallbackServices = (business?.services || [])
       .filter((s) => s.isActive !== false)
       .map(mapServiceToPriceList);
@@ -170,6 +168,7 @@ export default function BusinessDetailsClient({ businessSlug }) {
   const showPrices = Boolean(
     priceListSettings?.isPublished && priceListSettings?.services?.length > 0
   );
+
   const openBooking = useCallback(
     (service) => {
       requireAuth(() => {
@@ -195,16 +194,16 @@ export default function BusinessDetailsClient({ businessSlug }) {
     setActivePortfolio(null);
   }, []);
 
-  // ✅ اصلاح ۲: استفاده از business.id به جای businessId برای اکشن‌ها
+  // ✅ FIX: استفاده از businessId به جای business برای dependency
   const toggleFavorite = useCallback(async () => {
     if (!isAuthenticated) {
       requireAuth(() => {});
       return;
     }
-    if (!business?.id) return; // اگر هنوز آی‌دی لود نشده کاری نکن
+    if (!businessId) return;
     try {
-      const newState = await toggleBusinessFavorite(business.id, {
-        id: business.id,
+      const newState = await toggleBusinessFavorite(businessId, {
+        id: businessId,
         name: business?.name,
         category: business?.category,
         city: business?.city,
@@ -214,7 +213,7 @@ export default function BusinessDetailsClient({ businessSlug }) {
     } catch (err) {
       showToast(err.message || 'خطا در عملیات', 'error');
     }
-  }, [isAuthenticated, requireAuth, toggleBusinessFavorite, business, showToast]);
+  }, [isAuthenticated, requireAuth, toggleBusinessFavorite, businessId, business, showToast]);
 
   const goBack = useCallback(() => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -228,6 +227,15 @@ export default function BusinessDetailsClient({ businessSlug }) {
     () => router.push(`/business/map?slug=${businessSlug}`),
     [router, businessSlug]
   );
+
+  // ✅ PERF: memoize کردن gallery, services, portfolios
+  const gallery = useMemo(
+    () => (business?.gallery || []).map((img) => img.image_url || img.image || img),
+    [business?.gallery]
+  );
+
+  const services = useMemo(() => business?.services || [], [business?.services]);
+  const portfolios = useMemo(() => business?.portfolios || [], [business?.portfolios]);
 
   if (isLoading) {
     return (
@@ -254,10 +262,6 @@ export default function BusinessDetailsClient({ businessSlug }) {
       </ScreenWrapper>
     );
   }
-
-  const gallery = (business.gallery || []).map((img) => img.image_url || img.image || img);
-  const services = business.services || [];
-  const portfolios = business.portfolios || [];
 
   return (
     <ScreenWrapper padding={0}>
@@ -305,7 +309,6 @@ export default function BusinessDetailsClient({ businessSlug }) {
         </div>
       </div>
 
-      {/* ✅ اصلاح ۳: ارسال business.id به مودال رزرو */}
       <BookingModal
         visible={bookingModalVisible}
         onClose={closeBooking}
