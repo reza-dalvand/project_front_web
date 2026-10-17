@@ -71,8 +71,10 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
     fetchBankInfo();
   }, [visible]);
 
+  // ✅ FIX BUG-03: اصلاح بررسی طول شبا از >= 24 به >= 26
+  // شبا شامل "IR" + ۲۴ رقم = ۲۶ کاراکتر است
   const hasCompleteBankInfo = Boolean(
-    bankInfo?.bankName && bankInfo?.sheba?.length >= 24 && bankInfo?.cardNumber?.length === 16
+    bankInfo?.bankName && bankInfo?.sheba?.length >= 26 && bankInfo?.cardNumber?.length === 16
   );
 
   // ✅ FIX LOG-05: استخراج امن dateObj
@@ -122,6 +124,7 @@ export default function CancelAppointmentModal({ visible, appointment, onClose, 
         return;
       }
       const cleanSheba = toEnglishDigits(sheba);
+      // ✅ FIX BUG-03: بررسی دقیق طول شبا (باید ۲۶ کاراکتر باشد)
       if (cleanSheba.length !== 26) {
         setError('شماره شبا باید ۲۶ کاراکتر باشد (IR + ۲۴ رقم)');
         return;

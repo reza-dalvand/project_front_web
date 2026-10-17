@@ -1,6 +1,6 @@
 // src/app/profile/appointments/page.jsx
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { FiCalendar, FiClock, FiXCircle, FiChevronLeft } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -43,209 +43,11 @@ const getServiceEmoji = (name = '') => {
   return '💆‍♀️';
 };
 
-export default function AppointmentsPage() {
-  const { colors } = useTheme();
-  const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
-  const { showToast } = useToast();
-
-  const [activeTab, setActiveTab] = useState('upcoming');
-  const [appointments, setAppointments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [detailVisible, setDetailVisible] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(null);
-
-    // ═══════ شمارنده تب‌ها ═══════
-  const [tabCounts, setTabCounts] = useState({
-    upcoming: 0,
-    past: 0,
-    cancelled: 0,
-  });
-
-  // ═══════ دریافت نوبت‌ها ═══════
-  const fetchAppointments = useCallback(async (status) => {
-    setIsLoading(true);
-    try {
-      const result = await appointmentsService.getMyAppointments(status);
-      const mapped = (result.data || []).map((apt) => ({
-        id: apt.id,
-        businessName: apt.businessName || apt.business_name || '',
-        serviceName: apt.serviceName || apt.service_name || '',
-        date: apt.dateKey || apt.date_key || '',
-        dateObj: apt.jm && apt.jd ? { jy: apt.jy, jm: apt.jm, jd: apt.jd } : null,
-        time: apt.timeSlot || apt.time_slot || '',
-        status: apt.status || '',
-        totalPrice: apt.totalPrice || apt.total_price || 0,
-        depositPaid: apt.depositPaid || apt.deposit_paid || 0,
-        verificationCode: apt.verificationCode || apt.verification_code || null,
-        isUpcoming: apt.isUpcoming ?? apt.is_upcoming ?? false,
-        canCancel: apt.canCancel ?? apt.can_cancel ?? false,
-        hoursLeft: apt.hoursLeft ?? apt.hours_left ?? null,
-        trustBased: apt.trustBased ?? apt.trust_based ?? false,
-        isVerified: apt.isVerified ?? apt.is_verified ?? false,
-        cancellationReason: apt.cancellationReason || apt.cancellation_reason || '',
-      }));
-      setAppointments(mapped);
-    } catch (err) {
-      console.error('Failed to fetch appointments:', err);
-      showToast('خطا در دریافت نوبت‌ها', 'error');
-      setAppointments([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showToast]);
-
-
-    // ═══════ دریافت آمار تب‌ها ═══════
-  const fetchStats = useCallback(async () => {
-    try {
-      const result = await appointmentsService.getMyAppointmentsStats();
-      const data = result.data || {};
-      setTabCounts({
-        upcoming: data.upcoming || 0,
-        past: data.past || 0,
-        cancelled: data.cancelled || 0,
-      });
-    } catch (err) {
-      console.error('Failed to fetch appointment stats:', err);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAppointments(activeTab);
-    fetchStats(); 
-  }, [activeTab, fetchAppointments, fetchStats]);
-
-  // ═══════ هندلرها ═══════
-  const handleCopyCode = async (code) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedCode(code);
-      showToast('کد تایید کپی شد', 'success');
-      setTimeout(() => setCopiedCode(null), 2000);
-    } catch {
-      showToast('امکان کپی وجود ندارد', 'error');
-    }
-  };
-
-  const handleOpenDetail = (apt) => {
-    setSelectedAppointment(apt);
-    setDetailVisible(true);
-  };
-
-  // ═══════ رندر ═══════
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p style={{ color: colors.textMain }}>در حال بارگذاری...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen pb-24" style={{ backgroundColor: colors.background }}>
-      {/* ═══ هدر + تب‌ها ═══ */}
-      <div
-        className="px-4 pt-4 pb-3 border-b sticky top-0 z-20"
-        style={{ backgroundColor: colors.background, borderBottomColor: colors.border }}
-      >
-        <h2 className="text-base font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
-          نوبت‌های من
-        </h2>
-        {/* تب‌ها */}
-        <div
-          className="flex p-1 rounded-xl border gap-1"
-          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
-        >
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            const count = tabCounts[tab.id] || 0;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg transition-colors relative"
-                style={{
-                  backgroundColor: isActive ? tab.color + '18' : 'transparent',
-                }}
-              >
-                <Icon size={15} style={{ color: isActive ? tab.color : colors.textSecondary }} />
-                <span
-                  className="text-[13px] font-[Vazir-Bold]"
-                  style={{ color: isActive ? tab.color : colors.textMain }}
-                >
-                  {tab.label}
-                </span>
-                {count > 0 && (
-                  <span
-                    className="min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 text-[10px] font-[Vazir-Bold] text-white"
-                    style={{ backgroundColor: tab.color }}
-                  >
-                    {toPersianDigit(count)}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ═══ لیست نوبت‌ها ═══ */}
-      <div className="px-4 py-4 space-y-3">
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <LoadingSpinner label="در حال بارگذاری نوبت‌ها..." />
-          </div>
-        ) : appointments.length === 0 ? (
-          <EmptyState
-            icon={activeTab === 'upcoming' ? '📅' : activeTab === 'past' ? '📜' : '🚫'}
-            title={
-              activeTab === 'upcoming'
-                ? 'نوبت آینده‌ای ندارید'
-                : activeTab === 'past'
-                ? 'نوبت گذشته‌ای ثبت نشده'
-                : 'نوبت لغو شده‌ای وجود ندارد'
-            }
-            description={
-              activeTab === 'upcoming'
-                ? 'از صفحه کسب‌وکارها نوبت رزرو کنید'
-                : activeTab === 'past'
-                ? 'پس از انجام اولین نوبت، اینجا نمایش داده می‌شود'
-                : 'هنوز نوبتی لغو نشده است'
-            }
-          />
-        ) : (
-          appointments.map((apt) => (
-            <AppointmentCard
-              key={apt.id}
-              appointment={apt}
-              onPress={handleOpenDetail}
-              onCopyCode={handleCopyCode}
-              copiedCode={copiedCode}
-              activeTab={activeTab}
-            />
-          ))
-        )}
-      </div>
-
-      {/* ═══ مدال‌ها ═══ */}
-      <AppointmentDetailModal
-        visible={detailVisible}
-        appointment={selectedAppointment}
-        onClose={() => {
-          setDetailVisible(false);
-          setSelectedAppointment(null);
-        }}
-      />
-    </div>
-  );
-}
-
 // ═══════════════════════════════════════════════════════
-//    کارت نوبت
+//    ✅ FIX PERF-02: کارت نوبت - استخراج شده به بیرون از کامپوننت
+//    استفاده از memo برای جلوگیری از re-render غیرضروری
 // ═══════════════════════════════════════════════════════
-function AppointmentCard({ appointment, onPress, onCopyCode, copiedCode, activeTab }) {
+const AppointmentCard = memo(function AppointmentCard({ appointment, onPress, onCopyCode, copiedCode, activeTab }) {
   const { colors } = useTheme();
   const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.reserved;
   const showCode =
@@ -364,6 +166,205 @@ function AppointmentCard({ appointment, onPress, onCopyCode, copiedCode, activeT
           </span>
         </div>
       )}
+    </div>
+  );
+});
+
+export default function AppointmentsPage() {
+  const { colors } = useTheme();
+  const { isAuthenticated } = useRequireAuth({ redirectToLogin: true });
+  const { showToast } = useToast();
+
+  const [activeTab, setActiveTab] = useState('upcoming');
+  const [appointments, setAppointments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(null);
+
+    // ═══════ شمارنده تب‌ها ═══════
+  const [tabCounts, setTabCounts] = useState({
+    upcoming: 0,
+    past: 0,
+    cancelled: 0,
+  });
+
+  // ═══════ دریافت نوبت‌ها ═══════
+  const fetchAppointments = useCallback(async (status) => {
+    setIsLoading(true);
+    try {
+      const result = await appointmentsService.getMyAppointments(status);
+      const mapped = (result.data || []).map((apt) => ({
+        id: apt.id,
+        businessName: apt.businessName || apt.business_name || '',
+        serviceName: apt.serviceName || apt.service_name || '',
+        date: apt.dateKey || apt.date_key || '',
+        dateObj: apt.jm && apt.jd ? { jy: apt.jy, jm: apt.jm, jd: apt.jd } : null,
+        time: apt.timeSlot || apt.time_slot || '',
+        status: apt.status || '',
+        totalPrice: apt.totalPrice || apt.total_price || 0,
+        depositPaid: apt.depositPaid || apt.deposit_paid || 0,
+        verificationCode: apt.verificationCode || apt.verification_code || null,
+        isUpcoming: apt.isUpcoming ?? apt.is_upcoming ?? false,
+        canCancel: apt.canCancel ?? apt.can_cancel ?? false,
+        hoursLeft: apt.hoursLeft ?? apt.hours_left ?? null,
+        trustBased: apt.trustBased ?? apt.trust_based ?? false,
+        isVerified: apt.isVerified ?? apt.is_verified ?? false,
+        cancellationReason: apt.cancellationReason || apt.cancellation_reason || '',
+      }));
+      setAppointments(mapped);
+    } catch (err) {
+      console.error('Failed to fetch appointments:', err);
+      showToast('خطا در دریافت نوبت‌ها', 'error');
+      setAppointments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast]);
+
+
+    // ═══════ دریافت آمار تب‌ها ═══════
+  const fetchStats = useCallback(async () => {
+    try {
+      const result = await appointmentsService.getMyAppointmentsStats();
+      const data = result.data || {};
+      setTabCounts({
+        upcoming: data.upcoming || 0,
+        past: data.past || 0,
+        cancelled: data.cancelled || 0,
+      });
+    } catch (err) {
+      console.error('Failed to fetch appointment stats:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAppointments(activeTab);
+    fetchStats(); 
+  }, [activeTab, fetchAppointments, fetchStats]);
+
+  // ═══════ هندلرها ═══════
+  const handleCopyCode = async (code) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      showToast('کد تایید کپی شد', 'success');
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch {
+      showToast('امکان کپی وجود ندارد', 'error');
+    }
+  };
+
+  const handleOpenDetail = useCallback((apt) => {
+    setSelectedAppointment(apt);
+    setDetailVisible(true);
+  }, []);
+
+  // ═══════ رندر ═══════
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p style={{ color: colors.textMain }}>در حال بارگذاری...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pb-24" style={{ backgroundColor: colors.background }}>
+      {/* ═══ هدر + تب‌ها ═══ */}
+      <div
+        className="px-4 pt-4 pb-3 border-b sticky top-0 z-20"
+        style={{ backgroundColor: colors.background, borderBottomColor: colors.border }}
+      >
+        <h2 className="text-base font-[Vazir-Bold] mb-3" style={{ color: colors.textMain }}>
+          نوبت‌های من
+        </h2>
+        {/* تب‌ها */}
+        <div
+          className="flex p-1 rounded-xl border gap-1"
+          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+        >
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            const count = tabCounts[tab.id] || 0;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg transition-colors relative"
+                style={{
+                  backgroundColor: isActive ? tab.color + '18' : 'transparent',
+                }}
+              >
+                <Icon size={15} style={{ color: isActive ? tab.color : colors.textSecondary }} />
+                <span
+                  className="text-[13px] font-[Vazir-Bold]"
+                  style={{ color: isActive ? tab.color : colors.textMain }}
+                >
+                  {tab.label}
+                </span>
+                {count > 0 && (
+                  <span
+                    className="min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 text-[10px] font-[Vazir-Bold] text-white"
+                    style={{ backgroundColor: tab.color }}
+                  >
+                    {toPersianDigit(count)}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ═══ لیست نوبت‌ها ═══ */}
+      <div className="px-4 py-4 space-y-3">
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner label="در حال بارگذاری نوبت‌ها..." />
+          </div>
+        ) : appointments.length === 0 ? (
+          <EmptyState
+            icon={activeTab === 'upcoming' ? '📅' : activeTab === 'past' ? '📜' : '🚫'}
+            title={
+              activeTab === 'upcoming'
+                ? 'نوبت آینده‌ای ندارید'
+                : activeTab === 'past'
+                ? 'نوبت گذشته‌ای ثبت نشده'
+                : 'نوبت لغو شده‌ای وجود ندارد'
+            }
+            description={
+              activeTab === 'upcoming'
+                ? 'از صفحه کسب‌وکارها نوبت رزرو کنید'
+                : activeTab === 'past'
+                ? 'پس از انجام اولین نوبت، اینجا نمایش داده می‌شود'
+                : 'هنوز نوبتی لغو نشده است'
+            }
+          />
+        ) : (
+          appointments.map((apt) => (
+            <AppointmentCard
+              key={apt.id}
+              appointment={apt}
+              onPress={handleOpenDetail}
+              onCopyCode={handleCopyCode}
+              copiedCode={copiedCode}
+              activeTab={activeTab}
+            />
+          ))
+        )}
+      </div>
+
+      {/* ═══ مدال‌ها ═══ */}
+      <AppointmentDetailModal
+        visible={detailVisible}
+        appointment={selectedAppointment}
+        onClose={() => {
+          setDetailVisible(false);
+          setSelectedAppointment(null);
+        }}
+      />
     </div>
   );
 }

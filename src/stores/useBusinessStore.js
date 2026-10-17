@@ -8,6 +8,8 @@
  * ✅ FIX rating:
  * - rating همیشه بین 0 تا 5 نرمال‌سازی شود
  * - reviewsCount همیشه عدد صحیح نامنفی باشد
+ * 
+ * ✅ FIX PERF-04: بهینه‌سازی sanitizeBusinessData برای جلوگیری از spread غیرضروری
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -40,10 +42,12 @@ const toPositiveInteger = (value) => {
 };
 
 /**
- * ✅ FIX 5.2: اعتبارسنجی و ترمیم ساختار businessData
+ * ✅ FIX 5.2 + PERF-04: اعتبارسنجی و ترمیم ساختار businessData
  * اگر فیلدهای ضروری وجود نداشته باشند، با مقادیر پیش‌فرض پر می‌شوند
+ * بهینه‌سازی شده برای جلوگیری از spread غیرضروری آبجکت‌های بزرگ
  */
 const sanitizeBusinessData = (data) => {
+  // ✅ PERF-04: اگر data نامعتبر است، مستقیماً INITIAL را برگردان
   if (!data || typeof data !== 'object') {
     return {
       ...INITIAL_BUSINESS_DATA,
@@ -52,27 +56,52 @@ const sanitizeBusinessData = (data) => {
     };
   }
 
-  return {
-    ...INITIAL_BUSINESS_DATA,
-    ...data,
-    rating: clampRating(data.rating),
-    reviewsCount: toPositiveInteger(data.reviewsCount),
-    // اطمینان از وجود آرایه‌ها
-    services: Array.isArray(data.services) ? data.services : [],
-    team: Array.isArray(data.team) ? data.team : [],
-    portfolios: Array.isArray(data.portfolios) ? data.portfolios : [],
-    appointments: Array.isArray(data.appointments) ? data.appointments : [],
-    schedules: data.schedules && typeof data.schedules === 'object' ? data.schedules : {},
-    // اطمینان از وجود bankInfo
-    bankInfo: {
-      isRegistered: Boolean(data.bankInfo?.isRegistered ?? false),
-      isVerified: Boolean(data.bankInfo?.isVerified ?? false),
-    },
-    // محافظت در برابر فیلدهای حساس باقی‌مانده از نسخه‌های قدیمی
-    nationalId: undefined,
-    verifiedName: undefined,
-    ownerName: undefined,
-  };
+  // ✅ PERF-04: فقط فیلدهایی که نیاز به ترمیم دارند را تغییر بده
+  // به جای spread کامل data، فیلدهای مشکل‌دار را override کن
+  const sanitized = { ...data };
+
+  // ترمیم rating و reviewsCount
+  sanitized.rating = clampRating(data.rating);
+  sanitized.reviewsCount = toPositiveInteger(data.reviewsCount);
+
+  // اطمینان از وجود آرایه‌ها - فقط در صورت نیاز جایگزین کن
+  if (!Array.isArray(data.services)) sanitized.services = [];
+  if (!Array.isArray(data.team)) sanitized.team = [];
+  if (!Array.isArray(data.portfolios)) sanitized.portfolios = [];
+  if (!Array.isArray(data.appointments)) sanitized.appointments = [];
+  
+  // اطمینان از وجود schedules
+  if (!data.schedules || typeof data.schedules !== 'object') {
+    sanitized.schedules = {};
+  }
+
+  // اطمینان از وجود bankInfo
+  if (!data.bankInfo || typeof data.bankInfo !== 'object') {
+    sanitized.bankInfo = {
+      isRegistered: false,
+      isVerified: false,
+    };
+  } else {
+    // ترمیم bankInfo بدون spread غیرضروری
+    sanitized.bankInfo = {
+      isRegistered: Boolean(data.bankInfo.isRegistered ?? false),
+      isVerified: Boolean(data.bankInfo.isVerified ?? false),
+      // حفظ سایر فیلدهای bankInfo اگر وجود دارند
+      ...(data.bankInfo.bankName && { bankName: data.bankInfo.bankName }),
+      ...(data.bankInfo.bankId && { bankId: data.bankInfo.bankId }),
+      ...(data.bankInfo.sheba && { sheba: data.bankInfo.sheba }),
+      ...(data.bankInfo.cardNumber && { cardNumber: data.bankInfo.cardNumber }),
+      ...(data.bankInfo.ownerName && { ownerName: data.bankInfo.ownerName }),
+      ...(data.bankInfo.accountNumber && { accountNumber: data.bankInfo.accountNumber }),
+    };
+  }
+
+  // محافظت در برابر فیلدهای حساس باقی‌مانده از نسخه‌های قدیمی
+  delete sanitized.nationalId;
+  delete sanitized.verifiedName;
+  delete sanitized.ownerName;
+
+  return sanitized;
 };
 
 export const useBusinessStore = create(

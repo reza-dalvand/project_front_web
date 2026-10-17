@@ -7,10 +7,11 @@
  *
  * ✅ FIX: استفاده از camelCase به جای snake_case
  * ✅ FIX F-16: استفاده از timestamp سرور به جای countdown سمت کلاینت
+ * ✅ FIX PERF-03: حذف dynamic import غیرضروری profileService
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { authService } from '@/api';
+import { authService, profileService } from '@/api';
 import { OTP_CONFIG } from '@/api/config';
 
 const OTP_LENGTH = OTP_CONFIG.CODE_LENGTH;
@@ -139,6 +140,7 @@ export const useAuthFlow = (options = {}) => {
   }, []);
 
   // ─── ذخیره پروفایل کاربر جدید ───
+  // ✅ FIX PERF-03: حذف dynamic import و استفاده از import استاتیک
   const saveProfile = useCallback(
     async (firstName, lastName) => {
       if (!firstName.trim() || !lastName.trim()) {
@@ -153,7 +155,7 @@ export const useAuthFlow = (options = {}) => {
 
       setLoading(true);
       try {
-        const { profileService } = await import('@/api/services/profile.service');
+        // ✅ FIX PERF-03: استفاده از import استاتیک به جای dynamic import
         await profileService.updateProfile({
           first_name: firstName.trim(),
           last_name: lastName.trim(),
