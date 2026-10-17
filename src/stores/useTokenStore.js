@@ -152,6 +152,14 @@ const getStorage = () => {
   return createSecureWebStorage('localStorage');
 };
 
+
+const tokenPersistStorage = {
+  getItem: (name) => getStorage().getItem(name),
+  setItem: (name, value) => getStorage().setItem(name, value),
+  removeItem: (name) => getStorage().removeItem(name),
+};
+
+
 export const useTokenStore = create(
   persist(
     (set, get) => ({
@@ -216,7 +224,7 @@ export const useTokenStore = create(
     {
       name: 'beau-token-storage',
       // ✅ FIX PERF-01: استفاده مستقیم از getStorage بدون createJSONStorage
-      storage: getStorage,
+      storage: tokenPersistStorage,
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,

@@ -16,7 +16,11 @@ import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { authService } from '@/api';
 import { useTokenStore } from './useTokenStore';
-import { isTokenExpired, isTokenExpiringSoon } from '@/utils/jwt-utils';
+import {
+  isTokenExpired,
+  isTokenExpiringSoon,
+  getTokenRemainingTime,
+} from '@/utils/jwt-utils';
 
 // ═══════════════════════════════════════════════
 //    Custom Storage برای Capacitor
@@ -98,6 +102,9 @@ const centralizedRefresh = async () => {
   return refreshPromise;
 };
 
+const PROACTIVE_REFRESH_CHECK_INTERVAL_MS = 5 * 60 * 1000; // هر ۵ دقیقه بررسی
+const PROACTIVE_REFRESH_THRESHOLD_MS = 10 * 60 * 1000; // اگر کمتر از ۱۰ دقیقه مانده بود refresh کن
+
 // ═══════════════════════════════════════════════
 //    Periodic Refresh Timer
 // ═══════════════════════════════════════════════
@@ -115,18 +122,19 @@ const startPeriodicRefresh = () => {
         return;
       }
 
-      // ✅ FIX BUG-01: استفاده از centralizedRefresh به جای getSessionStatus
-      // این واقعاً توکن را رفرش می‌کند، نه فقط بررسی وضعیت
-      if (accessToken && isTokenExpiringSoon(accessToken)) {
+      const remaining = accessToken ? getTokenRemainingTime(accessToken) : 0;
+
+      // ✅ FIX: اگر توکن نداشتیم یا کمتر از ۱۰ دقیقه مانده، proactive refresh انجام بده
+      if (!accessToken || remaining <= PROACTIVE_REFRESH_THRESHOLD_MS) {
         try {
           await centralizedRefresh();
         } catch (error) {
+          // ✅ FIX: خطای موقت شبکه نباید periodic refresh را برای همیشه خاموش کند
           console.warn('Periodic refresh failed:', error);
-          stopPeriodicRefresh();
         }
       }
     },
-    50 * 60 * 1000
+    PROACTIVE_REFRESH_CHECK_INTERVAL_MS
   );
 };
 
@@ -387,6 +395,26 @@ export const useAuthStore = create(
         return false;
       },
 
+            // ✅ FIX: refresh مرکزی برای استفاده AuthProvider و جلوگیری از race condition
+      refreshSessionToken: async () => {
+        const { accessToken, refreshToken } = useTokenStore.getState();
+
+        if (!refreshToken) return false;
+
+        const remaining = accessToken ? getTokenRemainingTime(accessToken) : 0;
+
+        if (!accessToken || remaining <= PROACTIVE_REFRESH_THRESHOLD_MS) {
+          try {
+            await centralizedRefresh();
+            return true;
+          } catch {
+            return false;
+          }
+        }
+
+        return true;
+      },
+
       // ✅ FIX F-15: بررسی وضعیت session از سرور
       checkSessionStatus: async () => {
         const { isAuthenticated } = get();
@@ -492,9 +520,6 @@ export const useAuthModalStore = create((set, get) => ({
 //    ۳. Hook ترکیبی: useAuth
 // ═══════════════════════════════════════════════
 export const useAuth = () => {
-  const { useRouter, usePathname } = require('next/navigation');
-  const router = useRouter();
-  const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const needsProfileCompletion = useAuthStore((s) => s.needsProfileCompletion);

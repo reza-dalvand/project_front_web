@@ -1,5 +1,5 @@
 // src/hooks/useTodayAppointments.js
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import apiClient from '@/api/api-client';
 import { appointmentsService } from '@/api';
 import { useToast } from '@/hooks/useToast';
@@ -44,12 +44,19 @@ export const useTodayAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const fetchIdRef = useRef(0);
 
   const fetchTodayAppointments = useCallback(async () => {
+    const currentFetchId = ++fetchIdRef.current;
+
     setIsLoading(true);
     setError(null);
+
     try {
       const result = await apiClient.get('/appointments/business-today/');
+
+      if (currentFetchId !== fetchIdRef.current) return;
+
       const data = result.data || [];
       const mapped = data.map(mapTodayAppointment);
 
@@ -62,10 +69,14 @@ export const useTodayAppointments = () => {
 
       setAppointments(mapped);
     } catch (err) {
+      if (currentFetchId !== fetchIdRef.current) return;
+
       console.error('Failed to fetch today appointments:', err);
-      setError(err.message);
+      setError(err?.message || 'خطا در دریافت نوبت‌های امروز');
     } finally {
-      setIsLoading(false);
+      if (currentFetchId === fetchIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 

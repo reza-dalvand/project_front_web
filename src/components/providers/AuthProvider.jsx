@@ -4,9 +4,6 @@ import { useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useTokenStore } from '@/stores/useTokenStore';
-import { authService } from '@/api';
-import { isTokenExpiringSoon } from '@/utils/jwt-utils';
 
 export default function AuthProvider({ children }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -20,46 +17,31 @@ export default function AuthProvider({ children }) {
 
     const handleRefresh = async () => {
       const now = Date.now();
-      
-      // ─── Token Refresh ───
+      const authStore = useAuthStore.getState();
+
+      // ─── Token Refresh مرکزی ───
       if (now - lastRefreshRef.current >= MIN_REFRESH_INTERVAL) {
-        const { accessToken, refreshToken } = useTokenStore.getState();
-        
-        if (refreshToken && isTokenExpiringSoon(accessToken)) {
-          lastRefreshRef.current = now;
-          try {
-            const result = await authService.refreshToken(refreshToken);
-            const data = result?.data;
-            if (data?.access) {
-              useTokenStore.getState().setTokens({
-                access: data.access,
-                refresh: data.refresh || refreshToken,
-              });
-            }
-          } catch (error) {
-            console.warn('Activity-based refresh skipped:', error?.message || error);
+        lastRefreshRef.current = now;
+
+        try {
+          if (typeof authStore.refreshSessionToken === 'function') {
+            await authStore.refreshSessionToken();
           }
+        } catch (error) {
+          console.warn('Activity-based refresh skipped:', error?.message || error);
         }
       }
 
-      // ─── Session Status Check ───
+      // ─── Session Status Check مرکزی ───
       if (now - lastSessionCheckRef.current >= MIN_SESSION_CHECK_INTERVAL) {
         lastSessionCheckRef.current = now;
+
         try {
-          const result = await authService.getSessionStatus();
-          const data = result?.data;
-          if (data) {
-            const authStore = useAuthStore.getState();
-            authStore.setSuspensionStatus(
-              data.isSuspended ?? false,
-              data.suspensionReason ?? ''
-            );
-            if (data.isDeactivated) {
-              authStore.logout();
-            }
+          if (typeof authStore.checkSessionStatus === 'function') {
+            await authStore.checkSessionStatus();
           }
         } catch (error) {
-          console.warn('Session status check skipped:', error?.message);
+          console.warn('Session status check skipped:', error?.message || error);
         }
       }
     };
@@ -71,6 +53,7 @@ export default function AuthProvider({ children }) {
           handleRefresh();
         }
       };
+
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
       return () => {
@@ -81,10 +64,9 @@ export default function AuthProvider({ children }) {
     // ─── Android/iOS: appStateChange ───
     if (platform === 'android' || platform === 'ios') {
       let listener = null;
-      let isMounted = true; // ✅ FIX F-20: محافظت در برابر unmount قبل از resolve
+      let isMounted = true;
 
       CapApp.addListener('appStateChange', ({ isActive }) => {
-        // ✅ FIX F-20: فقط اگر کامپوننت هنوز mounted است اجرا شود
         if (isMounted && isActive && isAuthenticated) {
           handleRefresh();
         }
@@ -92,8 +74,6 @@ export default function AuthProvider({ children }) {
         if (isMounted) {
           listener = pluginListener;
         } else {
-          // ✅ FIX F-20: کامپوننت قبل از resolve شدن unmount شده
-          // listener را فوراً remove کن
           pluginListener.remove();
         }
       });
@@ -107,7 +87,6 @@ export default function AuthProvider({ children }) {
       };
     }
 
-    // Fallback: هیچ cleanup لازم نیست
     return undefined;
   }, [isAuthenticated]);
 
