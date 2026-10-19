@@ -316,15 +316,16 @@ export default function HomePage() {
         <div className="content-padding">
           <ActiveFiltersBar filters={filters} onChange={handleFilterChange} onClearAll={handleClearAllFilters} />
         </div>
-        {!isAuthenticated && (
+        {/* {!isAuthenticated && (
           <div className="content-padding">
             <RegisterBanner onLogin={() => requireAuth()} />
           </div>
-        )}
+        )} */}
         <div className="content-padding pt-4 flex flex-col gap-6">
           {ads.length > 0 && (
             <section>
-              <SectionHeader icon={<FiStar size={18} />} iconColor={colors.primary} title="پیشنهادات ویژه" rightElement={<SeeAllButton onPress={() => router.push('/ads')} count={ads.length} />} />
+              {/* <SectionHeader icon={<FiStar size={18} />} iconColor={colors.primary} title="پیشنهادات ویژه" rightElement={<SeeAllButton onPress={() => router.push('/ads')} count={ads.length} />} /> */}
+              <SectionHeader icon={<FiStar size={18} />} iconColor={colors.primary} title="پیشنهادات ویژه" rightElement={<></>} />
               <AdSlider ads={ads} onPress={handleAdPress} />
             </section>
           )}
