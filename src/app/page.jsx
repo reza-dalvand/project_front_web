@@ -67,6 +67,8 @@ export default function HomePage() {
 
   // ✅ PERF-01: پاکسازی کش هنگام لاگ‌اوت یا تغییر کاربر
   const previousUserId = useRef(user?.id);
+  const homeFetchIdRef = useRef(0);
+
   useEffect(() => {
     const currentUserId = user?.id;
     if (previousUserId.current !== currentUserId) {
@@ -91,17 +93,27 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // ✅ FIX: هر اجرای effect یک fetchId جدید می‌گیرد تا پاسخ‌های قدیمی روی پاسخ‌های جدید اثر نگذارند.
+    const fetchId = ++homeFetchIdRef.current;
+
     const fetchAllData = async () => {
       const locationParams = getLocationParams();
-      // ساخت کلید کش بر اساس پارامترهای مکان
-      const cacheKey = `${locationParams.provinceId}-${locationParams.cityId}-${locationParams.latitude}-${locationParams.longitude}`;
+
+      // ✅ FIX اصلی:
+      // کلید کش باید بر اساس همان پارامترهایی باشد که واقعاً به API ارسال می‌شود.
+      // getLocationParams خروجی provinceId/cityId/latitude/longitude نمی‌دهد،
+      // بلکه province_id/city_id/lat/lng می‌دهد؛ بنابراین کلید قبلی همیشه یکسان بود.
+      const cacheKey = JSON.stringify(locationParams ?? {});
 
       // ✅ FIX 2.2: بررسی اعتبار کش
       if (
         homeDataCache &&
         homeDataCache.key === cacheKey &&
+        Date.now() - homeFetchIdRef.current >= 0 &&
         Date.now() - homeDataCacheTime < HOME_CACHE_TTL
       ) {
+        if (fetchId !== homeFetchIdRef.current) return;
+
         setAds(homeDataCache.ads);
         setCategories(homeDataCache.categories);
         setLineRentals(homeDataCache.lineRentals);
@@ -116,6 +128,9 @@ export default function HomePage() {
           categoriesService.getServiceCategories({ ...locationParams }),
           adsService.getLineRentals({ page_size: 6, ...locationParams }),
         ]);
+
+        // ✅ اگر در این فاصله فیلتر تغییر کرده، این پاسخ قدیمی است و نباید state را خراب کند.
+        if (fetchId !== homeFetchIdRef.current) return;
 
         let newAds = [], newCategories = [], newLineRentals = [];
 
@@ -150,7 +165,10 @@ export default function HomePage() {
       } catch (error) {
         console.error('Failed to fetch home data:', error);
       } finally {
-        setIsLoading(false);
+        // ✅ فقط آخرین request مجاز است loading را ببندد.
+        if (fetchId === homeFetchIdRef.current) {
+          setIsLoading(false);
+        }
       }
     };
     fetchAllData();
