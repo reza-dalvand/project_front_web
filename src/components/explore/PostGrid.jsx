@@ -70,7 +70,7 @@ export default function PostGrid({
       <EmptyState
         icon="🖼️"
         title="نتیجه‌ای یافت نشد"
-        description="فیلتر استان یا دسته‌بندی را تغییر دهید"
+        description="در صورت فعال بودن فیلتر استان یا دسته‌بندی، آن‌ها را تغییر دهید"
       />
     );
   }
