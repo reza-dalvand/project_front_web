@@ -60,9 +60,14 @@ export default function LineRentalCard({ rental, onPress }) {
       onClick={() => onPress?.(rental)}
       className="
         flex-shrink-0
-        w-full min-w-[270px] sm:min-w-[290px] md:min-w-0 md:w-full
+        flex flex-col
+        w-[75vw] max-w-[300px]
+        sm:w-[300px] sm:max-w-[320px]
+        md:w-[320px] md:max-w-[360px]
+        lg:w-full lg:max-w-none
         rounded-xl sm:rounded-2xl md:rounded-[20px]
         border overflow-hidden text-right transition-all
+        shadow-sm
         hover:shadow-md active:scale-[0.99]
       "
       style={{
@@ -133,7 +138,7 @@ export default function LineRentalCard({ rental, onPress }) {
       </div>
 
       {/* ═══ بدنه کارت ═══ */}
-      <div className="p-3 sm:p-3.5 md:p-4 space-y-2 sm:space-y-2.5 md:space-y-3">
+      <div className="p-3 sm:p-3.5 md:p-4 space-y-2 sm:space-y-2.5 md:space-y-3 flex-1 flex flex-col">
         {/* عنوان */}
         <h3
           className="text-[14px] sm:text-base md:text-lg font-[Vazir-Bold] leading-[22px] sm:leading-6 md:leading-[26px] line-clamp-2"
@@ -151,7 +156,7 @@ export default function LineRentalCard({ rental, onPress }) {
         </div>
 
         {/* کسب‌وکار + شهر + فاصله */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap mt-auto pt-2">
           <div className="flex items-center gap-1 sm:gap-1.5">
             <span className="text-[11px] sm:text-xs">🏪</span>
             <span
