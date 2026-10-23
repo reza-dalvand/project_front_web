@@ -19,46 +19,53 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
     <Card variant="elevated" padding={14} radius={18} className="w-full">
       <button onClick={() => onPress?.(business)} className="w-full text-right">
         {/* ✅ Layout ریپانسیو - در صفحات بزرگتر افقی شود */}
-        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-          {/* ردیف بالا - آیکون و اطلاعات */}
-          <div className="flex items-start gap-3 md:flex-1">
-            {/* آیکون دسته‌بندی */}
-            <div
-              className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-xl md:text-2xl flex-shrink-0"
-              style={{ backgroundColor: colors.primary + '15' }}
-            >
-              {categoryIcon || '💆‍♀️'}
-            </div>
+        <div className="flex items-start gap-3 md:gap-4">
+          {/* آیکون دسته‌بندی */}
+          <div
+            className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-xl md:text-2xl flex-shrink-0"
+            style={{ backgroundColor: colors.primary + '15' }}
+          >
+            {categoryIcon || '💆‍♀️'}
+          </div>
 
-            {/* اطلاعات */}
-            <div className="flex-1 min-w-0">
+          {/* اطلاعات */}
+          <div className="flex-1 min-w-0">
+            {/* ✅ امتیاز حالا روبروی عنوان خدمت قرار می‌گیرد */}
+            <div className="flex items-center justify-between gap-2">
               <h3
-                className="text-[13px] md:text-sm lg:text-base font-[Vazir-Bold] line-clamp-1"
+                className="flex-1 min-w-0 text-[13px] md:text-sm lg:text-base font-[Vazir-Bold] line-clamp-1"
                 style={{ color: colors.textMain }}
               >
                 {business.serviceType || business.name}
               </h3>
-              <p className="text-[11px] md:text-xs font-[Vazir-Medium] mt-0.5" style={{ color: colors.primary }}>
-                {business.name}
-              </p>
-              <p
-                className="text-[10px] md:text-[11px] font-[Vazir] mt-0.5 line-clamp-1"
-                style={{ color: colors.textSecondary }}
-              >
-                {business.category}
-              </p>
-            </div>
-          </div>
 
-          {/* امتیاز - در موبایل بالا، در دسکتاپ سمت چپ */}
-          <div
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl flex-shrink-0 self-start md:self-center"
-            style={{ backgroundColor: '#FFC10720' }}
-          >
-            <FiStar size={11} className="md:w-3 md:h-3" color="#FFC107" fill="#FFC107" />
-            <span className="text-[11px] md:text-xs font-[Vazir-Bold]" style={{ color: colors.textMain }}>
-              {toPersianDigit(displayRating)}
-            </span>
+              <div
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl flex-shrink-0"
+                style={{ backgroundColor: '#FFC10720' }}
+              >
+                <FiStar size={11} className="md:w-3 md:h-3" color="#FFC107" fill="#FFC107" />
+                <span
+                  className="text-[11px] md:text-xs font-[Vazir-Bold] whitespace-nowrap"
+                  style={{ color: colors.textMain }}
+                >
+                  {toPersianDigit(displayRating)}
+                </span>
+              </div>
+            </div>
+
+            <p
+              className="text-[11px] md:text-xs font-[Vazir-Medium] mt-0.5"
+              style={{ color: colors.primary }}
+            >
+              {business.name}
+            </p>
+
+            <p
+              className="text-[10px] md:text-[11px] font-[Vazir] mt-0.5 line-clamp-1"
+              style={{ color: colors.textSecondary }}
+            >
+              {business.category}
+            </p>
           </div>
         </div>
 
@@ -71,7 +78,10 @@ export default function BusinessListCard({ business, categoryIcon, onPress }) {
               style={{ backgroundColor: '#2196F318' }}
             >
               <FiNavigation size={9} className="md:w-2.5 md:h-2.5" color="#2196F3" />
-              <span className="text-[9px] md:text-[10px] font-[Vazir-Bold]" style={{ color: '#2196F3' }}>
+              <span
+                className="text-[9px] md:text-[10px] font-[Vazir-Bold]"
+                style={{ color: '#2196F3' }}
+              >
                 {business.distanceText}
               </span>
             </div>
