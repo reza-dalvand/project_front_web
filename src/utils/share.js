@@ -54,7 +54,9 @@ export const buildBusinessPortfolioShareUrl = (businessSlug, portfolioId) => {
     return buildPortfolioShareUrl(portfolioId);
   }
 
-  return `${base}/business?slug=${encodeURIComponent(businessSlug)}&portfolio=${encodeURIComponent(portfolioId)}`;
+  return `${base}/business?slug=${encodeURIComponent(
+    businessSlug
+  )}&portfolio=${encodeURIComponent(portfolioId)}`;
 };
 
 /**
@@ -65,9 +67,7 @@ export const buildBusinessPortfolioShareUrl = (businessSlug, portfolioId) => {
  */
 export const buildPostShareUrl = (postOrId) => {
   const id =
-    typeof postOrId === 'object' && postOrId !== null
-      ? postOrId.id
-      : postOrId;
+    typeof postOrId === 'object' && postOrId !== null ? postOrId.id : postOrId;
 
   return buildPortfolioShareUrl(id);
 };
@@ -92,7 +92,10 @@ export const shareWithUrl = async (url, options = {}) => {
   const text = options.text || 'این پست رو در بیو کلاب ببین';
 
   // ✅ Web Share API
-  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+  if (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.share === 'function'
+  ) {
     try {
       await navigator.share({
         title,
@@ -123,10 +126,13 @@ export const shareWithUrl = async (url, options = {}) => {
   }
 
   // ✅ Last resort: prompt
-  if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.prompt === 'function'
+  ) {
     try {
-      window.prompt('لینک اشتراک‌گذاری:', url);
-      return 'copied';
+      const result = window.prompt('لینک اشتراک‌گذاری:', url);
+      return result === null ? 'cancelled' : 'copied';
     } catch {
       return 'failed';
     }
@@ -155,7 +161,11 @@ export const sharePortfolio = async (portfolioId, options = {}) => {
  * @param {{ title?: string, text?: string }} options
  * @returns {Promise<'shared'|'copied'|'cancelled'|'failed'>}
  */
-export const shareBusinessPortfolio = async (businessSlug, portfolioId, options = {}) => {
+export const shareBusinessPortfolio = async (
+  businessSlug,
+  portfolioId,
+  options = {}
+) => {
   const url = buildBusinessPortfolioShareUrl(businessSlug, portfolioId);
   return shareWithUrl(url, options);
 };
@@ -169,9 +179,17 @@ export const shareBusinessPortfolio = async (businessSlug, portfolioId, options 
  */
 export const sharePost = async (postOrId, options = {}) => {
   const id =
-    typeof postOrId === 'object' && postOrId !== null
-      ? postOrId.id
-      : postOrId;
+    typeof postOrId === 'object' && postOrId !== null ? postOrId.id : postOrId;
 
   return sharePortfolio(id, options);
+};
+
+export default {
+  buildPortfolioShareUrl,
+  buildBusinessPortfolioShareUrl,
+  buildPostShareUrl,
+  shareWithUrl,
+  sharePortfolio,
+  shareBusinessPortfolio,
+  sharePost,
 };
