@@ -1,8 +1,8 @@
 // src/app/explore/page.jsx
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FiFilter } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -14,6 +14,8 @@ import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
 import { exploreService } from '@/api';
 import { useShallow } from 'zustand/react/shallow';
 import { BottomTabBar } from '@/components/common';
+import { useToast } from '@/hooks/useToast';
+import { sharePortfolio } from '@/utils/share';
 
 const PAGE_SIZE = 21;
 // ✅ FIX: محدودیت حداکثر اندازه آرایه برای جلوگیری از memory leak
@@ -28,9 +30,79 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
-export default function ExplorePage() {
+/**
+ * استخراج URL تصاویر از response بک‌اند
+ */
+const extractImages = (images) => {
+  if (!Array.isArray(images)) return [];
+
+  return images
+    .map((img) => {
+      if (!img) return null;
+      if (typeof img === 'string') return img;
+      return img.imageUrl || img.image_url || img.image || img.url || null;
+    })
+    .filter(Boolean);
+};
+
+/**
+ * Map کردن response جزئیات Portfolio به shape مورد انتظار PostModal
+ */
+const mapPortfolioToPost = (portfolio) => {
+  const images = extractImages(portfolio.images);
+
+  return {
+    id: portfolio.id,
+    type: 'portfolio',
+    caption: portfolio.title || 'نمونه‌کار',
+    description: portfolio.description || '',
+    images,
+    coverImage:
+      portfolio.coverImageUrl ||
+      portfolio.cover_image_url ||
+      images[0] ||
+      null,
+    businessId: portfolio.business ?? portfolio.businessId ?? null,
+    businessName:
+      portfolio.businessName ||
+      portfolio.business_name ||
+      portfolio.business?.name ||
+      '',
+    businessLogo:
+      portfolio.businessLogo ||
+      portfolio.business_logo ||
+      portfolio.business?.logo ||
+      null,
+    businessOwnerPhoto:
+      portfolio.businessOwnerPhoto ||
+      portfolio.business_owner_photo ||
+      null,
+    businessBookingSlug:
+      portfolio.businessBookingSlug ||
+      portfolio.business_booking_slug ||
+      '',
+    mainCategory: portfolio.category ?? portfolio.categoryId ?? null,
+    mainCategoryName:
+      portfolio.categoryName ||
+      portfolio.category_name ||
+      portfolio.category?.name ||
+      '',
+    subCategory: portfolio.subService ?? portfolio.sub_service ?? null,
+    subCategoryName:
+      portfolio.subServiceName ||
+      portfolio.sub_service_name ||
+      portfolio.sub_service?.name ||
+      '',
+    source: 'business',
+    createdAt: portfolio.createdAt || portfolio.created_at || '',
+  };
+};
+
+function ExplorePageContent() {
   const { colors } = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { showToast } = useToast();
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const authHydrated = useAuthStore((s) => s._hydrated);
@@ -56,6 +128,9 @@ export default function ExplorePage() {
 
   // ✅ برای جلوگیری از ارسال همزمان چند درخواست load-more
   const loadMoreLockRef = useRef(false);
+
+  // ✅ برای جلوگیری از fetch تکراری لینک عمیق
+  const processedDeepLinkIdRef = useRef(null);
 
   const locationState = useGlobalLocationStore(
     useShallow((state) => ({
@@ -127,11 +202,7 @@ export default function ExplorePage() {
           type: 'portfolio',
           caption: portfolio.title || 'نمونه‌کار',
           description: portfolio.description || '',
-          images: Array.isArray(portfolio.images)
-            ? portfolio.images.map(
-                (img) => img?.imageUrl || img?.image_url || img?.image || img
-              )
-            : [],
+          images: extractImages(portfolio.images),
           businessId: portfolio.business ?? portfolio.businessId,
           businessName:
             portfolio.businessName ||
@@ -175,7 +246,7 @@ export default function ExplorePage() {
             const seen = new Set(prev.map((post) => post.id));
             const newPosts = shuffled.filter((post) => !seen.has(post.id));
             const combined = [...prev, ...newPosts];
-            
+
             // ✅ FIX: محدود کردن اندازه آرایه برای جلوگیری از memory leak
             if (combined.length > MAX_POSTS_SIZE) {
               return combined.slice(combined.length - MAX_POSTS_SIZE);
@@ -248,6 +319,71 @@ export default function ExplorePage() {
     fetchPortfolios(1, false);
   }, [fetchPortfolios]);
 
+  /**
+   * 🔗 پشتیبانی از لینک عمیق اکسپلور
+   *
+   * نمونه:
+   * /explore?post=123
+   * /explore?portfolio=123
+   */
+  const deepLinkId = searchParams.get('portfolio') || searchParams.get('post');
+
+  useEffect(() => {
+    if (!deepLinkId) {
+      processedDeepLinkIdRef.current = null;
+      return;
+    }
+
+    const id = String(deepLinkId);
+
+    // اگر همین id قبلاً پردازش شده، دوباره fetch نکن
+    if (processedDeepLinkIdRef.current === id) {
+      return;
+    }
+
+    // فقط id عددی معتبر
+    if (!/^\d+$/.test(id)) {
+      processedDeepLinkIdRef.current = id;
+      router.replace('/explore', { scroll: false });
+      return;
+    }
+
+    processedDeepLinkIdRef.current = id;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const result = await exploreService.getPortfolioDetail(id);
+
+        if (cancelled) return;
+
+        const portfolio = result?.data;
+
+        if (!portfolio?.id) {
+          throw new Error('NOT_FOUND');
+        }
+
+        setActivePost(mapPortfolioToPost(portfolio));
+      } catch (error) {
+        if (cancelled) return;
+
+        console.warn('Deep link portfolio failed:', error);
+
+        setActivePost(null);
+        showToast('پست مورد نظر یافت نشد یا در دسترس نیست.', 'error');
+
+        // پاک کردن پارامتر از URL تا صفحه به حالت عادی برگردد
+        processedDeepLinkIdRef.current = null;
+        router.replace('/explore', { scroll: false });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deepLinkId, router, showToast]);
+
   const handleLoadMore = useCallback(() => {
     if (!hasMore || isLoadingMore || loadMoreError || loadMoreLockRef.current) {
       return;
@@ -263,8 +399,34 @@ export default function ExplorePage() {
     fetchPortfolios(page + 1, true);
   }, [page, fetchPortfolios]);
 
-  const handlePostPress = useCallback((post) => setActivePost(post), []);
-  const handlePostClose = useCallback(() => setActivePost(null), []);
+  /**
+   * ✅ باز کردن modal از روی کارت
+   *
+   * علاوه بر ست کردن activePost، URL را هم sync می‌کند تا:
+   * - آدرس بار قابل share باشد
+   * - با refresh همان modal باز بماند
+   */
+  const handlePostPress = useCallback(
+    (post) => {
+      if (!post?.id) return;
+
+      processedDeepLinkIdRef.current = String(post.id);
+      setActivePost(post);
+
+      router.replace(`/explore?post=${encodeURIComponent(post.id)}`, {
+        scroll: false,
+      });
+    },
+    [router]
+  );
+
+  const handlePostClose = useCallback(() => {
+    setActivePost(null);
+    processedDeepLinkIdRef.current = null;
+
+    router.replace('/explore', { scroll: false });
+  }, [router]);
+
   const handleFilterOpen = useCallback(() => setFilterVisible(true), []);
   const handleFilterClose = useCallback(() => setFilterVisible(false), []);
   const handleFilterChange = useCallback((newFilters) => setFilters(newFilters), []);
@@ -287,6 +449,27 @@ export default function ExplorePage() {
       }
     },
     [router]
+  );
+
+  /**
+   * ✅ Handler اشتراک‌گذاری از اکسپلور
+   */
+  const handleShare = useCallback(
+    async (postToShare) => {
+      const target = postToShare || activePost;
+      if (!target?.id) return;
+
+      const result = await sharePortfolio(target.id, {
+        title: target.caption || 'پست بیو کلاب',
+      });
+
+      if (result === 'copied') {
+        showToast('لینک پست کپی شد', 'success');
+      } else if (result === 'failed') {
+        showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
+      }
+    },
+    [activePost, showToast]
   );
 
   return (
@@ -350,7 +533,22 @@ export default function ExplorePage() {
         onClose={handlePostClose}
         onNavigateToProfile={() => handleNavigateToBusiness(activePost)}
         onBooking={() => handleNavigateToBusiness(activePost)}
+        onShare={handleShare}
       />
     </ScreenWrapper>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <ExplorePageContent />
+    </Suspense>
   );
 }

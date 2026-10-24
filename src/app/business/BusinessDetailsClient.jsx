@@ -1,6 +1,6 @@
 // src/app/business/BusinessDetailsClient.jsx
 'use client';
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useTheme } from '@/stores/useThemeStore';
@@ -19,6 +19,7 @@ import EmptyState from '@/components/common/EmptyState';
 import { businessesService, portfoliosService } from '@/api';
 import { useAuth } from '@/stores/useAuthStore';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
+import { shareBusinessPortfolio } from '@/utils/share';
 
 const BookingModal = dynamic(() => import('@/components/booking/BookingModal'), { ssr: false });
 const PortfolioModal = dynamic(() => import('@/components/home/PortfolioModal'), { ssr: false });
@@ -36,7 +37,19 @@ const mapServiceToPriceList = (s) => ({
   depositAmount: s.depositAmount ?? s.deposit_amount ?? 0,
 });
 
-export default function BusinessDetailsClient({ businessSlug }) {
+const extractPortfolioImages = (images) => {
+  if (!Array.isArray(images)) return [];
+
+  return images
+    .map((img) => {
+      if (!img) return null;
+      if (typeof img === 'string') return img;
+      return img.imageUrl || img.image_url || img.image || img.url || null;
+    })
+    .filter(Boolean);
+};
+
+export default function BusinessDetailsClient({ businessSlug, initialPortfolioId }) {
   const { colors } = useTheme();
   const router = useRouter();
   const { showToast } = useToast();
@@ -52,6 +65,9 @@ export default function BusinessDetailsClient({ businessSlug }) {
   const [activePortfolio, setActivePortfolio] = useState(null);
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
   const fetchPublicPriceList = usePriceListStore((s) => s.fetchPublicPriceList);
+
+  // ✅ برای جلوگیری از پردازش تکراری لینک عمیق
+  const initialPortfolioProcessedRef = useRef(null);
 
   // ✅ FIX: استفاده از businessId به جای business برای dependency
   const businessId = business?.id;
@@ -120,13 +136,16 @@ export default function BusinessDetailsClient({ businessSlug }) {
     const fetchPortfolios = async () => {
       try {
         const result = await portfoliosService.getPortfolios({ business_id: businessId });
-        const portfolios = (result.data || []).map((p) => ({
-          id: p.id,
-          title: p.title,
-          description: p.description,
-          coverImage: p.cover_image || p.coverImage,
-          images: (p.images || []).map((img) => img.image || img),
-        }));
+        const portfolios = (result.data || []).map((p) => {
+          const images = extractPortfolioImages(p.images);
+          return {
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            coverImage: p.coverImageUrl || p.cover_image_url || images[0] || null,
+            images,
+          };
+        });
         setBusiness((prev) => (prev ? { ...prev, portfolios } : prev));
       } catch (err) {
         console.error('Failed to fetch portfolios:', err);
@@ -237,6 +256,89 @@ export default function BusinessDetailsClient({ businessSlug }) {
   const services = useMemo(() => business?.services || [], [business?.services]);
   const portfolios = useMemo(() => business?.portfolios || [], [business?.portfolios]);
 
+  /**
+   * 🔗 باز کردن مستقیم PortfolioModal از لینک عمیق
+   *
+   * /business?slug=...&portfolio=123
+   * /business?slug=...&post=123
+   */
+  useEffect(() => {
+    if (!initialPortfolioId || !businessId) return;
+
+    const id = String(initialPortfolioId);
+
+    if (!/^\d+$/.test(id)) return;
+
+    if (initialPortfolioProcessedRef.current === id) return;
+
+    initialPortfolioProcessedRef.current = id;
+
+    const existing = portfolios.find((p) => String(p.id) === id);
+
+    if (existing) {
+      setActivePortfolio(existing);
+      setPortfolioModalVisible(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const result = await portfoliosService.getPortfolioDetail(id);
+        const p = result?.data;
+
+        if (cancelled || !p?.id) return;
+
+        const belongs =
+          Number(p.business) === Number(businessId) ||
+          p.businessBookingSlug === businessSlug;
+
+        if (!belongs) return;
+
+        const images = extractPortfolioImages(p.images);
+
+        const mapped = {
+          id: p.id,
+          title: p.title || '',
+          description: p.description || '',
+          coverImage: p.coverImageUrl || images[0] || null,
+          images,
+        };
+
+        setActivePortfolio(mapped);
+        setPortfolioModalVisible(true);
+      } catch (err) {
+        console.warn('Deep link portfolio failed:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialPortfolioId, businessId, businessSlug, portfolios]);
+
+  /**
+   * ✅ Share لینک نمونه‌کار از صفحه کسب‌وکار
+   */
+  const handlePortfolioShare = useCallback(
+    async (portfolioToShare) => {
+      const target = portfolioToShare || activePortfolio;
+      if (!target?.id || !businessSlug) return;
+
+      const result = await shareBusinessPortfolio(businessSlug, target.id, {
+        title: target.title || 'نمونه‌کار بیو کلاب',
+      });
+
+      if (result === 'copied') {
+        showToast('لینک نمونه‌کار کپی شد', 'success');
+      } else if (result === 'failed') {
+        showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
+      }
+    },
+    [businessSlug, activePortfolio, showToast]
+  );
+
   if (isLoading) {
     return (
       <ScreenWrapper>
@@ -320,6 +422,7 @@ export default function BusinessDetailsClient({ businessSlug }) {
         visible={portfolioModalVisible}
         onClose={closePortfolio}
         portfolio={activePortfolio}
+        onShare={handlePortfolioShare}
       />
     </ScreenWrapper>
   );
