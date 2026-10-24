@@ -1,11 +1,19 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { FiStar, FiMapPin, FiCreditCard, FiSettings, FiAlertTriangle } from 'react-icons/fi';
+import {
+  FiStar,
+  FiMapPin,
+  FiCreditCard,
+  FiSettings,
+  FiAlertTriangle,
+  FiArrowRight,
+} from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { toPersianDigit } from '@/utils/numberUtils';
 import Avatar from '@/components/common/Avatar';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 const MIN_REVIEWS_THRESHOLD = 3;
 const DEFAULT_RATING = 5.0;
@@ -15,6 +23,7 @@ export default function ManageHeader() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const businessData = useBusinessStore((s) => s.businessData);
+  const handleBack = useSafeBack('/');
 
   const needsBankRegistration = !businessData?.bankInfo?.isRegistered;
 
@@ -43,12 +52,25 @@ export default function ManageHeader() {
       />
 
       <div className="relative z-10 space-y-5">
-        {/* خوشامدگویی */}
-        <div>
-          <p className="text-sm text-white/80 mb-1">
-            {greeting.emoji} {greeting.text}
-          </p>
-          <h1 className="text-2xl font-[Vazir-Bold] text-white">{user?.name || 'مدیر سالن'}</h1>
+        {/* خوشامدگویی + دکمه بازگشت */}
+        <div className="flex items-start gap-3">
+          <button
+            type="button"
+            onClick={handleBack}
+            aria-label="بازگشت به صفحه قبل"
+            className="w-10 h-10 rounded-full flex items-center justify-center border border-white/20 bg-white/15 text-white transition-all hover:bg-white/25 active:scale-95 shrink-0 mt-0.5"
+          >
+            <FiArrowRight size={20} />
+          </button>
+
+          <div className="min-w-0">
+            <p className="text-sm text-white/80 mb-1">
+              {greeting.emoji} {greeting.text}
+            </p>
+            <h1 className="text-2xl font-[Vazir-Bold] text-white truncate">
+              {user?.name || 'مدیر سالن'}
+            </h1>
+          </div>
         </div>
 
         {/* کارت کسب‌وکار */}
@@ -80,6 +102,7 @@ export default function ManageHeader() {
               <span className="text-[10px] text-white/75">{businessData?.city || '—'}</span>
             </div>
           </div>
+
           {/* باکس امتیاز */}
           <div
             className="flex flex-col items-center px-3 py-2 rounded-2xl border"
@@ -89,16 +112,14 @@ export default function ManageHeader() {
             }}
           >
             <span className="text-xl font-[Vazir-Bold] text-white leading-tight">
-              {/* ✅ منطق جدید: اگر کمتر از ۳ رای → 5.0 ، در غیر این صورت میانگین واقعی */}
               {toPersianDigit(
                 (businessData?.reviewsCount || 0) < MIN_REVIEWS_THRESHOLD
                   ? DEFAULT_RATING.toFixed(1)
                   : parseFloat(businessData?.rating || 0).toFixed(1)
               )}
             </span>
-            <div dir="ltr" className="flex items-center gap-0.5 my-1 ">
+            <div dir="ltr" className="flex items-center gap-0.5 my-1">
               {[...Array(5)].map((_, i) => {
-                // ✅ محاسبه تعداد ستاره‌های پر
                 const displayRating =
                   (businessData?.reviewsCount || 0) < MIN_REVIEWS_THRESHOLD
                     ? DEFAULT_RATING

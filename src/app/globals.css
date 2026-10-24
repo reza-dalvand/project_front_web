@@ -242,6 +242,77 @@
       flex: 0 0 calc(25% - 0.5rem);
     }
   }
+
+  /* ═══════ ✅ اسکرول افقی بخش فرصت‌های همکاری هوم ═══════ */
+  .line-rental-scroll {
+    gap: 0.875rem;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline-start: 0.25rem;
+    overscroll-behavior-x: contain;
+  }
+
+  .line-rental-scroll > * {
+    scroll-snap-align: start;
+  }
+
+  .line-rental-scroll > *:only-child {
+    width: 100%;
+    max-width: none;
+  }
+
+  .line-rental-scroll-edge {
+    position: relative;
+  }
+
+  .line-rental-scroll-edge::before,
+  .line-rental-scroll-edge::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 24px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .line-rental-scroll-edge::before {
+    right: 0;
+    background: linear-gradient(to left, var(--bg), transparent);
+  }
+
+  .line-rental-scroll-edge::after {
+    left: 0;
+    background: linear-gradient(to right, var(--bg), transparent);
+  }
+
+  @media (min-width: 640px) {
+    .line-rental-scroll-edge::before,
+    .line-rental-scroll-edge::after {
+      width: 32px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .line-rental-scroll {
+      scroll-snap-type: none;
+      overscroll-behavior-x: auto;
+    }
+
+    .line-rental-scroll > * {
+      scroll-snap-align: none;
+    }
+
+    .line-rental-scroll > *:only-child {
+      flex: 0 0 100%;
+      width: 100%;
+      max-width: none;
+    }
+
+    .line-rental-scroll-edge::before,
+    .line-rental-scroll-edge::after {
+      display: none;
+    }
+  }
 }
 
 /* ═══════ Keyframes ═══════ */

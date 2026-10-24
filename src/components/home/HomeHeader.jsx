@@ -1,9 +1,11 @@
 'use client';
+
 import { FiFilter, FiMoon, FiSun } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
 import SearchBar from '@/components/common/SearchBar';
 import Avatar from '@/components/common/Avatar';
-import { useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
+import { LOCATION_TYPES, useGlobalLocationStore } from '@/stores/useGlobalLocationStore';
+import HomeActiveLocationTags from './HomeActiveLocationTags';
 
 export default function HomeHeader({
   userName,
@@ -18,8 +20,12 @@ export default function HomeHeader({
   onSearchClick,
 }) {
   const { colors } = useTheme();
-  const hasActiveLocationFilter = useGlobalLocationStore((s) => s.hasActiveLocationFilter());
-  const getLocationLabel = useGlobalLocationStore((s) => s.getLocationLabel);
+
+  const hasActiveLocationFilter = useGlobalLocationStore(
+    (s) => s.locationType !== LOCATION_TYPES.ALL
+  );
+
+  const showActiveIndicator = hasActiveFilter || hasActiveLocationFilter;
 
   return (
     <div
@@ -85,14 +91,14 @@ export default function HomeHeader({
                 onClick={onFilterPress}
                 className="w-[40px] h-[40px] md:w-[44px] md:h-[44px] lg:w-[48px] lg:h-[48px] rounded-[12px] md:rounded-[14px] flex items-center justify-center border relative transition-colors"
                 style={{
-                  backgroundColor: hasActiveLocationFilter
+                  backgroundColor: showActiveIndicator
                     ? 'rgba(255,255,255,0.32)'
                     : 'rgba(255,255,255,0.18)',
                   borderColor: 'rgba(255,255,255,0.1)',
                 }}
               >
                 <FiFilter size={20} className="md:w-5 md:h-5 lg:w-6 lg:h-6" color="#fff" />
-                {hasActiveLocationFilter && (
+                {showActiveIndicator && (
                   <div
                     className="absolute top-1.5 right-1.5 w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border-2"
                     style={{ backgroundColor: '#4CAF50', borderColor: colors.primary }}
@@ -114,6 +120,9 @@ export default function HomeHeader({
               />
             </div>
           </button>
+
+          {/* تگ‌های فیلتر فعال موقعیت */}
+          <HomeActiveLocationTags />
         </div>
       </div>
     </div>

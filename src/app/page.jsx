@@ -340,11 +340,33 @@ export default function HomePage() {
           )}
           {filteredLineRentals.length > 0 && (
             <section>
-              <SectionHeader icon={<span style={{ fontSize: 18 }}>🏢</span>} iconColor="#667eea" title="فرصت‌های همکاری" rightElement={<SeeAllButton onPress={() => router.push('/line-rentals')} count={filteredLineRentals.length} />} />
-              <div className="responsive-scroll pb-2 -mx-1 px-1">
-                {filteredLineRentals.map((rental) => (
-                  <LineRentalCard key={rental.id} rental={rental} onPress={handleLineRentalPress} />
-                ))}
+              <SectionHeader
+                icon={<span style={{ fontSize: 18 }}>🏢</span>}
+                iconColor="#667eea"
+                title="فرصت‌های همکاری"
+                rightElement={<SeeAllButton onPress={() => router.push('/line-rentals')} count={filteredLineRentals.length} />}
+              />
+
+              <div className="relative">
+                <div className={filteredLineRentals.length > 1 ? 'line-rental-scroll-edge' : ''}>
+                  <div className="responsive-scroll line-rental-scroll pb-2 -mx-1 px-1">
+                    {filteredLineRentals.map((rental) => (
+                      <LineRentalCard key={rental.id} rental={rental} onPress={handleLineRentalPress} />
+                    ))}
+                  </div>
+                </div>
+
+                {filteredLineRentals.length > 1 && (
+                  <div
+                    className="mt-2 flex items-center justify-center gap-1.5 text-[10px] sm:text-[11px] font-[Vazir-Medium] lg:hidden"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    <span>برای دیدن فرصت‌های بیشتر</span>
+                    <span dir="ltr" aria-hidden="true" className="text-[13px] leading-none">
+                      ←
+                    </span>
+                  </div>
+                )}
               </div>
             </section>
           )}
