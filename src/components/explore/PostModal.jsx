@@ -12,8 +12,16 @@ import PostCaptionCard from './post/PostCaptionCard';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
 import { useFavoriteStore } from '@/stores/useFavoriteStore';
 import { useAuth } from '@/stores/useAuthStore';
+import { sharePortfolio } from '@/utils/share';
 
-export default function PostModal({ post, visible, onClose, onNavigateToProfile, onBooking }) {
+export default function PostModal({
+  post,
+  visible,
+  onClose,
+  onNavigateToProfile,
+  onBooking,
+  onShare,
+}) {
   const { colors } = useTheme();
   const { showToast } = useToast();
   const { isAuthenticated, requireAuth } = useAuth();
@@ -110,6 +118,28 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
 
   const handleShare = useCallback(async () => {
     if (!post) return;
+
+    // ✅ اگر parent handler داشت، از همان استفاده کن
+    if (typeof onShare === 'function') {
+      await onShare(post);
+      return;
+    }
+
+    // ✅ اگر پورتفولیو بود، لینک استاندارد اکسپلور بساز
+    if (post.type === 'portfolio') {
+      const result = await sharePortfolio(post.id, {
+        title: post.caption || post.title || 'نمونه‌کار بیو کلاب',
+      });
+
+      if (result === 'copied') {
+        showToast('لینک پست کپی شد', 'success');
+      } else if (result === 'failed') {
+        showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
+      }
+      return;
+    }
+
+    // ✅ fallback قدیمی برای سایر موارد (مثلاً Favorites)
     const shareTitle = post.caption || post.title || 'نمونه‌کار بیو کلاب';
     const shareMessage = `🖼️ ${shareTitle}\n\n🏪 ${post.businessName || ''}\n\n📱 بیو کلاب | رزرو آنلاین خدمات زیبایی`;
 
@@ -136,7 +166,7 @@ export default function PostModal({ post, visible, onClose, onNavigateToProfile,
     } catch {
       showToast('امکان کپی وجود ندارد', 'error');
     }
-  }, [post, showToast]);
+  }, [post, onShare, showToast]);
 
   const handleNavigate = useCallback(() => {
     onClose?.();

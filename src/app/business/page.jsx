@@ -1,13 +1,24 @@
 // src/app/business/page.jsx
 'use client';
+
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import BusinessDetailsClient from './BusinessDetailsClient';
 
 function BusinessPageContent() {
   const searchParams = useSearchParams();
+
   // ✅ پشتیبانی از slug (جدید) و id (برای سازگاری با عقب)
   const slug = searchParams.get('slug') || searchParams.get('id');
+
+  /**
+   * 🔗 لینک عمیق نمونه‌کار در صفحه کسب‌وکار
+   *
+   * نمونه:
+   * /business?slug=...&portfolio=123
+   * /business?slug=...&post=123
+   */
+  const portfolioId = searchParams.get('portfolio') || searchParams.get('post');
 
   if (!slug) {
     return (
@@ -21,7 +32,7 @@ function BusinessPageContent() {
     );
   }
 
-  return <BusinessDetailsClient businessSlug={slug} />;
+  return <BusinessDetailsClient businessSlug={slug} initialPortfolioId={portfolioId} />;
 }
 
 export default function BusinessPage() {

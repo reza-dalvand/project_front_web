@@ -1,16 +1,31 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
-import { FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiX, FiChevronLeft, FiChevronRight, FiShare2, FiImage } from 'react-icons/fi';
 import { useTheme } from '@/stores/useThemeStore';
+import { useToast } from '@/hooks/useToast';
 import { acquireScrollLock, releaseScrollLock } from '@/utils/scrollLock';
+import { sharePortfolio } from '@/utils/share';
 
-export default function PortfolioModal({ visible, onClose, portfolio }) {
+export default function PortfolioModal({ visible, onClose, portfolio, onShare }) {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
   const instanceId = useRef('portfolio-modal');
+
+  const images = useMemo(() => {
+    if (!portfolio) return [];
+
+    const list = Array.isArray(portfolio.images) ? portfolio.images.filter(Boolean) : [];
+
+    if (list.length > 0) return list;
+
+    if (portfolio.coverImage) return [portfolio.coverImage];
+
+    return [];
+  }, [portfolio]);
 
   useEffect(() => {
     setMounted(true);
@@ -23,6 +38,12 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
   useEffect(() => {
     setCurrentIndex(0);
   }, [portfolio, visible]);
+
+  useEffect(() => {
+    if (currentIndex >= images.length) {
+      setCurrentIndex(0);
+    }
+  }, [images.length, currentIndex]);
 
   useEffect(() => {
     if (visible) {
@@ -45,9 +66,26 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [visible, onClose]);
 
-  if (!mounted || !visible || !portfolio) return null;
+  const handleShare = useCallback(async () => {
+    if (!portfolio?.id) return;
 
-  const images = portfolio.images || [portfolio.coverImage];
+    if (typeof onShare === 'function') {
+      await onShare(portfolio);
+      return;
+    }
+
+    const result = await sharePortfolio(portfolio.id, {
+      title: portfolio.title || 'نمونه‌کار بیو کلاب',
+    });
+
+    if (result === 'copied') {
+      showToast('لینک نمونه‌کار کپی شد', 'success');
+    } else if (result === 'failed') {
+      showToast('امکان اشتراک‌گذاری وجود ندارد', 'error');
+    }
+  }, [portfolio, onShare, showToast]);
+
+  if (!mounted || !visible || !portfolio) return null;
 
   const goToPrev = () => {
     if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
@@ -80,14 +118,26 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
 
         {/* تصویر اصلی */}
         <div className="relative w-full h-[60%]">
-          <Image
-            src={images[currentIndex]}
-            alt={portfolio.title || 'portfolio'}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 800px"
-            priority
-          />
+          {images.length > 0 ? (
+            <Image
+              src={images[currentIndex]}
+              alt={portfolio.title || 'portfolio'}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 800px"
+              priority
+            />
+          ) : (
+            <div
+              className="w-full h-full flex flex-col items-center justify-center gap-2"
+              style={{ backgroundColor: '#111' }}
+            >
+              <FiImage size={32} color="#999" />
+              <span className="text-xs font-[Vazir]" style={{ color: '#999' }}>
+                تصویری موجود نیست
+              </span>
+            </div>
+          )}
 
           {/* دکمه‌های ناوبری */}
           {images.length > 1 && currentIndex > 0 && (
@@ -152,6 +202,20 @@ export default function PortfolioModal({ visible, onClose, portfolio }) {
               توضیحاتی برای این نمونه‌کار ثبت نشده است
             </p>
           )}
+
+          {/* دکمه اشتراک‌گذاری */}
+          <button
+            onClick={handleShare}
+            className="mt-auto w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 transition-all active:scale-[0.98]"
+            style={{
+              borderColor: colors.primary,
+              backgroundColor: colors.primary + '10',
+              color: colors.primary,
+            }}
+          >
+            <FiShare2 size={18} />
+            <span className="text-sm font-[Vazir-Bold]">اشتراک‌گذاری</span>
+          </button>
         </div>
 
         {/* Indicator Dots */}
